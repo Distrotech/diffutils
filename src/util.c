@@ -669,7 +669,7 @@ xmalloc (size)
   if (size == 0)
     size = 1;
 
-  value = malloc (size);
+  value = (VOID *) malloc (size);
 
   if (!value)
     fatal ("virtual memory exhausted");
@@ -688,7 +688,7 @@ xrealloc (old, size)
   if (size == 0)
     size = 1;
 
-  value = realloc (old, size);
+  value = (VOID *) realloc (old, size);
 
   if (!value)
     fatal ("virtual memory exhausted");
@@ -731,11 +731,11 @@ debug_script (sp)
 #if !HAVE_MEMCHR
 char *
 memchr (s, c, n)
-     char *s;
+     char const *s;
      int c;
      size_t n;
 {
-  unsigned char *p = (unsigned char *) s, *lim = p + n;
+  unsigned char const *p = (unsigned char const *) s, *lim = p + n;
   for (;  p < lim;  p++)
     if (*p == c)
       return (char *) p;
