@@ -28,18 +28,13 @@
 #include <error.h>
 #include <exitfail.h>
 #include <file-type.h>
-#include <freesoft.h>
 #include <getopt.h>
 #include <quotesys.h>
 #include <stdio.h>
+#include <version-etc.h>
 #include <xalloc.h>
 
 static char const authorship_msgid[] = N_("Written by Thomas Lord.");
-
-static char const copyright_notice[] =
-  "Copyright %s 2002 Free Software Foundation, Inc.";
-
-extern char const version_string[];
 
 /* Size of chunks read from files which must be parsed into lines.  */
 #define SDIFF_BUFSIZE ((size_t) 65536)
@@ -515,10 +510,7 @@ main (int argc, char *argv[])
 	  break;
 
 	case 'v':
-	  printf ("sdiff %s\n", version_string);
-	  printf (copyright_notice, _("(C)"));
-	  printf ("\n\n%s\n\n%s\n",
-		  _(free_software_msgid), _(authorship_msgid));
+	  version_etc ("sdiff", authorship_msgid);
 	  check_stdout ();
 	  return EXIT_SUCCESS;
 

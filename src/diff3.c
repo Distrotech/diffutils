@@ -23,22 +23,17 @@
 
 static char const authorship_msgid[] = N_("Written by Randy Smith.");
 
-static char const copyright_notice[] =
-  "Copyright %s 2002 Free Software Foundation, Inc.";
-
 #include <c-stack.h>
 #include <cmpbuf.h>
 #include <error.h>
 #include <exitfail.h>
 #include <file-type.h>
-#include <freesoft.h>
 #include <getopt.h>
 #include <inttostr.h>
 #include <quotesys.h>
 #include <stdio.h>
+#include <version-etc.h>
 #include <xalloc.h>
-
-extern char const version_string[];
 
 /* Internal data structures and macros for the diff3 program; includes
    data structures for both diff3 diffs and normal diffs.  */
@@ -273,10 +268,7 @@ main (int argc, char **argv)
 	  initial_tab = 1;
 	  break;
 	case 'v':
-	  printf ("diff3 %s\n", version_string);
-	  printf (copyright_notice, _("(C)"));
-	  printf ("\n\n%s\n\n%s\n",
-		  _(free_software_msgid), _(authorship_msgid));
+	  version_etc ("diff3", authorship_msgid);
 	  check_stdout ();
 	  return EXIT_SUCCESS;
 	case DIFF_PROGRAM_OPTION:

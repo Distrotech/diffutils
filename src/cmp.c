@@ -27,11 +27,11 @@
 #include <error.h>
 #include <exitfail.h>
 #include <file-type.h>
-#include <freesoft.h>
 #include <getopt.h>
 #include <hard-locale.h>
 #include <inttostr.h>
 #include <setmode.h>
+#include <version-etc.h>
 #include <xalloc.h>
 #include <xstrtol.h>
 
@@ -41,13 +41,11 @@
 # define hard_locale_LC_MESSAGES 0
 #endif
 
-static char const authorship_msgid[] =
-  N_("Written by Torbjorn Granlund and David MacKenzie.");
-
-static char const copyright_notice[] =
-  "Copyright %s 2002 Free Software Foundation, Inc.";
-
-extern char const version_string[];
+/* TRANSLATORS: Please translate the second "o" in "Torbjorn Granlund"
+   to an o-with-umlaut (U+00F6, LATIN SMALL LETTER O WITH DIAERESIS)
+   if possible.  */
+static char const authorship_msgid[] = N_("\
+Written by Torbjorn Granlund and David MacKenzie.");
 
 static int cmp (void);
 static off_t file_position (int);
@@ -241,10 +239,7 @@ main (int argc, char **argv)
 	break;
 
       case 'v':
-	printf ("cmp %s\n", version_string);
-	printf (copyright_notice, _("(C)"));
-	printf ("\n\n%s\n\n%s\n",
-		_(free_software_msgid), _(authorship_msgid));
+	version_etc ("cmp", authorship_msgid);
 	check_stdout ();
 	return EXIT_SUCCESS;
 
