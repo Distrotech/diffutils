@@ -1,27 +1,32 @@
-/* Three way file comparison program (diff3) for Project GNU.
-   Copyright (C) 1988, 1989, 1992, 1993, 1994 Free Software Foundation, Inc.
+/* Three way file comparison program (diff3) for Project GNU.  */
 
-   This program is free software; you can redistribute it and/or modify
+static char const copyright_string[] =
+  "Copyright 1988, 89, 92, 93, 94, 95, 96, 1997 Free Software Foundation, Inc.";
+
+/* This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2, or (at your option)
    any later version.
 
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+   See the GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  */
+   along with this program; see the file COPYING.
+   If not, write to the Free Software Foundation, 
+   59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
 
-/* Written by Randy Smith */
+static char const authorship_msgid[] = "Written by Randy Smith.";
 
 #include "system.h"
 #include <stdio.h>
 #include <signal.h>
 #include "getopt.h"
+#include "quotearg.h"
 
+extern char const free_software_msgid[];
 extern char const version_string[];
 
 /*
@@ -48,8 +53,8 @@ extern char const version_string[];
 #define FC 1
 
 /* The ranges are indexed by */
-#define	START	0
-#define	END	1
+#define	RANGE_START	0
+#define	RANGE_END	1
 
 enum diff_type {
   ERROR,			/* Should not be used */
@@ -84,9 +89,9 @@ struct diff3_block {
  * Access the ranges on a diff block.
  */
 #define	D_LOWLINE(diff, filenum)	\
-  ((diff)->ranges[filenum][START])
+  ((diff)->ranges[filenum][RANGE_START])
 #define	D_HIGHLINE(diff, filenum)	\
-  ((diff)->ranges[filenum][END])
+  ((diff)->ranges[filenum][RANGE_END])
 #define	D_NUMLINES(diff, filenum)	\
   (D_HIGHLINE (diff, filenum) - D_LOWLINE (diff, filenum) + 1)
 
@@ -190,19 +195,23 @@ static struct diff3_block *reverse_diff3_blocklist PARAMS((struct diff3_block *)
 static struct diff3_block *using_to_diff3_block PARAMS((struct diff_block *[2], struct diff_block *[2], int, int, struct diff3_block const *));
 static struct diff_block *process_diff PARAMS((char const *, char const *, struct diff_block **));
 static void check_stdout PARAMS((void));
-static void fatal PARAMS((char const *));
+static void fatal PARAMS((char const *)) __attribute__((noreturn));
 static void output_diff3 PARAMS((FILE *, struct diff3_block *, int const[3], int const[3]));
-static void perror_with_exit PARAMS((char const *));
-static void try_help PARAMS((char const *));
+static void perror_with_exit PARAMS((char const *)) __attribute__((noreturn));
+static void try_help PARAMS((char const *, char const *)) __attribute__((noreturn));
 static void undotlines PARAMS((FILE *, int, int, int));
 static void usage PARAMS((void));
 
-void error PARAMS((int, int, char const *, ...));
+#if __STDC__ && (HAVE_VPRINTF || HAVE_DOPRNT)
+void error (int, int, char const *, ...) __attribute__((format (printf, 3, 4)));
+#else
+void error ();
+#endif
 VOID *xmalloc PARAMS((size_t));
 VOID *xrealloc PARAMS((VOID *, size_t));
 extern int xmalloc_exit_failure;
 
-static char const diff_program[] = DIFF_PROGRAM;
+static char const *diff_program = DEFAULT_DIFF_PROGRAM;
 
 static struct option const longopts[] =
 {
@@ -216,7 +225,7 @@ static struct option const longopts[] =
   {"overlap-only", 0, 0, 'x'},
   {"easy-only", 0, 0, '3'},
   {"version", 0, 0, 'v'},
-  {"help", 0, 0, 129},
+  {"help", 0, 0, CHAR_MAX + 1},
   {0, 0, 0, 0}
 };
 
@@ -240,14 +249,17 @@ main (argc, argv)
   char *tag_strings[3];
   char *commonname;
   char **file;
+  char const *diff;
   struct stat statb;
 
   initialize_main (&argc, &argv);
   setlocale (LC_ALL, "");
   program_name = argv[0];
   xmalloc_exit_failure = 2;
+  if ((diff = getenv ("DIFF")))
+    diff_program = diff;
 
-  while ((c = getopt_long (argc, argv, "aeimvx3AEL:TX", longopts, 0)) != EOF)
+  while ((c = getopt_long (argc, argv, "aeimvx3AEL:TX", longopts, 0)) != -1)
     {
       switch (c)
 	{
@@ -286,9 +298,11 @@ main (argc, argv)
 	  tab_align_flag = 1;
 	  break;
 	case 'v':
-	  printf ("diff3 - %s\n", version_string);
+	  printf ("diff3 %s\n%s\n\n%s\n\n%s\n",
+		  version_string, copyright_string,
+		  _(free_software_msgid), _(authorship_msgid));
 	  exit (0);
-	case 129:
+	case CHAR_MAX + 1:
 	  usage ();
 	  check_stdout ();
 	  exit (0);
@@ -299,9 +313,9 @@ main (argc, argv)
 	      tag_strings[tag_count++] = optarg;
 	      break;
 	    }
-	  try_help ("too many file label options");
+	  try_help ("too many file label options", 0);
 	default:
-	  try_help (0);
+	  try_help (0, 0);
 	}
     }
 
@@ -312,10 +326,15 @@ main (argc, argv)
   if (incompat > 1  /* Ensure at most one of -AeExX3.  */
       || finalwrite & merge /* -i -m would rewrite input file.  */
       || (tag_count && ! flagging)) /* -L requires one of -AEX.  */
-    try_help ("incompatible options");
+    try_help ("incompatible options", 0);
 
   if (argc - optind != 3)
-    try_help (argc - optind < 3 ? "missing operand" : "extra operand");
+    {
+      if (argc - optind < 3)
+	try_help ("missing operand after `%s'", argv[argc - 1]);
+      else
+	try_help ("extra operand `%s'", argv[optind + 3]);
+    }
 
   file = &argv[optind];
 
@@ -404,12 +423,14 @@ main (argc, argv)
 }
 
 static void
-try_help (reason_msgid)
+try_help (reason_msgid, operand)
      char const *reason_msgid;
+     char const *operand;
 {
   if (reason_msgid)
-    error (0, 0, "%s", gettext (reason_msgid));
-  error (2, 0, gettext ("Try `%s --help' for more information."), program_name);
+    error (0, 0, _(reason_msgid), operand);
+  error (2, 0, _("Try `%s --help' for more information."), program_name);
+  abort ();
 }
 
 static void
@@ -426,7 +447,7 @@ static char const * const option_help_msgid[] = {
   "-A  --show-all  Output all changes, bracketing conflicts.",
   "-x  --overlap-only  Output overlapping changes.",
   "-X  Output overlapping changes, bracketing them.",
-  "-3  --easy-only  Output unmerged nonoverlapping changes."
+  "-3  --easy-only  Output unmerged nonoverlapping changes.",
   "",
   "-m  --merge  Output merged file instead of ed script (default -A).",
   "-L LABEL  --label=LABEL  Use LABEL instead of file name.",
@@ -445,14 +466,15 @@ usage ()
 {
   char const * const *p;
 
-  printf (gettext ("Usage: %s [OPTION]... MYFILE OLDFILE YOURFILE\n"),
+  printf (_("Usage: %s [OPTION]... MYFILE OLDFILE YOURFILE\n"),
 	  program_name);
+  printf (_("If a FILE is `-', read standard input.\n"));
   for (p = option_help_msgid;  *p;  p++)
     if (**p)
-      printf ("  %s\n", gettext (*p));
+      printf ("  %s\n", _(*p));
     else
       putchar ('\n');
-  printf (gettext ("If a FILE is `-', read standard input.\n"));
+  printf (_("Report bugs to <bug-gnu-utils@prep.ai.mit.edu>.\n"));
 }
 
 /*
@@ -596,11 +618,6 @@ make_3way_diff (thread0, thread1)
       high_water_thread = base_water_thread;
 
       high_water_diff = current[high_water_thread];
-
-#if 0
-      /* low and high waters start off same diff */
-      base_water_mark = D_LOWLINE (high_water_diff, FC);
-#endif
 
       high_water_mark = D_HIGHLINE (high_water_diff, FC);
 
@@ -940,8 +957,6 @@ compare_line_list (list1, lengths1, list2, lengths2, nl)
  * Routines to input and parse two way diffs.
  */
 
-extern char **environ;
-
 static struct diff_block *
 process_diff (filea, fileb, last_block)
      char const *filea, *fileb;
@@ -968,7 +983,7 @@ process_diff (filea, fileb, last_block)
       dt = process_diff_control (&scan_diff, bptr);
       if (dt == ERROR || *scan_diff != '\n')
 	{
-	  fprintf (stderr, gettext ("%s: diff failed: "), program_name);
+	  fprintf (stderr, _("%s: diff failed: "), program_name);
 	  do
 	    {
 	      putc (*scan_diff, stderr);
@@ -1082,7 +1097,7 @@ process_diff_control (string, db)
 
   /* Read first set of digits */
   SKIPWHITE (s);
-  READNUM (s, db->ranges[0][START]);
+  READNUM (s, db->ranges[0][RANGE_START]);
 
   /* Was that the only digit? */
   SKIPWHITE (s);
@@ -1090,10 +1105,10 @@ process_diff_control (string, db)
     {
       /* Get the next digit */
       s++;
-      READNUM (s, db->ranges[0][END]);
+      READNUM (s, db->ranges[0][RANGE_END]);
     }
   else
-    db->ranges[0][END] = db->ranges[0][START];
+    db->ranges[0][RANGE_END] = db->ranges[0][RANGE_START];
 
   /* Get the letter */
   SKIPWHITE (s);
@@ -1115,7 +1130,7 @@ process_diff_control (string, db)
 
   /* Read second set of digits */
   SKIPWHITE (s);
-  READNUM (s, db->ranges[1][START]);
+  READNUM (s, db->ranges[1][RANGE_START]);
 
   /* Was that the only digit? */
   SKIPWHITE (s);
@@ -1123,11 +1138,11 @@ process_diff_control (string, db)
     {
       /* Get the next digit */
       s++;
-      READNUM (s, db->ranges[1][END]);
+      READNUM (s, db->ranges[1][RANGE_END]);
       SKIPWHITE (s);		/* To move to end */
     }
   else
-    db->ranges[1][END] = db->ranges[1][START];
+    db->ranges[1][RANGE_END] = db->ranges[1][RANGE_START];
 
   *string = s;
   return type;
@@ -1149,9 +1164,10 @@ read_diff (filea, fileb, output_placement)
 
 #if HAVE_FORK
 
-  char const *argv[7];
+  char const *argv[8];
   char horizon_arg[17 + INT_STRLEN_BOUND (int)];
   char const **ap;
+  char const *not_found = _(": not found\n");
   int fds[2];
   pid_t pid;
 
@@ -1161,6 +1177,7 @@ read_diff (filea, fileb, output_placement)
     *ap++ = "-a";
   sprintf (horizon_arg, "--horizon-lines=%d", horizon_lines);
   *ap++ = horizon_arg;
+  *ap++ = "--inhibit-hunk-merge";
   *ap++ = "--";
   *ap++ = filea;
   *ap++ = fileb;
@@ -1179,10 +1196,11 @@ read_diff (filea, fileb, output_placement)
 	  dup2 (fds[1], STDOUT_FILENO);
 	  close (fds[1]);
 	}
-      execve (diff_program, (char **) argv, environ);
-      /* Avoid stdio, because the parent process's buffers are inherited.  */
+      execvp (diff_program, (char **) argv);
+      /* Avoid stdio, because the parent process's buffers are inherited.
+         Similarly, avoid gettext since it may modify the parent buffers.  */
       write (STDERR_FILENO, diff_program, strlen (diff_program));
-      write (STDERR_FILENO, ": not found\n", 12);
+      write (STDERR_FILENO, not_found, strlen (not_found));
       _exit (2);
     }
 
@@ -1195,17 +1213,17 @@ read_diff (filea, fileb, output_placement)
 #else /* ! HAVE_FORK */
 
   FILE *fpipe;
-  char *command = xmalloc (sizeof (diff_program) - 1 + 20
+  char *command = xmalloc (quote_system_arg ((char *) 0, diff_program) + 20
 			   + INT_STRLEN_BOUND (int) + 4
-			   + system_quote_arg ((char *) 0, filea) + 1
-			   + system_quote_arg ((char *) 0, fileb) + 1);
-  char *p;
-  sprintf (command, "%s -a --horizon-lines=%d -- ",
-	   diff_program, horizon_lines);
-  p = command + strlen (command);
-  p += system_quote_arg (p, filea);
+			   + quote_system_arg ((char *) 0, filea) + 1
+			   + quote_system_arg ((char *) 0, fileb) + 1);
+  char *p = command;
+  p += quote_system_arg (p, diff_program);
+  sprintf (p, " -a --horizon-lines=%d -- ", horizon_lines);
+  p += strlen (p);
+  p += quote_system_arg (p, filea);
   *p++ = ' ';
-  p += system_quote_arg (p, fileb);
+  p += quote_system_arg (p, fileb);
   *p = '\0';
   fpipe = popen (command, "r");
   if (!fpipe)
@@ -1233,7 +1251,7 @@ read_diff (filea, fileb, output_placement)
 	else if (current_chunk_size < (size_t) -1)
 	  current_chunk_size = (size_t) -1;
 	else
-	  fatal ("memory exhausted");
+	  fatal ("Memory exhausted");
 	diff_result = xrealloc (diff_result, (current_chunk_size *= 2));
       }
   } while (bytes);
@@ -1401,7 +1419,7 @@ output_diff3 (outputfile, diff, mapping, rev_mapping)
 	      while (++line < hight - lowt + 1);
 	      if (cp[length - 1] != '\n')
 		fprintf (outputfile, "\n\\ %s\n",
-			 gettext ("No newline at end of file"));
+			 _("No newline at end of file"));
 	    }
 	}
     }
@@ -1450,10 +1468,12 @@ undotlines (outputfile, leading_dot, start, num)
 {
   fprintf (outputfile, ".\n");
   if (leading_dot)
-    if (num == 1)
-      fprintf (outputfile, "%ds/^\\.//\n", start);
-    else
-      fprintf (outputfile, "%d,%ds/^\\.//\n", start, start + num - 1);
+    {
+      if (num == 1)
+	fprintf (outputfile, "%ds/^\\.//\n", start);
+      else
+	fprintf (outputfile, "%d,%ds/^\\.//\n", start, start + num - 1);
+    }
 }
 
 /*
@@ -1648,10 +1668,12 @@ output_diff3_merge (infile, outputfile, diff, mapping, rev_mapping,
 	  {
 	    c = getc (infile);
 	    if (c == EOF)
-	      if (ferror (infile))
-		perror_with_exit (gettext ("read failed"));
-	      else if (feof (infile))
-		fatal ("input file shrank");
+	      {
+		if (ferror (infile))
+		  perror_with_exit (_("read failed"));
+		else if (feof (infile))
+		  fatal ("input file shrank");
+	      }
 	    putc (c, outputfile);
 	  }
 	while (c != '\n');
@@ -1701,14 +1723,16 @@ output_diff3_merge (infile, outputfile, diff, mapping, rev_mapping,
       while (0 <= --i)
 	while ((c = getc (infile)) != '\n')
 	  if (c == EOF)
-	    if (ferror (infile))
-	      perror_with_exit (gettext ("read failed"));
-	    else if (feof (infile))
-	      {
-		if (i || b->next)
-		  fatal ("input file shrank");
-		return conflicts_found;
-	      }
+	    {
+	      if (ferror (infile))
+		perror_with_exit (_("read failed"));
+	      else if (feof (infile))
+		{
+		  if (i || b->next)
+		    fatal ("input file shrank");
+		  return conflicts_found;
+		}
+	    }
     }
   /* Copy rest of common file.  */
   while ((c = getc (infile)) != EOF || !(ferror (infile) | feof (infile)))
@@ -1743,7 +1767,7 @@ myread (fd, ptr, size)
 {
   size_t result = read (fd, ptr, size);
   if (result == -1)
-    perror_with_exit (gettext ("read failed"));
+    perror_with_exit (_("read failed"));
   return result;
 }
 
@@ -1751,7 +1775,8 @@ static void
 fatal (msgid)
      char const *msgid;
 {
-  error (2, 0, "%s", gettext (msgid));
+  error (2, 0, "%s", _(msgid));
+  abort ();
 }
 
 static void
@@ -1759,4 +1784,5 @@ perror_with_exit (string)
      char const *string;
 {
   error (2, errno, "%s", string);
+  abort ();
 }
