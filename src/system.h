@@ -51,16 +51,16 @@ the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 #ifndef S_ISREG
 #define S_ISREG(mode) (((mode) & S_IFMT) == S_IFREG)
 #endif
-#if !defined(S_ISBLK) && defined(S_IFBLK)
+#if !defined (S_ISBLK) && defined (S_IFBLK)
 #define S_ISBLK(mode) (((mode) & S_IFMT) == S_IFBLK)
 #endif
-#if !defined(S_ISCHR) && defined(S_IFCHR)
+#if !defined (S_ISCHR) && defined (S_IFCHR)
 #define S_ISCHR(mode) (((mode) & S_IFMT) == S_IFCHR)
 #endif
-#if !defined(S_ISFIFO) && defined(S_IFFIFO)
+#if !defined (S_ISFIFO) && defined (S_IFFIFO)
 #define S_ISFIFO(mode) (((mode) & S_IFMT) == S_IFFIFO)
 #endif
-#if !defined(S_ISSOCK) && defined(S_IFSOCK)
+#if !defined (S_ISSOCK) && defined (S_IFSOCK)
 #define S_ISSOCK(mode) (((mode) & S_IFMT) == S_IFSOCK)
 #endif
 
@@ -127,7 +127,7 @@ the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 
 #if HAVE_DIRENT_H
 # include <dirent.h>
-# define NAMLEN(dirent) strlen((dirent)->d_name)
+# define NAMLEN(dirent) strlen ((dirent)->d_name)
 #else
 # define dirent direct
 # define NAMLEN(dirent) ((dirent)->d_namlen)
@@ -148,9 +148,6 @@ the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 
 #if HAVE_STDLIB_H
 #include <stdlib.h>
-#else
-VOID *malloc ();
-VOID *realloc ();
 #endif
 #ifndef getenv
 char *getenv ();
@@ -204,6 +201,10 @@ void *memchr ();
 
 #ifndef ISDIGIT
 #define ISDIGIT(c) ((unsigned) (c) - '0' <= 9)
+#endif
+
+#ifndef _tolower
+#define _tolower(c) tolower (c)
 #endif
 
 #include <errno.h>
