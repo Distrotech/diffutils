@@ -1,28 +1,30 @@
-* new diff options
+User-visible changes in test version 2.7.3:
+
+* cmp's old -c or --print-chars option has been renamed;
+  use -b or --print-bytes instead.
+* Recursive diffs now sort file names according to the LC_COLLATE locale
+  category, instead of using native byte comparison.
+* diff uses ISO 8601 format for output times (e.g. "2001-11-23
+  16:44:36.875702460 -0800") unless in the C or POSIX LC_TIME locale.
+* diff's -I and -F options use the regexp syntax of grep, not of Emacs.
+* New diff options:
   --from-file=FILE, --to-file=FILE
+  --ignore-file-name-case
+* New diff and sdiff options:
+  -E  --ignore-tab-expansion
+  --strip-trailing-cr
+* Diff printf specs can now use the 0 and ' flags.
+* New environment variables:
+  DIFF_OPTIONS specifies default options for diff.
+  DIFF_PROGRAM tells diff3 and sdiff which `diff' program to use.
 * The new sdiff interactive command `ed' precedes each version with a header.
-* The `DIFF' environment variable tells diff3 and sdiff which `diff' program
-  to use.
+* On 64-bit hosts, files larger than 2 GB can be compared.
 
-User-visible changes in version 2.7.1 alpha:
+Other user-visible changes since version 2.7:
 
-* Internationalization support is being added.
+* Some internationalization support has been added.
   Some diagnostics have been reworded slightly for consistency.
   Also, `diff -D FOO' now outputs `/* ! FOO */' instead of `/* not FOO */'.
-
-  This area is still under construction.
-  The current draft uses the Uniforum proposal message interface.
-  The following work needs to be done:
-
-  - Integration with glocale.
-      We plan to add a Uniforum-style interface to glocale,
-      at least enough to support `gettext', `<libintl.h>',
-      and perhaps *.po files.
-  - Internationalization support for library files like regex.c.
-      The tricky part here is modularizing the message files.
-  - Message localization.
-      See the file `messages.po' for the messages now used by diffutils.
-      These must be translated for each language locale.
 
 * diffutils can now run on some PC configurations.
   See the `pc' subdirectory.  This is still under construction.
