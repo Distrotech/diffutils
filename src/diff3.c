@@ -197,7 +197,7 @@ static char *scan_diff_line ();
 
 static struct diff3_block *reverse_diff3_blocklist ();
 
-static VOID *xmalloc ();
+VOID *xmalloc ();
 static VOID *xrealloc ();
 
 static char diff_program[] = DIFF_PROGRAM;
@@ -1638,7 +1638,7 @@ myread (fd, ptr, size)
   return result;
 }
 
-static VOID *
+VOID *
 xmalloc (size)
      unsigned size;
 {
