@@ -244,12 +244,12 @@ main (int argc, char **argv)
   char const *diff;
   struct stat statb;
 
+  xalloc_exit_failure = 2;
   initialize_main (&argc, &argv);
   program_name = argv[0];
   setlocale (LC_ALL, "");
   bindtextdomain (PACKAGE, LOCALEDIR);
   textdomain (PACKAGE);
-  xalloc_exit_failure = 2;
   if ((diff = getenv ("DIFF_PROGRAM")))
     diff_program = diff;
 
