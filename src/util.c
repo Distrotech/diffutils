@@ -738,7 +738,8 @@ char *
 dir_file_pathname (dir, file)
      char const *dir, *file;
 {
-  return concat (dir, "/" + (*dir && dir[strlen (dir) - 1] == '/'), file);
+  char const *p = filename_lastdirchar (dir);
+  return concat (dir, "/" + (p && !p[1]), file);
 }
 
 void
