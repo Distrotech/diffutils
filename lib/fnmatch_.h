@@ -1,4 +1,5 @@
-/* Copyright (C) 1991,92,93,96,97,98,99,2001 Free Software Foundation, Inc.
+/* Copyright (C) 1991, 1992, 1993, 1996, 1997, 1998, 1999, 2001, 2002
+   Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -34,12 +35,8 @@ extern "C" {
    non-ANSI C where `const' is problematical.  */
 #endif /* C++ or ANSI C.  */
 
-#ifndef const
-# if (defined __STDC__ && __STDC__) || defined __cplusplus
-#  define __const	const
-# else
-#  define __const
-# endif
+#ifndef __const
+# define __const const
 #endif
 
 /* We #undef these before defining them because some losing systems
