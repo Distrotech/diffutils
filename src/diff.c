@@ -1,7 +1,7 @@
 /* diff - compare files line by line
 
-   Copyright (C) 1988, 1989, 1992, 1993, 1994, 1996, 1998, 2001, 2002
-   Free Software Foundation, Inc.
+   Copyright (C) 1988, 1989, 1992, 1993, 1994, 1996, 1998, 2001, 2002,
+   2004 Free Software Foundation, Inc.
 
    This file is part of GNU DIFF.
 
@@ -27,6 +27,7 @@
 #include <dirname.h>
 #include <error.h>
 #include <exclude.h>
+#include <exit.h>
 #include <exitfail.h>
 #include <file-type.h>
 #include <fnmatch.h>
@@ -35,14 +36,9 @@
 #include <posixver.h>
 #include <prepargs.h>
 #include <quotesys.h>
-#include <regex.h>
 #include <setmode.h>
 #include <version-etc.h>
 #include <xalloc.h>
-
-static char const authorship_msgid[] =
-  N_("Written by Paul Eggert, Mike Haertel, David Hayes,\n\
-Richard Stallman, and Len Tower.");
 
 #ifndef GUTTER_WIDTH_MINIMUM
 # define GUTTER_WIDTH_MINIMUM 3
@@ -80,6 +76,8 @@ static struct regexp_list ignore_regexp_list;
 /* Use binary I/O when reading and writing data (--binary).
    On POSIX hosts, this has no effect.  */
 static bool binary;
+#else
+enum { binary = true };
 #endif
 
 /* When comparing directories, if a file appears only in one
@@ -234,7 +232,7 @@ static struct option const longopts[] =
   {"starting-file", 1, 0, 'S'},
   {"strip-trailing-cr", 0, 0, STRIP_TRAILING_CR_OPTION},
   {"suppress-common-lines", 0, 0, SUPPRESS_COMMON_LINES_OPTION},
-  {"tabsize", 0, 0, TABSIZE_OPTION},
+  {"tabsize", 1, 0, TABSIZE_OPTION},
   {"text", 0, 0, 'a'},
   {"to-file", 1, 0, TO_FILE_OPTION},
   {"unchanged-group-format", 1, 0, UNCHANGED_GROUP_FORMAT_OPTION},
@@ -254,9 +252,9 @@ main (int argc, char **argv)
   int i;
   int prev = -1;
   lin ocontext = -1;
-  bool explicit_context = 0;
+  bool explicit_context = false;
   size_t width = 0;
-  bool show_c_function = 0;
+  bool show_c_function = false;
   char const *from_file = 0;
   char const *to_file = 0;
   uintmax_t numval;
@@ -269,7 +267,7 @@ main (int argc, char **argv)
   setlocale (LC_ALL, "");
   bindtextdomain (PACKAGE, LOCALEDIR);
   textdomain (PACKAGE);
-  c_stack_action (argv, 0);
+  c_stack_action (0);
   function_regexp_list.buf = &function_regexp;
   ignore_regexp_list.buf = &ignore_regexp;
   re_set_syntax (RE_SYNTAX_GREP | RE_NO_POSIX_BACKTRACKING);
@@ -302,7 +300,7 @@ main (int argc, char **argv)
 	  break;
 
 	case 'a':
-	  text = 1;
+	  text = true;
 	  break;
 
 	case 'b':
@@ -311,11 +309,11 @@ main (int argc, char **argv)
 	  break;
 
 	case 'B':
-	  ignore_blank_lines = 1;
+	  ignore_blank_lines = true;
 	  break;
 
-	case 'C':		/* +context[=lines] */
-	case 'U':		/* +unified[=lines] */
+	case 'C':
+	case 'U':
 	  {
 	    if (optarg)
 	      {
@@ -331,7 +329,7 @@ main (int argc, char **argv)
 	    specify_style (c == 'U' ? OUTPUT_UNIFIED : OUTPUT_CONTEXT);
 	    if (context < numval)
 	      context = numval;
-	    explicit_context = 1;
+	    explicit_context = true;
 	  }
 	  break;
 
@@ -342,7 +340,7 @@ main (int argc, char **argv)
 	  break;
 
 	case 'd':
-	  minimal = 1;
+	  minimal = true;
 	  break;
 
 	case 'D':
@@ -391,11 +389,11 @@ main (int argc, char **argv)
 	  break;
 
 	case 'H':
-	  speed_large_files = 1;
+	  speed_large_files = true;
 	  break;
 
 	case 'i':
-	  ignore_case = 1;
+	  ignore_case = true;
 	  break;
 
 	case 'I':
@@ -405,7 +403,7 @@ main (int argc, char **argv)
 	case 'l':
 	  if (!pr_program[0])
 	    try_help ("pagination not supported on this host", 0);
-	  paginate = 1;
+	  paginate = true;
 #ifdef SIGCHLD
 	  /* Pagination requires forking and waiting, and
 	     System V fork+wait does not work if SIGCHLD is ignored.  */
@@ -427,28 +425,28 @@ main (int argc, char **argv)
 	  break;
 
 	case 'N':
-	  new_file = 1;
+	  new_file = true;
 	  break;
 
 	case 'p':
-	  show_c_function = 1;
+	  show_c_function = true;
 	  add_regexp (&function_regexp_list, "^[[:alpha:]$_]");
 	  break;
 
 	case 'P':
-	  unidirectional_new_file = 1;
+	  unidirectional_new_file = true;
 	  break;
 
 	case 'q':
-	  brief = 1;
+	  brief = true;
 	  break;
 
 	case 'r':
-	  recursive = 1;
+	  recursive = true;
 	  break;
 
 	case 's':
-	  report_identical_files = 1;
+	  report_identical_files = true;
 	  break;
 
 	case 'S':
@@ -456,11 +454,11 @@ main (int argc, char **argv)
 	  break;
 
 	case 't':
-	  expand_tabs = 1;
+	  expand_tabs = true;
 	  break;
 
 	case 'T':
-	  initial_tab = 1;
+	  initial_tab = true;
 	  break;
 
 	case 'u':
@@ -470,7 +468,9 @@ main (int argc, char **argv)
 	  break;
 
 	case 'v':
-	  version_etc ("diff", authorship_msgid);
+	  version_etc (stdout, "diff", PACKAGE_NAME, PACKAGE_VERSION,
+		       "Paul Eggert", "Mike Haertel", "David Hayes",
+		       "Richard Stallman", "Len Tower", (char *) 0);
 	  check_stdout ();
 	  return EXIT_SUCCESS;
 
@@ -506,8 +506,8 @@ main (int argc, char **argv)
 
 	case BINARY_OPTION:
 #if HAVE_SETMODE_DOS
-	  binary = 1;
-	  set_binary_mode (STDOUT_FILENO, 1);
+	  binary = true;
+	  set_binary_mode (STDOUT_FILENO, true);
 #endif
 	  break;
 
@@ -528,7 +528,7 @@ main (int argc, char **argv)
 	  break;
 
 	case IGNORE_FILE_NAME_CASE_OPTION:
-	  ignore_file_name_case = 1;
+	  ignore_file_name_case = true;
 	  break;
 
 	case INHIBIT_HUNK_MERGE_OPTION:
@@ -537,7 +537,7 @@ main (int argc, char **argv)
 	  break;
 
 	case LEFT_COLUMN_OPTION:
-	  left_column = 1;
+	  left_column = true;
 	  break;
 
 	case LINE_FORMAT_OPTION:
@@ -547,7 +547,7 @@ main (int argc, char **argv)
 	  break;
 
 	case NO_IGNORE_FILE_NAME_CASE_OPTION:
-	  ignore_file_name_case = 0;
+	  ignore_file_name_case = false;
 	  break;
 
 	case NORMAL_OPTION:
@@ -556,15 +556,15 @@ main (int argc, char **argv)
 
 	case SDIFF_MERGE_ASSIST_OPTION:
 	  specify_style (OUTPUT_SDIFF);
-	  sdiff_merge_assist = 1;
+	  sdiff_merge_assist = true;
 	  break;
 
 	case STRIP_TRAILING_CR_OPTION:
-	  strip_trailing_cr = 1;
+	  strip_trailing_cr = true;
 	  break;
 
 	case SUPPRESS_COMMON_LINES_OPTION:
-	  suppress_common_lines = 1;
+	  suppress_common_lines = true;
 	  break;
 
 	case TABSIZE_OPTION:
@@ -619,7 +619,13 @@ main (int argc, char **argv)
     }
 
   if (output_style != OUTPUT_CONTEXT || hard_locale (LC_TIME))
-    time_format = "%Y-%m-%d %H:%M:%S.%N %z";
+    {
+#ifdef ST_MTIM_NSEC
+      time_format = "%Y-%m-%d %H:%M:%S.%N %z";
+#else
+      time_format = "%Y-%m-%d %H:%M:%S %z";
+#endif
+    }
   else
     {
       /* See POSIX 1003.1-2001 for this format.  */
@@ -639,9 +645,9 @@ main (int argc, char **argv)
 	    {
 	      error (0, 0,
 		     _("`-%ld' option is obsolete; use `-%c %ld'"),
-		     (long) ocontext,
+		     (long int) ocontext,
 		     output_style == OUTPUT_CONTEXT ? 'C' : 'U',
-		     (long) ocontext);
+		     (long int) ocontext);
 	      try_help (0, 0);
 	    }
 	  context = ocontext;
@@ -651,7 +657,7 @@ main (int argc, char **argv)
 	  if (modern_usage)
 	    {
 	      error (0, 0, _("`-%ld' option is obsolete; omit it"),
-		     (long) ocontext);
+		     (long int) ocontext);
 	      try_help (0, 0);
 	    }
 	}
@@ -714,7 +720,7 @@ main (int argc, char **argv)
      : (output_style != OUTPUT_SDIFF) | suppress_common_lines);
 
   files_can_be_treated_as_binary =
-    (brief
+    (brief & binary
      & ~ (ignore_blank_lines | ignore_case | strip_trailing_cr
 	  | (ignore_regexp_list.regexps || ignore_white_space)));
 
@@ -925,6 +931,7 @@ static char const * const option_help_msgid[] = {
   N_("FILES are `FILE1 FILE2' or `DIR1 DIR2' or `DIR FILE...' or `FILE... DIR'."),
   N_("If --from-file or --to-file is given, there are no restrictions on FILES."),
   N_("If a FILE is `-', read standard input."),
+  N_("Exit status is 0 if inputs are the same, 1 if different, 2 if trouble."),
   "",
   N_("Report bugs to <bug-gnu-utils@gnu.org>."),
   0
@@ -997,7 +1004,7 @@ set_mtime_to_now (struct stat *st)
 # if HAVE_GETTIMEOFDAY
   {
     struct timeval timeval;
-    if (gettimeofday (&timeval, NULL) == 0)
+    if (gettimeofday (&timeval, 0) == 0)
       {
 	st->st_mtime = timeval.tv_sec;
 	st->st_mtim.ST_MTIM_NSEC = timeval.tv_usec * 1000;
@@ -1123,24 +1130,28 @@ compare_files (struct comparison const *parent,
 	}
     }
 
-  /* Mark files as nonexistent at the top level as needed for -N and
-     --unidirectional-new-file.  */
-  if (! parent)
-    {
-      if ((new_file | unidirectional_new_file)
-	  && cmp.file[0].desc == ERRNO_ENCODE (ENOENT)
-	  && cmp.file[1].desc == UNOPENED)
-	cmp.file[0].desc = NONEXISTENT;
-
-      if (new_file
-	  && cmp.file[0].desc == UNOPENED
-	  && cmp.file[1].desc == ERRNO_ENCODE (ENOENT))
-	cmp.file[1].desc = NONEXISTENT;
-    }
+  /* Mark files as nonexistent as needed for -N and -P, if they are
+     inaccessible empty regular files (the kind of files that 'patch'
+     creates to indicate nonexistent backups), or if they are
+     top-level files that do not exist but their counterparts do
+     exist.  */
+  for (f = 0; f < 2; f++)
+    if ((new_file || (f == 0 && unidirectional_new_file))
+	&& (cmp.file[f].desc == UNOPENED
+	    ? (S_ISREG (cmp.file[f].stat.st_mode)
+	       && ! (cmp.file[f].stat.st_mode & (S_IRWXU | S_IRWXG | S_IRWXO))
+	       && cmp.file[f].stat.st_size == 0)
+	    : (cmp.file[f].desc == ERRNO_ENCODE (ENOENT)
+	       && ! parent
+	       && cmp.file[1 - f].desc == UNOPENED)))
+      cmp.file[f].desc = NONEXISTENT;
 
   for (f = 0; f < 2; f++)
     if (cmp.file[f].desc == NONEXISTENT)
-      cmp.file[f].stat.st_mode = cmp.file[1 - f].stat.st_mode;
+      {
+	memset (&cmp.file[f].stat, 0, sizeof cmp.file[f].stat);
+	cmp.file[f].stat.st_mode = cmp.file[1 - f].stat.st_mode;
+      }
 
   for (f = 0; f < 2; f++)
     {
@@ -1178,6 +1189,11 @@ compare_files (struct comparison const *parent,
   if (status != EXIT_SUCCESS)
     {
       /* One of the files should exist but does not.  */
+    }
+  else if (cmp.file[0].desc == NONEXISTENT
+	   && cmp.file[1].desc == NONEXISTENT)
+    {
+      /* Neither file "exists", so there's nothing to compare.  */
     }
   else if ((same_files
 	    = (cmp.file[0].desc != NONEXISTENT
@@ -1250,11 +1266,9 @@ compare_files (struct comparison const *parent,
 	}
     }
   else if (files_can_be_treated_as_binary
-	   && cmp.file[0].stat.st_size != cmp.file[1].stat.st_size
-	   && (cmp.file[0].desc == NONEXISTENT
-	       || S_ISREG (cmp.file[0].stat.st_mode))
-	   && (cmp.file[1].desc == NONEXISTENT
-	       || S_ISREG (cmp.file[1].stat.st_mode)))
+	   && S_ISREG (cmp.file[0].stat.st_mode)
+	   && S_ISREG (cmp.file[1].stat.st_mode)
+	   && cmp.file[0].stat.st_size != cmp.file[1].stat.st_size)
     {
       message ("Files %s and %s differ\n",
 	       file_label[0] ? file_label[0] : cmp.file[0].name,
@@ -1289,7 +1303,7 @@ compare_files (struct comparison const *parent,
       if (binary)
 	for (f = 0; f < 2; f++)
 	  if (0 <= cmp.file[f].desc)
-	    set_binary_mode (cmp.file[f].desc, 1);
+	    set_binary_mode (cmp.file[f].desc, true);
 #endif
 
       /* Compare the files, if no error was found.  */
