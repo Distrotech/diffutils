@@ -1,7 +1,7 @@
 /* System dependent declarations.
 
-   Copyright (C) 1988, 1989, 1992, 1993, 1994, 1995, 1998, 2001, 2002
-   Free Software Foundation, Inc.
+   Copyright (C) 1988, 1989, 1992, 1993, 1994, 1995, 1998, 2001, 2002,
+   2004 Free Software Foundation, Inc.
 
    This file is part of GNU DIFF.
 
@@ -61,14 +61,14 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#ifndef S_IXUSR
-# define S_IXUSR 0100
+#ifndef S_IRWXU
+# define S_IRWXU 0700
 #endif
-#ifndef S_IXGRP
-# define S_IXGRP 0010
+#ifndef S_IRWXG
+# define S_IRWXG 0070
 #endif
-#ifndef S_IXOTH
-# define S_IXOTH 0001
+#ifndef S_IRWXO
+# define S_IRWXO 0007
 #endif
 
 #if HAVE_UNISTD_H
@@ -92,11 +92,7 @@
 # define STDERR_FILENO 2
 #endif
 
-#if HAVE_TIME_H
-# include <time.h>
-#else
-# include <sys/time.h>
-#endif
+#include <time.h>
 
 #if HAVE_FCNTL_H
 # include <fcntl.h>
@@ -158,26 +154,10 @@
 # endif
 #endif
 
-#if HAVE_STDLIB_H
-# include <stdlib.h>
-#else
-# ifndef getenv
-   char *getenv ();
-# endif
-#endif
-#ifndef EXIT_SUCCESS
-# define EXIT_SUCCESS 0
-#endif
-#if !EXIT_FAILURE
-# undef EXIT_FAILURE /* Sony NEWS-OS 4.0C defines EXIT_FAILURE to 0.  */
-# define EXIT_FAILURE 1
-#endif
+#include <stdlib.h>
 #define EXIT_TROUBLE 2
 
 #include <limits.h>
-#ifndef SSIZE_MAX
-# define SSIZE_MAX TYPE_MAXIMUM (ssize_t)
-#endif
 
 #if HAVE_INTTYPES_H
 # include <inttypes.h>
@@ -197,19 +177,16 @@ uintmax_t strtoumax (char const *, char **, int);
 
 #include <stddef.h>
 
-#if STDC_HEADERS || HAVE_STRING_H
-# include <string.h>
-#else
-# if !HAVE_STRCHR
-#  define strchr index
-#  define strrchr rindex
+#include <string.h>
+#if ! HAVE_STRCASECOLL
+# if HAVE_STRICOLL || defined stricoll
+#  define strcasecoll(a, b) stricoll (a, b)
+# else
+#  define strcasecoll(a, b) strcasecmp (a, b) /* best we can do */
 # endif
-char *strchr (), *strrchr ();
-# if !HAVE_MEMCHR
-#  define memcmp(s1, s2, n) bcmp (s1, s2, n)
-#  define memcpy(d, s, n) bcopy (s, d, n)
-void *memchr ();
-# endif
+#endif
+#if ! (HAVE_STRCASECMP || defined strcasecmp)
+int strcasecmp (char const *, char const *);
 #endif
 
 #if HAVE_LOCALE_H
@@ -225,25 +202,6 @@ void *memchr ();
 
 #include <ctype.h>
 
-/* CTYPE_DOMAIN (C) is nonzero if the unsigned char C can safely be given
-   as an argument to <ctype.h> macros like `isspace'.  */
-#if STDC_HEADERS
-# define CTYPE_DOMAIN(c) 1
-#else
-# define CTYPE_DOMAIN(c) ((unsigned int) (c) <= 0177)
-#endif
-#define ISPRINT(c) (CTYPE_DOMAIN (c) && isprint (c))
-#define ISSPACE(c) (CTYPE_DOMAIN (c) && isspace (c))
-
-#if STDC_HEADERS
-# define TOLOWER(c) tolower (c)
-#else
-# ifndef _tolower
-#  define _tolower(c) tolower (c)
-# endif
-# define TOLOWER(c) (CTYPE_DOMAIN (c) && isupper (c) ? _tolower (c) : (c))
-#endif
-
 /* ISDIGIT differs from isdigit, as follows:
    - Its arg may be any int or unsigned int; it need not be an unsigned char.
    - It's guaranteed to evaluate its argument exactly once.
@@ -254,9 +212,6 @@ void *memchr ();
 #define ISDIGIT(c) ((unsigned int) (c) - '0' <= 9)
 
 #include <errno.h>
-#if !STDC_HEADERS
- extern int errno;
-#endif
 
 #include <signal.h>
 #ifndef SA_RESTART
@@ -275,11 +230,7 @@ void *memchr ();
 #define MIN(a, b) ((a) <= (b) ? (a) : (b))
 #define MAX(a, b) ((a) >= (b) ? (a) : (b))
 
-#if HAVE_STDBOOL_H
-# include <stdbool.h>
-#else
-# define bool unsigned char
-#endif
+#include <stdbool.h>
 
 #if HAVE_VFORK_H
 # include <vfork.h>
@@ -302,7 +253,7 @@ typedef ptrdiff_t lin;
 #define LIN_MAX PTRDIFF_MAX
 verify (lin_is_signed, TYPE_SIGNED (lin));
 verify (lin_is_wide_enough, sizeof (ptrdiff_t) <= sizeof (lin));
-verify (lin_is_printable_as_long, sizeof (lin) <= sizeof (long));
+verify (lin_is_printable_as_long_int, sizeof (lin) <= sizeof (long int));
 
 /* This section contains POSIX-compliant defaults for macros
    that are meant to be overridden by hand in config.h as needed.  */
