@@ -37,7 +37,7 @@ the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 #define DEFAULT_EDITOR_PROGRAM "ed"
 #endif
 
-extern char version_string[];
+extern char const version_string[];
 char *program_name;
 
 static char const *diffbin = DIFF_PROGRAM;
@@ -131,40 +131,52 @@ static struct option const longopts[] =
 };
 
 static void
-try_help (reason)
-     char const *reason;
+try_help (reason_msgid)
+     char const *reason_msgid;
 {
-  if (reason)
-    error (0, 0, "%s", reason);
-  error (2, 0, "Try `%s --help' for more information.", program_name);
+  if (reason_msgid)
+    error (0, 0, "%s", gettext (reason_msgid));
+  error (2, 0, gettext ("Try `%s --help' for more information."), program_name);
 }
+
+static char const * const option_help_msgid[] = {
+  "",
+  "-o FILE  --output=FILE  Operate interactively, sending output to FILE.",
+  "",
+  "-i  --ignore-case  Consider upper- and lower-case to be the same.",
+  "-W  --ignore-all-space  Ignore all white space.",
+  "-b  --ignore-space-change  Ignore changes in the amount of white space.",
+  "-B  --ignore-blank-lines  Ignore changes whose lines are all blank.",
+  "-I RE  --ignore-matching-lines=RE  Ignore changes whose lines all match RE.",
+  "-a  --text  Treat all files as text.",
+  "",
+  "-w NUM  --width=NUM  Output at most NUM (default 130) characters per line.",
+  "-l  --left-column  Output only the left column of common lines.",
+  "-s  --suppress-common-lines  Do not output common lines.",
+  "",
+  "-t  --expand-tabs  Expand tabs to spaces in output.",
+  "",
+  "-d  --minimal  Try hard to find a smaller set of changes.",
+  "-H  --speed-large-files  Assume large files and many scattered small changes.",
+  "",
+  "-v  --version  Output version info.",
+  "--help  Output this help.",
+  "",
+  0
+};
 
 static void
 usage ()
 {
-  printf ("Usage: %s [OPTIONS]... FILE1 FILE2\n\n", program_name);
-  printf ("%s", "\
-  -o FILE  --output=FILE  Operate interactively, sending output to FILE.\n\n");
-  printf ("%s", "\
-  -i  --ignore-case  Consider upper- and lower-case to be the same.\n\
-  -W  --ignore-all-space  Ignore all white space.\n\
-  -b  --ignore-space-change  Ignore changes in the amount of white space.\n\
-  -B  --ignore-blank-lines  Ignore changes whose lines are all blank.\n\
-  -I RE  --ignore-matching-lines=RE  Ignore changes whose lines all match RE.\n\
-  -a  --text  Treat all files as text.\n\n");
-  printf ("%s", "\
-  -w NUM  --width=NUM  Output at most NUM (default 130) characters per line.\n\
-  -l  --left-column  Output only the left column of common lines.\n\
-  -s  --suppress-common-lines  Do not output common lines.\n\n");
-  printf ("\
-  -t  --expand-tabs  Expand tabs to spaces in output.\n\n");
-  printf ("%s", "\
-  -d  --minimal  Try hard to find a smaller set of changes.\n\
-  -H  --speed-large-files  Assume large files and many scattered small changes.\n\n");
- printf ("%s", "\
-  -v  --version  Output version info.\n\
-  --help  Output this help.\n\n\
-If FILE1 or FILE2 is `-', read standard input.\n");
+  char const * const *p;
+
+  printf (gettext ("Usage: %s [OPTION]... FILE1 FILE2\n"), program_name);
+  for (p = option_help_msgid;  *p;  p++)
+    if (**p)
+      printf ("  %s\n", gettext (*p));
+    else
+      putchar ('\n');
+  printf (gettext ("If a FILE is `-', read standard input.\n"));
 }
 
 static void
@@ -188,10 +200,10 @@ exiterr ()
 }
 
 static void
-fatal (msg)
-     char const *msg;
+fatal (msgid)
+     char const *msgid;
 {
-  error (0, 0, "%s", msg);
+  error (0, 0, "%s", gettext (msgid));
   exiterr ();
 }
 
@@ -220,7 +232,7 @@ ck_fclose (f)
      FILE *f;
 {
   if (fclose (f))
-    perror_fatal ("input/output error");
+    perror_fatal ("fclose");
 }
 
 static size_t
@@ -231,7 +243,7 @@ ck_fread (buf, size, f)
 {
   size_t r = fread (buf, sizeof (char), size, f);
   if (r == 0 && ferror (f))
-    perror_fatal ("input error");
+    perror_fatal (gettext ("read failed"));
   return r;
 }
 
@@ -242,7 +254,7 @@ ck_fwrite (buf, size, f)
      FILE *f;
 {
   if (fwrite (buf, sizeof (char), size, f) != size)
-    perror_fatal ("output error");
+    perror_fatal (gettext ("write failed"));
 }
 
 static void
@@ -250,7 +262,7 @@ ck_fflush (f)
      FILE *f;
 {
   if (fflush (f) != 0)
-    perror_fatal ("output error");
+    perror_fatal (gettext ("write failed"));
 }
 
 static char const *
@@ -402,6 +414,7 @@ main (argc, argv)
   char *differ;
 
   initialize_main (&argc, &argv);
+  setlocale (LC_ALL, "");
   program_name = argv[0];
   xmalloc_exit_failure = 2;
 
@@ -466,7 +479,7 @@ main (argc, argv)
 	  break;
 
 	case 'v':
-	  printf ("sdiff - GNU diffutils version %s\n", version_string);
+	  printf ("sdiff - %s\n", version_string);
 	  exit (0);
 
 	case 'w':
@@ -481,7 +494,7 @@ main (argc, argv)
 	case 129:
 	  usage ();
 	  if (ferror (stdout) || fclose (stdout) != 0)
-	    fatal ("write error");
+	    fatal ("write failed");
 	  exit (0);
 
 	default:
@@ -559,7 +572,7 @@ main (argc, argv)
 
 	diffpid = vfork ();
 	if (diffpid < 0)
-	  perror_fatal ("fork failed");
+	  perror_fatal ("fork");
 	if (!diffpid)
 	  {
 	    signal (SIGINT, SIG_IGN);  /* in case user interrupts editor */
@@ -603,7 +616,7 @@ main (argc, argv)
 	  if (errno == EINTR)
 	    checksigs ();
 	  else
-	    perror_fatal ("wait failed");
+	    perror_fatal ("waitpid");
 	diffpid = 0;
 #endif
 
@@ -617,7 +630,7 @@ main (argc, argv)
 	  exiterr ();
 
 	if (! (WIFEXITED (wstatus) && WEXITSTATUS (wstatus) < 2))
-	  fatal ("Subsidiary diff failed");
+	  fatal ("subsidiary program failed");
 
 	untrapsig (0);
 	checksigs ();
@@ -721,9 +734,8 @@ trapsigs ()
   for (i = 0;  i < NUM_SIGS;  i++)
     {
       sigaction (sigs[i], 0, &initial_action[i]);
-      if (initial_handler (i) != SIG_IGN
-	  && sigaction (sigs[i], &catchaction, 0) != 0)
-	fatal ("signal error");
+      if (initial_handler (i) != SIG_IGN)
+	sigaction (sigs[i], &catchaction, 0);
     }
 #else /* ! HAVE_SIGACTION */
   for (i = 0;  i < NUM_SIGS;  i++)
@@ -781,19 +793,26 @@ checksigs ()
 }
 
 
+static char const * const help_msgid[] = {
+  "l:\tuse the left version",
+  "r:\tuse the right version",
+  "e l:\tedit then use the left version",
+  "e r:\tedit then use the right version",
+  "e b:\tedit then use the left and right versions concatenated",
+  "e:\tedit a new version",
+  "s:\tsilently include common lines",
+  "v:\tverbosely include common lines",
+  "q:\tquit",
+  0
+};
 
 static void
 give_help ()
 {
-  fprintf (stderr,"l:\tuse the left version\n");
-  fprintf (stderr,"r:\tuse the right version\n");
-  fprintf (stderr,"e l:\tedit then use the left version\n");
-  fprintf (stderr,"e r:\tedit then use the right version\n");
-  fprintf (stderr,"e b:\tedit then use the left and right versions concatenated\n");
-  fprintf (stderr,"e:\tedit a new version\n");
-  fprintf (stderr,"s:\tsilently include common lines\n");
-  fprintf (stderr,"v:\tverbosely include common lines\n");
-  fprintf (stderr,"q:\tquit\n");
+  char const * const *p;
+
+  for (p = help_msgid;  *p;  p++)
+    fprintf (stderr, "%s\n", gettext (*p));
 }
 
 static int
@@ -808,7 +827,7 @@ skip_white ()
       checksigs ();
     }
   if (ferror (stdin))
-    perror_fatal ("input error");
+    perror_fatal (gettext ("read failed"));
   return c;
 }
 
@@ -819,7 +838,7 @@ flush_line ()
   while ((c = getchar ()) != '\n' && c != EOF)
     ;
   if (ferror (stdin))
-    perror_fatal ("input error");
+    perror_fatal (gettext ("read failed"));
 }
 
 
@@ -842,7 +861,7 @@ edit (left, lenl, right, lenr, outfile)
       while (!gotcmd)
 	{
 	  if (putchar ('%') != '%')
-	    perror_fatal ("output error");
+	    perror_fatal (gettext ("write failed"));
 	  ck_fflush (stdout);
 
 	  cmd0 = skip_white ();
@@ -918,7 +937,7 @@ edit (left, lenl, right, lenr, outfile)
 	  return 0;
 	case 'e':
 	  if (! tmpname && ! (tmpname = private_tempnam ()))
-	    perror_fatal ("temporary file name");
+	    perror_fatal ("tmpnam");
 
 	  tmpmade = 1;
 
@@ -967,19 +986,19 @@ edit (left, lenl, right, lenr, outfile)
 		}
 
 	      if (pid < 0)
-		perror_fatal ("fork failed");
+		perror_fatal ("fork");
 
 	      while (waitpid (pid, &wstatus, 0) < 0)
 		if (errno == EINTR)
 		  checksigs ();
 		else
-		  perror_fatal ("wait failed");
+		  perror_fatal ("waitpid");
 
 	      ignore_SIGINT = 0;
 #endif /* HAVE_FORK */
 
 	      if (wstatus != 0)
-		fatal ("Subsidiary editor failed");
+		fatal ("subsidiary program failed");
 	    }
 
 	    if (fseek (tmp, 0L, SEEK_SET) != 0)
