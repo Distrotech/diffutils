@@ -22,12 +22,13 @@
 
 #include "system.h"
 
+#include <c-stack.h>
 #include <dirname.h>
 #include <error.h>
+#include <exitfail.h>
 #include <freesoft.h>
 #include <getopt.h>
 #include <quotesys.h>
-#include <signal.h>
 #include <stdio.h>
 #include <xalloc.h>
 
@@ -164,7 +165,8 @@ try_help (char const *reason_msgid, char const *operand)
 {
   if (reason_msgid)
     error (0, 0, _(reason_msgid), operand);
-  error (2, 0, _("Try `%s --help' for more information."), program_name);
+  error (EXIT_TROUBLE, 0, _("Try `%s --help' for more information."),
+	 program_name);
   abort ();
 }
 
@@ -239,7 +241,7 @@ exiterr (void)
   cleanup ();
   untrapsig (0);
   checksigs ();
-  exit (2);
+  exit (EXIT_TROUBLE);
 }
 
 static void
@@ -256,6 +258,27 @@ perror_fatal (char const *msg)
   checksigs ();
   error (0, e, "%s", msg);
   exiterr ();
+}
+
+static void
+ck_editor_status (int errnum, int status)
+{
+  if (errnum | status)
+    {
+      char const *failure_msgid = N_("subsidiary program `%s' failed");
+      if (! errnum && WIFEXITED (status))
+	switch (WEXITSTATUS (status))
+	  {
+	  case 126:
+	    failure_msgid = N_("subsidiary program `%s' not executable");
+	    break;
+	  case 127:
+	    failure_msgid = N_("subsidiary program `%s' not found");
+	    break;
+	  }
+      error (0, errnum, _(failure_msgid), editor_program);
+      exiterr ();
+    }
 }
 
 static FILE *
@@ -426,12 +449,13 @@ main (int argc, char *argv[])
   int opt;
   char const *prog;
 
-  xalloc_exit_failure = 2;
+  exit_failure = EXIT_TROUBLE;
   initialize_main (&argc, &argv);
   program_name = argv[0];
   setlocale (LC_ALL, "");
   bindtextdomain (PACKAGE, LOCALEDIR);
   textdomain (PACKAGE);
+  c_stack_action (c_stack_die);
 
   prog = getenv ("EDITOR");
   if (prog)
@@ -499,7 +523,7 @@ main (int argc, char *argv[])
 		  version_string, copyright_string,
 		  _(free_software_msgid), _(authorship_msgid));
 	  check_stdout ();
-	  exit (0);
+	  return EXIT_SUCCESS;
 
 	case 'w':
 	  diffarg ("-W");
@@ -517,7 +541,7 @@ main (int argc, char *argv[])
 	case HELP_OPTION:
 	  usage ();
 	  check_stdout ();
-	  exit (0);
+	  return EXIT_SUCCESS;
 
 	case STRIP_TRAILING_CR_OPTION:
 	  diffarg ("--strip-trailing-cr");
@@ -640,7 +664,7 @@ main (int argc, char *argv[])
 	      }
 
 	    execvp (diffargv[0], (char **) diffargv);
-	    _exit (127);
+	    _exit (errno == ENOEXEC ? 126 : 127);
 	  }
 
 # if HAVE_WORKING_VFORK
@@ -700,19 +724,13 @@ main (int argc, char *argv[])
 	if (! interact_ok)
 	  exiterr ();
 
-	if (! werrno && WIFEXITED (wstatus) && WEXITSTATUS (wstatus) == 127)
-	  error (2, 0, _("subsidiary program `%s' not found"),
-		 editor_program);
-	if (werrno || ! (WIFEXITED (wstatus) && WEXITSTATUS (wstatus) < 2))
-	  error (2, werrno, _("subsidiary program `%s' failed"),
-		 editor_program);
-
+	ck_editor_status (werrno, wstatus);
 	untrapsig (0);
 	checksigs ();
 	exit (WEXITSTATUS (wstatus));
       }
     }
-  return 0;			/* Fool `-Wall'.  */
+  return EXIT_SUCCESS;			/* Fool `-Wall'.  */
 }
 
 static void
@@ -722,7 +740,12 @@ diffarg (char const *a)
 
   if (diffargs == diffarglim)
     {
-      diffarglim = diffarglim ? 2 * diffarglim : 16;
+      if (! diffarglim)
+	diffarglim = 16;
+      else if (PTRDIFF_MAX / (2 * sizeof *diffargv) <= diffarglim)
+	xalloc_die ();
+      else
+	diffarglim *= 2;
       diffargv = xrealloc (diffargv, diffarglim * sizeof *diffargv);
     }
   diffargv[diffargs++] = a;
@@ -764,11 +787,7 @@ trapsigs (void)
   int i;
 
 #if HAVE_SIGACTION
-# ifdef SA_INTERRUPT
-  /* Non-POSIX BSD-style systems like SunOS 4.1.x need this
-     so that `read' calls are interrupted properly.  */
-  catchaction.sa_flags = SA_INTERRUPT;
-# endif
+  catchaction.sa_flags = SA_RESTART;
   sigemptyset (&catchaction.sa_mask);
   for (i = 0;  i < NUM_SIGS;  i++)
     sigaddset (&catchaction.sa_mask, sigs[i]);
@@ -785,9 +804,6 @@ trapsigs (void)
 	signal_handler (sigs[i], catchsig);
     }
 
-#if !defined SIGCHLD && defined SIGCLD
-# define SIGCHLD SIGCLD
-#endif
 #ifdef SIGCHLD
   /* System V fork+wait does not work if SIGCHLD is ignored.  */
   signal (SIGCHLD, SIG_DFL);
@@ -826,7 +842,7 @@ checksigs (void)
       kill (getpid (), s);
 
       /* That didn't work, so exit with error status.  */
-      exit (2);
+      exit (EXIT_TROUBLE);
     }
 }
 
@@ -1056,7 +1072,7 @@ edit (struct line_filter *left, char const *lname, lin lline, lin llen,
 		    argv[i] = 0;
 
 		    execvp (editor_program, (char **) argv);
-		    _exit (127);
+		    _exit (errno == ENOEXEC ? 126 : 127);
 		  }
 
 		if (pid < 0)
@@ -1071,14 +1087,7 @@ edit (struct line_filter *left, char const *lname, lin lline, lin llen,
 	      }
 
 	      ignore_SIGINT = 0;
-
-	      if (! werrno && WIFEXITED (wstatus)
-		  && WEXITSTATUS (wstatus) == 127)
-		error (2, 0, _("subsidiary program `%s' not found"),
-		       editor_program);
-	      if (wstatus != 0)
-		error (2, werrno, _("subsidiary program `%s' failed"),
-		       editor_program);
+	      ck_editor_status (werrno, wstatus);
 	    }
 
 	    {
