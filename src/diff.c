@@ -896,6 +896,7 @@ static char const * const option_help_msgid[] = {
   N_("--from-file=FILE1  Compare FILE1 to all operands.  FILE1 can be a directory."),
   N_("--to-file=FILE2  Compare all operands to FILE2.  FILE2 can be a directory."),
   "",
+  N_("--horizon-lines=NUM  Keep NUM lines of the common prefix and suffix."),
   N_("-d  --minimal  Try hard to find a smaller set of changes."),
   N_("--speed-large-files  Assume large files and many scattered small changes."),
   "",
