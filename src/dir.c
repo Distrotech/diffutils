@@ -1,7 +1,7 @@
 /* Read, sort and compare two directories.  Used for GNU DIFF.
 
-   Copyright (C) 1988, 1989, 1992, 1993, 1994, 1995, 1998, 2001, 2002
-   Free Software Foundation, Inc.
+   Copyright (C) 1988, 1989, 1992, 1993, 1994, 1995, 1998, 2001, 2002,
+   2004 Free Software Foundation, Inc.
 
    This file is part of GNU DIFF.
 
@@ -24,6 +24,7 @@
 #include <error.h>
 #include <exclude.h>
 #include <setjmp.h>
+#include <strcase.h>
 #include <xalloc.h>
 
 /* Read the directory named by DIR and store into DIRDATA a sorted vector
@@ -38,11 +39,12 @@ struct dirdata
   char *data;	/* Allocated storage for file names.  */
 };
 
-/* Whether file names in directories should be compared with strcoll.  */
+/* Whether file names in directories should be compared with
+   locale-specific sorting.  */
 static bool locale_specific_sorting;
 
-/* Where to go if strcoll fails.  */
-static jmp_buf failed_strcoll;
+/* Where to go if locale-specific sorting fails.  */
+static jmp_buf failed_locale_specific_sorting;
 
 static bool dir_loop (struct comparison const *, int);
 static int compare_names_for_qsort (void const *, void const *);
@@ -76,7 +78,7 @@ dir_read (struct file_data const *dir, struct dirdata *dirdata)
       /* Open the directory and check for errors.  */
       register DIR *reading = opendir (dir->name);
       if (!reading)
-	return 0;
+	return false;
 
       /* Initialize the table of filenames.  */
 
@@ -116,13 +118,13 @@ dir_read (struct file_data const *dir, struct dirdata *dirdata)
 	  int e = errno;
 	  closedir (reading);
 	  errno = e;
-	  return 0;
+	  return false;
 	}
 #if CLOSEDIR_VOID
       closedir (reading);
 #else
       if (closedir (reading) != 0)
-	return 0;
+	return false;
 #endif
     }
 
@@ -137,7 +139,7 @@ dir_read (struct file_data const *dir, struct dirdata *dirdata)
       data += strlen (data) + 1;
     }
   names[nnames] = 0;
-  return 1;
+  return true;
 }
 
 /* Compare file names, returning a value compatible with strcmp.  */
@@ -145,29 +147,26 @@ dir_read (struct file_data const *dir, struct dirdata *dirdata)
 static int
 compare_names (char const *name1, char const *name2)
 {
-  if (ignore_file_name_case)
-    {
-      int r = strcasecmp (name1, name2);
-      if (r)
-	return r;
-    }
-
   if (locale_specific_sorting)
     {
       int r;
       errno = 0;
-      r = strcoll (name1, name2);
+      if (ignore_file_name_case)
+	r = strcasecoll (name1, name2);
+      else
+	r = strcoll (name1, name2);
       if (errno)
 	{
 	  error (0, errno, _("cannot compare file names `%s' and `%s'"),
 		 name1, name2);
-	  longjmp (failed_strcoll, 1);
+	  longjmp (failed_locale_specific_sorting, 1);
 	}
-      if (r)
-	return r;
+      return r;
     }
 
-  return file_name_cmp (name1, name2);
+  return (ignore_file_name_case
+	  ? strcasecmp (name1, name2)
+	  : file_name_cmp (name1, name2));
 }
 
 /* A wrapper for compare_names suitable as an argument for qsort.  */
@@ -229,9 +228,9 @@ diff_dirs (struct comparison const *cmp,
       names[1] = dirdata[1].names;
 
       /* Use locale-specific sorting if possible, else native byte order.  */
-      locale_specific_sorting = 1;
-      if (setjmp (failed_strcoll))
-	locale_specific_sorting = 0;
+      locale_specific_sorting = true;
+      if (setjmp (failed_locale_specific_sorting))
+	locale_specific_sorting = false;
 
       /* Sort the directories.  */
       for (i = 0; i < 2; i++)
@@ -284,6 +283,6 @@ dir_loop (struct comparison const *cmp, int i)
   struct comparison const *p = cmp;
   while ((p = p->parent))
     if (0 < same_file (&p->file[i].stat, &cmp->file[i].stat))
-      return 1;
-  return 0;
+      return true;
+  return false;
 }
