@@ -1,7 +1,7 @@
 /* Three way file comparison program (diff3) for Project GNU.  */
 
 static char const copyright_string[] =
-  "Copyright 1988, 89, 92, 93, 94, 95, 96, 1997 Free Software Foundation, Inc.";
+  "Copyright 1988, 89, 92, 93, 94, 95, 96, 1998 Free Software Foundation, Inc.";
 
 /* This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -24,7 +24,7 @@ static char const authorship_msgid[] = "Written by Randy Smith.";
 #include <stdio.h>
 #include <signal.h>
 #include "getopt.h"
-#include "quotearg.h"
+#include "quotesys.h"
 
 extern char const free_software_msgid[];
 extern char const version_string[];
@@ -474,7 +474,7 @@ usage ()
       printf ("  %s\n", _(*p));
     else
       putchar ('\n');
-  printf (_("Report bugs to <bug-gnu-utils@prep.ai.mit.edu>.\n"));
+  printf (_("Report bugs to <bug-gnu-utils@gnu.org>.\n"));
 }
 
 /*
