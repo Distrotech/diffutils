@@ -17,19 +17,7 @@ You should have received a copy of the GNU General Public License
 along with GNU DIFF; see the file COPYING.  If not, write to
 the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 
-#include <stdio.h>
 #include <string.h>
-
-void
-initialize_main (int *pargc, char ***pargv)
-{
-  _response (pargc, pargv);
-  _wildcard (pargc, pargv);
-
-  _emxload_env ("RCSLOAD");
-
-  setvbuf (stdout, NULL, _IOFBF, BUFSIZ);
-}
 
 char *
 filename_lastdirchar (char const *filename)
