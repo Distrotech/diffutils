@@ -1833,7 +1833,10 @@ differences; however, the output will still be correct.
 Normally @command{diff} discards the prefix and suffix that is common to
 both files before it attempts to find a minimal set of differences.
 This makes @command{diff} run faster, but occasionally it may produce
-non-minimal output.
+non-minimal output.  The @option{--horizon-lines=@var{lines}} option
+prevents @command{diff} from discarding the last @var{lines} lines of the
+prefix and the first @var{lines} lines of the suffix.  This gives
+@command{diff} further opportunities to find a minimal output.
 
 Suppose a run of changed lines includes a sequence of lines at one end
 and there is an identical sequence of lines just outside the other end.
@@ -3041,6 +3044,11 @@ Compare @var{file} to each operand; @var{file} may be a directory.
 
 @item --help
 Output a summary of usage and then exit.
+
+@item --horizon-lines=@var{lines}
+Do not discard the last @var{lines} lines of the common prefix
+and the first @var{lines} lines of the common suffix.
+@xref{diff Performance}.
 
 @item -i
 @itemx --ignore-case
