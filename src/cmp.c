@@ -14,24 +14,17 @@
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  */
+
+/* Written by Torbjorn Granlund and David MacKenzie. */
 
-/* Differences from the Unix cmp:
-   * 6 - 40 - oo times faster.
-   * The file name `-' is always the standard input. If one file name
-     is omitted, the standard input is used as well.
-   * -c option to print the differing characters like `cat -t'
-     (except that newlines are printed as `^J'), with or without -l.
-
-   Written by Torbjorn Granlund and David MacKenzie. */
-
 #include <stdio.h>
 #include "system.h"
 #include "getopt.h"
 
 char *xmalloc ();
-int bcmp_cnt ();
-int bcmp2 ();
-int bread ();
+int block_compare ();
+int block_compare_and_count ();
+int block_read ();
 int cmp ();
 void printc ();
 void error ();
@@ -254,10 +247,10 @@ cmp ()
 
   do
     {
-      read1 = bread (file1_desc, buf1, buf_size);
+      read1 = block_read (file1_desc, buf1, buf_size);
       if (read1 < 0)
 	error (2, errno, "%s", file1);
-      read2 = bread (file2_desc, buf2, buf_size);
+      read2 = block_read (file2_desc, buf2, buf_size);
       if (read2 < 0)
 	error (2, errno, "%s", file2);
 
@@ -273,12 +266,12 @@ cmp ()
 	  /* If the line number should be written for differing files,
 	     compare the blocks and count the number of newlines
 	     simultaneously.  */
-	  first_diff = bcmp_cnt (&cnt, buf1, buf2, '\n');
+	  first_diff = block_compare_and_count (&cnt, buf1, buf2, '\n');
 	  line_number += cnt;
 	}
       else
 	{
-	  first_diff = bcmp2 (buf1, buf2);
+	  first_diff = block_compare (buf1, buf2);
 	}
 
       if (comparison_type != type_all_diffs)
@@ -371,11 +364,12 @@ cmp ()
    Assumes that P1 and P2 are aligned at long addresses!
    If the blocks are not guaranteed to be different, put sentinels at the ends
    of the blocks before calling this function.
+
    Return the offset of the first byte that differs.
    Place the count at the address pointed to by COUNT.  */
 
 int
-bcmp_cnt (count, p1, p2, c)
+block_compare_and_count (count, p1, p2, c)
      int *count;
      char *p1, *p2;
      unsigned char c;
@@ -433,10 +427,11 @@ bcmp_cnt (count, p1, p2, c)
    Assumes that P1 and P2 are aligned at long addresses!
    If the blocks are not guaranteed to be different, put sentinels at the ends
    of the blocks before calling this function.
+
    Return the offset of the first byte that differs.  */
 
 int
-bcmp2 (p1, p2)
+block_compare (p1, p2)
      char *p1, *p2;
 {
   long *i1, *i2;
@@ -460,7 +455,7 @@ bcmp2 (p1, p2)
    Return the number of characters successfully read.  */
 
 int
-bread (fd, buf, nchars)
+block_read (fd, buf, nchars)
      int fd;
      char *buf;
      int nchars;
