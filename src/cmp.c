@@ -467,13 +467,27 @@ cmp (void)
 		char const *line_num = offtostr (line_number, line_buf);
 		if (!opt_print_bytes)
 		  {
-		    /* See POSIX 1003.1-2001 for this format.
-		       The POSIX rationale recommends using the word "byte"
-		       outside the POSIX locale, so the message with "char"
+		    /* See POSIX 1003.1-2001 for this format.  This
+		       message is used only in the POSIX locale, so it
 		       need not be translated.  */
-		    printf ((hard_locale_LC_MESSAGES
-			     ? _("%s %s differ: byte %s, line %s\n")
-			     : "%s %s differ: char %s, line %s\n"),
+		    static char const char_message[] =
+		      "%s %s differ: char %s, line %s\n";
+
+		    /* The POSIX rationale recommends using the word
+		       "byte" outside the POSIX locale.  Some gettext
+		       implementations translate even in the POSIX
+		       locale if certain other environment variables
+		       are set, so use "byte" if a translation is
+		       available, or if outside the POSIX locale.  */
+		    static char const byte_msgid[] =
+		      N_("%s %s differ: byte %s, line %s\n");
+		    char const *byte_message = _(byte_msgid);
+		    bool use_translation = (byte_message != byte_msgid
+					    || hard_locale_LC_MESSAGES);
+
+		    printf (use_translation
+			    ? byte_message
+			    : "%s %s differ: char %s, line %s\n"),
 			    file[0], file[1], byte_num, line_num);
 		  }
 		else
