@@ -3,9 +3,9 @@ MS_DOS and MS-Windows using the DJGPP tools.
 
 To build Diffutils, you will need the following packages:
 
-    . the basic DJGPP development kit: GCC, Binutils, and djdevNNN.zip;
-    . a DJGPP port of Bash (bsh204b.zip or later);
-    . GNU Fileutils (fil40b.zip);
+    . the basic DJGPP development kit: GCC, Binutils, and djdevNNN.zip
+    . a DJGPP port of Bash (bsh204b.zip)
+    . GNU Fileutils (fil40b.zip)
     . GNU Textutils (txt20b.zip)
     . GNU Sh-utils (shl112b.zip)
     . GNU Grep (grep24b.zip)
@@ -24,7 +24,7 @@ library, and without NLS support.  If that is what you have installed,
 and if you don't need NLS support in Diffutils, you don't need to run
 the configure script; proceed directly to the "make" step below.
 
-If you are building the oficial GNU distribution, or your library is
+If you are building the official GNU distribution, or your library is
 not the latest official release, or if you modified your headers or
 installed optional libraries, or if you want to have NLS support in
 Diffutils, you will have to reconfigure the package.  To this end,

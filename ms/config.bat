@@ -124,8 +124,8 @@ if not "%CONFIG_SITE%" == "%XSRC%/ms/config.site" goto small_env
 Rem Make sure crucial file names are not munged by unpacking
 test -f %XSRC%/po/Makefile.in.in
 if not errorlevel 1 mv -f %XSRC%/po/Makefile.in.in %XSRC%/po/Makefile.in-in
-test -f %XSRC%/po/Makefile.am.in
-if not errorlevel 1 mv -f %XSRC%/po/Makefile.am.in %XSRC%/po/Makefile.am-in
+test -f %XSRC%/m4/Makefile.am.in
+if not errorlevel 1 mv -f %XSRC%/m4/Makefile.am.in %XSRC%/m4/Makefile.am-in
 
 Rem This is required because DOS/Windows are case-insensitive
 Rem to file names, and "make install" will do nothing if Make
@@ -134,8 +134,8 @@ if exist INSTALL ren INSTALL INSTALL.txt
 
 Rem Set HOME to a sane default so configure stops complaining.
 if not "%HOME%" == "" goto HostName
-set HOME=%XSRC%/djgpp
-if not "%HOME%" == "%XSRC%/djgpp" goto small_env
+set HOME=%XSRC%/ms
+if not "%HOME%" == "%XSRC%/ms" goto small_env
 echo No HOME found in the environment, using default value
 
 :HostName
@@ -244,7 +244,7 @@ if not errorlevel 1 goto no_ren1
 test -f %XSRC%/install-sh
 if not errorlevel 1 mv -f %XSRC%/install-sh %XSRC%/install-sh.sh
 :no_ren1
-if "%HOME%" == "%XSRC%/djgpp" set HOME=
+if "%HOME%" == "%XSRC%/ms" set HOME=
 set ARGS=
 set CONFIG_SITE=
 set HOSTNAME=
