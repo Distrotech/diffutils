@@ -1,7 +1,7 @@
 /* File I/O for GNU DIFF.
 
-   Copyright (C) 1988, 1989, 1992, 1993, 1994, 1995, 1998, 2001 Free
-   Software Foundation, Inc.
+   Copyright (C) 1988, 1989, 1992, 1993, 1994, 1995, 1998, 2001, 2002
+   Free Software Foundation, Inc.
 
    This file is part of GNU DIFF.
 
@@ -79,7 +79,7 @@ file_block_read (struct file_data *current, size_t size)
     {
       size_t s = block_read (current->desc,
 			     FILE_BUFFER (current) + current->buffered, size);
-      if (s == (size_t) -1)
+      if (s == SIZE_MAX)
 	pfatal_with_name (current->name);
       current->buffered += s;
       current->eof = s < size;
