@@ -1,5 +1,5 @@
 /* Shared definitions for GNU DIFF
-   Copyright 1988, 89, 91, 92, 93, 94, 95, 1997 Free Software Foundation, Inc.
+   Copyright 1988, 89, 91, 92, 93, 94, 95, 1998 Free Software Foundation, Inc.
 
    This file is part of GNU DIFF.
 
