@@ -64,9 +64,7 @@ enum output_style {
 
 /* True for output styles that are robust,
    i.e. can handle a file that ends in a non-newline.  */
-#define ROBUST_OUTPUT_STYLE(S) \
- ((S) == OUTPUT_NORMAL || (S) == OUTPUT_CONTEXT || (S) == OUTPUT_UNIFIED \
-  || (S) == OUTPUT_RCS || (S) == OUTPUT_SDIFF)
+#define ROBUST_OUTPUT_STYLE(S) ((S) != OUTPUT_ED && (S) != OUTPUT_FORWARD_ED)
 
 EXTERN enum output_style output_style;
 
@@ -147,15 +145,22 @@ EXTERN int	unidirectional_new_file_flag;
 /* Pipe each file's output through pr (-l).  */
 EXTERN int	paginate_flag;
 
-/* Formats to use for --ifdef (-D).  */
-EXTERN const char *common_format;
-EXTERN const char *ifndef_format, *ifdef_format, *ifnelse_format;
+enum line_class {
+  /* Lines taken from just the first file.  */
+  OLD,
+  /* Lines taken from just the second file.  */
+  NEW,
+  /* Lines common to both files.  */
+  UNCHANGED,
+  /* A hunk containing both old and new lines (line groups only).  */
+  CHANGED
+};
 
-/* Line formats for file 0 lines, file 1 lines, and common lines.  */
-EXTERN const char *line_format[3];
+/* Line group formats for old, new, unchanged, and changed groups.  */
+EXTERN const char *group_format[CHANGED + 1];
 
-/* Line format if user doesn't specify.  */
-extern const char default_line_format[];
+/* Line formats for old, new, and unchanged lines.  */
+EXTERN const char *line_format[UNCHANGED + 1];
 
 /* If using OUTPUT_SDIFF print extra information to help the sdiff filter. */
 EXTERN int sdiff_help_sdiff;  
