@@ -32,8 +32,8 @@ s|\$(REGEX):|regex.o:|g
 	s|\*\$o|*.o|g
 }
 
+s|^\(DEFAULT_DIFF_PROGRAM *=\).*|\1 diff|
 s|^\(DEFAULT_EDITOR_PROGRAM *=\).*|\1 edit|
-s|^\(DIFF_PROGRAM *=\).*|\1 diff|
 s|^\(NULL_DEVICE *=\).*|\1 nul|
 s|^\(PR_PROGRAM *=\).*|\1 pr|
 /^SHELL *=/{
@@ -55,10 +55,12 @@ s|^	rm -f *\(.*\)|	$(SUBSHELL) for %%f in (\1) do del %%f|g
 s|`echo ||g
 s/ | \$[(]edit_program_name.*//g
 /test  *-f/d
-s|	.*/mkinstalldirs *\(.*\)|	$(SUBSHELL) for %%d in (\1) do md %%d|g
-s|^	$(INSTALL_DATA)|	$(SUBSHELL) $(INSTALL_DATA)|
+s|	.*/mkinstalldirs *\(.*\)|	$(SUBSHELL) for %%d in ($(exec_prefix) $(prefix) \1) do md %%d|g
+s|^	\$(INSTALL_DATA)|	$(SUBSHELL) $(INSTALL_DATA)|
+s|\(\$(INSTALL[^)]*) %%.\)\( \$([^)]*)\)/%%.|\1.exe\2|g
 s|\.info|.inf|g
 s|rm -f|del|g
+s|\$(bindir).%%.|&.exe|
 
 s|^clean:|& pc-clean|
 s|^config.h:|#&|
