@@ -27,7 +27,12 @@ AC_DEFUN([jm_FUNC_REALLOC],
 	 dnl When crosscompiling, assume realloc(0,0) returns NULL.
 	 jm_cv_func_working_realloc=no)
   ])
-  if test $jm_cv_func_working_realloc = no; then
+  if test $jm_cv_func_working_realloc = yes; then
+    AC_DEFINE([HAVE_REALLOC], 1,
+	      [Define to 1 if your system has a working `realloc' function,
+	       and to 0 otherwise.])
+  else
+    AC_DEFINE([HAVE_REALLOC], 0)
     AC_LIBOBJ(realloc)
     AC_DEFINE(realloc, rpl_realloc,
       [Define to rpl_realloc if the replacement function should be used.])
