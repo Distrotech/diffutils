@@ -16,4 +16,6 @@
    is used by other (old-fashioned) programs that need re_comp.  */
 #define _REGEX_RE_COMP
 
+#define same_file(s,t) (-1)
+
 #define STAT_BLOCKSIZE(s) 65536
