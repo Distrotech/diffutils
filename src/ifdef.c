@@ -1,5 +1,5 @@
 /* #ifdef-format output routines for GNU DIFF.
-   Copyright 1989, 1991, 1992, 1993, 1994 Free Software Foundation, Inc.
+   Copyright (C) 1989, 1991, 1992, 1993, 1994 Free Software Foundation, Inc.
 
 This file is part of GNU DIFF.
 
@@ -336,7 +336,7 @@ print_ifdef_lines (out, format, group)
 		        case 'n':
 			  value = translate_line_number (file, from);
 			  break;
-			
+
 			default:
 			  goto bad_format;
 		      }

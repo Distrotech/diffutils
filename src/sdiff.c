@@ -1,5 +1,5 @@
 /* SDIFF -- interactive merge front end to diff
-   Copyright 1992, 1993, 1994 Free Software Foundation, Inc.
+   Copyright (C) 1992, 1993, 1994 Free Software Foundation, Inc.
 
 This file is part of GNU DIFF.
 
@@ -525,7 +525,7 @@ main (argc, argv)
       ;
       right = ck_fopen (expand_name (argv[optind + 1], rightdir, argv[optind]), "r");
       out = ck_fopen (out_file, "w");
-      
+
       diffarg ("--sdiff-merge-assist");
       diffarg ("--");
       diffarg (argv[optind]);

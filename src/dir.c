@@ -1,5 +1,5 @@
 /* Read, sort and compare two directories.  Used for GNU DIFF.
-   Copyright 1988, 1989, 1992, 1993, 1994 Free Software Foundation, Inc.
+   Copyright (C) 1988, 1989, 1992, 1993, 1994 Free Software Foundation, Inc.
 
 This file is part of GNU DIFF.
 
