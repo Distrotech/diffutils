@@ -1,5 +1,7 @@
 /* Three way file comparison program (diff3) for Project GNU.  */
 
+#include "system.h"
+
 static char const copyright_string[] =
   "Copyright 1988, 89, 92, 93, 94, 95, 96, 1998 Free Software Foundation, Inc.";
 
@@ -20,7 +22,6 @@ static char const copyright_string[] =
 
 static char const authorship_msgid[] = "Written by Randy Smith.";
 
-#include "system.h"
 #include <stdio.h>
 #include <signal.h>
 #include "getopt.h"

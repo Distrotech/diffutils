@@ -1,5 +1,7 @@
 /* cmp -- compare two files.  */
 
+#include "system.h"
+
 static char const copyright_string[] =
    "Copyright 1990, 91,92,93,94,95,96, 1998 Free Software Foundation, Inc.";
 
@@ -21,7 +23,6 @@ static char const copyright_string[] =
 static char const authorship_msgid[] =
   "Written by Torbjorn Granlund and David MacKenzie.";
 
-#include "system.h"
 #include <stdio.h>
 #include "getopt.h"
 #include "cmpbuf.h"

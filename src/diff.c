@@ -1,5 +1,8 @@
 /* GNU DIFF main routine.  */
 
+#define GDIFF_MAIN
+#include "diff.h"
+
 static char const copyright_string[] =
   "Copyright 1988, 89, 92, 93, 94, 96, 1998 Free Software Foundation, Inc.";
 
@@ -24,8 +27,6 @@ static char const authorship_msgid[] =
   "Written by Paul Eggert, Mike Haertel, David Hayes,\n\
 Richard Stallman, and Len Tower.";
 
-#define GDIFF_MAIN
-#include "diff.h"
 #include <signal.h>
 #include "getopt.h"
 #include "fnmatch.h"

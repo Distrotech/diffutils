@@ -1,5 +1,7 @@
 /* SDIFF -- interactive merge front end to diff */
 
+#include "system.h"
+
 static char const copyright_string[] =
   "Copyright 1992, 93, 94, 95, 96, 1998 Free Software Foundation, Inc.";
 
@@ -23,7 +25,6 @@ static char const copyright_string[] =
 static char const authorship_msgid[] =
   "Written by Thomas Lord.";
 
-#include "system.h"
 #include <stdio.h>
 #include <signal.h>
 #include "getopt.h"
