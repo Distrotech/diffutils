@@ -69,7 +69,7 @@ following versions were used to generate the intermediate files in
 this distribution:
 
 * Autoconf 2.53   <ftp://ftp.gnu.org/gnu/autoconf/autoconf-2.53.tar.gz>
-* Automake 1.6.1  <ftp://ftp.gnu.org/gnu/automake/automake-1.6.1.tar.gz>
+* Automake 1.6.2  <ftp://ftp.gnu.org/gnu/automake/automake-1.6.2.tar.gz>
 * gettext 0.11.2  <ftp://ftp.gnu.org/gnu/gettext/gettext-0.11.2.tar.gz>
 * help2man 1.28   <ftp://ftp.gnu.org/gnu/help2man/help2man-1.28.tar.gz>
 * Texinfo 4.2     <ftp://ftp.gnu.org/gnu/texinfo/texinfo-4.2.tar.gz>
