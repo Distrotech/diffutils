@@ -1,6 +1,6 @@
 /* #ifdef-format output routines for GNU DIFF.
 
-   Copyright (C) 1989, 1991, 1992, 1993, 1994, 2001, 2002 Free
+   Copyright (C) 1989, 1991, 1992, 1993, 1994, 2001, 2002, 2004 Free
    Software Foundation, Inc.
 
    This file is part of GNU DIFF.
@@ -41,21 +41,23 @@ static void format_ifdef (char const *, lin, lin, lin, lin);
 static void print_ifdef_hunk (struct change *);
 static void print_ifdef_lines (FILE *, char const *, struct group const *);
 
-static lin next_line;
+static lin next_line0;
+static lin next_line1;
 
 /* Print the edit-script SCRIPT as a merged #ifdef file.  */
 
 void
 print_ifdef_script (struct change *script)
 {
-  next_line = - files[0].prefix_lines;
+  next_line0 = next_line1 = - files[0].prefix_lines;
   print_script (script, find_change, print_ifdef_hunk);
-  if (next_line < files[0].valid_lines)
+  if (next_line0 < files[0].valid_lines
+      || next_line1 < files[1].valid_lines)
     {
       begin_output ();
-      format_ifdef (group_format[UNCHANGED], next_line, files[0].valid_lines,
-		    next_line - files[0].valid_lines + files[1].valid_lines,
-		    files[1].valid_lines);
+      format_ifdef (group_format[UNCHANGED],
+		    next_line0, files[0].valid_lines,
+		    next_line1, files[1].valid_lines);
     }
 }
 
@@ -76,13 +78,17 @@ print_ifdef_hunk (struct change *hunk)
   begin_output ();
 
   /* Print lines up to this change.  */
-  if (next_line < first0)
-    format_ifdef (group_format[UNCHANGED], next_line, first0,
-		  next_line - first0 + first1, first1);
+  if (next_line0 < first0 || next_line1 < first1)
+    format_ifdef (group_format[UNCHANGED],
+		  next_line0, first0,
+		  next_line1, first1);
 
   /* Print this change.  */
-  next_line = last0 + 1;
-  format_ifdef (group_format[changes], first0, next_line, first1, last1 + 1);
+  next_line0 = last0 + 1;
+  next_line1 = last1 + 1;
+  format_ifdef (group_format[changes],
+		first0, next_line0,
+		first1, next_line1);
 }
 
 /* Print a set of lines according to FORMAT.
@@ -353,7 +359,7 @@ do_printf_spec (FILE *out, char const *spec,
 	  {
 	    /* For example, if the spec is "%3xn", use the printf
 	       format spec "%3lx".  Here the spec prefix is "%3".  */
-	    long long_value = value;
+	    long int long_value = value;
 	    size_t spec_prefix_len = f - spec - 2;
 #if HAVE_C_VARARRAYS
 	    char format[spec_prefix_len + 3];
