@@ -5,8 +5,8 @@
 AC_INIT(src/diff.c)
 AM_CONFIG_HEADER([config.h:config.hin])
 AC_PREREQ(2.52)
-AM_INIT_AUTOMAKE(diffutils, 2.7.5)
-ALL_LINGUAS="da de en_GB eo es fr gl id pl ru sv tr"
+AM_INIT_AUTOMAKE(diffutils, 2.7.6)
+ALL_LINGUAS="da de en_GB eo es fr gl he id pl ru sv tr"
 
 AC_PROG_AWK
 AC_PROG_CC
