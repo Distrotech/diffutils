@@ -122,7 +122,7 @@ often called a @dfn{diff} or @dfn{patch}.  For files that are identical,
 
 You can use the @command{cmp} command to show the byte and line numbers
 where two files differ.  @command{cmp} can also show all the bytes
-that differ between the two files, side by side.  Another way to compare
+that differ between the two files, side by side.  A way to compare
 two files character by character is the Emacs command @kbd{M-x
 compare-windows}.  @xref{Other Window, , Other Window, emacs, The @sc{gnu}
 Emacs Manual}, for more information on that command.
@@ -706,7 +706,7 @@ zone.  However, a traditional time stamp like @samp{Thu Feb 21
 23:30:39 2002} is used if the @env{LC_TIME} locale category is either
 @samp{C} or @samp{POSIX}.
 
-You can change the header's content with the @option{-L @var{label}} or
+You can change the header's content with the
 @option{--label=@var{label}} option; see @ref{Alternate Names}.
 
 Next come one or more hunks of differences; each hunk shows one area
@@ -852,7 +852,7 @@ like this:
 The time stamp looks like @samp{2002-02-21 23:30:39.942229878 -0800}
 to indicate the date, time with fractional seconds, and time zone.
 
-You can change the header's content with the @option{-L @var{label}} or
+You can change the header's content with the
 @option{--label=@var{label}} option; see @xref{Alternate Names}.
 
 Next come one or more hunks of differences; each hunk shows one area
@@ -985,17 +985,17 @@ The @option{-p} and @option{--show-c-function} options are equivalent to
 
 If you are comparing two files that have meaningless or uninformative
 names, you might want @command{diff} to show alternate names in the header
-of the context and unified output formats.  To do this, use the @option{-L
-@var{label}} or @option{--label=@var{label}} option.  The first time
+of the context and unified output formats.  To do this, use the
+@option{--label=@var{label}} option.  The first time
 you give this option, its argument replaces the name and date of the
 first file in the header; the second time, its argument replaces the
 name and date of the second file.  If you give this option more than
-twice, @command{diff} reports an error.  The @option{-L} option does not
+twice, @command{diff} reports an error.  The @option{--label} option does not
 affect the file names in the @command{pr} header when the @option{-l} or
 @option{--paginate} option is used (@pxref{Pagination}).
 
-Here are the first two lines of the output from @samp{diff -C 2 -L
-original -L modified lao tzu}:
+Here are the first two lines of the output from @samp{diff -C 2
+--label=original --label=modified lao tzu}:
 
 @example
 *** original
@@ -1697,7 +1697,7 @@ option.
 
 If the older directory contains one or more large files that are not in
 the newer directory, you can make the patch smaller by using the
-@option{-P} or @option{--unidirectional-new-file} option instead of @option{-N}.
+@option{--unidirectional-new-file} option instead of @option{-N}.
 This option is like @option{-N} except that it only inserts the contents
 of files that appear in the second directory but not the first (that is,
 files that were added).  At the top of the patch, write instructions for
@@ -1823,7 +1823,7 @@ produces a smaller set of differences.  The @option{-d} or
 behavior.
 
 When the files you are comparing are large and have small groups of
-changes scattered throughout them, you can use the @option{-H} or
+changes scattered throughout them, you can use the
 @option{--speed-large-files} option to make a different modification to
 the algorithm that @command{diff} uses.  If the input files have a constant
 small density of changes, this option speeds up the comparisons without
@@ -1833,10 +1833,7 @@ differences; however, the output will still be correct.
 Normally @command{diff} discards the prefix and suffix that is common to
 both files before it attempts to find a minimal set of differences.
 This makes @command{diff} run faster, but occasionally it may produce
-non-minimal output.  The @option{--horizon-lines=@var{lines}} option
-prevents @command{diff} from discarding the last @var{lines} lines of the
-prefix and the first @var{lines} lines of the suffix.  This gives
-@command{diff} further opportunities to find a minimal output.
+non-minimal output.
 
 Suppose a run of changed lines includes a sequence of lines at one end
 and there is an identical sequence of lines just outside the other end.
@@ -2308,7 +2305,7 @@ The following @command{sdiff} options have the same meaning as for
 
 @example
 -a -b -d -i -t -v
--B -E -H -I @var{regexp}
+-B -E -I @var{regexp}
 
 --ignore-blank-lines  --ignore-case
 --ignore-matching-lines=@var{regexp}  --ignore-space-change
@@ -2736,10 +2733,10 @@ for patch distributions is context or unified format with two lines of
 context, produced by giving @command{diff} the @option{-C 2} or
 @option{-U 2} options.  Do not use less
 than two lines of context, because @command{patch} typically needs at
-least two lines for proper operation.  Give @command{diff} the @option{-P}
-option in case the newer version of the package contains any files that
-the older one does not.  Make sure to specify the scratch directory
-first and the newer directory second.
+least two lines for proper operation.  Give @command{diff} the
+@option{--unidirectional-new-file} option in case the newer version of
+the package contains any files that the older one does not.  Make sure
+to specify the scratch directory first and the newer directory second.
 
 Also, apply @command{diff} to directories whose names have the same number
 of slashes.  This reduces confusion when the user specifies the
@@ -2787,17 +2784,18 @@ Below is a summary of all of the options that @sc{gnu} @command{cmp} accepts.
 Most options have two equivalent names, one of which is a single letter
 preceded by @samp{-}, and the other of which is a long name preceded by
 @samp{--}.  Multiple single letter options (unless they take an
-argument) can be combined into a single command line word: @option{-cl} is
-equivalent to @option{-c -l}.
+argument) can be combined into a single command line word: @option{-bl} is
+equivalent to @option{-b -l}.
 
 @table @option
 @item -b
+@itemx --print-bytes
 Print the differing bytes.  Display control bytes as a
 @samp{^} followed by a letter of the alphabet and precede bytes
 that have the high bit set with @samp{M-} (which stands for ``meta'').
 
-@item --bytes=@var{count}
-Compare at most @var{count} input bytes.
+@item --help
+Output a summary of usage and then exit.
 
 @item -i @var{skip}
 @itemx --ignore-initial=@var{skip}
@@ -2809,30 +2807,22 @@ bytes of the first input file and the first @var{to-skip} bytes of the
 second.
 
 @item -l
-Print the (decimal) indices and (octal) values of all differing bytes.
+@itemx --verbose
+Print the (decimal) byte numbers and (octal) values of all differing bytes.
 
 @item -n @var{count}
+@itemx --bytes=@var{count}
 Compare at most @var{count} input bytes.
 
-@item --print-bytes
-Print the differing bytes.  Display control bytes as a
-@samp{^} followed by a letter of the alphabet and precede bytes
-that have the high bit set with @samp{M-} (which stands for ``meta'').
-
-@item --quiet
-@itemx -s
+@item -s
+@itemx --quiet
 @itemx --silent
 Do not print anything; only return an exit status indicating whether
 the files differ.
 
 @item -v
-Output the version number of @command{cmp}.
-
-@item --verbose
-Print the (decimal) indices and (octal) values of all differing bytes.
-
-@item --version
-Output the version number of @command{cmp}.
+@itemx --version
+Output version information and then exit.
 @end table
 
 In the above table, operands that are byte counts are normally
@@ -2979,25 +2969,25 @@ option takes an optional argument.
 
 @table @option
 @item -a
+@itemx --text
 Treat all files as text and compare them line-by-line, even if they
 do not seem to be text.  @xref{Binary}.
 
 @item -b
+@itemx --ignore-space-change
 Ignore changes in amount of white space.  @xref{White Space}.
 
 @item -B
+@itemx --ignore-blank-lines
 Ignore changes that just insert or delete blank lines.  @xref{Blank
 Lines}.
 
 @item --binary
 Read and write data in binary mode.  @xref{Binary}.
 
-@item --brief
-Report only whether the files differ, not the details of the
-differences.  @xref{Brief}.
-
 @item -c
-Use the context output format.  @xref{Context Format}.
+Use the context output format, showing three lines of context.
+@xref{Context Format}.
 
 @item -C @var{lines}
 @itemx --context@r{[}=@var{lines}@r{]}
@@ -3017,10 +3007,12 @@ Use @var{format} to output a line group containing differing lines from
 both files in if-then-else format.  @xref{Line Group Formats}.
 
 @item -d
+@itemx --minimal
 Change the algorithm perhaps find a smaller set of changes.  This makes
 @command{diff} slower (sometimes much slower).  @xref{diff Performance}.
 
 @item -D @var{name}
+@itemx --ifdef=@var{name}
 Make merged @samp{#ifdef} format output, conditional on the preprocessor
 macro @var{name}.  @xref{If-then-else}.
 
@@ -3029,105 +3021,49 @@ macro @var{name}.  @xref{If-then-else}.
 Make output that is a valid @command{ed} script.  @xref{ed Scripts}.
 
 @item -E
+@itemx --ignore-tab-expansion
 Ignore changes due to tab expansion.
 @xref{White Space}.
 
-@item --exclude=@var{pattern}
-When comparing directories, ignore files and subdirectories whose basenames
-match @var{pattern}.  @xref{Comparing Directories}.
-
-@item --exclude-from=@var{file}
-When comparing directories, ignore files and subdirectories whose basenames
-match any pattern contained in @var{file}.  @xref{Comparing Directories}.
-
-@item --expand-tabs
-Expand tabs to spaces in the output, to preserve the alignment of tabs
-in the input files.  @xref{Tabs}.
-
 @item -f
+@itemx --forward-ed
 Make output that looks vaguely like an @command{ed} script but has changes
 in the order they appear in the file.  @xref{Forward ed}.
 
 @item -F @var{regexp}
+@itemx --show-function-line=@var{regexp}
 In context and unified format, for each hunk of differences, show some
 of the last preceding line that matches @var{regexp}.  @xref{Specified
 Headings}.
 
-@item --forward-ed
-Make output that looks vaguely like an @command{ed} script but has changes
-in the order they appear in the file.  @xref{Forward ed}.
-
 @item --from-file=@var{file}
 Compare @var{file} to each operand; @var{file} may be a directory.
 
-@item -h
-This option currently has no effect; it is present for Unix
-compatibility.
-
-@item -H
-Use heuristics to speed handling of large files that have numerous
-scattered small changes.  @xref{diff Performance}.
-
-@item --horizon-lines=@var{lines}
-Do not discard the last @var{lines} lines of the common prefix
-and the first @var{lines} lines of the common suffix.
-@xref{diff Performance}.
+@item --help
+Output a summary of usage and then exit.
 
 @item -i
+@itemx --ignore-case
 Ignore changes in case; consider upper- and lower-case letters
 equivalent.  @xref{Case Folding}.
 
 @item -I @var{regexp}
+@itemx --ignore-matching-lines=@var{regexp}
 Ignore changes that just insert or delete lines that match @var{regexp}.
 @xref{Specified Folding}.
-
-@item --ifdef=@var{name}
-Make merged if-then-else output using @var{name}.  @xref{If-then-else}.
-
-@item --ignore-all-space
-Ignore white space when comparing lines.  @xref{White Space}.
-
-@item --ignore-blank-lines
-Ignore changes that just insert or delete blank lines.  @xref{Blank
-Lines}.
-
-@item --ignore-case
-Ignore changes in case; consider upper- and lower-case to be the same.
-@xref{Case Folding}.
 
 @item --ignore-file-name-case
 Ignore case when comparing file names during recursive comparison.
 @xref{Comparing Directories}.
 
-@item --ignore-matching-lines=@var{regexp}
-Ignore changes that just insert or delete lines that match @var{regexp}.
-@xref{Specified Folding}.
-
-@item --ignore-space-change
-Ignore changes in amount of white space.
-@xref{White Space}.
-
-@item --ignore-tab-expansion
-Ignore changes due to tab expansion.
-@xref{White Space}.
-
-@item --initial-tab
-Output a tab rather than a space before the text of a line in normal or
-context format.  This causes the alignment of tabs in the line to look
-normal.  @xref{Tabs}.
-
 @item -l
+@itemx --paginate
 Pass the output through @command{pr} to paginate it.  @xref{Pagination}.
-
-@item -L @var{label}
-Use @var{label} instead of the file name in the context format
-(@pxref{Context Format}) and unified format (@pxref{Unified Format})
-headers.  @xref{RCS}.
 
 @item --label=@var{label}
 Use @var{label} instead of the file name in the context format
 (@pxref{Context Format}) and unified format (@pxref{Unified Format})
-headers.
+headers.  @xref{RCS}.
 
 @item --left-column
 Print only the left column of two common lines in side by side format.
@@ -3137,12 +3073,8 @@ Print only the left column of two common lines in side by side format.
 Use @var{format} to output all input lines in if-then-else format.
 @xref{Line Formats}.
 
-@item --minimal
-Change the algorithm to perhaps find a smaller set of changes.  This
-makes @command{diff} slower (sometimes much slower).  @xref{diff
-Performance}.
-
 @item -n
+@itemx --rcs
 Output @sc{rcs}-format diffs; like @option{-f} except that each command
 specifies the number of lines affected.  @xref{RCS}.
 
@@ -3169,65 +3101,31 @@ Use @var{format} to output a line taken from just the first file in
 if-then-else format.  @xref{Line Formats}.
 
 @item -p
+@itemx --show-c-function
 Show which C function each change is in.  @xref{C Function Headings}.
 
-@item -P
-When comparing directories, if a file appears only in the second
-directory of the two, treat it as present but empty in the other.
-@xref{Comparing Directories}.
-
-@item --paginate
-Pass the output through @command{pr} to paginate it.  @xref{Pagination}.
-
 @item -q
+@itemx --brief
 Report only whether the files differ, not the details of the
 differences.  @xref{Brief}.
 
 @item -r
+@itemx --recursive
 When comparing directories, recursively compare any subdirectories
 found.  @xref{Comparing Directories}.
-
-@item --rcs
-Output @sc{rcs}-format diffs; like @option{-f} except that each command
-specifies the number of lines affected.  @xref{RCS}.
-
-@item --recursive
-When comparing directories, recursively compare any subdirectories
-found.  @xref{Comparing Directories}.
-
-@item --report-identical-files
-Report when two files are the same.  @xref{Comparing Directories}.
 
 @item -s
+@itemx --report-identical-files
 Report when two files are the same.  @xref{Comparing Directories}.
 
 @item -S @var{file}
+@itemx --starting-file=@var{file}
 When comparing directories, start with the file @var{file}.  This is
 used for resuming an aborted comparison.  @xref{Comparing Directories}.
-
-@item --sdiff-merge-assist
-Print extra information to help @command{sdiff}.  @command{sdiff} uses this
-option when it runs @command{diff}.  This option is not intended for users
-to use directly.
-
-@item --show-c-function
-Show which C function each change is in.  @xref{C Function Headings}.
-
-@item --show-function-line=@var{regexp}
-In context and unified format, for each hunk of differences, show some
-of the last preceding line that matches @var{regexp}.  @xref{Specified
-Headings}.
-
-@item --side-by-side
-Use the side by side output format.  @xref{Side by Side Format}.
 
 @item --speed-large-files
 Use heuristics to speed handling of large files that have numerous
 scattered small changes.  @xref{diff Performance}.
-
-@item --starting-file=@var{file}
-When comparing directories, start with the file @var{file}.  This is
-used for resuming an aborted comparison.  @xref{Comparing Directories}.
 
 @item --strip-trailing-cr
 Strip any trailing carriage-return at the end of an input line.
@@ -3238,23 +3136,22 @@ Do not print common lines in side by side format.
 @xref{Side by Side Format}.
 
 @item -t
+@itemx --expand-tabs
 Expand tabs to spaces in the output, to preserve the alignment of tabs
 in the input files.  @xref{Tabs}.
 
 @item -T
+@itemx --initial-tab
 Output a tab rather than a space before the text of a line in normal or
 context format.  This causes the alignment of tabs in the line to look
 normal.  @xref{Tabs}.
-
-@item --text
-Treat all files as text and compare them line-by-line, even if they
-do not appear to be text.  @xref{Binary}.
 
 @item --to-file=@var{file}
 Compare each operand to @var{file}; @var{file} may be a directory.
 
 @item -u
-Use the unified output format.  @xref{Unified Format}.
+Use the unified output format, showing three lines of context.
+@xref{Unified Format}.
 
 @item --unchanged-group-format=@var{format}
 Use @var{format} to output a group of common lines taken from both files
@@ -3283,9 +3180,10 @@ this; use @option{-U @var{lines}} instead.
 
 @item -v
 @itemx --version
-Output the version number of @command{diff}.
+Output version information and then exit.
 
 @item -w
+@itemx --ignore-all-space
 Ignore white space when comparing lines.  @xref{White Space}.
 
 @item -W @var{columns}
@@ -3294,14 +3192,17 @@ Output at most @var{columns} (default 130) print columns per line in
 side by side format.  @xref{Side by Side Format}.
 
 @item -x @var{pattern}
+@itemx --exclude=@var{pattern}
 When comparing directories, ignore files and subdirectories whose basenames
 match @var{pattern}.  @xref{Comparing Directories}.
 
 @item -X @var{file}
+@itemx --exclude-from=@var{file}
 When comparing directories, ignore files and subdirectories whose basenames
 match any pattern contained in @var{file}.  @xref{Comparing Directories}.
 
 @item -y
+@itemx --side-by-side
 Use the side by side output format.  @xref{Side by Side Format}.
 @end table
 
@@ -3339,12 +3240,14 @@ can be combined into a single command line argument.
 
 @table @option
 @item -a
+@itemx --text
 Treat all files as text and compare them line-by-line, even if they
 do not appear to be text.  @xref{Binary}.
 
 @item -A
-Incorporate all changes from @var{older} to @var{yours} into @var{mine},
-surrounding all conflicts with bracket lines.
+@itemx --show-all
+Incorporate all unmerged changes from @var{older} to @var{yours} into
+@var{mine}, surrounding conflicts with bracket lines.
 @xref{Marking Conflicts}.
 
 @item --diff-program=@var{program}
@@ -3352,14 +3255,16 @@ Use the compatible comparison program @var{program} to compare files
 instead of @command{diff}.
 
 @item -e
+@itemx --ed
 Generate an @command{ed} script that incorporates all the changes from
 @var{older} to @var{yours} into @var{mine}.  @xref{Which Changes}.
 
 @item -E
+@itemx --show-overlap
 Like @option{-e}, except bracket lines from overlapping changes' first
 and third files.
 @xref{Marking Conflicts}.
-With @option{-e}, an overlapping change looks like this:
+With @option{-E}, an overlapping change looks like this:
 
 @example
 <<<<<<< @var{mine}
@@ -3369,23 +3274,14 @@ With @option{-e}, an overlapping change looks like this:
 >>>>>>> @var{yours}
 @end example
 
-@item --ed
-Generate an @command{ed} script that incorporates all the changes from
-@var{older} to @var{yours} into @var{mine}.  @xref{Which Changes}.
-
-@item --easy-only
-Like @option{-e}, except output only the nonoverlapping changes.
-@xref{Which Changes}.
+@item --help
+Output a summary of usage and then exit.
 
 @item -i
 Generate @samp{w} and @samp{q} commands at the end of the @command{ed}
 script for System V compatibility.  This option must be combined with
 one of the @option{-AeExX3} options, and may not be combined with @option{-m}.
 @xref{Saving the Changed File}.
-
-@item --initial-tab
-Output a tab rather than two spaces before the text of a line in normal format.
-This causes the alignment of tabs in the line to look normal.  @xref{Tabs}.
 
 @item -L @var{label}
 @itemx --label=@var{label}
@@ -3404,33 +3300,17 @@ output.  Unlike piping the output from @command{diff3} to @command{ed}, this
 works even for binary files and incomplete lines.  @option{-A} is assumed
 if no edit script option is specified.  @xref{Bypassing ed}.
 
-@item --overlap-only
-Like @option{-e}, except output only the overlapping changes.
-@xref{Which Changes}.
-
-@item --show-all
-Incorporate all unmerged changes from @var{older} to @var{yours} into
-@var{mine}, surrounding all overlapping changes with bracket lines.
-@xref{Marking Conflicts}.
-
-@item --show-overlap
-Like @option{-e}, except bracket lines from overlapping changes' first
-and third files.
-@xref{Marking Conflicts}.
-
 @item -T
+@itemx --initial-tab
 Output a tab rather than two spaces before the text of a line in normal format.
 This causes the alignment of tabs in the line to look normal.  @xref{Tabs}.
 
-@item --text
-Treat all files as text and compare them line-by-line, even if they
-do not appear to be text.  @xref{Binary}.
-
 @item -v
 @itemx --version
-Output the version number of @command{diff3}.
+Output version information and then exit.
 
 @item -x
+@itemx --overlap-only
 Like @option{-e}, except output only the overlapping changes.
 @xref{Which Changes}.
 
@@ -3440,6 +3320,7 @@ In other words, like @option{-x}, except bracket changes as in @option{-E}.
 @xref{Marking Conflicts}.
 
 @item -3
+@itemx --easy-only
 Like @option{-e}, except output only the nonoverlapping changes.
 @xref{Which Changes}.
 @end table
@@ -3632,11 +3513,9 @@ Use @var{backup-suffix} as the backup extension instead of
 @samp{.orig} or @samp{~}.  @xref{Backups}.
 
 @item -B @var{backup-prefix}
+@itemx --prefix=@var{backup-prefix}
 Use @var{backup-prefix} as a prefix to the backup file name.  If this
 option is specified, any @option{-b} option is ignored.  @xref{Backups}.
-
-@item --batch
-Do not ask any questions.  @xref{patch Messages}.
 
 @item -c
 @itemx --context
@@ -3649,46 +3528,32 @@ both file names in the patch file, and file names given as arguments to
 other options.  @xref{patch Directories}.
 
 @item -D @var{name}
+@itemx --ifdef=@var{name}
 Make merged if-then-else output using @var{format}.  @xref{If-then-else}.
-
-@item --debug=@var{number}
-Set internal debugging flags.  Of interest only to @command{patch}
-patchers.
 
 @item -e
 @itemx --ed
 Interpret the patch file as an @command{ed} script.  @xref{patch Input}.
 
 @item -E
+@itemx --remove-empty-files
 Remove output files that are empty after the patches have been applied.
 @xref{Empty Files}.
 
 @item -f
+@itemx --force
 Assume that the user knows exactly what he or she is doing, and do not
 ask any questions.  @xref{patch Messages}.
 
 @item -F @var{lines}
-Set the maximum fuzz factor to @var{lines}.  @xref{Inexact}.
-
-@item --force
-Assume that the user knows exactly what he or she is doing, and do not
-ask any questions.  @xref{patch Messages}.
-
-@item --forward
-Ignore patches that @command{patch} thinks are reversed or already applied.
-See also @option{-R}.  @xref{Reversed Patches}.
-
-@item --fuzz=@var{lines}
+@itemx --fuzz=@var{lines}
 Set the maximum fuzz factor to @var{lines}.  @xref{Inexact}.
 
 @item --help
-Print a summary of the options that @command{patch} recognizes, then exit.
+Output a summary of usage and then exit.
 
-@item --ifdef=@var{name}
-Make merged if-then-else output using @var{format}.  @xref{If-then-else}.
-
-@item --ignore-white-space
-@itemx -l
+@item -l
+@itemx --ignore-white-space
 Let any sequence of white space in the patch file match any sequence of
 white space in the input file.  @xref{Changed White Space}.
 
@@ -3697,6 +3562,7 @@ white space in the input file.  @xref{Changed White Space}.
 Interpret the patch file as a normal diff.  @xref{patch Input}.
 
 @item -N
+@itemx --forward
 Ignore patches that @command{patch} thinks are reversed or already applied.
 See also @option{-R}.  @xref{Reversed Patches}.
 
@@ -3705,55 +3571,34 @@ See also @option{-R}.  @xref{Reversed Patches}.
 Use @var{output-file} as the output file name.  @xref{patch Options}.
 
 @item -p@var{number}
+@itemx --strip=@var{number}
 Set the file name strip count to @var{number}.  @xref{patch Directories}.
 
-@item --prefix=@var{backup-prefix}
-Use @var{backup-prefix} as a prefix to the backup file name.  If this
-option is specified, any @option{-b} option is ignored.  @xref{Backups}.
-
-@item --quiet
-Work silently unless an error occurs.  @xref{patch Messages}.
-
 @item -r @var{reject-file}
+@itemx --reject-file=@var{reject-file}
 Use @var{reject-file} as the reject file name.  @xref{Rejects}.
 
 @item -R
-Assume that this patch was created with the old and new files swapped.
-@xref{Reversed Patches}.
-
-@item --reject-file=@var{reject-file}
-Use @var{reject-file} as the reject file name.  @xref{Rejects}.
-
-@item --remove-empty-files
-Remove output files that are empty after the patches have been applied.
-@xref{Empty Files}.
-
-@item --reverse
+@itemx --reverse
 Assume that this patch was created with the old and new files swapped.
 @xref{Reversed Patches}.
 
 @item -s
+@itemx --quiet
+@itemx --silent
 Work silently unless an error occurs.  @xref{patch Messages}.
 
 @item -S
+@itemx --skip
 Ignore this patch from the patch file, but continue looking for the next
 patch in the file.  @xref{Multiple Patches}.
-
-@item --silent
-Work silently unless an error occurs.  @xref{patch Messages}.
-
-@item --skip
-Ignore this patch from the patch file, but continue looking for the next
-patch in the file.  @xref{Multiple Patches}.
-
-@item --strip=@var{number}
-Set the file name strip count to @var{number}.  @xref{patch Directories}.
 
 @item --suffix=@var{backup-suffix}
 Use @var{backup-suffix} as the backup extension instead of
 @samp{.orig} or @samp{~}.  @xref{Backups}.
 
 @item -t
+@itemx --batch
 Do not ask any questions.  @xref{patch Messages}.
 
 @item -u
@@ -3761,18 +3606,15 @@ Do not ask any questions.  @xref{patch Messages}.
 Interpret the patch file as a unified diff.  @xref{patch Input}.
 
 @item -v
-Output the revision header and patch level of @command{patch}.
+@itemx --version
+Output version information and then exit.
 
 @item -V @var{backup-style}
-Select the kind of backups to make.  @xref{Backups}.
-
-@item --version
-Output the revision header and patch level of @command{patch}, then exit.
-
-@item --version=control=@var{backup-style}
+@itemx --version=control=@var{backup-style}
 Select the kind of backups to make.  @xref{Backups}.
 
 @item -x @var{number}
+@itemx --debug=@var{number}
 Set internal debugging flags.  Of interest only to @command{patch}
 patchers.
 @end table
@@ -3825,17 +3667,21 @@ named options can be abbreviated to any unique prefix of their name.
 
 @table @option
 @item -a
+@itemx --text
 Treat all files as text and compare them line-by-line, even if they
 do not appear to be text.  @xref{Binary}.
 
 @item -b
+@itemx --ignore-space-change
 Ignore changes in amount of white space.  @xref{White Space}.
 
 @item -B
+@itemx --ignore-blank-lines
 Ignore changes that just insert or delete blank lines.  @xref{Blank
 Lines}.
 
 @item -d
+@itemx --minimal
 Change the algorithm to perhaps find a smaller set of changes.  This
 makes @command{sdiff} slower (sometimes much slower).  @xref{diff
 Performance}.
@@ -3845,57 +3691,27 @@ Use the compatible comparison program @var{program} to compare files
 instead of @command{diff}.
 
 @item -E
+@itemx --ignore-tab-expansion
 Ignore changes due to tab expansion.
 @xref{White Space}.
 
-@item -H
-Use heuristics to speed handling of large files that have numerous
-scattered small changes.  @xref{diff Performance}.
-
-@item --expand-tabs
-Expand tabs to spaces in the output, to preserve the alignment of tabs
-in the input files.  @xref{Tabs}.
+@item --help
+Output a summary of usage and then exit.
 
 @item -i
+@itemx --ignore-case
 Ignore changes in case; consider upper- and lower-case to be the same.
 @xref{Case Folding}.
 
 @item -I @var{regexp}
+@itemx --ignore-matching-lines=@var{regexp}
 Ignore changes that just insert or delete lines that match @var{regexp}.
 @xref{Specified Folding}.
-
-@item --ignore-all-space
-Ignore white space when comparing lines.  @xref{White Space}.
-
-@item --ignore-blank-lines
-Ignore changes that just insert or delete blank lines.  @xref{Blank
-Lines}.
-
-@item --ignore-case
-Ignore changes in case; consider upper- and lower-case to be the same.
-@xref{Case Folding}.
-
-@item --ignore-matching-lines=@var{regexp}
-Ignore changes that just insert or delete lines that match @var{regexp}.
-@xref{Specified Folding}.
-
-@item --ignore-space-change
-Ignore changes in amount of white space.
-@xref{White Space}.
-
-@item --ignore-tab-expansion
-Ignore changes due to tab expansion.
-@xref{White Space}.
 
 @item -l
 @itemx --left-column
 Print only the left column of two common lines.
 @xref{Side by Side Format}.
-
-@item --minimal
-Change the algorithm to perhaps find a smaller set of changes.  This
-makes @command{sdiff} slower (sometimes much slower).  @xref{diff
-Performance}.
 
 @item -o @var{file}
 @itemx --output=@var{file}
@@ -3914,16 +3730,13 @@ Strip any trailing carriage-return at the end of an input line.
 @xref{Binary}.
 
 @item -t
+@itemx --expand-tabs
 Expand tabs to spaces in the output, to preserve the alignment of tabs
 in the input files.  @xref{Tabs}.
 
-@item --text
-Treat all files as text and compare them line-by-line, even if they
-do not appear to be text.  @xref{Binary}.
-
 @item -v
 @itemx --version
-Output the version number of @command{sdiff}.
+Output version information and then exit.
 
 @item -w @var{columns}
 @itemx --width=@var{columns}
@@ -3932,7 +3745,8 @@ Output at most @var{columns} (default 130) print columns per line.
 option is @option{-W} in @command{diff}, @option{-w} in @command{sdiff}.
 
 @item -W
-Ignore horizontal white space when comparing lines.  @xref{White Space}.
+@itemx --ignore-all-space
+Ignore white space when comparing lines.  @xref{White Space}.
 Note that for historical reasons, this option is @option{-w} in @command{diff},
 @option{-W} in @command{sdiff}.
 @end table
