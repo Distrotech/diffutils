@@ -106,9 +106,15 @@ the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 #ifndef rindex
 #define rindex	strrchr
 #endif
+#ifndef bcopy
 #define bcopy(s,d,n)	memcpy (d,s,n)
+#endif
+#ifndef bcmp
 #define bcmp(s1,s2,n)	memcmp (s1,s2,n)
+#endif
+#ifndef bzero
 #define bzero(s,n)	memset (s,0,n)
+#endif
 #else
 #include <strings.h>
 #endif
