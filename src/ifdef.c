@@ -244,7 +244,7 @@ groups_letter_value (g, letter)
   if (ISUPPER (letter))
     {
       g++;
-      letter = tolower (letter);
+      letter = _tolower (letter);
     }
   switch (letter)
     {
