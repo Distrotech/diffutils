@@ -1,5 +1,5 @@
 /* File I/O for GNU DIFF.
-   Copyright (C) 1988, 1989, 1992, 1993 Free Software Foundation, Inc.
+   Copyright 1988, 1989, 1992, 1993, 1994 Free Software Foundation, Inc.
 
 This file is part of GNU DIFF.
 
@@ -97,12 +97,23 @@ sip (current, skip_test)
       if (! skip_test)
 	{
 	  /* Check first part of file to see if it's a binary file.  */
-	  current->buffered_chars = read (current->desc,
-					  current->buffer,
-					  current->bufsize);
-	  if (current->buffered_chars == -1)
+#if HAVE_SETMODE
+	  int oldmode = setmode (current->desc, O_BINARY);
+#endif
+	  size_t n = read (current->desc, current->buffer, current->bufsize);
+	  if (n == -1)
 	    pfatal_with_name (current->name);
-	  return binary_file_p (current->buffer, current->buffered_chars);
+	  current->buffered_chars = n;
+#if HAVE_SETMODE
+	  if (oldmode != O_BINARY)
+	    {
+	      if (lseek (current->desc, - (off_t) n, SEEK_CUR) == -1)
+		pfatal_with_name (current->name);
+	      setmode (current->desc, oldmode);
+	      current->buffered_chars = 0;
+	    }
+#endif
+	  return binary_file_p (current->buffer, n);
 	}
     }
   
