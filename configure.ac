@@ -85,5 +85,4 @@ AC_FUNC_SETMODE_DOS
 AC_CONFIG_FILES([Makefile doc/Makefile \
 		 lib/Makefile man/Makefile \
 		 m4/Makefile ms/Makefile po/Makefile.in src/Makefile])
-AC_CONFIG_COMMANDS([default], [date > stamp-h])
 AC_OUTPUT
