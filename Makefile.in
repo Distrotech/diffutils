@@ -1,5 +1,5 @@
 # Makefile for GNU DIFF
-# Copyright (C) 1988-1992 Free Software Foundation, Inc.
+# Copyright (C) 1988, 1989, 1991, 1992, 1993 Free Software Foundation, Inc.
 #
 # This file is part of GNU DIFF.
 #
@@ -31,14 +31,15 @@ MAKEINFO = makeinfo
 # Things you might add to DEFS:
 # -DSTDC_HEADERS	If you have ANSI C headers and libraries.
 # -DHAVE_UNISTD_H	If you have unistd.h.
-# -DUSG			If you have System V/ANSI C string and
-#			memory functions and headers, fcntl.h, and ndir.h.
+# -DHAVE_STRING_H	If you don't have ANSI C headers but have string.h.
 # -DDIRENT		If you have dirent.h.
-# -DSYSNDIR		Old Xenix systems (selects sys/ndir.h).
+# -DSYSNDIR		Old Xenix systems (sys/ndir.h).
+# -DSYSDIR		Old BSD systems (sys/dir.h).
+# -DNDIR		Old System V systems (ndir.h).
 # -DHAVE_VFORK_H	If you have vfork and it needs vfork.h.
 # -DHAVE_DUP2		If you have dup2 system call.
 # -DHAVE_WAITPID	If you have waitpid system call.
-# -DHAVE_ST_BLKSIZE	If your FILE type has a st_blksize member.
+# -DHAVE_ST_BLKSIZE	If your struct stat has an st_blksize member.
 # -DHAVE_STRERROR	If you have strerror function.
 # -DHAVE_ALLOCA_H	If you have a working alloca.h.
 
@@ -68,21 +69,21 @@ SHELL = /bin/sh
 
 # The source files for all of the programs.
 srcs=diff.c analyze.c io.c context.c ed.c normal.c ifdef.c util.c dir.c \
-	wildmat.c version.c diff.h regex.c regex.h side.c system.h limits.h \
+	version.c diff.h regex.c regex.h side.c system.h \
 	diff3.c sdiff.c cmp.c error.c xmalloc.c getopt.c getopt1.c getopt.h \
-	alloca.c
+	fnmatch.c fnmatch.h alloca.c
 # Object files for diff only.
 objs=diff.o analyze.o io.o context.o \
-     ed.o normal.o util.o dir.o wildmat.o \
+     ed.o normal.o util.o dir.o fnmatch.o \
      regex.o side.o ifdef.o version.o \
      getopt.o getopt1.o $(ALLOCA)
-distfiles = $(srcs) README INSTALL diagmeet.note Makefile.in configure \
+distfiles = $(srcs) README INSTALL NEWS diagmeet.note Makefile.in configure \
 	configure.in COPYING ChangeLog diff.texi diff.info* texinfo.tex
 
 all: diff diff3 sdiff cmp diff.info
 
 .c.o:
-	$(CC) -c $(CFLAGS) $(CPPFLAGS) $(DEFS) $<
+	$(CC) -c $(DEFS) $(CPPFLAGS) $(CFLAGS) -I. $<
 
 diff: $(objs)
 	$(CC) -o $@ $(LDFLAGS) $(objs) $(LIBS)
@@ -103,12 +104,13 @@ $(objs): diff.h system.h
 cmp.o diff3.o sdiff.o: system.h
 context.o diff.o regex.o: regex.h
 cmp.o diff.o diff3.o sdiff.o getopt.o getopt1.o: getopt.h
+diff.o fnmatch.o: fnmatch.h
 
 diff3.o: diff3.c
-	$(CC) -c $(CFLAGS) $(CPPFLAGS) $(DEFS) -DDIFF_PROGRAM=\"$(bindir)/diff\" $(srcdir)/diff3.c
+	$(CC) -c $(DEFS) $(CPPFLAGS) $(CFLAGS) -DDIFF_PROGRAM=\"$(bindir)/$(binprefix)diff\" $(srcdir)/diff3.c
 
 sdiff.o: sdiff.c
-	$(CC) -c $(CFLAGS) $(CPPFLAGS) $(DEFS) -DDIFF_PROGRAM=\"$(bindir)/diff\" $(srcdir)/sdiff.c
+	$(CC) -c $(DEFS) $(CPPFLAGS) $(CFLAGS) -DDIFF_PROGRAM=\"$(bindir)/$(binprefix)diff\" $(srcdir)/sdiff.c
 
 TAGS: $(srcs)
 	etags $(srcs)
@@ -130,15 +132,21 @@ install: all
 	cd $(srcdir); for f in diff.info*; \
 	do $(INSTALL_DATA) $$f $(infodir)/$$f; done
 
+uninstall:
+	for p in diff diff3 sdiff cmp; \
+	do rm -f $(bindir)/$(binprefix)$$p; done
+	rm -f $(infodir)/diff.info*
+
 dist: $(distfiles)
 	echo diff-`sed -e '/version_string/!d' -e 's/[^0-9]*\([0-9a-z.]*\).*/\1/' -e q version.c` > .fname
 	rm -rf `cat .fname`
 	mkdir `cat .fname`
-	ln $(distfiles) `cat .fname`
+	-ln $(distfiles) `cat .fname`
 	for file in $(distfiles); do \
 	  if [ ! -r `cat .fname`/$$file ]; then cp -p $$file `cat .fname`; fi \
 	done
 	tar chZf `cat .fname`.tar.Z `cat .fname`
+	tar chf - `cat .fname` | gzip > `cat .fname`.tar.z
 	rm -rf `cat .fname` .fname
 
 # Prevent GNU make v3 from overflowing arg limit on SysV.
