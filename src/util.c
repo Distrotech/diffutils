@@ -282,18 +282,8 @@ finish_output ()
 #else /* HAVE_FORK */
       if (fclose (outfile) != 0)
 	pfatal_with_name ("write error");
-#if HAVE_WAITPID
       if (waitpid (pr_pid, &wstatus, 0) < 0)
 	pfatal_with_name ("waitpid");
-#else
-      for (;;) {
-	pid_t w = wait (&wstatus);
-	if (w < 0)
-	  pfatal_with_name ("wait");
-	if (w == pr_pid)
-	  break;
-      }
-#endif
 #endif /* HAVE_FORK */
       if (wstatus != 0)
 	fatal ("subsidiary pr failed");
@@ -756,18 +746,3 @@ debug_script (sp)
 	     sp->line0, sp->line1, sp->deleted, sp->inserted);
   fflush (stderr);
 }
-
-#if !HAVE_MEMCHR
-char *
-memchr (s, c, n)
-     char const *s;
-     int c;
-     size_t n;
-{
-  unsigned char const *p = (unsigned char const *) s, *lim = p + n;
-  for (;  p < lim;  p++)
-    if (*p == c)
-      return (char *) p;
-  return 0;
-}
-#endif
