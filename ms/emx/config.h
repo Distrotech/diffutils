@@ -1,6 +1,6 @@
 /* emx configuration */
 
-#include <pc\config.h>
+#include <pc/config.h>
 
 #define initialize_main(pargc, pargv) \
   { \

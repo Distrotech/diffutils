@@ -122,8 +122,6 @@
 #include <io.h>
 #include <process.h>
 
-#define __GNU_LIBRARY__ 1
-
 char *filename_lastdirchar (char const *);
 #define filename_lastdirchar (filename_lastdirchar)
 
@@ -133,8 +131,5 @@ char *filename_lastdirchar (char const *);
 int setmode (int, int);
 
 #define same_file(s,t) (-1)
-
-#define SYSTEM_QUOTE_ARG(q, a) ((q) = system_quote_arg (q, a))
-char *system_quote_arg (char *, char const *);
 
 #define TMPDIR_ENV "TEMP"
