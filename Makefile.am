@@ -17,7 +17,7 @@
 ## Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
 ## 02111-1307, USA.
 
-EXTRA_DIST = config/config.rpath exgettext INSTALLME
+EXTRA_DIST = config/config.rpath exgettext
 SUBDIRS = doc lib m4 ms src man po
 
 ACLOCAL_AMFLAGS = -I m4
