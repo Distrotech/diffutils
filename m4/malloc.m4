@@ -1,4 +1,4 @@
-#serial 6
+#serial 7
 
 dnl From Jim Meyering.
 dnl Determine whether malloc accepts 0 as its argument.
@@ -27,7 +27,12 @@ AC_DEFUN([jm_FUNC_MALLOC],
 	 dnl When crosscompiling, assume malloc(0) returns NULL.
 	 jm_cv_func_working_malloc=no)
   ])
-  if test $jm_cv_func_working_malloc = no; then
+  if test $jm_cv_func_working_malloc = yes; then
+    AC_DEFINE([HAVE_MALLOC], 1,
+	      [Define to 1 if your system has a working `malloc' function,
+	       and to 0 otherwise.])
+  else
+    AC_DEFINE([HAVE_MALLOC], 0)
     AC_LIBOBJ(malloc)
     AC_DEFINE(malloc, rpl_malloc,
       [Define to rpl_malloc if the replacement function should be used.])
