@@ -1,0 +1,21 @@
+LIBRARY GNUREGEX INITGLOBAL
+DESCRIPTION 'GNU regular expression library'
+DATA MULTIPLE NONSHARED
+
+EXPORTS
+  re_syntax_options    @1
+  re_comp              @2
+  re_compile_fastmap   @3
+  re_compile_pattern   @4
+  re_exec              @5
+  re_match             @6
+  re_match_2           @7
+  re_max_failures      @8
+  re_search            @9
+  re_search_2          @10
+  re_set_registers     @11
+  re_set_syntax        @12
+  regcomp              @13
+  regerror             @14
+  regexec              @15
+  regfree              @16
