@@ -51,10 +51,7 @@ void
 perror_with_name (text)
      char const *text;
 {
-  int e = errno;
-  fprintf (stderr, "%s: ", program_name);
-  errno = e;
-  perror (text);
+  error (0, errno, "%s", text);
 }
 
 /* Use when a system call returns non-zero status and that is fatal.  */
@@ -65,22 +62,7 @@ pfatal_with_name (text)
 {
   int e = errno;
   print_message_queue ();
-  fprintf (stderr, "%s: ", program_name);
-  errno = e;
-  perror (text);
-  exit (2);
-}
-
-/* Print an error message from the format-string FORMAT
-   with args ARG1 and ARG2.  */
-
-void
-error (format, arg, arg1)
-     char const *format, *arg, *arg1;
-{
-  fprintf (stderr, "%s: ", program_name);
-  fprintf (stderr, format, arg, arg1);
-  fprintf (stderr, "\n");
+  error (2, e, "%s", text);
 }
 
 /* Print an error message containing the string TEXT, then exit.  */
@@ -90,8 +72,7 @@ fatal (m)
      char const *m;
 {
   print_message_queue ();
-  error ("%s", m, 0);
-  exit (2);
+  error (2, 0, "%s", m);
 }
 
 /* Like printf, except if -l in effect then save the message and print later.
@@ -176,10 +157,11 @@ begin_output ()
   /* Construct the header of this piece of diff.  */
   name = xmalloc (strlen (current_name0) + strlen (current_name1)
 		  + strlen (switch_string) + 7);
-  /* Posix.2 section 4.17.6.1.1 specifies this format.  But there is a
-     bug in the first printing (IEEE Std 1003.2-1992 p 251 l 3304):
-     it says that we must print only the last component of the pathnames.
-     This requirement is silly and does not match historical practice.  */
+  /* Posix.2 section 4.17.6.1.1 specifies this format.  But there are some
+     bugs in the first printing (IEEE Std 1003.2-1992 p 251 l 3304):
+     it says that we must print only the last component of the pathnames,
+     and it requires two spaces after "diff" if there are no options.
+     These requirements are silly and do not match historical practice.  */
   sprintf (name, "diff%s %s %s", switch_string, current_name0, current_name1);
 
   if (paginate_flag)
@@ -359,14 +341,14 @@ line_cmp (s1, s2)
 		     character in both sides and try again.  */
 		  if (c2 == ' ' && c1 != '\n'
 		      && (unsigned char const *) s1 + 1 < t1
-		      && ISSPACE(t1[-2]))
+		      && ISSPACE (t1[-2]))
 		    {
 		      --t1;
 		      continue;
 		    }
 		  if (c1 == ' ' && c2 != '\n'
 		      && (unsigned char const *) s2 + 1 < t2
-		      && ISSPACE(t2[-2]))
+		      && ISSPACE (t2[-2]))
 		    {
 		      --t2;
 		      continue;
@@ -379,9 +361,9 @@ line_cmp (s1, s2)
 	  if (ignore_case_flag)
 	    {
 	      if (ISUPPER (c1))
-		c1 = tolower (c1);
+		c1 = _tolower (c1);
 	      if (ISUPPER (c2))
-		c2 = tolower (c2);
+		c2 = _tolower (c2);
 	    }
 
 	  if (c1 != c2)
@@ -391,7 +373,7 @@ line_cmp (s1, s2)
 	return 0;
     }
 
-  return (1);
+  return 1;
 }
 
 /* Find the consecutive changes at the start of the script START.
@@ -682,51 +664,13 @@ analyze_hunk (hunk, first0, last0, first1, last1, deletes, inserts)
   *inserts = show_to;
 }
 
-/* malloc a block of memory, with fatal error message if we can't do it. */
-
-VOID *
-xmalloc (size)
-     size_t size;
-{
-  register VOID *value;
-
-  if (size == 0)
-    size = 1;
-
-  value = (VOID *) malloc (size);
-
-  if (!value)
-    fatal ("memory exhausted");
-  return value;
-}
-
-/* realloc a block of memory, with fatal error message if we can't do it. */
-
-VOID *
-xrealloc (old, size)
-     VOID *old;
-     size_t size;
-{
-  register VOID *value;
-
-  if (size == 0)
-    size = 1;
-
-  value = (VOID *) realloc (old, size);
-
-  if (!value)
-    fatal ("memory exhausted");
-  return value;
-}
-
 /* Concatenate three strings, returning a newly malloc'd string.  */
 
 char *
 concat (s1, s2, s3)
      char const *s1, *s2, *s3;
 {
-  size_t len = strlen (s1) + strlen (s2) + strlen (s3);
-  char *new = xmalloc (len + 1);
+  char *new = xmalloc (strlen (s1) + strlen (s2) + strlen (s3) + 1);
   sprintf (new, "%s%s%s", s1, s2, s3);
   return new;
 }
