@@ -772,9 +772,10 @@ diff_2_files (filevec, depth)
 
 	      /* If the buffers differ, the files differ.  */
 	      if (filevec[0].buffered_chars != filevec[1].buffered_chars
-		  || memcmp (filevec[0].buffer,
-			     filevec[1].buffer,
-			     filevec[0].buffered_chars) != 0)
+		  || (filevec[0].buffered_chars != 0
+		      && memcmp (filevec[0].buffer,
+				 filevec[1].buffer,
+				 filevec[0].buffered_chars) != 0))
 		{
 		  changes = 1;
 		  break;
