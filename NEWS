@@ -1,3 +1,7 @@
+User-visible changes in version 2.8.1:
+
+* Documentation fixes.
+
 User-visible changes in version 2.8:
 
 * cmp and diff now conform to POSIX 1003.1-2001 (IEEE Std 1003.1-2001)
