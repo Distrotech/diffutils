@@ -20,6 +20,13 @@ Installation instructions specific to GNU Diffutils
 	Boston, MA 02111-1307, USA.
 
 
+Please send comments and problem reports to <bug-gnu-utils@gnu.org>.
+
+If you have a problem linking with libiconv or with other
+internationalization libraries, you might be able to work around the
+problem by invoking `configure' with the `--disable-nls' option.  If
+the problem seems isolated to diffutils, please report a bug.
+
 This program requires a Standard C compiler; if you have an older K&R
 compiler, please install GCC first.
 
