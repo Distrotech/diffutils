@@ -13,6 +13,9 @@
    This function is required for alloca.c support on those systems.  */
 #undef CRAY_STACKSEG_END
 
+/* Define if you have alloca, as a function or macro.  */
+#undef HAVE_ALLOCA
+
 /* Define if you have <alloca.h> and it should be used (not on Ultrix).  */
 #undef HAVE_ALLOCA_H
 
@@ -21,6 +24,9 @@
 
 /* Define if your struct stat has st_blksize.  */
 #undef HAVE_ST_BLKSIZE
+
+/* Define if you have <sys/wait.h> that is POSIX.1 compatible.  */
+#undef HAVE_SYS_WAIT_H
 
 /* Define if you have <vfork.h>.  */
 #undef HAVE_VFORK_H
@@ -106,9 +112,6 @@
 
 /* Define if you have the <sys/ndir.h> header file.  */
 #undef HAVE_SYS_NDIR_H
-
-/* Define if you have the <sys/wait.h> header file.  */
-#define HAVE_SYS_WAIT_H 1
 
 /* Define if you have the <time.h> header file.  */
 #define HAVE_TIME_H 1
