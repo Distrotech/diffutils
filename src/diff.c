@@ -222,33 +222,11 @@ main (argc, argv)
   extern char *version_string;
   int width = DEFAULT_WIDTH;
 
+  /* Do our initializations.  */
   program = argv[0];
-
-  /* Do our initializations. */
   output_style = OUTPUT_NORMAL;
-  always_text_flag = FALSE;
-  ignore_space_change_flag = FALSE;
-  ignore_all_space_flag = FALSE;
-  length_varies = FALSE;
-  ignore_case_flag = FALSE;
-  ignore_blank_lines_flag = FALSE;
-  ignore_regexp_list = NULL;
-  function_regexp_list = NULL;
-  print_file_same_flag = FALSE;
-  entire_new_file_flag = FALSE;
-  unidirectional_new_file_flag = FALSE;
-  no_details_flag = FALSE;
   context = -1;
   line_end_char = '\n';
-  tab_align_flag = FALSE;
-  tab_expand_flag = FALSE;
-  recursive = FALSE;
-  paginate_flag = FALSE;
-  heuristic = FALSE;
-  dir_start_file = NULL;
-  msg_chain = NULL;
-  msg_chain_end = NULL;
-  no_discards = 0;
 
   /* Decode the options.  */
 
@@ -289,11 +267,13 @@ main (argc, argv)
 	  /* Ignore changes in amount of whitespace.  */
 	  ignore_space_change_flag = 1;
 	  length_varies = 1;
+	  ignore_some_changes = 1;
 	  break;
 
 	case 'B':
 	  /* Ignore changes affecting only blank lines.  */
 	  ignore_blank_lines_flag = 1;
+	  ignore_some_changes = 1;
 	  break;
 
 	case 'C':		/* +context[=lines] */
@@ -377,12 +357,14 @@ main (argc, argv)
 	case 'i':
 	  /* Ignore changes in case.  */
 	  ignore_case_flag = 1;
+	  ignore_some_changes = 1;
 	  break;
 
 	case 'I':
 	  /* Ignore changes affecting only lines that match the
 	     specified regexp.  */
 	  add_regexp (&ignore_regexp_list, optarg);
+	  ignore_some_changes = 1;
 	  break;
 
 	case 'l':
@@ -471,6 +453,7 @@ main (argc, argv)
 	case 'w':
 	  /* Ignore horizontal whitespace when comparing lines.  */
 	  ignore_all_space_flag = 1;
+	  ignore_some_changes = 1;
 	  length_varies = 1;
 	  break;
 
@@ -859,7 +842,7 @@ compare_files (dir0, name0, dir1, name1, depth)
 	  val = 1;
 	}
     }
-  else if (no_details_flag
+  else if ((no_details_flag & ~ignore_some_changes)
 	   && inf[0].stat.st_size != inf[1].stat.st_size
 	   && (inf[0].desc == -1 || S_ISREG (inf[0].stat.st_mode))
 	   && (inf[1].desc == -1 || S_ISREG (inf[1].stat.st_mode)))
