@@ -1,3 +1,12 @@
+User-visible changes in version 2.6:
+
+* New cmp, diff, diff3, sdiff option: --help
+* A new heuristic for diff greatly reduces the time needed to compare
+  large input files that contain many differences.
+* Partly as a result, GNU diff's output is not exactly the same as before.
+  Usually it is a bit smaller, but sometimes it is a bit larger.
+
+
 User-visible changes in version 2.5:
 
 * New cmp option: -v --version
