@@ -61,32 +61,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#if STAT_MACROS_BROKEN
-# undef S_ISBLK
-# undef S_ISCHR
-# undef S_ISDIR
-# undef S_ISFIFO
-# undef S_ISREG
-# undef S_ISSOCK
-#endif
-#ifndef S_ISDIR
-# define S_ISDIR(mode) (((mode) & S_IFMT) == S_IFDIR)
-#endif
-#ifndef S_ISREG
-# define S_ISREG(mode) (((mode) & S_IFMT) == S_IFREG)
-#endif
-#if !defined S_ISBLK && defined S_IFBLK
-# define S_ISBLK(mode) (((mode) & S_IFMT) == S_IFBLK)
-#endif
-#if !defined S_ISCHR && defined S_IFCHR
-# define S_ISCHR(mode) (((mode) & S_IFMT) == S_IFCHR)
-#endif
-#if !defined S_ISFIFO && defined S_IFFIFO
-# define S_ISFIFO(mode) (((mode) & S_IFMT) == S_IFFIFO)
-#endif
-#if !defined S_ISSOCK && defined S_IFSOCK
-# define S_ISSOCK(mode) (((mode) & S_IFMT) == S_IFSOCK)
-#endif
 #ifndef S_IXUSR
 # define S_IXUSR 0100
 #endif
