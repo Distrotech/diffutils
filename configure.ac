@@ -1,5 +1,6 @@
 dnl Process this file with autoconf to produce a configure script.
 AC_INIT(diff.h)
+AC_CONFIG_HEADER(config.h)
 AC_PROG_CC
 AC_PROG_CPP
 AC_PROG_INSTALL
@@ -10,9 +11,11 @@ AC_CONST
 AC_STDC_HEADERS
 AC_UNISTD_H
 AC_PID_T
-AC_HAVE_FUNCS(dup2 memchr strerror waitpid)
+AC_RETSIGTYPE
+AC_HAVE_FUNCS(dup2 memchr sigaction strerror waitpid)
 AC_HAVE_HEADERS(fcntl.h string.h sys/wait.h time.h)
 AC_VFORK
+AC_VPRINTF
 AC_ALLOCA
 AC_ST_BLKSIZE
 AC_XENIX_DIR
