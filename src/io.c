@@ -651,15 +651,17 @@ static const int primes[] =
 
 /* Given a vector of two file_data objects, read the file associated
    with each one, and build the table of equivalence classes.
-   Return 1 if either file appears to be a binary file.  */
+   Return 1 if either file appears to be a binary file.
+   If PRETEND_BINARY is nonzero, pretend they are binary regardless.  */
 
 int
-read_files (filevec)
+read_files (filevec, pretend_binary)
      struct file_data filevec[];
+     int pretend_binary;
 {
   int i;
-  int skip_test = always_text_flag | no_details_flag;
-  int appears_binary = no_details_flag | sip (&filevec[0], skip_test);
+  int skip_test = always_text_flag | pretend_binary;
+  int appears_binary = pretend_binary | sip (&filevec[0], skip_test);
 
   if (filevec[0].desc != filevec[1].desc)
     appears_binary |= sip (&filevec[1], skip_test | appears_binary);
