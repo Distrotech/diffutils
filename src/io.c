@@ -22,6 +22,7 @@
 
 #include "diff.h"
 #include <cmpbuf.h>
+#include <file-type.h>
 #include <regex.h>
 #include <setmode.h>
 #include <xalloc.h>
@@ -277,7 +278,7 @@ find_and_hash_each_line (struct file_data *current)
 	      size_t column = 0;
 	      while ((c = *p++) != '\n')
 		{
-		  int repetitions = 1;
+		  size_t repetitions = 1;
 
 		  switch (c)
 		    {
@@ -287,8 +288,10 @@ find_and_hash_each_line (struct file_data *current)
 
 		    case '\t':
 		      c = ' ';
-		      repetitions = TAB_WIDTH - column % TAB_WIDTH;
-		      column += repetitions;
+		      repetitions = tabsize - column % tabsize;
+		      column = (column + repetitions < column
+				? 0
+				: column + repetitions);
 		      break;
 
 		    case '\r':
@@ -345,7 +348,7 @@ find_and_hash_each_line (struct file_data *current)
 	      size_t column = 0;
 	      while ((c = *p++) != '\n')
 		{
-		  int repetitions = 1;
+		  size_t repetitions = 1;
 
 		  switch (c)
 		    {
@@ -355,8 +358,10 @@ find_and_hash_each_line (struct file_data *current)
 
 		    case '\t':
 		      c = ' ';
-		      repetitions = TAB_WIDTH - column % TAB_WIDTH;
-		      column += repetitions;
+		      repetitions = tabsize - column % tabsize;
+		      column = (column + repetitions < column
+				? 0
+				: column + repetitions);
 		      break;
 
 		    case '\r':
