@@ -856,12 +856,16 @@ edit (left, lenl, right, lenr, outfile)
 	    if (fseek (tmp, 0L, SEEK_SET) != 0)
 	      perror_fatal ("fseek");
 	    {
-	      char buf[SDIFF_BUFSIZE];
+	      /* SDIFF_BUFSIZE is too big for a local var
+		 in some compilers, so we allocate it dynamically.  */
+	      char *buf = (char *) xmalloc (SDIFF_BUFSIZE);
 	      size_t size;
 
 	      while ((size = ck_fread (buf, SDIFF_BUFSIZE, tmp)) != 0)
 		ck_fwrite (buf, size, outfile);
 	      ck_fclose (tmp);
+
+	      free (buf);
 	    }
 	    return 1;
 	  }
