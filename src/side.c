@@ -1,22 +1,22 @@
 /* sdiff-format output routines for GNU DIFF.
-   Copyright (C) 1991, 1992, 1993 Free Software Foundation, Inc.
+   Copyright 1991, 1992, 1993, 1997 Free Software Foundation, Inc.
 
-This file is part of GNU DIFF.
+   This file is part of GNU DIFF.
 
-GNU DIFF is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY.  No author or distributor
-accepts responsibility to anyone for the consequences of using it
-or for whether it serves any particular purpose or works at all,
-unless he says so in writing.  Refer to the GNU DIFF General Public
-License for full details.
+   GNU DIFF is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY.  No author or distributor
+   accepts responsibility to anyone for the consequences of using it
+   or for whether it serves any particular purpose or works at all,
+   unless he says so in writing.  Refer to the GNU DIFF General Public
+   License for full details.
 
-Everyone is granted permission to copy, modify and redistribute
-GNU DIFF, but only under the conditions described in the
-GNU DIFF General Public License.   A copy of this license is
-supposed to have been given to you along with GNU DIFF so you
-can know your rights and responsibilities.  It should be in a
-file named COPYING.  Among other things, the copyright notice
-and this notice must be preserved on all copies.  */
+   Everyone is granted permission to copy, modify and redistribute
+   GNU DIFF, but only under the conditions described in the
+   GNU DIFF General Public License.   A copy of this license is
+   supposed to have been given to you along with GNU DIFF so you
+   can know your rights and responsibilities.  It should be in a
+   file named COPYING.  Among other things, the copyright notice
+   and this notice must be preserved on all copies.  */
 
 
 #include "diff.h"
@@ -120,15 +120,17 @@ print_half_line (line, indent, out_bound)
 
 	case '\b':
 	  if (in_position != 0 && --in_position < out_bound)
-	    if (out_position <= in_position)
-	      /* Add spaces to make up for suppressed tab past out_bound.  */
-	      for (;  out_position < in_position;  out_position++)
-		putc (' ', out);
-	    else
-	      {
-		out_position = in_position;
-		putc (c, out);
-	      }
+	    {
+	      if (out_position <= in_position)
+		/* Add spaces to make up for suppressed tab past out_bound.  */
+		for (;  out_position < in_position;  out_position++)
+		  putc (' ', out);
+	      else
+		{
+		  out_position = in_position;
+		  putc (c, out);
+		}
+	    }
 	  break;
 
 	case '\f':
