@@ -208,7 +208,7 @@ begin_output ()
 	{
 	  close (pipes[0]);
 	  outfile = fdopen (pipes[1], "w");
-	} 
+	}
     }
   else
     {
@@ -275,7 +275,7 @@ finish_output ()
 
 /* Compare two lines (typically one from each input file)
    according to the command line options.
-   Return 1 if the lines differ, like `bcmp'.  */
+   Return 1 if the lines differ, like `memcmp'.  */
 
 int
 line_cmp (s1, len1, s2, len2)
@@ -290,7 +290,7 @@ line_cmp (s1, len1, s2, len2)
      This detects the common case of exact identity
      faster than complete comparison would.  */
 
-  if (len1 == len2 && bcmp (s1, s2, len1) == 0)
+  if (len1 == len2 && memcmp (s1, s2, len1) == 0)
     return 0;
 
   /* Not exactly identical, but perhaps they match anyway
@@ -577,7 +577,7 @@ print_number_range (sepchar, file, a, b)
 /* Look at a hunk of edit script and report the range of lines in each file
    that it applies to.  HUNK is the start of the hunk, which is a chain
    of `struct change'.  The first and last line numbers of file 0 are stored in
-   *FIRST0 and *LAST0, and likewise for file 1 in *FIRST1 and *LAST1. 
+   *FIRST0 and *LAST0, and likewise for file 1 in *FIRST1 and *LAST1.
    Note that these are internal line numbers that count from 0.
 
    If no lines from file 0 are deleted, then FIRST0 is LAST0+1.
