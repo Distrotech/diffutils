@@ -1,9 +1,33 @@
-# Translation catalog for English in Great Britain.
-# Only differences are given.
+# British English messages for GNU diffutils
+# Copyright (C) 1998, 2001, 2002 Free Software Foundation, Inc.
+# Paul Eggert <eggert@twinsun.com>, 1998
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: GNU diffutils 2.7.7\n"
+"POT-Creation-Date: 2002-01-24 04:24-0800\n"
+"PO-Revision-Date: 2002-01-23 22:57-0800\n"
+"Last-Translator: Paul Eggert <eggert@twinsun.com>\n"
+"Language-Team: English <en@translate.freefriends.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=US-ASCII\n"
+"Content-Transfer-Encoding: 8bit\n"
 
 # `Thou whoreson zed!  Thou unnecessary letter!'  -- Kent in _King Lear_
-msgid  "%s: unrecognized option `%c%s'\n"
+#: lib/getopt.c:770
+#, c-format
+msgid "%s: unrecognized option `--%s'\n"
+msgstr "%s: unrecognised option `--%s'\n"
+
+#: lib/getopt.c:774
+#, c-format
+msgid "%s: unrecognized option `%c%s'\n"
 msgstr "%s: unrecognised option `%c%s'\n"
 
-msgid  "%s: unrecognized option `--%s'\n"
-msgstr "%s: unrecognised option `--%s'\n"
+# POSIX requires the word "illegal" in the POSIX locale, but the error
+# is not really against the law.  This is not the POSIX locale, so fix
+# the wording.
+#: lib/getopt.c:800
+#, c-format
+msgid "%s: illegal option -- %c\n"
+msgstr "%s: unrecognised option `-%c'\n"
