@@ -22,9 +22,11 @@
 
 #define GDIFF_MAIN
 #include "diff.h"
+#include <c-stack.h>
 #include <dirname.h>
 #include <error.h>
 #include <exclude.h>
+#include <exitfail.h>
 #include <fnmatch.h>
 #include <freesoft.h>
 #include <getopt.h>
@@ -33,7 +35,6 @@
 #include <quotesys.h>
 #include <regex.h>
 #include <setmode.h>
-#include <signal.h>
 #include <xalloc.h>
 
 static char const authorship_msgid[] =
@@ -59,35 +60,39 @@ struct regexp_list
 static int compare_files (struct comparison const *, char const *, char const *);
 static void add_regexp (struct regexp_list *, char const *);
 static void summarize_regexp_list (struct regexp_list *);
+static void specify_style (enum output_style);
+static void specify_value (char const **, char const *, char const *);
 static void try_help (char const *, char const *) __attribute__((noreturn));
 static void check_stdout (void);
 static void usage (void);
 
-/* If comparing two directories, compare their common subdirectories
+/* If comparing directories, compare their common subdirectories
    recursively.  */
-
 static bool recursive;
 
-/* For -F and -I: lists of regular expressions.  */
+/* In context diffs, show previous lines that match these regexps.  */
 static struct regexp_list function_regexp_list;
+
+/* Ignore changes affecting only lines that match these regexps.  */
 static struct regexp_list ignore_regexp_list;
 
 #if HAVE_SETMODE_DOS
-/* Use binary input/output (--binary).  */
+/* Use binary I/O when reading and writing data (--binary).
+   On POSIX hosts, this has no effect.  */
 static bool binary;
 #endif
 
-/* If a file is new (appears in only one dir)
-   include its entire contents (-N).
+/* When comparing directories, if a file appears only in one
+   directory, treat it as present but empty in the other (-N).
    Then `patch' would create the file with appropriate contents.  */
 static bool new_file;
 
-/* If a file is new (appears in only the second dir)
-   include its entire contents (-P).
+/* When comparing directories, if a file appears only in the second
+   directory of the two, treat it as present but empty in the other (-P).
    Then `patch' would create the file with appropriate contents.  */
 static bool unidirectional_new_file;
 
-/* Report files compared that match (-s).
+/* Report files compared that are the same (-s).
    Normally nothing is output when that happens.  */
 static bool report_identical_files;
 
@@ -132,6 +137,9 @@ exclude_options (void)
   return EXCLUDE_WILDCARDS | (ignore_file_name_case ? FNM_CASEFOLD : 0);
 }
 
+static char const shortopts[] =
+"0123456789abBcC:dD:eEfF:hHiI:lL:nNpPqrsS:tTuU:vwW:x:X:y";
+
 /* Values for long options that do not have single-letter equivalents.  */
 enum
 {
@@ -162,11 +170,31 @@ enum
   CHANGED_GROUP_FORMAT_OPTION
 };
 
+static char const group_format_option[][sizeof "--unchanged-group-format"] =
+  {
+    "--unchanged-group-format",
+    "--old-group-format",
+    "--new-group-format",
+    "--changed-group-format"
+  };
+
+static char const line_format_option[][sizeof "--unchanged-line-format"] =
+  {
+    "--unchanged-line-format",
+    "--old-line-format",
+    "--new-line-format"
+  };
+
+#define LONG_OPTION(array, origin, i) { (array)[(i) - (origin)] + 2, 1, 0, i }
+#define GROUP_FORMAT_OPTION(i) \
+  LONG_OPTION (group_format_option, UNCHANGED_GROUP_FORMAT_OPTION, i)
+#define LINE_FORMAT_OPTION(i) \
+  LONG_OPTION (line_format_option, UNCHANGED_LINE_FORMAT_OPTION, i)
+
 static struct option const longopts[] =
 {
   {"binary", 0, 0, BINARY_OPTION},
   {"brief", 0, 0, 'q'},
-  {"changed-group-format", 1, 0, CHANGED_GROUP_FORMAT_OPTION},
   {"context", 2, 0, 'C'},
   {"ed", 0, 0, 'e'},
   {"exclude", 1, 0, 'x'},
@@ -191,11 +219,9 @@ static struct option const longopts[] =
   {"line-format", 1, 0, LINE_FORMAT_OPTION},
   {"minimal", 0, 0, 'd'},
   {"new-file", 0, 0, 'N'},
-  {"new-group-format", 1, 0, NEW_GROUP_FORMAT_OPTION},
   {"new-line-format", 1, 0, NEW_LINE_FORMAT_OPTION},
   {"no-ignore-file-name-case", 0, 0, NO_IGNORE_FILE_NAME_CASE_OPTION},
   {"normal", 0, 0, NORMAL_OPTION},
-  {"old-group-format", 1, 0, OLD_GROUP_FORMAT_OPTION},
   {"old-line-format", 1, 0, OLD_LINE_FORMAT_OPTION},
   {"paginate", 0, 0, 'l'},
   {"rcs", 0, 0, 'n'},
@@ -211,22 +237,30 @@ static struct option const longopts[] =
   {"suppress-common-lines", 0, 0, SUPPRESS_COMMON_LINES_OPTION},
   {"text", 0, 0, 'a'},
   {"to-file", 1, 0, TO_FILE_OPTION},
-  {"unchanged-group-format", 1, 0, UNCHANGED_GROUP_FORMAT_OPTION},
   {"unchanged-line-format", 1, 0, UNCHANGED_LINE_FORMAT_OPTION},
   {"unidirectional-new-file", 0, 0, 'P'},
   {"unified", 2, 0, 'U'},
   {"version", 0, 0, 'v'},
   {"width", 1, 0, 'W'},
+  GROUP_FORMAT_OPTION (CHANGED_GROUP_FORMAT_OPTION),
+  GROUP_FORMAT_OPTION (NEW_GROUP_FORMAT_OPTION),
+  GROUP_FORMAT_OPTION (OLD_GROUP_FORMAT_OPTION),
+  GROUP_FORMAT_OPTION (UNCHANGED_GROUP_FORMAT_OPTION),
+  LINE_FORMAT_OPTION (NEW_LINE_FORMAT_OPTION),
+  LINE_FORMAT_OPTION (OLD_LINE_FORMAT_OPTION),
+  LINE_FORMAT_OPTION (UNCHANGED_LINE_FORMAT_OPTION),
   {0, 0, 0, 0}
 };
 
 int
 main (int argc, char **argv)
 {
-  int exit_status = 0;
+  int exit_status = EXIT_SUCCESS;
   int c;
   int i;
   int prev = -1;
+  lin ocontext = -1;
+  bool explicit_context = 0;
   int width = 130;
   bool show_c_function = 0;
   char const *from_file = 0;
@@ -235,41 +269,28 @@ main (int argc, char **argv)
   char *numend;
 
   /* Do our initializations.  */
-  xalloc_exit_failure = 2;
+  exit_failure = 2;
   initialize_main (&argc, &argv);
   program_name = argv[0];
   setlocale (LC_ALL, "");
   bindtextdomain (PACKAGE, LOCALEDIR);
   textdomain (PACKAGE);
-  context = -1;
-  horizon_lines = -1;
+  c_stack_action (c_stack_die);
   function_regexp_list.buf = &function_regexp;
   ignore_regexp_list.buf = &ignore_regexp;
   re_set_syntax (RE_SYNTAX_GREP | RE_NO_POSIX_BACKTRACKING);
   excluded = new_exclude ();
 
-  if (hard_locale (LC_TIME))
-    time_format = "%Y-%m-%d %H:%M:%S.%N %z";
-  else
-    {
-      /* See POSIX 1003.2-1992 section 4.17.6.1.4 for this format.
-         POSIX 1003.1-2001 is unchanged here.  */
-      time_format = "%a %b %e %T %Y";
-    }
-
   /* Decode the options.  */
 
-  while ((c = getopt_long (argc, argv,
-			   "0123456789abBcC:dD:eEfF:hHiI:lL:nNpPqrsS:tTuU:vwW:x:X:y",
-			   longopts, 0))
-	 != -1)
+  while ((c = getopt_long (argc, argv, shortopts, longopts, 0)) != -1)
     {
       switch (c)
 	{
 	case 0:
 	  break;
 
-	  /* All digits combine in decimal to specify the context-size.  */
+	case '0':
 	case '1':
 	case '2':
 	case '3':
@@ -279,20 +300,14 @@ main (int argc, char **argv)
 	case '7':
 	case '8':
 	case '9':
-	case '0':
-	  if (context == -1)
-	    context = 0;
-	  /* If a context length has already been specified,
-	     more digits allowed only if they follow right after the others.
-	     Reject two separate runs of digits, or digits after -C.  */
-	  else if (! ISDIGIT (prev))
-	    fatal ("context length specified twice");
-
-	  context = context * 10 + c - '0';
+	  if (! ISDIGIT (prev))
+	    ocontext = c - '0';
+	  else if (LIN_MAX / 10 < ocontext
+		   || ((ocontext = 10 * ocontext + c - '0') < 0))
+	    ocontext = LIN_MAX;
 	  break;
 
 	case 'a':
-	  /* Treat all files as text files; never treat as binary.  */
 	  text = 1;
 	  break;
 
@@ -302,34 +317,42 @@ main (int argc, char **argv)
 	  break;
 
 	case 'B':
-	  /* Ignore changes affecting only blank lines.  */
 	  ignore_blank_lines = 1;
 	  break;
 
 	case 'C':		/* +context[=lines] */
 	case 'U':		/* +unified[=lines] */
-	  if (optarg)
-	    {
-	      errno = 0;
-	      context = numval = strtoumax (optarg, &numend, 10);
-	      if (context < 0 || context != numval || errno || *numend)
-		try_help ("invalid context length `%s'", optarg);
-	    }
-	  /* Fall through.  */
+	  {
+	    if (optarg)
+	      {
+		numval = strtoumax (optarg, &numend, 10);
+		if (*numend)
+		  try_help ("invalid context length `%s'", optarg);
+		if (LIN_MAX < numval)
+		  numval = LIN_MAX;
+	      }
+	    else
+	      numval = 3;
+
+	    specify_style (c == 'U' ? OUTPUT_UNIFIED : OUTPUT_CONTEXT);
+	    if (context < numval)
+	      context = numval;
+	    explicit_context = 1;
+	  }
+	  break;
+
 	case 'c':
-	  /* Make context-style output.  */
-	  output_style = c == 'U' ? OUTPUT_UNIFIED : OUTPUT_CONTEXT;
+	  specify_style (OUTPUT_CONTEXT);
+	  if (context < 3)
+	    context = 3;
 	  break;
 
 	case 'd':
-	  /* Don't discard lines.  This makes things slower (sometimes much
-	     slower) but will find a guaranteed minimal set of changes.  */
 	  minimal = 1;
 	  break;
 
 	case 'D':
-	  /* Make merged #ifdef output.  */
-	  output_style = OUTPUT_IFDEF;
+	  specify_style (OUTPUT_IFDEF);
 	  {
 	    static char const C_ifdef_group_formats[] =
 	      "%%=%c#ifndef %s\n%%<#endif /* ! %s */\n%c#ifdef %s\n%%>#endif /* %s */\n%c#ifndef %s\n%%<#else /* %s */\n%%>#endif /* %s */\n";
@@ -343,15 +366,14 @@ main (int argc, char **argv)
 		     optarg, optarg, optarg);
 	    for (i = 0; i < sizeof group_format / sizeof *group_format; i++)
 	      {
-		group_format[i] = b;
+		specify_value (&group_format[i], b, "-D");
 		b += strlen (b) + 1;
 	      }
 	  }
 	  break;
 
 	case 'e':
-	  /* Make output that is a valid `ed' script.  */
-	  output_style = OUTPUT_ED;
+	  specify_style (OUTPUT_ED);
 	  break;
 
 	case 'E':
@@ -360,50 +382,36 @@ main (int argc, char **argv)
 	  break;
 
 	case 'f':
-	  /* Make output that looks vaguely like an `ed' script
-	     but has changes in the order they appear in the file.  */
-	  output_style = OUTPUT_FORWARD_ED;
+	  specify_style (OUTPUT_FORWARD_ED);
 	  break;
 
 	case 'F':
-	  /* Show, for each set of changes, the previous line that
-	     matches the specified regexp.  Currently affects only
-	     context-style output.  */
 	  add_regexp (&function_regexp_list, optarg);
 	  break;
 
 	case 'h':
-	  /* Split the files into chunks of around 1500 lines
-	     for faster processing.  Usually does not change the result.
+	  /* Split the files into chunks for faster processing.
+	     Usually does not change the result.
 
 	     This currently has no effect.  */
 	  break;
 
 	case 'H':
-	  /* Turn on heuristics that speed processing of large files
-	     with a small density of changes.  */
 	  speed_large_files = 1;
 	  break;
 
 	case 'i':
-	  /* Ignore changes in case.  */
 	  ignore_case = 1;
 	  break;
 
 	case 'I':
-	  /* Ignore changes affecting only lines that match the
-	     specified regexp.  */
 	  add_regexp (&ignore_regexp_list, optarg);
 	  break;
 
 	case 'l':
-	  /* Pass the output through "pr" to paginate it.  */
 	  if (!pr_program[0])
 	    try_help ("pagination not supported on this host", 0);
 	  paginate = 1;
-#if !defined SIGCHLD && defined SIGCLD
-# define SIGCHLD SIGCLD
-#endif
 #ifdef SIGCHLD
 	  /* Pagination requires forking and waiting, and
 	     System V fork+wait does not work if SIGCHLD is ignored.  */
@@ -412,7 +420,6 @@ main (int argc, char **argv)
 	  break;
 
 	case 'L':
-	  /* Specify file labels for `-c' output headers.  */
 	  if (!file_label[0])
 	    file_label[0] = optarg;
 	  else if (!file_label[1])
@@ -422,27 +429,19 @@ main (int argc, char **argv)
 	  break;
 
 	case 'n':
-	  /* Output RCS-style diffs, like `-f' except that each command
-	     specifies the number of lines affected.  */
-	  output_style = OUTPUT_RCS;
+	  specify_style (OUTPUT_RCS);
 	  break;
 
 	case 'N':
-	  /* When comparing directories, if a file appears only in one
-	     directory, treat it as present but empty in the other.  */
 	  new_file = 1;
 	  break;
 
 	case 'p':
-	  /* Make context-style output and show name of last C function.  */
 	  show_c_function = 1;
 	  add_regexp (&function_regexp_list, "^[[:alpha:]$_]");
 	  break;
 
 	case 'P':
-	  /* When comparing directories, if a file appears only in
-	     the second directory of the two,
-	     treat it as present but empty in the other.  */
 	  unidirectional_new_file = 1;
 	  break;
 
@@ -451,38 +450,29 @@ main (int argc, char **argv)
 	  break;
 
 	case 'r':
-	  /* When comparing directories,
-	     recursively compare any subdirectories found.  */
 	  recursive = 1;
 	  break;
 
 	case 's':
-	  /* Print a message if the files are the same.  */
 	  report_identical_files = 1;
 	  break;
 
 	case 'S':
-	  /* When comparing directories, start with the specified
-	     file name.  This is used for resuming an aborted comparison.  */
-	  starting_file = optarg;
+	  specify_value (&starting_file, optarg, "-S");
 	  break;
 
 	case 't':
-	  /* Expand tabs to spaces in the output so that it preserves
-	     the alignment of the input files.  */
 	  expand_tabs = 1;
 	  break;
 
 	case 'T':
-	  /* Use a tab in the output, rather than a space, before the
-	     text of an input line, so as to keep the proper alignment
-	     in the input line without changing the characters in it.  */
 	  initial_tab = 1;
 	  break;
 
 	case 'u':
-	  /* Output the context diff in unidiff format.  */
-	  output_style = OUTPUT_UNIFIED;
+	  specify_style (OUTPUT_UNIFIED);
+	  if (context < 3)
+	    context = 3;
 	  break;
 
 	case 'v':
@@ -490,7 +480,7 @@ main (int argc, char **argv)
 		  version_string, copyright_string,
 		  _(free_software_msgid), _(authorship_msgid));
 	  check_stdout ();
-	  exit (0);
+	  return EXIT_SUCCESS;
 
 	case 'w':
 	  ignore_white_space = IGNORE_ALL_SPACE;
@@ -507,21 +497,22 @@ main (int argc, char **argv)
 	  break;
 
 	case 'y':
-	  /* Use side-by-side (sdiff-style) columnar output.  */
-	  output_style = OUTPUT_SDIFF;
+	  specify_style (OUTPUT_SDIFF);
 	  break;
 
 	case 'W':
-	  /* Set the line width for OUTPUT_SDIFF.  */
-	  errno = 0;
-	  width = numval = strtoumax (optarg, &numend, 10);
-	  if (width <= 0 || width != numval || errno || *numend)
+	  numval = strtoumax (optarg, &numend, 10);
+	  if (! (0 < numval && numval <= INT_MAX) || *numend)
 	    try_help ("invalid width `%s'", optarg);
+	  if (width != numval)
+	    {
+	      if (width)
+		fatal ("conflicting width options");
+	      width = numval;
+	    }
 	  break;
 
 	case BINARY_OPTION:
-	  /* Use binary I/O when reading and writing data.
-	     On POSIX hosts, this has no effect.  */
 #if HAVE_SETMODE_DOS
 	  binary = 1;
 	  set_binary_mode (STDOUT_FILENO, 1);
@@ -529,21 +520,19 @@ main (int argc, char **argv)
 	  break;
 
 	case FROM_FILE_OPTION:
-	  if (from_file)
-	    fatal ("multiple `--from-file' options");
-	  from_file = optarg;
+	  specify_value (&from_file, optarg, "--from-file");
 	  break;
 
 	case HELP_OPTION:
 	  usage ();
 	  check_stdout ();
-	  exit (0);
+	  return EXIT_SUCCESS;
 
 	case HORIZON_LINES_OPTION:
-	  errno = 0;
-	  horizon_lines = numval = strtoumax (optarg, &numend, 10);
-	  if (horizon_lines < 0 || horizon_lines != numval || errno || *numend)
+	  numval = strtoumax (optarg, &numend, 10);
+	  if (*numend)
 	    try_help ("invalid horizon length `%s'", optarg);
+	  horizon_lines = MAX (horizon_lines, MIN (numval, LIN_MAX));
 	  break;
 
 	case IGNORE_FILE_NAME_CASE_OPTION:
@@ -560,9 +549,9 @@ main (int argc, char **argv)
 	  break;
 
 	case LINE_FORMAT_OPTION:
-	  output_style = OUTPUT_IFDEF;
+	  specify_style (OUTPUT_IFDEF);
 	  for (i = 0; i < sizeof line_format / sizeof *line_format; i++)
-	    line_format[i] = optarg;
+	    specify_value (&line_format[i], optarg, "--line-format");
 	  break;
 
 	case NO_IGNORE_FILE_NAME_CASE_OPTION:
@@ -570,11 +559,11 @@ main (int argc, char **argv)
 	  break;
 
 	case NORMAL_OPTION:
-	  output_style = OUTPUT_NORMAL;
+	  specify_style (OUTPUT_NORMAL);
 	  break;
 
 	case SDIFF_MERGE_ASSIST_OPTION:
-	  output_style = OUTPUT_SDIFF;
+	  specify_style (OUTPUT_SDIFF);
 	  sdiff_merge_assist = 1;
 	  break;
 
@@ -587,30 +576,81 @@ main (int argc, char **argv)
 	  break;
 
 	case TO_FILE_OPTION:
-	  if (to_file)
-	    fatal ("multiple `--to-file' options");
-	  to_file = optarg;
+	  specify_value (&to_file, optarg, "--to-file");
 	  break;
 
 	case UNCHANGED_LINE_FORMAT_OPTION:
 	case OLD_LINE_FORMAT_OPTION:
 	case NEW_LINE_FORMAT_OPTION:
-	  output_style = OUTPUT_IFDEF;
-	  line_format[c - UNCHANGED_LINE_FORMAT_OPTION] = optarg;
+	  specify_style (OUTPUT_IFDEF);
+	  c -= UNCHANGED_LINE_FORMAT_OPTION;
+	  specify_value (&line_format[c], optarg, line_format_option[c]);
 	  break;
 
 	case UNCHANGED_GROUP_FORMAT_OPTION:
 	case OLD_GROUP_FORMAT_OPTION:
 	case NEW_GROUP_FORMAT_OPTION:
 	case CHANGED_GROUP_FORMAT_OPTION:
-	  output_style = OUTPUT_IFDEF;
-	  group_format[c - UNCHANGED_GROUP_FORMAT_OPTION] = optarg;
+	  specify_style (OUTPUT_IFDEF);
+	  c -= UNCHANGED_GROUP_FORMAT_OPTION;
+	  specify_value (&group_format[c], optarg, group_format_option[c]);
 	  break;
 
 	default:
 	  try_help (0, 0);
 	}
       prev = c;
+    }
+
+  if (output_style == OUTPUT_UNSPECIFIED)
+    {
+      if (show_c_function)
+	{
+	  specify_style (OUTPUT_CONTEXT);
+	  if (ocontext < 0)
+	    context = 3;
+	}
+      else
+	specify_style (OUTPUT_NORMAL);
+    }
+
+  if (output_style != OUTPUT_CONTEXT || hard_locale (LC_TIME))
+    time_format = "%Y-%m-%d %H:%M:%S.%N %z";
+  else
+    {
+      /* See POSIX 1003.1-2001 for this format.  */
+      time_format = "%a %b %e %T %Y";
+    }
+
+  if (0 <= ocontext)
+    {
+      bool modern_usage = 200112 <= posix2_version ();
+
+      if ((output_style == OUTPUT_CONTEXT
+	   || output_style == OUTPUT_UNIFIED)
+	  && (context < ocontext
+	      || (ocontext < context && ! explicit_context)))
+	{
+	  if (modern_usage)
+	    {
+	      error (0, 0,
+		     _("`-%ld' option is obsolete; use `-%c %ld'"),
+		     (long) ocontext,
+		     output_style == OUTPUT_CONTEXT ? 'C' : 'U',
+		     (long) ocontext);
+	      try_help (0, 0);
+	    }
+	  context = ocontext;
+	}
+      else
+	{
+	  if (modern_usage)
+	    {
+	      error (0, 0, _("`-%ld' option is obsolete; omit it"),
+		     (long) ocontext);
+	      try_help (0, 0);
+	    }
+	}
     }
 
   {
@@ -624,23 +664,11 @@ main (int argc, char **argv)
      *		a half line plus a gutter is an integral number of tabs,
      *		so that tabs in the right column line up.
      */
-    int t = expand_tabs ? 1 : TAB_WIDTH;
-    int off = (width + t + GUTTER_WIDTH_MINIMUM) / (2*t)  *  t;
+    unsigned int t = expand_tabs ? 1 : TAB_WIDTH;
+    int off = (width + t + GUTTER_WIDTH_MINIMUM) / (2 * t)  *  t;
     sdiff_half_width = MAX (0, MIN (off - GUTTER_WIDTH_MINIMUM, width - off)),
     sdiff_column2_offset = sdiff_half_width ? off : width;
   }
-
-  if (show_c_function && output_style != OUTPUT_UNIFIED)
-    output_style = OUTPUT_CONTEXT;
-
-  if (output_style == OUTPUT_UNSPECIFIED)
-    output_style = OUTPUT_NORMAL;
-
-  if (output_style != OUTPUT_CONTEXT && output_style != OUTPUT_UNIFIED)
-    context = 0;
-  else if (context == -1)
-    /* Default amount of context for -c.  */
-    context = 3;
 
   /* Make the horizon at least as large as the context, so that
      shift_boundaries has more freedom to shift the first and last hunks.  */
@@ -684,38 +712,40 @@ main (int argc, char **argv)
 
   if (from_file)
     {
-      for (;  optind < argc;  optind++)
-	{
-	  int status = compare_files ((struct comparison *) 0,
-				      from_file, argv[optind]);
-	  if (exit_status < status)
-	    exit_status = status;
-	}
+      if (to_file)
+	fatal ("--from-file and --to-file both specified");
+      else
+	for (; optind < argc; optind++)
+	  {
+	    int status = compare_files ((struct comparison *) 0,
+					from_file, argv[optind]);
+	    if (exit_status < status)
+	      exit_status = status;
+	  }
     }
-
-  if (to_file)
+  else
     {
-      for (;  optind < argc;  optind++)
+      if (to_file)
+	for (; optind < argc; optind++)
+	  {
+	    int status = compare_files ((struct comparison *) 0,
+					argv[optind], to_file);
+	    if (exit_status < status)
+	      exit_status = status;
+	  }
+      else
 	{
-	  int status = compare_files ((struct comparison *) 0,
-				      argv[optind], to_file);
-	  if (exit_status < status)
-	    exit_status = status;
-	}
-    }
+	  if (argc - optind != 2)
+	    {
+	      if (argc - optind < 2)
+		try_help ("missing operand after `%s'", argv[argc - 1]);
+	      else
+		try_help ("extra operand `%s'", argv[optind + 2]);
+	    }
 
-  if (!from_file && !to_file)
-    {
-      if (argc - optind != 2)
-	{
-	  if (argc - optind < 2)
-	    try_help ("missing operand after `%s'", argv[argc - 1]);
-	  else
-	    try_help ("extra operand `%s'", argv[optind + 2]);
+	  exit_status = compare_files ((struct comparison *) 0,
+				       argv[optind], argv[optind + 1]);
 	}
-
-      exit_status = compare_files ((struct comparison *) 0,
-				   argv[optind], argv[optind + 1]);
     }
 
   /* Print any messages that were saved up for last.  */
@@ -781,7 +811,7 @@ summarize_regexp_list (struct regexp_list *reglist)
 	  char const *m = re_compile_pattern (reglist->regexps, reglist->len,
 					      reglist->buf);
 	  if (m != 0)
-	    error (2, 0, "%s: %s", reglist->regexps, m);
+	    error (EXIT_TROUBLE, 0, "%s: %s", reglist->regexps, m);
 	}
     }
 }
@@ -791,7 +821,8 @@ try_help (char const *reason_msgid, char const *operand)
 {
   if (reason_msgid)
     error (0, 0, _(reason_msgid), operand);
-  error (2, 0, _("Try `%s --help' for more information."), program_name);
+  error (EXIT_TROUBLE, 0, _("Try `%s --help' for more information."),
+	 program_name);
   abort ();
 }
 
@@ -825,7 +856,6 @@ static char const * const option_help_msgid[] = {
   "",
   N_("-c  -C NUM  --context[=NUM]  Output NUM (default 3) lines of copied context.\n\
 -u  -U NUM  --unified[=NUM]  Output NUM (default 3) lines of unified context.\n\
-  -NUM  Use NUM context lines.\n\
   -L LABEL  --label LABEL  Use LABEL instead of file name.\n\
   -p  --show-c-function  Show which C function each change is in.\n\
   -F RE  --show-function-line=RE  Show the most recent line matching RE."),
@@ -914,36 +944,45 @@ usage (void)
 	}
     }
 }
+
+/* Set VAR to VALUE, reporting an OPTION error if this is a
+   conflict.  */
+static void
+specify_value (char const **var, char const *value, char const *option)
+{
+  if (*var && strcmp (*var, value) != 0)
+    {
+      error (0, 0, _("conflicting %s option value `%s'"), option, value);
+      try_help (0, 0);
+    }
+  *var = value;
+}
+
+/* Set the output style to STYLE, diagnosing conflicts.  */
+static void
+specify_style (enum output_style style)
+{
+  if (output_style != style)
+    {
+      if (output_style != OUTPUT_UNSPECIFIED)
+	try_help ("conflicting output style options", 0);
+      output_style = style;
+    }
+}
 
 static char const *
 filetype (struct stat const *st)
 {
-  /* See POSIX 1003.2-1992 section 4.17.6.1.1 and Table 5-1 for these formats.
-     POSIX 1003.1-2001 is unchanged here.
+  /* See POSIX 1003.1-2001 for these formats.
 
      To keep diagnostics grammatical in English, the returned string
      must start with a consonant.  */
 
   if (S_ISREG (st->st_mode))
-    {
-      bool executable = (st->st_mode & (S_IXUSR | S_IXGRP | S_IXOTH)) != 0;
-	  
-      if (st->st_size == 0)
-	return (executable
-		? _("regular empty executable file")
-		: _("regular empty file"));
-      /* POSIX 1003.2-1992 section 5.14.2 seems to suggest that we
-	 must read the file and guess whether it's C, Fortran, etc.,
-	 but this is somewhat useless and doesn't reflect historical
-	 practice.  POSIX 1003.1-2001 is unchanged here.  We're
-	 allowed to guess wrong, so don't bother to read the file.  */
-      return (executable
-	      ? _("regular executable file")
-	      : _("regular file"));
-    }
+    return st->st_size == 0 ? _("regular empty file") : _("regular file");
+
   if (S_ISDIR (st->st_mode)) return _("directory");
 
-  /* other POSIX file types */
 #ifdef S_ISBLK
   if (S_ISBLK (st->st_mode)) return _("block special file");
 #endif
@@ -952,6 +991,10 @@ filetype (struct stat const *st)
 #endif
 #ifdef S_ISFIFO
   if (S_ISFIFO (st->st_mode)) return _("fifo");
+#endif
+  /* S_ISLNK is impossible with `fstat' and `stat'.  */
+#ifdef S_ISSOCK
+  if (S_ISSOCK (st->st_mode)) return _("socket");
 #endif
 #ifdef S_TYPEISMQ
   if (S_TYPEISMQ (st)) return _("message queue");
@@ -962,11 +1005,8 @@ filetype (struct stat const *st)
 #ifdef S_TYPEISSHM
   if (S_TYPEISSHM (st)) return _("shared memory object");
 #endif
-
-  /* other popular file types */
-  /* S_ISLNK is impossible with `fstat' and `stat'.  */
-#ifdef S_ISSOCK
-  if (S_ISSOCK (st->st_mode)) return _("socket");
+#ifdef S_TYPEISTMO
+  if (S_TYPEISTMO (st)) return _("typed memory object");
 #endif
 
   return _("weird file");
@@ -1006,8 +1046,8 @@ set_mtime_to_now (struct stat *st)
    (If PARENT is 0, then the first name is just NAME0, etc.)
    This is self-contained; it opens the files and closes them.
 
-   Value is 0 if files are the same, 1 if different,
-   2 if there is a problem opening them.  */
+   Value is EXIT_SUCCESS if files are the same, EXIT_FAILURE if
+   different, EXIT_TROUBLE if there is a problem opening them.  */
 
 static int
 compare_files (struct comparison const *parent,
@@ -1017,7 +1057,7 @@ compare_files (struct comparison const *parent,
   struct comparison cmp;
 #define DIR_P(f) (S_ISDIR (cmp.file[f].stat.st_mode) != 0)
   register int f;
-  int status = 0;
+  int status = EXIT_SUCCESS;
   bool same_files;
   char *free0, *free1;
 
@@ -1032,12 +1072,12 @@ compare_files (struct comparison const *parent,
       char const *name = name0 == 0 ? name1 : name0;
       char const *dir = parent->file[name0 == 0].name;
 
-      /* See POSIX 1003.2-1992 section 4.17.6.1.1 for this format.
-	 POSIX 1003.1-2001 is unchanged here.  */
+      /* See POSIX 1003.1-2001 for this format.  */
       message ("Only in %s: %s\n", dir, name);
 
-      /* Return 1 so that diff_dirs will return 1 ("some files differ").  */
-      return 1;
+      /* Return EXIT_FAILURE so that diff_dirs will return
+	 EXIT_FAILURE ("some files differ").  */
+      return EXIT_FAILURE;
     }
 
   memset (cmp.file, 0, sizeof cmp.file);
@@ -1103,9 +1143,8 @@ compare_files (struct comparison const *parent,
 			  MAX (0, cmp.file[f].stat.st_size - pos);
 		    }
 
-		  /* POSIX 1003.2-1992 4.17.6.1.4 requires current
-		     time for stdin.  POSIX 1003.1-2001 is unchanged
-		     here.  */
+		  /* POSIX 1003.1-2001 requires current time for
+		     stdin.  */
 		  set_mtime_to_now (&cmp.file[f].stat);
 		}
 	    }
@@ -1139,11 +1178,11 @@ compare_files (struct comparison const *parent,
 	{
 	  errno = e;
 	  perror_with_name (cmp.file[f].name);
-	  status = 2;
+	  status = EXIT_TROUBLE;
 	}
     }
 
-  if (status == 0 && ! parent && DIR_P (0) != DIR_P (1))
+  if (status == EXIT_SUCCESS && ! parent && DIR_P (0) != DIR_P (1))
     {
       /* If one is a directory, and it was specified in the command line,
 	 use the file in that dir with the other file's basename.  */
@@ -1161,11 +1200,11 @@ compare_files (struct comparison const *parent,
       if (stat (filename, &cmp.file[dir_arg].stat) != 0)
 	{
 	  perror_with_name (filename);
-	  status = 2;
+	  status = EXIT_TROUBLE;
 	}
     }
 
-  if (status != 0)
+  if (status != EXIT_SUCCESS)
     {
       /* One of the files should exist but does not.  */
     }
@@ -1191,8 +1230,7 @@ compare_files (struct comparison const *parent,
 	{
 	  /* But don't compare dir contents one level down
 	     unless -r was specified.
-	     See POSIX 1003.2-1992 section 4.17.6.1.1 for this format.
-	     POSIX 1003.1-2001 is unchanged here.  */
+	     See POSIX 1003.1-2001 for this format.  */
 	  message ("Common subdirectories: %s and %s\n",
 		   cmp.file[0].name, cmp.file[1].name);
 	}
@@ -1219,19 +1257,17 @@ compare_files (struct comparison const *parent,
 	      char const *dir
 		= parent->file[cmp.file[0].desc == NONEXISTENT].name;
 
-	      /* See POSIX 1003.2-1992 section 4.17.6.1.1 for this format.
-		 POSIX 1003.1-2001 is unchanged here.  */
+	      /* See POSIX 1003.1-2001 for this format.  */
 	      message ("Only in %s: %s\n", dir, name0);
 
-	      status = 1;
+	      status = EXIT_FAILURE;
 	    }
 	}
       else
 	{
 	  /* We have two files that are not to be compared.  */
 
-	  /* See POSIX 1003.2-1992 section 4.17.6.1.1 for this format.
-	     POSIX 1003.1-2001 is unchanged here.  */
+	  /* See POSIX 1003.1-2001 for this format.  */
 	  message5 ("File %s is a %s while file %s is a %s\n",
 		    file_label[0] ? file_label[0] : cmp.file[0].name,
 		    filetype (&cmp.file[0].stat),
@@ -1239,7 +1275,7 @@ compare_files (struct comparison const *parent,
 		    filetype (&cmp.file[1].stat));
 
 	  /* This is a difference.  */
-	  status = 1;
+	  status = EXIT_FAILURE;
 	}
     }
   else if (files_can_be_treated_as_binary
@@ -1252,7 +1288,7 @@ compare_files (struct comparison const *parent,
       message ("Files %s and %s differ\n",
 	       file_label[0] ? file_label[0] : cmp.file[0].name,
 	       file_label[1] ? file_label[1] : cmp.file[1].name);
-      status = 1;
+      status = EXIT_FAILURE;
     }
   else
     {
@@ -1264,7 +1300,7 @@ compare_files (struct comparison const *parent,
 	if ((cmp.file[0].desc = open (cmp.file[0].name, O_RDONLY, 0)) < 0)
 	  {
 	    perror_with_name (cmp.file[0].name);
-	    status = 2;
+	    status = EXIT_TROUBLE;
 	  }
       if (cmp.file[1].desc == UNOPENED)
 	{
@@ -1274,7 +1310,7 @@ compare_files (struct comparison const *parent,
 		   < 0)
 	    {
 	      perror_with_name (cmp.file[1].name);
-	      status = 2;
+	      status = EXIT_TROUBLE;
 	    }
 	}
 
@@ -1287,7 +1323,7 @@ compare_files (struct comparison const *parent,
 
       /* Compare the files, if no error was found.  */
 
-      if (status == 0)
+      if (status == EXIT_SUCCESS)
 	status = diff_2_files (&cmp);
 
       /* Close the file descriptors.  */
@@ -1295,20 +1331,20 @@ compare_files (struct comparison const *parent,
       if (0 <= cmp.file[0].desc && close (cmp.file[0].desc) != 0)
 	{
 	  perror_with_name (cmp.file[0].name);
-	  status = 2;
+	  status = EXIT_TROUBLE;
 	}
       if (0 <= cmp.file[1].desc && cmp.file[0].desc != cmp.file[1].desc
 	  && close (cmp.file[1].desc) != 0)
 	{
 	  perror_with_name (cmp.file[1].name);
-	  status = 2;
+	  status = EXIT_TROUBLE;
 	}
     }
 
   /* Now the comparison has been done, if no error prevented it,
      and STATUS is the value this function will return.  */
 
-  if (status == 0)
+  if (status == EXIT_SUCCESS)
     {
       if (report_identical_files && !DIR_P (0))
 	message ("Files %s and %s are identical\n",
