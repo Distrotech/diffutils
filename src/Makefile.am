@@ -33,6 +33,7 @@ DEFS = -DLOCALEDIR=\"$(localedir)\" @DEFS@
 # rpl_realloc.  And link it before @INTTLIBS@, since it invokes i18n
 # functions.
 LDADD = ../lib/libdiffutils.a @INTLLIBS@ ../lib/libdiffutils.a
+diff_LDADD = $(LDADD) @LIB_CLOCK_GETTIME@
 
 cmp_SOURCES = cmp.c version.c
 diff3_SOURCES = diff3.c version.c
