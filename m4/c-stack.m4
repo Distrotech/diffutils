@@ -102,7 +102,7 @@ AC_DEFUN([AC_SYS_XSI_STACK_OVERFLOW_HEURISTIC],
 	   c_stack_action ();
 	   return recurse ("\1");
 	 }
-	], 
+	],
 	[ac_cv_sys_xsi_stack_overflow_heuristic=yes],
 	[ac_cv_sys_xsi_stack_overflow_heuristic=no],
 	[ac_cv_sys_xsi_stack_overflow_heuristic=cross-compiling])])
