@@ -393,7 +393,7 @@ Usage: %s [options] my-file older-file your-file\n\
 Options:\n\
        [-exAEX3v] [-i|-m] [-L label1 [-L label2 [-L label3]]] [--text] [--ed]\n\
        [--merge] [--show-all] [--show-overlap] [--overlap-only] [--easy-only]\n\
-       [--label=my-label [--label=your-label]] [--version]\n\
+       [--label=label1 [--label=label2 [--label=label3]]] [--version]\n\
        Only one of [exAEX3] is allowed\n", argv0);
   exit (2);
 }
