@@ -1,6 +1,6 @@
-# Automakefile for GNU diffutils library.
+# Automakefile for GNU Diffutils library.
 
-# Copyright (C) 2001 Free Software Foundation, Inc.
+# Copyright (C) 2001, 2002 Free Software Foundation, Inc.
 
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -28,7 +28,7 @@ SUBDIRS = posix
 
 noinst_HEADERS = \
   cmpbuf.h dirname.h error.h exclude.h fnmatch.hin freesoft.h getopt.h \
-  hard-locale.h inttostr.h prepargs.h quotesys.h \
+  gettext.h hard-locale.h inttostr.h prepargs.h quotesys.h \
   regex.hin setmode.h unlocked-io.h xalloc.h xstrtol.h
 
 libdiffutils_a_SOURCES = \
