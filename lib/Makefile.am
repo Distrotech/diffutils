@@ -17,8 +17,6 @@
 ## Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
 ## 02111-1307, USA.
 
-AUTOMAKE_OPTIONS = gnits
-
 noinst_LIBRARIES = libdiffutils.a
 
 EXTRA_DIST = alloca.c fnmatch.c inttostr.c malloc.c memchr.c mkstemp.c \
