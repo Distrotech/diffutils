@@ -1,7 +1,9 @@
-User-visible changes since version 2.6:
+User-visible changes in version 2.7:
 
 * New diff option: --binary (useful only on non-Posix hosts)
-* -b and -w now ignore the incompleteness of lines; -B no longer does this.
+* diff -b and -w now ignore line incompleteness; -B no longer does this.
+* cmp -c now uses locale to decide which output characters to quote.
+* Help and version messages are reorganized.
 
 
 User-visible changes in version 2.6:
