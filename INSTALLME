@@ -34,8 +34,8 @@ upgrade to the latest one, preferably libiconv-1.8 or newer.
 be out soon.)  If the problem seems isolated to diffutils, though,
 please report a bug.
 
-This program requires a Standard C compiler; if you have an older K&R
-compiler, please install GCC first.
+This program requires a Standard C compiler (C89 or later); if you
+have an older K&R compiler, please install GCC first.
 
 If you make changes to the source code, you may need recent test
 versions of GNU build tools to regenerate the intermediate files.  The
@@ -46,60 +46,6 @@ this distribution:
 
 * GNU Automake 1.6 <ftp://ftp.gnu.org/gnu/automake/automake-1.6.tar.gz>
 
-* GNU help2man 1.25 <ftp://ftp.gnu.org/gnu/help2man/help2man-1.25.tar.gz>,
-  patched as follows:
+* GNU gettext 0.11.1 <ftp://ftp.gnu.org/gnu/gettext/gettext-0.11.1.tar.gz>
 
-2002-03-10  Paul Eggert  <eggert@twinsun.com>
-
-	* help2man.PL: When you see a line like this:
-	  -I RE  --ignore-matching-lines=RE  Ignore changes matching RE.
-	take the "-I RE  --ignore-matching-lines=RE" to be the option,
-	and the rest to be a description.  This is the style used by
-	diffutils.
-
-===================================================================
-RCS file: help2man.PL,v
-retrieving revision 1.25
-retrieving revision 1.25.0.1
-diff -pu -r1.25 -r1.25.0.1
---- help2man.PL	2001/12/03 08:06:09	1.25
-+++ help2man.PL	2002/03/11 05:39:37	1.25.0.1
-@@ -467,7 +467,7 @@ while (length)
-     my $content = '';
- 
-     # Option with description.
--    if (s/^( {1,10}([+-]\S.*?))(?:(  +)|\n( {20,}))(\S.*)\n//)
-+    if (s/^( {1,10}([+-]\S.*?))(?:(  +(?=[^- ]))|\n( {20,}))(\S.*)\n//)
-     {
- 	$matched .= $& if %append;
- 	$indent = length ($4 || "$1$3");
-
-
-* GNU gettext 0.11 <ftp://ftp.gnu.org/gnu/gettext/gettext-0.11.tar.gz>,
-  patched as follows:
-
-2002-03-02  Bruno Haible  <bruno@clisp.org>
-
-	* gettext.m4 (AM_GNU_GETTEXT): Set LIBINTL and LTLIBINTL to empty if
-	no preinstalled GNU gettext was found.
-	Reported by Paul Eggert.
-
-===================================================================
-RCS file: m4/RCS/gettext.m4,v
-retrieving revision 0.11
-retrieving revision 0.11.0.1
-diff -pu -r0.11 -r0.11.0.1
---- m4/gettext.m4	2002/01/24 12:26:27	0.11
-+++ m4/gettext.m4	2002/03/04 12:34:23	0.11.0.1
-@@ -169,6 +169,11 @@ return (int) gettext ("")]ifelse([$2], [
-            || { test "$gt_cv_func_gnugettext_libintl" = "yes" \
-                 && test "$PACKAGE" != gettext; }; then
-           gt_use_preinstalled_gnugettext=yes
-+        else
-+          dnl Reset the values set by searching libintl.
-+          LIBINTL=
-+          LTLIBINTL=
-+          INCINTL=
-         fi
- 
-     ifelse(gt_included_intl, yes, [
+* GNU help2man 1.27 <ftp://ftp.gnu.org/gnu/help2man/help2man-1.27.tar.gz>
