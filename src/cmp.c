@@ -1,7 +1,7 @@
 /* cmp -- compare two files.  */
 
 static char const copyright_string[] =
-   "Copyright 1990, 91,92,93,94,95,96, 1997 Free Software Foundation, Inc.";
+   "Copyright 1990, 91,92,93,94,95,96, 1998 Free Software Foundation, Inc.";
 
 /* This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -135,7 +135,7 @@ usage ()
   printf (_("If a FILE is `-' or missing, read standard input.\n"));
   for (p = option_help_msgid;  *p;  p++)
     printf ("  %s\n", _(*p));
-  printf (_("Report bugs to <bug-gnu-utils@prep.ai.mit.edu>.\n"));
+  printf (_("Report bugs to <bug-gnu-utils@gnu.org>.\n"));
 }
 
 int
