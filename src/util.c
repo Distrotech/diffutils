@@ -1,5 +1,5 @@
 /* Support routines for GNU DIFF.
-   Copyright (C) 1988, 1989, 1992, 1993 Free Software Foundation, Inc.
+   Copyright 1988, 1989, 1992, 1993, 1994 Free Software Foundation, Inc.
 
 This file is part of GNU DIFF.
 
@@ -157,7 +157,9 @@ setup_output (name0, name1, depth)
   outfile = 0;
 }
 
+#if HAVE_FORK
 static pid_t pr_pid;
+#endif
 
 void
 begin_output ()
@@ -179,10 +181,12 @@ begin_output ()
 
   if (paginate_flag)
     {
+      /* Make OUTFILE a pipe to a subsidiary `pr'.  */
+
+#if HAVE_FORK
       int pipes[2];
 
-      /* Fork a `pr' and make OUTFILE a pipe to it.  */
-      if (pipe (pipes) < 0)
+      if (pipe (pipes) != 0)
 	pfatal_with_name ("pipe");
 
       fflush (stdout);
@@ -208,7 +212,28 @@ begin_output ()
 	{
 	  close (pipes[0]);
 	  outfile = fdopen (pipes[1], "w");
+	  if (!outfile)
+	    pfatal_with_name ("fdopen");
 	}
+#else /* ! HAVE_FORK */
+      char *command = xmalloc (4 * strlen (name) + strlen (PR_FILE_NAME) + 10);
+      char *p, *q;
+      sprintf (command, "%s -f -h '", PR_FILE_NAME);
+      p = command + strlen (command);
+      for (q = name;  *q;  *p++ = *q++)
+	if (*q == '\'')
+	  {
+	    *p++ = '\'';
+	    *p++ = '\\';
+	    *p++ = '\'';
+	  }
+      *p++ = '\'';
+      *p = 0;
+      outfile = popen (command, "w");
+      if (!outfile)
+	pfatal_with_name (command);
+      free (command);
+#endif /* ! HAVE_FORK */
     }
   else
     {
@@ -252,6 +277,9 @@ finish_output ()
       int wstatus;
       if (ferror (outfile))
 	fatal ("write error");
+#if ! HAVE_FORK
+      wstatus = pclose (outfile);
+#else /* HAVE_FORK */
       if (fclose (outfile) != 0)
 	pfatal_with_name ("write error");
 #if HAVE_WAITPID
@@ -266,7 +294,8 @@ finish_output ()
 	  break;
       }
 #endif
-      if (! WIFEXITED (wstatus) || WEXITSTATUS (wstatus) != 0)
+#endif /* HAVE_FORK */
+      if (wstatus != 0)
 	fatal ("subsidiary pr failed");
     }
 
