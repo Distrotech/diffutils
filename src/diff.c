@@ -598,6 +598,10 @@ main (argc, argv)
 
   if (output_style == OUTPUT_IFDEF)
     {
+      /* Format arrays are char *, not char const *,
+	 because integer formats are temporarily modified.
+	 But it is safe to assign a constant like "%=" to a format array,
+	 since "%=" does not format any integers.  */
       int i;
       for (i = 0; i < sizeof (line_format) / sizeof (*line_format); i++)
 	if (!line_format[i])
