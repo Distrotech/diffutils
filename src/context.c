@@ -1,7 +1,7 @@
 /* Context-format output routines for GNU DIFF.
 
    Copyright (C) 1988, 1989, 1991, 1992, 1993, 1994, 1995, 1998, 2001,
-   2002 Free Software Foundation, Inc.
+   2002, 2004 Free Software Foundation, Inc.
 
    This file is part of GNU DIFF.
 
@@ -22,7 +22,6 @@
 
 #include "diff.h"
 #include <inttostr.h>
-#include <regex.h>
 
 #ifdef ST_MTIM_NSEC
 # define TIMESPEC_NS(timespec) ((timespec).ST_MTIM_NSEC)
@@ -61,7 +60,7 @@ print_context_label (char const *mark,
       int nsec = TIMESPEC_NS (inf->stat.st_mtim);
       if (! (tm && nstrftime (buf, sizeof buf, time_format, tm, 0, nsec)))
 	{
-	  long sec = inf->stat.st_mtime;
+	  long int sec = inf->stat.st_mtime;
 	  verify (info_preserved, sizeof inf->stat.st_mtime <= sizeof sec);
 	  sprintf (buf, "%ld.%.9d", sec, nsec);
 	}
@@ -97,7 +96,7 @@ print_context_script (struct change *script, bool unidiff)
     {
       struct change *e;
       for (e = script; e; e = e->link)
-	e->ignore = 0;
+	e->ignore = false;
     }
 
   find_function_last_search = - files[0].prefix_lines;
@@ -118,7 +117,7 @@ print_context_script (struct change *script, bool unidiff)
 static void
 print_context_number_range (struct file_data const *file, lin a, lin b)
 {
-  long trans_a, trans_b;
+  long int trans_a, trans_b;
   translate_range (file, a, b, &trans_a, &trans_b);
 
   /* We can have B <= A in the case of a range of no lines.
@@ -144,7 +143,7 @@ print_context_function (FILE *out, char const *function)
   putc (' ', out);
   for (i = 0; i < 40 && function[i] != '\n'; i++)
     continue;
-  fwrite (function, 1, i, out);
+  fwrite (function, sizeof (char), i, out);
 }
 
 /* Print a portion of an edit script in context format.
@@ -264,12 +263,13 @@ pr_context_hunk (struct change *hunk)
 static void
 print_unidiff_number_range (struct file_data const *file, lin a, lin b)
 {
-  long trans_a, trans_b;
+  long int trans_a, trans_b;
   translate_range (file, a, b, &trans_a, &trans_b);
 
   /* We can have B < A in the case of a range of no lines.
-     In this case, we should print the line number before the range,
-     which is B.  */
+     In this case, we print the line number before the range,
+     which is B.  It would be more logical to print A, but
+     'patch' expects B in order to detect diffs against empty files.  */
   if (trans_b <= trans_a)
     fprintf (outfile, trans_b < trans_a ? "%ld,0" : "%ld", trans_b);
   else

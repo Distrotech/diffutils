@@ -1,7 +1,7 @@
 /* Analyze file differences for GNU DIFF.
 
-   Copyright (C) 1988, 1989, 1992, 1993, 1994, 1995, 1998, 2001, 2002
-   Free Software Foundation, Inc.
+   Copyright (C) 1988, 1989, 1992, 1993, 1994, 1995, 1998, 2001, 2002,
+   2004 Free Software Foundation, Inc.
 
    This file is part of GNU DIFF.
 
@@ -37,7 +37,6 @@
 #include <cmpbuf.h>
 #include <error.h>
 #include <file-type.h>
-#include <regex.h>
 #include <xalloc.h>
 
 static lin *xvec, *yvec;	/* Vectors being compared. */
