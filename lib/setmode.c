@@ -31,10 +31,12 @@ typedef enum {false = 0, true = 1} bool;
 
 #if HAVE_SETMODE_DOS
 # include <io.h>
-#endif
-
-#if HAVE_UNISTD_H
-# include <unistd.h>
+# if HAVE_FCNTL_H
+#  include <fcntl.h>
+# endif
+# if HAVE_UNISTD_H
+#  include <unistd.h>
+# endif
 #endif
 
 #include "setmode.h"
@@ -43,15 +45,17 @@ typedef enum {false = 0, true = 1} bool;
 
 /* Set the binary mode of FD to MODE, returning its previous mode.
    MODE is 1 for binary and 0 for text.  If setting the mode might
-   cause problems, ignore the request and return the current mode.
-   Always return 1 on POSIX platforms, which do not distinguish
-   between text and binary.  */
+   cause problems, ignore the request and return MODE.  Always return
+   1 on POSIX platforms, which do not distinguish between text and
+   binary.  */
 
 bool
-set_binary_mode (int fd, bool binary)
+set_binary_mode (int fd, bool mode)
 {
 #if HAVE_SETMODE_DOS
-  return ! isatty (fd) && setmode (fd, binary ? O_BINARY : 0);
+  if (isatty (fd))
+    return mode;
+  return setmode (fd, mode ? O_BINARY : O_TEXT) != O_TEXT;
 #else
   return 1;
 #endif
