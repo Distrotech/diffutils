@@ -5,7 +5,7 @@
 AC_INIT(src/diff.c)
 AM_CONFIG_HEADER([config.h:config.hin])
 AC_PREREQ(2.52)
-AM_INIT_AUTOMAKE(diffutils, 2.7.4)
+AM_INIT_AUTOMAKE(diffutils, 2.7.5)
 ALL_LINGUAS="da de en_GB eo es fr gl id pl ru sv tr"
 
 AC_PROG_AWK
@@ -35,14 +35,16 @@ AC_DEFINE(DEFAULT_EDITOR_PROGRAM, "ed",
   [Name of editor program, unless overridden.])
 
 AC_PATH_PROG(PR_PROGRAM, pr, "")
-AC_DEFINE(PR_PROGRAM, "$PR_PROGRAM", [Name of "pr" program.])
+AC_DEFINE_UNQUOTED(PR_PROGRAM, "$PR_PROGRAM", [Name of "pr" program.])
 
 AC_HEADER_STDC
 AC_CHECK_HEADERS(fcntl.h libintl.h limits.h locale.h \
   stdbool.h stdlib.h string.h sys/file.h time.h unistd.h)
 AC_CHECK_MEMBERS([struct stat.st_blksize])
 AC_CHECK_MEMBERS([struct stat.st_rdev])
-AC_CHECK_TYPES([ptrdiff_t, uintmax_t])
+AC_CHECK_TYPE(ptrdiff_t, int)
+AC_CHECK_TYPE(ssize_t, int)
+jm_AC_TYPE_UINTMAX_T
 AM_GNU_GETTEXT
 XGETTEXT="AWK='$AWK' \$(SHELL) \$(top_srcdir)/exgettext $XGETTEXT"
 AC_HEADER_DIRENT
@@ -104,8 +106,11 @@ else
   rm -f lib/regex.h
 fi
 
+jm_AC_DOS
+AC_FUNC_SETMODE_DOS
+
 AC_CONFIG_FILES([Makefile doc/Makefile intl/Makefile \
 		 lib/Makefile lib/posix/Makefile \
-		 m4/Makefile po/Makefile.in src/Makefile])
+		 m4/Makefile ms/Makefile po/Makefile.in src/Makefile])
 AC_CONFIG_COMMANDS([default], [date > stamp-h])
 AC_OUTPUT
