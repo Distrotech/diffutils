@@ -94,7 +94,7 @@ set SPECIAL_ARG_SEEN=
 
 Rem Create a response file for the configure script.
 echo --srcdir=%XSRC% > arguments
-if "%CACHE%" == "enabled"              echo --cache-file=%XSRC%/pc/config.cache >> arguments
+if "%CACHE%" == "enabled"              echo --cache-file=%XSRC%/ms/config.cache >> arguments
 if "%DEPENDENCY_TRACKING%" == "enabled"  echo --enable-dependency-tracking >> arguments
 if "%DEPENDENCY_TRACKING%" == "disabled" echo --disable-dependency-tracking >> arguments
 if not "%ARGS%" == ""                    echo %ARGS% >> arguments
@@ -114,12 +114,12 @@ Rem Update configuration files
 echo Updating configuration scripts...
 test -f ./configure.orig
 if errorlevel 1 update configure configure.orig
-sed -f %XSRC%/pc/config.sed configure.orig > configure
+sed -f %XSRC%/ms/config.sed configure.orig > configure
 if errorlevel 1 goto sed_error
 
 Rem Make sure they have a config.site file
-set CONFIG_SITE=%XSRC%/pc/config.site
-if not "%CONFIG_SITE%" == "%XSRC%/pc/config.site" goto small_env
+set CONFIG_SITE=%XSRC%/ms/config.site
+if not "%CONFIG_SITE%" == "%XSRC%/ms/config.site" goto small_env
 
 Rem Make sure crucial file names are not munged by unpacking
 test -f %XSRC%/po/Makefile.in.in
