@@ -1,5 +1,5 @@
 /* sdiff-format output routines for GNU DIFF.
-   Copyright 1991, 1992, 1993, 1997 Free Software Foundation, Inc.
+   Copyright 1991, 1992, 1993, 1998 Free Software Foundation, Inc.
 
    This file is part of GNU DIFF.
 
