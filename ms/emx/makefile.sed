@@ -1,3 +1,9 @@
+/^all:/i\
+default: debug\
+
+/^\.c\.o:$/i\
+.SUFFIXES: .c $o\
+
 s|@CC@|gcc|g
 s|@CFLAGS@|-g -O|g
 s|@DEFS@|-DHAVE_CONFIG_H|g
@@ -20,6 +26,7 @@ s|\.o|$o|g
 s|\*\$o|*.o|g
 
 s|^	rm -f|	-del|g
+s|^SHELL *=|# &|
 s|^\(DEFAULT_EDITOR_PROGRAM *=\).*|\1 edit|
 s|^\(DIFF_PROGRAM *=\).*|\1 diff.exe|
 s|^\(NULL_DEVICE *=\).*|\1 /dev/nul|
