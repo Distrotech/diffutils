@@ -4502,13 +4502,16 @@ to understand these extensions.
 
 Some files are neither directories nor regular files: they are unusual
 files like symbolic links, device special files, named pipes, and
-sockets.  Currently, @command{diff} treats symbolic links like regular files;
-it treats other special files like regular files if they are specified
-at the top level, but simply reports their presence when comparing
-directories.  This means that @command{patch} cannot represent changes
-to such files.  For example, if you change which file a symbolic link
-points to, @command{diff} outputs the difference between the two files,
-instead of the change to the symbolic link.
+sockets.  Currently, @command{diff} treats symbolic links as if they
+were the pointed-to files, except that a recursive @command{diff}
+reports an error if it detects infinite loops of symbolic links (e.g.,
+symbolic links to @file{..}).  @command{diff} treats other special
+files like regular files if they are specified at the top level, but
+simply reports their presence when comparing directories.  This means
+that @command{patch} cannot represent changes to such files.  For
+example, if you change which file a symbolic link points to,
+@command{diff} outputs the difference between the two files, instead
+of the change to the symbolic link.
 
 @c This might not be a good idea; is it wise for root to install devices
 @c this way?
