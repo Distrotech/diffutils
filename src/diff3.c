@@ -1132,7 +1132,7 @@ read_diff (char const *filea,
   int fd, wstatus;
   struct stat pipestat;
 
-#if HAVE_FORK
+#if HAVE_WORKING_FORK || HAVE_WORKING_VFORK
 
   char const *argv[8];
   char const **ap;
@@ -1181,7 +1181,7 @@ read_diff (char const *filea,
   close (fds[1]);		/* Prevent erroneous lack of EOF */
   fd = fds[0];
 
-#else /* ! HAVE_FORK */
+#else
 
   FILE *fpipe;
   char const args[] = " -a --horizon-lines=100 -- ";
@@ -1203,7 +1203,7 @@ read_diff (char const *filea,
   free (command);
   fd = fileno (fpipe);
 
-#endif /* ! HAVE_FORK */
+#endif
 
   if (fstat (fd, &pipestat) != 0)
     perror_with_exit ("fstat");
@@ -1228,18 +1228,18 @@ read_diff (char const *filea,
 
   *output_placement = diff_result;
 
-#if ! HAVE_FORK
+#if ! (HAVE_WORKING_FORK || HAVE_WORKING_VFORK)
 
   wstatus = pclose (fpipe);
 
-#else /* HAVE_FORK */
+#else
 
   if (close (fd) != 0)
     perror_with_exit ("close");
   if (waitpid (pid, &wstatus, 0) < 0)
     perror_with_exit ("waitpid");
 
-#endif /* HAVE_FORK */
+#endif
 
   if (! (WIFEXITED (wstatus) && WEXITSTATUS (wstatus) < 2))
     fatal ("subsidiary program failed");
