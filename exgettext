@@ -1,17 +1,16 @@
 #! /bin/sh
-# Wrapper around gettext for GCC sources.
-# Copyright 1998 Free Software Foundation, Inc.
+# Wrapper around gettext for programs using the msgid convention.
+
+# Copyright (C) 1998, 2001 Free Software Foundation, Inc.
 
 # Written by Paul Eggert <eggert@twinsun.com>.
 
-# This file is part of GNU CC.
-
-# GNU CC is free software; you can redistribute it and/or modify
+# This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2, or (at your option)
 # any later version.
 
-# GNU CC is distributed in the hope that it will be useful,
+# This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
@@ -21,8 +20,14 @@
 # the Free Software Foundation, 59 Temple Place - Suite 330,
 # Boston, MA 02111-1307, USA.
 
-# Set environment to default value, if not already set.
-: ${AWK=awk}
+# Always operate in the C locale.
+LANG=C
+LANGUAGE=C
+LC_ALL=C
+export LANG LANGUAGE LC_ALL
+
+# Set AWK if environment has not already set it.
+AWK=${AWK-awk}
 
 # The argument to this wrapper is the xgettext command to be executed.
 # Extract the xgettext program name from the rest of the command.
