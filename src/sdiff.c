@@ -834,7 +834,7 @@ edit (left, lenl, right, lenr, outfile)
 		  argv[i++] = tmpname;
 		  argv[i++] = 0;
 
-		  execvp (edbin, argv);
+		  execvp (edbin, (char **) argv);
 		  write (fileno (stderr), edbin, strlen (edbin));
 		  write (fileno (stderr), ": not found\n", 12);
 		  _exit (1);
