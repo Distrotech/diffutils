@@ -86,8 +86,7 @@ dir_sort (dirname, nonex)
       if (files_index == nfiles)
 	{
 	  nfiles *= 2;
-	  files
-	    = (char **) xrealloc (files, sizeof (char *) * nfiles);
+	  files = (char **) xrealloc (files, sizeof (char *) * nfiles);
 	}
       files[files_index++] = concat (next->d_name, "", "");
     }
@@ -127,7 +126,8 @@ compare_names (file1, file2)
    For a file that appears in only one of the dirs, one of the name-args
    to HANDLE_FILE is zero.
 
-   DEPTH is the current depth in recursion.
+   DEPTH is the current depth in recursion, used for skipping top-level
+   files by the -S option.
 
    Returns the maximum of all the values returned by HANDLE_FILE,
    or 2 if trouble is encountered in opening files.  */
@@ -136,12 +136,11 @@ int
 diff_dirs (name1, name2, handle_file, depth, nonex1, nonex2)
      char *name1, *name2;
      int (*handle_file) ();
-     int nonex1, nonex2;
+     int depth, nonex1, nonex2;
 {
   struct dirdata data1, data2;
-  register int i1, i2;
-  int val = 0;
-  int v1;
+  register int i1, i2;		/* Indexes in data{1,2}.files.  */
+  int val = 0;			/* Return value.  */
 
   /* Get sorted contents of both dirs.  */
   data1 = dir_sort (name1, nonex1);
@@ -158,7 +157,7 @@ diff_dirs (name1, name2, handle_file, depth, nonex1, nonex2)
   i1 = 0;
   i2 = 0;
 
-  /* If -Sname was specified, and this is the topmost level of comparison,
+  /* If `-S name' was specified, and this is the topmost level of comparison,
      ignore all file names less than the specified starting name.  */
 
   if (dir_start_file && depth == 0)
@@ -172,7 +171,7 @@ diff_dirs (name1, name2, handle_file, depth, nonex1, nonex2)
   /* Loop while files remain in one or both dirs.  */
   while (i1 < data1.length || i2 < data2.length)
     {
-      int nameorder;
+      int nameorder, v1;
 
       /* Compare next name in dir 1 with next name in dir 2.
 	 At the end of a dir,
