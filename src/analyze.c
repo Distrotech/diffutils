@@ -76,9 +76,6 @@ struct partition
    Set PART->(xmid,ymid) to the midpoint (XMID,YMID).  The diagonal number
    XMID - YMID equals the number of inserted lines minus the number
    of deleted lines (counting only lines before the midpoint).
-   Return the approximate edit cost; this is the total number of
-   lines inserted or deleted (counting only lines before the midpoint),
-   unless a heuristic is used to terminate the search prematurely.
 
    Set PART->lo_minimal to true iff the minimal edit script for the
    left half of the partition is known; similarly for PART->hi_minimal.
@@ -92,7 +89,7 @@ struct partition
    the worst this can do is cause suboptimal diff output.
    It cannot cause incorrect diff output.  */
 
-static lin
+static void
 diag (lin xoff, lin xlim, lin yoff, lin ylim, bool find_minimal,
       struct partition *part)
 {
@@ -116,7 +113,7 @@ diag (lin xoff, lin xlim, lin yoff, lin ylim, bool find_minimal,
   for (c = 1;; ++c)
     {
       lin d;			/* Active diagonal. */
-      bool big_snake = 0;
+      bool big_snake = false;
 
       /* Extend the top-down search by an edit step in each diagonal. */
       fmin > dmin ? fd[--fmin - 1] = -1 : ++fmin;
@@ -134,14 +131,14 @@ diag (lin xoff, lin xlim, lin yoff, lin ylim, bool find_minimal,
 	  while (x < xlim && y < ylim && xv[x] == yv[y])
 	    ++x, ++y;
 	  if (x - oldx > SNAKE_LIMIT)
-	    big_snake = 1;
+	    big_snake = true;
 	  fd[d] = x;
 	  if (odd && bmin <= d && d <= bmax && bd[d] <= x)
 	    {
 	      part->xmid = x;
 	      part->ymid = y;
-	      part->lo_minimal = part->hi_minimal = 1;
-	      return 2 * c - 1;
+	      part->lo_minimal = part->hi_minimal = true;
+	      return;
 	    }
 	}
 
@@ -161,14 +158,14 @@ diag (lin xoff, lin xlim, lin yoff, lin ylim, bool find_minimal,
 	  while (x > xoff && y > yoff && xv[x - 1] == yv[y - 1])
 	    --x, --y;
 	  if (oldx - x > SNAKE_LIMIT)
-	    big_snake = 1;
+	    big_snake = true;
 	  bd[d] = x;
 	  if (!odd && fmin <= d && d <= fmax && x <= fd[d])
 	    {
 	      part->xmid = x;
 	      part->ymid = y;
-	      part->lo_minimal = part->hi_minimal = 1;
-	      return 2 * c;
+	      part->lo_minimal = part->hi_minimal = true;
+	      return;
 	    }
 	}
 
@@ -185,9 +182,8 @@ diag (lin xoff, lin xlim, lin yoff, lin ylim, bool find_minimal,
 
       if (200 < c && big_snake && speed_large_files)
 	{
-	  lin best;
+	  lin best = 0;
 
-	  best = 0;
 	  for (d = fmax; d >= fmin; d -= 2)
 	    {
 	      lin dd = d - fmid;
@@ -217,9 +213,9 @@ diag (lin xoff, lin xlim, lin yoff, lin ylim, bool find_minimal,
 	    }
 	  if (best > 0)
 	    {
-	      part->lo_minimal = 1;
-	      part->hi_minimal = 0;
-	      return 2 * c - 1;
+	      part->lo_minimal = true;
+	      part->hi_minimal = false;
+	      return;
 	    }
 
 	  best = 0;
@@ -252,9 +248,9 @@ diag (lin xoff, lin xlim, lin yoff, lin ylim, bool find_minimal,
 	    }
 	  if (best > 0)
 	    {
-	      part->lo_minimal = 0;
-	      part->hi_minimal = 1;
-	      return 2 * c - 1;
+	      part->lo_minimal = false;
+	      part->hi_minimal = true;
+	      return;
 	    }
 	}
 
@@ -302,17 +298,17 @@ diag (lin xoff, lin xlim, lin yoff, lin ylim, bool find_minimal,
 	    {
 	      part->xmid = fxbest;
 	      part->ymid = fxybest - fxbest;
-	      part->lo_minimal = 1;
-	      part->hi_minimal = 0;
+	      part->lo_minimal = true;
+	      part->hi_minimal = false;
 	    }
 	  else
 	    {
 	      part->xmid = bxbest;
 	      part->ymid = bxybest - bxbest;
-	      part->lo_minimal = 0;
-	      part->hi_minimal = 1;
+	      part->lo_minimal = false;
+	      part->hi_minimal = true;
 	    }
-	  return 2 * c - 1;
+	  return;
 	}
     }
 }
@@ -334,8 +330,8 @@ diag (lin xoff, lin xlim, lin yoff, lin ylim, bool find_minimal,
 static void
 compareseq (lin xoff, lin xlim, lin yoff, lin ylim, bool find_minimal)
 {
-  lin * const xv = xvec; /* Help the compiler.  */
-  lin * const yv = yvec;
+  lin const *xv = xvec; /* Help the compiler.  */
+  lin const *yv = yvec;
 
   /* Slide down the bottom initial diagonal. */
   while (xoff < xlim && yoff < ylim && xv[xoff] == yv[yoff])
@@ -353,35 +349,14 @@ compareseq (lin xoff, lin xlim, lin yoff, lin ylim, bool find_minimal)
       files[0].changed[files[0].realindexes[xoff++]] = 1;
   else
     {
-      lin c;
       struct partition part;
 
       /* Find a point of correspondence in the middle of the files.  */
+      diag (xoff, xlim, yoff, ylim, find_minimal, &part);
 
-      c = diag (xoff, xlim, yoff, ylim, find_minimal, &part);
-
-      if (c == 1)
-	{
-	  /* This should be impossible, because it implies that
-	     one of the two subsequences is empty,
-	     and that case was handled above without calling `diag'.
-	     Let's verify that this is true.  */
-	  abort ();
-#if 0
-	  /* The two subsequences differ by a single insert or delete;
-	     record it and we are done.  */
-	  if (part.xmid - part.ymid < xoff - yoff)
-	    files[1].changed[files[1].realindexes[part.ymid - 1]] = 1;
-	  else
-	    files[0].changed[files[0].realindexes[part.xmid]] = 1;
-#endif
-	}
-      else
-	{
-	  /* Use the partitions to split this problem into subproblems.  */
-	  compareseq (xoff, part.xmid, yoff, part.ymid, part.lo_minimal);
-	  compareseq (part.xmid, xlim, part.ymid, ylim, part.hi_minimal);
-	}
+      /* Use the partitions to split this problem into subproblems.  */
+      compareseq (xoff, part.xmid, yoff, part.ymid, part.lo_minimal);
+      compareseq (part.xmid, xlim, part.ymid, ylim, part.hi_minimal);
     }
 }
 
@@ -613,8 +588,8 @@ shift_boundaries (struct file_data filevec[])
 
   for (f = 0; f < 2; f++)
     {
-      bool *changed = filevec[f].changed;
-      bool const *other_changed = filevec[1 - f].changed;
+      char *changed = filevec[f].changed;
+      char *other_changed = filevec[1 - f].changed;
       lin const *equivs = filevec[f].equivs;
       lin i = 0;
       lin j = 0;
@@ -732,8 +707,8 @@ static struct change *
 build_reverse_script (struct file_data const filevec[])
 {
   struct change *script = 0;
-  bool *changed0 = filevec[0].changed;
-  bool *changed1 = filevec[1].changed;
+  char *changed0 = filevec[0].changed;
+  char *changed1 = filevec[1].changed;
   lin len0 = filevec[0].buffered_lines;
   lin len1 = filevec[1].buffered_lines;
 
@@ -769,8 +744,8 @@ static struct change *
 build_script (struct file_data const filevec[])
 {
   struct change *script = 0;
-  bool *changed0 = filevec[0].changed;
-  bool *changed1 = filevec[1].changed;
+  char *changed0 = filevec[0].changed;
+  char *changed1 = filevec[1].changed;
   lin i0 = filevec[0].buffered_lines, i1 = filevec[1].buffered_lines;
 
   /* Note that changedN[-1] does exist, and is 0.  */
@@ -893,7 +868,7 @@ diff_2_files (struct comparison *cmp)
 	 Allocate an extra element, always 0, at each end of each vector.  */
 
       size_t s = cmp->file[0].buffered_lines + cmp->file[1].buffered_lines + 4;
-      bool *flag_space = zalloc (s * sizeof *flag_space);
+      char *flag_space = zalloc (s);
       cmp->file[0].changed = flag_space + 1;
       cmp->file[1].changed = flag_space + cmp->file[0].buffered_lines + 3;
 
@@ -990,11 +965,11 @@ diff_2_files (struct comparison *cmp)
 	      switch (output_style)
 		{
 		case OUTPUT_CONTEXT:
-		  print_context_script (script, 0);
+		  print_context_script (script, false);
 		  break;
 
 		case OUTPUT_UNIFIED:
-		  print_context_script (script, 1);
+		  print_context_script (script, true);
 		  break;
 
 		case OUTPUT_ED:
