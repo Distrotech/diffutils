@@ -171,7 +171,7 @@ static VOID *
 xmalloc (size)
      size_t size;
 {
-  VOID *r = malloc (size);
+  VOID *r = (VOID *) malloc (size);
   if (!r)
     fatal ("virtual memory exhausted");
   return r;
@@ -240,11 +240,11 @@ ck_fflush (f)
 #if !HAVE_MEMCHR
 char *
 memchr (s, c, n)
-     char *s;
+     char const *s;
      int c;
      size_t n;
 {
-  unsigned char *p = (unsigned char *) s, *lim = p + n;
+  unsigned char const *p = (unsigned char const *) s, *lim = p + n;
   for (;  p < lim;  p++)
     if (*p == c)
       return (char *) p;
@@ -350,7 +350,7 @@ lf_copy (lf, lines, outfile)
 
   while (lines)
     {
-      lf->bufpos = memchr (lf->bufpos, '\n', lf->buflim - lf->bufpos);
+      lf->bufpos = (char *) memchr (lf->bufpos, '\n', lf->buflim - lf->bufpos);
       if (! lf->bufpos)
 	{
 	  ck_fwrite (start, lf->buflim - start, outfile);
@@ -376,7 +376,7 @@ lf_skip (lf, lines)
 {
   while (lines)
     {
-      lf->bufpos = memchr (lf->bufpos, '\n', lf->buflim - lf->bufpos);
+      lf->bufpos = (char *) memchr (lf->bufpos, '\n', lf->buflim - lf->bufpos);
       if (! lf->bufpos)
 	{
 	  if (! lf_refill (lf))
@@ -401,7 +401,7 @@ lf_snarf (lf, buffer, bufsize)
 
   for (;;)
     {
-      char *next = memchr (start, '\n', lf->buflim + 1 - start);
+      char *next = (char *) memchr (start, '\n', lf->buflim + 1 - start);
       size_t s = next - start;
       if (bufsize <= s)
 	return 0;
