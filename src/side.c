@@ -1,7 +1,7 @@
 /* sdiff-format output routines for GNU DIFF.
 
-   Copyright (C) 1991, 1992, 1993, 1998, 2001, 2002 Free Software
-   Foundation, Inc.
+   Copyright (C) 1991, 1992, 1993, 1998, 2001, 2002, 2004 Free
+   Software Foundation, Inc.
 
    This file is part of GNU DIFF.
 
@@ -135,7 +135,7 @@ print_half_line (char const *const *line, size_t indent, size_t out_bound)
 	  break;
 
 	default:
-	  if (! ISPRINT (c))
+	  if (! isprint (c))
 	    goto control_char;
 	  /* falls through */
 	case ' ':
@@ -166,7 +166,7 @@ print_1sdiff_line (char const *const *left, char sep,
   size_t hw = sdiff_half_width;
   size_t c2o = sdiff_column2_offset;
   size_t col = 0;
-  bool put_newline = 0;
+  bool put_newline = false;
 
   if (left)
     {
@@ -206,8 +206,8 @@ print_sdiff_common_lines (lin limit0, lin limit1)
     {
       if (sdiff_merge_assist)
 	{
-	  long len0 = limit0 - i0;
-	  long len1 = limit1 - i1;
+	  long int len0 = limit0 - i0;
+	  long int len1 = limit1 - i1;
 	  fprintf (outfile, "i%ld,%ld\n", len0, len1);
 	}
 
@@ -248,8 +248,8 @@ print_sdiff_hunk (struct change *hunk)
 
   if (sdiff_merge_assist)
     {
-      long len0 = last0 - first0 + 1;
-      long len1 = last1 - first1 + 1;
+      long int len0 = last0 - first0 + 1;
+      long int len1 = last1 - first1 + 1;
       fprintf (outfile, "c%ld,%ld\n", len0, len1);
     }
 
