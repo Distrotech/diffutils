@@ -29,8 +29,14 @@ AC_DEFUN([AC_HEADER_STDBOOL],
 	  #ifndef false
 	   "error: false is not defined"
 	  #endif
+	  #if false
+	   "error: false is not 0"
+	  #endif
 	  #ifndef true
 	   "error: false is not defined"
+	  #endif
+	  #if true != 1
+	   "error: true is not 1"
 	  #endif
 	  #ifndef __bool_true_false_are_defined
 	   "error: __bool_true_false_are_defined is not defined"
