@@ -19,6 +19,9 @@
 
 #### Start of system configuration section.  ####
 
+PACKAGE = diffutils
+VERSION = 2.7.1 alpha
+
 srcdir = @srcdir@
 VPATH = @srcdir@
 
@@ -58,19 +61,35 @@ PR_PROGRAM = /bin/pr
 SHELL = /bin/sh
 
 # The source files for all of the programs.
-srcs=diff.c analyze.c cmpbuf.c cmpbuf.h io.c context.c ed.c normal.c ifdef.c \
-	quote.c util.c dir.c memchr.c waitpid.c \
-	version.c diff.h regex.c regex.h side.c system.h \
-	diff3.c sdiff.c cmp.c error.c xmalloc.c getopt.c getopt1.c getopt.h \
-	fnmatch.c fnmatch.h alloca.c
+diffutils_srcs = \
+	analyze.c cmp.c cmpbuf.c cmpbuf.h context.c \
+	diff.c diff.h diff3.c dir.c ed.c ifdef.c io.c \
+	memchr.c normal.c quote.c sdiff.c side.c system.h \
+	util.c waitpid.c
+srcs = $(diffutils_srcs) \
+	alloca.c error.c fnmatch.c fnmatch.h \
+	getopt.c getopt.h getopt1.c regex.c regex.h xmalloc.c
 distfiles = $(srcs) README INSTALL NEWS diagmeet.note Makefile.in \
 	stamp-h.in config.hin configure configure.in COPYING ChangeLog \
-	diff.texi diff.info* texinfo.tex \
-	install-sh mkinstalldirs
+	diff.texi diff.info texinfo.tex \
+	install-sh mkinstalldirs getmsgids messages.po version.c version.texi \
+	pc/COPYING pc/INSTALL pc/config.h pc/makefile pc/makefile.sed pc/pc.c \
+	pc/djgpp/config.h pc/djgpp/makefile.sed \
+	pc/emx/config.h pc/emx/diff.def pc/emx/gnuregex.def pc/emx/makefile.sed
 
 PROGRAMS = cmp diff diff3 sdiff
 
 all: $(PROGRAMS) info
+
+version.c:
+	(echo '#include <config.h>' && \
+	 echo 'char const version_string[] = "GNU $(PACKAGE) $(VERSION)";') >$@
+
+version.texi: diff.texi
+	(echo '@set VERSION $(VERSION)' && \
+	 set `sed -n '/^.*\$$Id: diff.texi,v \([^ ]*\) \([^ ]*\).*/{ s//\1 \2/; s|/|-|g; p; q; }' diff.texi` && \
+	 echo "@set EDITION $$1" && \
+	 echo "@set UPDATED $$2") >$@
 
 COMPILE = $(CC) -c $(CPPFLAGS) $(DEFS) -I. -I$(srcdir) $(CFLAGS)
 
@@ -98,8 +117,8 @@ cmp: $(cmp_o)
 	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $(cmp_o) $(LIBS)
 
 info: diff.info
-diff.info: diff.texi
-	$(MAKEINFO) $(srcdir)/diff.texi --output=$@
+diff.info: diff.texi version.texi
+	$(MAKEINFO) --no-split $(srcdir)/diff.texi --output=$@
 
 dvi: diff.dvi
 diff.dvi: diff.texi
@@ -128,6 +147,9 @@ util.o: util.c
 TAGS: $(srcs)
 	etags $(srcs)
 
+messages.po: getmsgids $(diffutils_srcs)
+	./getmsgids $(diffutils_srcs) >$@
+
 clean:
 	rm -f *.o $(PROGRAMS) core
 	rm -f *.aux *.cp *.cps *.dvi *.fn *.fns *.ky *.kys *.log
@@ -139,16 +161,14 @@ distclean: clean
 	rm -f Makefile config.cache config.h config.log config.status stamp-h
 
 realclean: distclean
-	rm -f TAGS *.info*
+	rm -f TAGS *.info version.*
 
 install: all installdirs
 	for p in $(PROGRAMS); do \
 	  $(INSTALL_PROGRAM) $$p $(bindir)/`echo $$p | $(edit_program_name)`; \
 	done
 	{ test -f diff.info || cd $(srcdir); } && \
-	for f in diff.info*; do \
-	  $(INSTALL_DATA) $$f $(infodir)/$$f; \
-	done
+	$(INSTALL_DATA) diff.info $(infodir)
 
 installdirs:
 	$(SHELL) ${srcdir}/mkinstalldirs $(bindir) $(infodir)
@@ -185,16 +205,20 @@ stamp-h: config.hin config.status
 Makefile: Makefile.in config.status
 	./config.status
 
-dist: $(distfiles)
-	echo diffutils-`sed -e '/version_string/!d' -e 's/[^0-9]*\([0-9a-z.]*\).*/\1/' -e q version.c` > .fname
-	rm -rf `cat .fname`
-	mkdir `cat .fname`
-	-ln $(distfiles) `cat .fname`
+D = $(PACKAGE)-$(VERSION)
+D_dirs = $D $D/pc $D/pc/djgpp $D/pc/emx
+
+dist: $D.tar.gz
+
+$D.tar.gz: $(distfiles)
+	rm -rf $D
+	mkdir $(D_dirs)
+	chmod a+rwx $(D_dirs)
 	for file in $(distfiles); do \
-	  [ -r `cat .fname`/$$file ] || cp -p $$file `cat .fname` || exit; \
+	  ln $$file $D/$$file 2>/dev/null || cp -p $$file $D/$$file; \
 	done
-	tar -chf - `cat .fname` | gzip >`cat .fname`.tar.gz
-	rm -rf `cat .fname` .fname
+	tar -chf - $D | gzip >$@
+	rm -rf $D
 
 # Prevent GNU make v3 from overflowing arg limit on SysV.
 .NOEXPORT:
