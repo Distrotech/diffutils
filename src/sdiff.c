@@ -45,7 +45,6 @@ char *program_name;
 
 static char const *editor_program = DEFAULT_EDITOR_PROGRAM;
 static char const **diffargv;
-static char const *not_found;
 
 static char * volatile tmpname;
 static FILE *tmp;
@@ -61,7 +60,6 @@ static bool edit (struct line_filter *, char const *, lin, lin, struct line_filt
 static bool interact (struct line_filter *, struct line_filter *, char const *, struct line_filter *, char const *, FILE *);
 static void checksigs (void);
 static void diffarg (char const *);
-static void execdiff (void);
 static void fatal (char const *) __attribute__((noreturn));
 static void perror_fatal (char const *) __attribute__((noreturn));
 static void trapsigs (void);
@@ -129,12 +127,14 @@ static bool suppress_common_lines;
 /* Value for the long option that does not have single-letter equivalents.  */
 enum
 {
-  HELP_OPTION = CHAR_MAX + 1,
+  DIFF_PROGRAM_OPTION = CHAR_MAX + 1,
+  HELP_OPTION,
   STRIP_TRAILING_CR_OPTION
 };
 
 static struct option const longopts[] =
 {
+  {"diff-program", 1, 0, DIFF_PROGRAM_OPTION},
   {"expand-tabs", 0, 0, 't'},
   {"help", 0, 0, HELP_OPTION},
   {"ignore-all-space", 0, 0, 'W'}, /* swap W and w for historical reasons */
@@ -164,6 +164,15 @@ try_help (char const *reason_msgid, char const *operand)
   abort ();
 }
 
+static void
+check_stdout (void)
+{
+  if (ferror (stdout))
+    fatal ("write failed");
+  else if (fclose (stdout) != 0)
+    perror_fatal (_("standard output"));
+}
+
 static char const * const option_help_msgid[] = {
   "",
   N_("-o FILE  --output=FILE  Operate interactively, sending output to FILE."),
@@ -185,6 +194,7 @@ static char const * const option_help_msgid[] = {
   "",
   N_("-d  --minimal  Try hard to find a smaller set of changes."),
   N_("-H  --speed-large-files  Assume large files and many scattered small changes."),
+  N_("--diff-program=PROGRAM  Use PROGRAM to compare files."),
   "",
   N_("-v  --version  Output version info."),
   N_("--help  Output this help."),
@@ -423,8 +433,7 @@ main (int argc, char *argv[])
   if (prog)
     editor_program = prog;
 
-  prog = getenv ("DIFF_PROGRAM");
-  diffarg (prog ? prog : DEFAULT_DIFF_PROGRAM);
+  diffarg (DEFAULT_DIFF_PROGRAM);
 
   /* parse command line args */
   while ((opt = getopt_long (argc, argv, "abBdHiI:lo:stvw:W", longopts, 0))
@@ -485,6 +494,7 @@ main (int argc, char *argv[])
 	  printf ("sdiff %s\n%s\n\n%s\n\n%s\n",
 		  version_string, copyright_string,
 		  _(free_software_msgid), _(authorship_msgid));
+	  check_stdout ();
 	  exit (0);
 
 	case 'w':
@@ -496,10 +506,13 @@ main (int argc, char *argv[])
 	  diffarg ("-w");
 	  break;
 
+	case DIFF_PROGRAM_OPTION:
+	  diffargv[0] = optarg;
+	  break;
+
 	case HELP_OPTION:
 	  usage ();
-	  if (ferror (stdout) || fclose (stdout) != 0)
-	    fatal ("write failed");
+	  check_stdout ();
 	  exit (0);
 
 	case STRIP_TRAILING_CR_OPTION:
@@ -529,7 +542,8 @@ main (int argc, char *argv[])
       diffarg (argv[optind]);
       diffarg (argv[optind + 1]);
       diffarg (0);
-      execdiff ();
+      execvp (diffargv[0], (char **) diffargv);
+      perror_fatal (diffargv[0]);
     }
   else
     {
@@ -574,6 +588,7 @@ main (int argc, char *argv[])
 	    *p++ = ' ';
 	  }
 	p[-1] = 0;
+	errno = 0;
 	diffout = popen (command, "r");
 	if (! diffout)
 	  perror_fatal (command);
@@ -589,8 +604,6 @@ main (int argc, char *argv[])
 
 	if (pipe (diff_fds) != 0)
 	  perror_fatal ("pipe");
-
-	not_found = _(": not found\n");
 
 # if HAVE_WORKING_VFORK
 	/* Block SIGINT and SIGPIPE.  */
@@ -622,7 +635,8 @@ main (int argc, char *argv[])
 		close (diff_fds[1]);
 	      }
 
-	    execdiff ();
+	    execvp (diffargv[0], (char **) diffargv);
+	    _exit (127);
 	  }
 
 # if HAVE_WORKING_VFORK
@@ -657,9 +671,12 @@ main (int argc, char *argv[])
 
       {
 	int wstatus;
+	int werrno = 0;
 
 #if ! (HAVE_WORKING_FORK || HAVE_WORKING_VFORK)
 	wstatus = pclose (diffout);
+	if (wstatus == -1)
+	  werrno = errno;
 #else
 	ck_fclose (diffout);
 	while (waitpid (diffpid, &wstatus, 0) < 0)
@@ -679,8 +696,12 @@ main (int argc, char *argv[])
 	if (! interact_ok)
 	  exiterr ();
 
-	if (! (WIFEXITED (wstatus) && WEXITSTATUS (wstatus) < 2))
-	  fatal ("subsidiary program failed");
+	if (! werrno && WIFEXITED (wstatus) && WEXITSTATUS (wstatus) == 127)
+	  error (2, 0, _("subsidiary program `%s' not found"),
+		 editor_program);
+	if (werrno || ! (WIFEXITED (wstatus) && WEXITSTATUS (wstatus) < 2))
+	  error (2, werrno, _("subsidiary program `%s' failed"),
+		 editor_program);
 
 	untrapsig (0);
 	checksigs ();
@@ -701,15 +722,6 @@ diffarg (char const *a)
       diffargv = xrealloc (diffargv, diffarglim * sizeof *diffargv);
     }
   diffargv[diffargs++] = a;
-}
-
-static void
-execdiff (void)
-{
-  execvp (diffargv[0], (char **) diffargv);
-  write (STDERR_FILENO, diffargv[0], strlen (diffargv[0]));
-  write (STDERR_FILENO, not_found, strlen (not_found));
-  _exit (2);
 }
 
 
@@ -1011,52 +1023,58 @@ edit (struct line_filter *left, char const *lname, lin lline, lin llen,
 
 	    {
 	      int wstatus;
-#if ! (HAVE_WORKING_FORK || HAVE_WORKING_VFORK)
-	      char *command =
-		xmalloc (quote_system_arg (0, editor_program)
-			 + 1 + strlen (tmpname) + 1);
-	      sprintf (command + quote_system_arg (command, editor_program),
-		       " %s", tmpname);
-	      wstatus = system (command);
-	      free (command);
-#else
-	      pid_t pid;
-
+	      int werrno = 0;
 	      ignore_SIGINT = 1;
 	      checksigs ();
 
-	      not_found = _(": not found\n");
-	      pid = vfork ();
-	      if (pid == 0)
-		{
-		  char const *argv[3];
-		  int i = 0;
+	      {
+#if ! (HAVE_WORKING_FORK || HAVE_WORKING_VFORK)
+		char *command =
+		  xmalloc (quote_system_arg (0, editor_program)
+			   + 1 + strlen (tmpname) + 1);
+		sprintf (command + quote_system_arg (command, editor_program),
+			 " %s", tmpname);
+		wstatus = system (command);
+		if (wstatus == -1)
+		  werrno = errno;
+		free (command);
+#else
+		pid_t pid;
 
-		  argv[i++] = editor_program;
-		  argv[i++] = tmpname;
-		  argv[i] = 0;
+		pid = vfork ();
+		if (pid == 0)
+		  {
+		    char const *argv[3];
+		    int i = 0;
 
-		  execvp (editor_program, (char **) argv);
-		  write (STDERR_FILENO, editor_program,
-			 strlen (editor_program));
-		  write (STDERR_FILENO, not_found, strlen (not_found));
-		  _exit (1);
-		}
+		    argv[i++] = editor_program;
+		    argv[i++] = tmpname;
+		    argv[i] = 0;
 
-	      if (pid < 0)
-		perror_fatal ("fork");
+		    execvp (editor_program, (char **) argv);
+		    _exit (127);
+		  }
 
-	      while (waitpid (pid, &wstatus, 0) < 0)
-		if (errno == EINTR)
-		  checksigs ();
-		else
-		  perror_fatal ("waitpid");
+		if (pid < 0)
+		  perror_fatal ("fork");
+
+		while (waitpid (pid, &wstatus, 0) < 0)
+		  if (errno == EINTR)
+		    checksigs ();
+		  else
+		    perror_fatal ("waitpid");
+#endif
+	      }
 
 	      ignore_SIGINT = 0;
-#endif
 
+	      if (! werrno && WIFEXITED (wstatus)
+		  && WEXITSTATUS (wstatus) == 127)
+		error (2, 0, _("subsidiary program `%s' not found"),
+		       editor_program);
 	      if (wstatus != 0)
-		fatal ("subsidiary program failed");
+		error (2, werrno, _("subsidiary program `%s' failed"),
+		       editor_program);
 	    }
 
 	    {
