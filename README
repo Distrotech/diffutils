@@ -26,4 +26,4 @@ in some buggy file systems:
     This bug also can occur with Network Appliance NFS servers
     in snapshot directories; see Netapp bug#1780.
 
-Report bugs to bug-gnu-utils@prep.ai.mit.edu
+Report bugs to bug-gnu-utils@gnu.org
