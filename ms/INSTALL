@@ -4,7 +4,7 @@ It currently assumes GCC with either DJGPP or emx.
 To build, do the following:
 
 	cd ..
-	make -f pc\makefile env=ENV
+	make -f pc/makefile env=ENV
 	# edit makefile, particularly checking `prefix' and `exec_prefix'
 	make OS-TARGET
 

@@ -13,8 +13,8 @@ s|@INSTALL_PROGRAM@|xcopy|g
 s|@LDFLAGS@|-s|g
 s|@LIBOBJS@|pc.o|g
 s|@VPATH@|.|g
-s|@exec_prefix@|c:\\$(env)|g
-s|@prefix@|c:\\$(env)\\docs|g
+s|@exec_prefix@|c:/$(env)|g
+s|@prefix@|c:/$(env)/docs|g
 s|@srcdir@|.|g
 s|@[0-9A-Z_a-z]*@||g
 
@@ -22,7 +22,6 @@ s|regex.o|$(REGEX)|g
 s|\$(REGEX):|regex.o:|g
 
 /^[^#]/{
-	s|/|\\|g
 	s|;||g
 	s|\$\$|%%|g
 
@@ -46,7 +45,7 @@ s|^	for \([a-z]\) in \(.*\) do |	$(SUBSHELL) for %%\1 in (\2) do |g
 s|`echo ||g
 s/ | \$[(]edit_program_name.*//g
 /test  *-f/d
-s|	.*\\mkinstalldirs *\(.*\)|	$(SUBSHELL) for %%d in (\1) do md %%d|g
+s|	.*/mkinstalldirs *\(.*\)|	$(SUBSHELL) for %%d in (\1) do md %%d|g
 s|\.info\*|.i*|g
 s|rm -f|del|g
 

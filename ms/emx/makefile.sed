@@ -1,7 +1,7 @@
 1i\
 env = emx
 
-/^LIBS *=/s|=.*|= pc\\$(env)\\diff.def|
+/^LIBS *=/s|=.*|= pc/$(env)/diff.def|
 
 s|cmp|&.exe|g
 s|s*diff3*|&.exe|g
