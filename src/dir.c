@@ -97,8 +97,12 @@ dir_sort (dir, dirdata)
 	  errno = e;
 	  return -1;
 	}
+#ifdef VOID_CLOSEDIR
+      closedir (reading);
+#else
       if (closedir (reading) != 0)
 	return -1;
+#endif
     }
 
   /* Create the `files' table from the `data' table.  */
