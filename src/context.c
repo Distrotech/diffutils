@@ -83,8 +83,8 @@ print_context_script (script, unidiff_flag)
 	e->ignore = 0;
     }
 
-  find_function_last_search = 0;
-  find_function_last_match = -1;
+  find_function_last_search = - files[0].prefix_lines;
+  find_function_last_match = find_function_last_search - 1;
 
   if (unidiff_flag)
     print_script (script, find_hunk, pr_unidiff_hunk);
@@ -451,7 +451,7 @@ find_function (file, linenum, linep, lenp)
     }
   /* If we search back to where we started searching the previous time,
      find the line we found last time.  */
-  if (find_function_last_match >= 0)
+  if (find_function_last_match >= - file->prefix_lines)
     {
       i = find_function_last_match;
       *linep = file->linbuf[i];
