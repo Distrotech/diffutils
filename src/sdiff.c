@@ -296,13 +296,13 @@ expand_name (name, isdir, other_name)
     {
       /* Yield NAME/BASE, where BASE is OTHER_NAME's basename.  */
       char const
-	*p = rindex (other_name, '/'),
+	*p = strrchr (other_name, '/'),
 	*base = p ? p+1 : other_name;
       size_t namelen = strlen (name), baselen = strlen (base);
       char *r = xmalloc (namelen + baselen + 2);
-      bcopy (name, r, namelen);
+      memcpy (r, name, namelen);
       r[namelen] = '/';
-      bcopy (base, r + namelen + 1, baselen + 1);
+      memcpy (r + namelen + 1, base, baselen + 1);
       return r;
     }
 }
@@ -405,7 +405,7 @@ lf_snarf (lf, buffer, bufsize)
       size_t s = next - start;
       if (bufsize <= s)
 	return 0;
-      bcopy (start, buffer, s);
+      memcpy (buffer, start, s);
       if (next < lf->buflim)
 	{
 	  buffer[s] = 0;
@@ -1017,7 +1017,7 @@ interact (diff, left, right, outfile)
 	case 'i':
 	  {
 	    int lenl = atoi (diff_help + 1), lenr, lenmax;
-	    char *p = index (diff_help, ',');
+	    char *p = strchr (diff_help, ',');
 
 	    if (!p)
 	      fatal (diff_help);
@@ -1036,7 +1036,7 @@ interact (diff, left, right, outfile)
 	case 'c':
 	  {
 	    int lenl = atoi (diff_help + 1), lenr;
-	    char *p = index (diff_help, ',');
+	    char *p = strchr (diff_help, ',');
 
 	    if (!p)
 	      fatal (diff_help);
