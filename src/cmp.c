@@ -17,8 +17,8 @@
 
 /* Written by Torbjorn Granlund and David MacKenzie. */
 
-#include <stdio.h>
 #include "system.h"
+#include <stdio.h>
 #include "getopt.h"
 #include "cmpbuf.h"
 
