@@ -13,7 +13,7 @@ This file documents the the GNU @code{diff}, @code{diff3}, @code{sdiff},
 and @code{cmp} commands for showing the differences between text files
 and the @code{patch} command for using their output to update files.
 
-Copyright (C) 1992, 1993, 1994 Free Software Foundation, Inc.
+Copyright 1992, 1993, 1994, 1997 Free Software Foundation, Inc.
 
 Permission is granted to make and distribute verbatim copies of
 this manual provided the copyright notice and this permission notice
@@ -40,13 +40,13 @@ by the Foundation.
 @titlepage
 @title Comparing and Merging Files
 @subtitle @code{diff}, @code{diff3}, @code{sdiff}, @code{cmp}, and @code{patch}
-@subtitle Edition @value{EDITION}, for @code{diffutils} @value{VERSION} and @code{patch} 2.1
+@subtitle Edition @value{EDITION}, for @code{diffutils} @value{VERSION} and @code{patch} 2.2
 @subtitle @value{UPDATED}
 @author by David MacKenzie, Paul Eggert, and Richard Stallman
 
 @page
 @vskip 0pt plus 1filll
-Copyright @copyright{} 1992, 1993, 1994 Free Software Foundation, Inc.
+Copyright @copyright{} 1992, 1993, 1994, 1997 Free Software Foundation, Inc.
 
 Permission is granted to make and distribute verbatim copies of
 this manual provided the copyright notice and this permission notice
@@ -71,7 +71,7 @@ and @code{cmp} commands for showing the differences between text files
 and the @code{patch} command for using their output to update files.
 
 This is Edition @value{EDITION}, dated @value{UPDATED},
-for @code{diffutils} @value{VERSION} and @code{patch} 2.1.
+for @code{diffutils} @value{VERSION} and @code{patch} 2.2.
 @end ifinfo
 
 @menu
@@ -169,10 +169,10 @@ GNU @code{diff3} was written by Randy Smith.  GNU @code{sdiff} was
 written by Thomas Lord.  GNU @code{cmp} was written by Torbjorn Granlund
 and David MacKenzie.
 
-@code{patch} was written mainly by Larry Wall; the GNU enhancements were
-written mainly by Wayne Davison and David MacKenzie.  Parts of this
-manual are adapted from a manual page written by Larry Wall, with his
-permission.
+@code{patch} was written mainly by Larry Wall and Paul Eggert; several GNU
+enhancements were contributed by Wayne Davison and David MacKenzie.
+Parts of this manual are adapted from a manual page written by Larry Wall,
+with his permission.
 
 @node Comparison, Output Formats, Overview, Top
 @chapter What Comparison Means
@@ -1776,6 +1776,18 @@ prevents @code{diff} from discarding the last @var{lines} lines of the
 prefix and the first @var{lines} lines of the suffix.  This gives
 @code{diff} further opportunities to find a minimal output.
 
+Suppose a run of changed lines includes a sequence of lines at one end
+and there is an identical sequence of lines just outside the other end.
+The @code{diff} command is free to choose which identical sequence is
+included in the hunk.  In this case, @code{diff} normally shifts the
+hunk's boundaries when this merges adjacent hunks, or shifts a hunk's
+lines towards the end of the file.  Merging hunks can make the output
+look nicer, but when repeating comparisons among similar files it can
+make the common hunks harder to find.  The @samp{--inhibit-hunk-merge}
+option prevents hunks from being merged in this way.  It does not
+affect shifting a hunk's boundaries so long as the shifting does not
+merge adjacent hunks.
+
 @node Comparing Three Files, diff3 Merging, diff Performance, Top
 @chapter Comparing Three Files
 @cindex comparing three files
@@ -2277,6 +2289,10 @@ then copy the resulting file to the output.
 Concatenate the two versions, edit the result in a temporary file,
 then copy the edited result to the output.
 
+@item ed
+Like @samp{eb}, except precede each version with a header that
+shows what file and lines the version came from.
+
 @item el
 Edit a copy of the left version, then copy the result to the output.
 
@@ -2317,8 +2333,7 @@ article or message containing a difference listing directly to
 @code{patch}.
 
 @code{patch} detects and warns about common problems like forward
-patches.  It saves the original version of the files it patches, and
-saves any patches that it could not apply.  It can also maintain a
+patches.  It saves any patches that it could not apply.  It can also maintain a
 @code{patchlevel.h} file to ensures that your correspondents apply
 diffs in the proper order.
 
@@ -2328,13 +2343,12 @@ separated by headers that specify which file to patch.  It applies
 exactly match the original file, @code{patch} uses heuristics to try to
 patch the file as well as it can.  If no approximate match can be found,
 @code{patch} rejects the hunk and skips to the next hunk.  @code{patch}
-normally replaces each file @var{f} with its new version, saving the
-original file in @samp{@var{f}.orig}, and putting reject hunks (if any)
-into @samp{@var{f}.rej}.
+normally replaces each file @var{f} with its new version, putting reject
+hunks (if any) into @samp{@var{f}.rej}.
 
 @xref{Invoking patch}, for detailed information on the options to
 @code{patch}.  @xref{Backups}, for more information on how
-@code{patch} names backup files.  @xref{Rejects}, for more information
+@code{patch} makes backup files.  @xref{Rejects}, for more information
 on where @code{patch} puts reject hunks.
 
 @menu
@@ -2402,8 +2416,9 @@ or vice versa.  If this happens to a patch file or an input file, the
 files might look the same, but @code{patch} will not be able to match
 them properly.  If this problem occurs, use the @samp{-l} or
 @samp{--ignore-white-space} option, which makes @code{patch} compare
-white space loosely so that any sequence of white space in the patch file
-matches any sequence of white space in the input files.  Non-white-space
+blank characters (i.e.@: spaces and tabs) loosely so that any nonempty
+sequence of blanks in the patch file matches any nonempty sequence of
+blanks in the input files.  Non-blank
 characters must still match exactly.  Each line of the context must
 still match a line in the input file.
 
@@ -2415,9 +2430,7 @@ Sometimes people run @code{diff} with the new file first instead of
 second.  This creates a diff that is ``reversed''.  To apply such
 patches, give @code{patch} the @samp{-R} or @samp{--reverse} option.
 @code{patch} then attempts to swap each hunk around before applying it.
-Rejects come out in the swapped format.  The @samp{-R} option does not
-work with @code{ed} scripts because there is too little information in
-them to reconstruct the reverse operation.
+Rejects come out in the swapped format.
 
 Often @code{patch} can guess that the patch is reversed.  If the first
 hunk of a patch fails, @code{patch} reverses the hunk to see if it can
@@ -2463,9 +2476,9 @@ The @samp{-F @var{lines}} or @samp{--fuzz=@var{lines}} option sets the
 maximum fuzz factor to @var{lines}.  This option only applies to context
 and unified diffs; it ignores up to @var{lines} lines while looking for
 the place to install a hunk.  Note that a larger fuzz factor increases
-the odds of making a faulty patch.  The default fuzz factor is 2; it may
-not be set to more than the number of lines of context in the diff,
-ordinarily 3.
+the odds of making a faulty patch.  The default fuzz factor is 2; there
+is no point to setting it to more than the number of lines of context
+in the diff, ordinarily 3.
 
 If @code{patch} cannot find a place to install a hunk of the patch, it
 writes the hunk out to a reject file (@pxref{Rejects}, for information
@@ -2477,7 +2490,8 @@ in the patch file: they show the approximate location where @code{patch}
 thinks the failed hunks belong in the new file rather than in the old
 one.
 
-As it completes each hunk, @code{patch} tells you whether the hunk
+If the @samp{--verbose} option is given, then
+as it completes each hunk @code{patch} tells you whether the hunk
 succeeded or failed, and if it failed, on which line (in the new file)
 @code{patch} thinks the hunk should go.  If this is different from the
 line number specified in the diff, it tells you the offset.  A single
@@ -2523,27 +2537,17 @@ and that it examines the leading text before each patch for file names
 and prerequisite revision level (@pxref{Making Patches}, for more on
 that topic).
 
-For the second and subsequent patches in the patch file, you can give
-options and another original file name by separating their argument
-lists with a @samp{+}.  However, the argument list for a second or
-subsequent patch may not specify a new patch file, since that does not
-make sense.
-
-For example, to tell @code{patch} to strip the first three slashes from
-the name of the first patch in the patch file and none from subsequent
-patches, and to use @file{code.c} as the first input file, you can use:
-
-@example
-patch -p3 code.c + -p0 < patchfile
-@end example
-
-The @samp{-S} or @samp{--skip} option ignores the current patch from the
-patch file, but continue looking for the next patch in the file.  Thus,
-to ignore the first and third patches in the patch file, you can use:
-
-@example
-patch -S + + -S + < patch file
-@end example
+If the leading text contains a context diff header, @code{patch} 
+tests for the existence of the old and new files named in the header.
+If there is an @samp{Index:} line in the leading text,
+@code{patch} tests for the existence of the file named in that line.
+If none of the file names refer to existing files,
+but the patch appears to create a file,
+then @code{patch} tries the same file names again,
+this time testing only for the existence of the file names' directory prefix;
+@code{patch} uses the first name with the longest existing prefix.
+If no file name can be intuited from the leading text,
+you are asked for the name of the file to patch.
 
 @node patch Messages, , Multiple Patches, Merging with patch
 @section Messages and Questions from @code{patch}
@@ -2554,10 +2558,12 @@ patch -S + + -S + < patch file
 @code{patch} can produce a variety of messages, especially if it has
 trouble decoding its input.  In a few situations where it's not sure how
 to proceed, @code{patch} normally prompts you for more information from
-the keyboard.  There are options to suppress printing non-fatal messages
-and stopping for keyboard input.
+the keyboard.  There are options to produce more messages, to suppress
+printing non-fatal messages, and to and stop for keyboard input.
 
-The message @samp{Hmm...} indicates that @code{patch} is reading text in
+You can cause @code{patch} to produce more messages by using the
+@samp{--verbose} option.  For example, when you give this option,
+the message @samp{Hmm...} indicates that @code{patch} is reading text in
 the patch file, attempting to determine whether there is a patch in that
 text, and if so, what kind of patch it is.
 
@@ -2597,8 +2603,9 @@ skip patches for which the file has the wrong version for the
 assume that patches are reversed if they look like they are.
 @end itemize
 
-@code{patch} exits with a non-zero status if it creates any reject
-files.  When applying a set of patches in a loop, you should check the
+@code{patch} exits with status 0 if all hunks are applied successfully,
+1 if some hunks cannot be applied, and 2 if there is more serious trouble.
+When applying a set of patches in a loop, you should check the
 exit status, so you don't apply a later patch to a partially patched
 file.
 
@@ -2607,15 +2614,28 @@ file.
 @cindex patch making tips
 @cindex tips for patch making
 
+@c ?? got to here
+
 Here are some things you should keep in mind if you are going to
 distribute patches for updating a software package.
 
+Tell your recipients how to apply the patches.  This should include
+which working directory to use, and which @code{patch} options to use.
+Normally you should specify which @samp{-p@var{number}} option to use.
+The @samp{-E} and @samp{-N} options are also common.  Test your
+procedure by pretending to be a recipient and applying your patches to
+a copy of the original files.
+
 Make sure you have specified the file names correctly, either in a
-context diff header or with an @samp{Index:} line.  If you are patching
-files in a subdirectory, be sure to tell the patch user to specify a
-@samp{-p} or @samp{--strip} option as needed.  Take care to not send out
+context diff header or with an @samp{Index:} line.  Take care to not send out
 reversed patches, since these make people wonder whether they have
 already applied the patch.
+
+Avoid sending patches that compare backup file names like
+@file{README.orig}, since this might confuse @code{patch} into patching
+a backup file instead of the real file.  Instead, send patches that
+compare the same base file names in different directories,
+e.g.@: @file{old/README} and @file{new/README}.
 
 To save people from partially applying a patch before other patches that
 should have gone before it, you can make the first patch in the patch
@@ -2633,10 +2653,6 @@ white space or a newline.  If not, @code{patch} prompts you for
 confirmation before proceeding.  This makes it difficult to accidentally
 apply patches in the wrong order.
 
-Since @code{patch} does not handle incomplete lines properly, make sure
-that all the source files in your program end with a newline whenever
-you release a version.
-
 To create a patch that changes an older version of a package into a
 newer version, first make a copy of the older version in a scratch
 directory.  Typically you do that by unpacking a @code{tar} or
@@ -2652,9 +2668,9 @@ yourself in the scratch directory.
 
 If there are any files that you don't need to include in the patch
 because they can easily be rebuilt from other files (for example,
-@file{TAGS} and output from @code{yacc} and @code{makeinfo}), replace
-the versions in the scratch directory with the newer versions, using
-@code{rm} and @code{ln} or @code{cp}.
+@file{TAGS} and output from @code{yacc} and @code{makeinfo}), exclude
+them from the patch by giving @code{diff} the @samp{-x @var{pattern}}
+option (@pxref{Comparing Directories}).
 
 Now you can create the patch.  The de-facto standard @code{diff} format
 for patch distributions is context format with two lines of context,
@@ -2665,6 +2681,12 @@ option in case the newer version of the package contains any files that
 the older one does not.  Make sure to specify the scratch directory
 first and the newer directory second.
 
+Also, apply @code{diff} to directories whose names have the same number
+of slashes.  This reduces confusion when the user specifies the
+@samp{-p@var{number}} option, since this option can have surprising
+results when the old and new file names have different numbers of
+slashes.
+
 Add to the top of the patch a note telling the user any @code{rm} and
 @code{mv} commands to run before applying the patch.  Then you can
 remove the scratch directory.
@@ -2673,6 +2695,8 @@ remove the scratch directory.
 @chapter Invoking @code{cmp}
 @cindex invoking @code{cmp}
 @cindex @code{cmp} invocation
+
+@c ?? got to here
 
 The @code{cmp} command compares two files, and if they differ, tells the
 first byte and line number where they differ.  Its arguments are as
@@ -2744,19 +2768,20 @@ Output the version number of @code{cmp}.
 The format for running the @code{diff} command is:
 
 @example
-diff @var{options}@dots{} @var{from-file} @var{to-file}
+diff @var{options}@dots{} @var{files}@dots{}
 @end example
 
-In the simplest case, @code{diff} compares the contents of the two files
-@var{from-file} and @var{to-file}.  A file name of @samp{-} stands for
+In the simplest case, two file names @var{from-file} and
+@var{to-file} are given, and @code{diff} compares the contents of
+@var{from-file} and @var{to-file}..  A file name of @samp{-} stands for
 text read from the standard input.  As a special case, @samp{diff - -}
 compares a copy of standard input to itself.
 
-If @var{from-file} is a directory and @var{to-file} is not, @code{diff}
-compares the file in @var{from-file} whose file name is that of @var{to-file},
-and vice versa.  The non-directory file must not be @samp{-}.
+If one file is a directory and the other is not, @code{diff} compares
+the file in the directory whose name is that of the non-directory.
+The non-directory file must not be @samp{-}.
 
-If both @var{from-file} and @var{to-file} are directories,
+If two file names are given and both are directories,
 @code{diff} compares corresponding files in both directories, in
 alphabetical order; this comparison is not recursive unless the
 @samp{-r} or @samp{--recursive} option is given.  @code{diff} never
@@ -2765,8 +2790,13 @@ file that is fully specified may not be standard input, because standard
 input is nameless and the notion of ``file with the same name'' does not
 apply.
 
-@code{diff} options begin with @samp{-}, so normally @var{from-file} and
-@var{to-file} may not begin with @samp{-}.  However, @samp{--} as an
+If the @samp{--from-file=@var{file}} option is given, the number of
+file names is arbitrary, and @var{file} is compared to each named file.
+Similarly, if the @samp{--to-file=@var{file}} option is given, each
+named file is compared to @var{file}.
+
+@code{diff} options begin with @samp{-}, so normally file names
+may not begin with @samp{-}.  However, @samp{--} as an
 argument by itself treats the remaining arguments as file names even if
 they begin with @samp{-}.
 
@@ -2868,6 +2898,9 @@ Headings}.
 Make output that looks vaguely like an @code{ed} script but has changes
 in the order they appear in the file.  @xref{Forward ed}.
 
+@item --from-file=@var{file}
+Compare @var{file} to each operand; @var{file} may be a directory.
+
 @item -h
 This option currently has no effect; it is present for Unix
 compatibility.
@@ -2910,6 +2943,10 @@ Ignore changes that just insert or delete lines that match @var{regexp}.
 @item --ignore-space-change
 Ignore changes in amount of white space.
 @xref{White Space}.
+
+@item --inhibit-hunk-merge
+Do not shift hunk boundaries to merge adjacent hunks.
+@xref{diff Performance}.
 
 @item --initial-tab
 Output a tab rather than a space before the text of a line in normal or
@@ -3046,6 +3083,9 @@ normal.  @xref{Tabs}.
 Treat all files as text and compare them line-by-line, even if they
 do not appear to be text.  @xref{Binary}.
 
+@item --to-file=@var{file}
+Compare each operand to @var{file}; @var{file} may be a directory.
+
 @item -u
 Use the unified output format.  @xref{Unified Format}.
 
@@ -3108,6 +3148,11 @@ diff3 @var{options}@dots{} @var{mine} @var{older} @var{yours}
 The files to compare are @var{mine}, @var{older}, and @var{yours}.
 At most one of these three file names may be @samp{-},
 which tells @code{diff3} to read the standard input for that file.
+
+Normally @code{diff3} invokes @code{diff} to do its work.  You can
+tell @code{diff3} to use some other compatible comparison program
+by setting the @code{DIFF} environment variable to the name of the
+other program.
 
 An exit status of 0 means @code{diff3} was successful, 1 means some
 conflicts were found, and 2 means trouble.
@@ -3264,10 +3309,11 @@ file name from that line.  If @code{patch} cannot figure out the name of
 an existing file from the leading text, it prompts you for the name of
 the file to patch.
 
-If the input file does not exist or is read-only, and a suitable RCS or
-SCCS file exists, @code{patch} attempts to check out or get the file
-before proceeding.
+If the input file does not exist or is read-only but a suitable RCS or
+SCCS file exists, and if version control is set to @samp{existing}
+@code{patch} attempts to check out or get the file before proceeding.
 
+@c ?? need to fix
 By default, @code{patch} replaces the original input file with the
 patched version, after renaming the original file into a backup file
 (@pxref{Backups}, for a description of how @code{patch} names backup
@@ -3301,23 +3347,19 @@ containing the patch like this:
 Sometimes the file names given in a patch contain leading directories,
 but you keep your files in a directory different from the one given in
 the patch.  In those cases, you can use the
-@samp{-p@r{[}@var{number}@r{]}} or @samp{--strip@r{[}=@var{number}@r{]}}
+@samp{-p@var{number}} or @samp{--strip=@var{number}}
 option to set the file name strip count to @var{number}.  The strip
 count tells @code{patch} how many slashes, along with the directory
-names between them, to strip from the front of file names.  @samp{-p}
-with no @var{number} given is equivalent to @samp{-p0}.  By default,
+names between them, to strip from the front of file names.  By default,
 @code{patch} strips off all leading directories, leaving just the base file
-names, except that when a file name given in the patch is a relative
-file name and all of its leading directories already exist, @code{patch} does
-not strip off the leading directory.  (A @dfn{relative} file name is one
-that does not start with a slash.)
+names.
 
 @code{patch} looks for each file (after any slashes have been stripped)
 in the current directory, or if you used the @samp{-d @var{directory}}
 option, in that directory.
 
 For example, suppose the file name in the patch file is
-@file{/gnu/src/emacs/etc/NEWS}.  Using @samp{-p} or @samp{-p0} gives the
+@file{/gnu/src/emacs/etc/NEWS}.  Using @samp{-p0} gives the
 entire file name unmodified, @samp{-p1} gives
 @file{gnu/src/emacs/etc/NEWS} (no leading slash), @samp{-p4} gives
 @file{etc/NEWS}, and not specifying @samp{-p} at all gives @file{NEWS}.
@@ -3490,7 +3532,7 @@ See also @samp{-R}.  @xref{Reversed Patches}.
 @itemx --output=@var{output-file}
 Use @var{output-file} as the output file name.  @xref{patch Options}.
 
-@item -p@r{[}@var{number}@r{]}
+@item -p@var{number}
 Set the file name strip count to @var{number}.  @xref{patch Directories}.
 
 @item --prefix=@var{backup-prefix}
@@ -3532,7 +3574,7 @@ Work silently unless an error occurs.  @xref{patch Messages}.
 Ignore this patch from the patch file, but continue looking for the next
 patch in the file.  @xref{Multiple Patches}.
 
-@item --strip@r{[}=@var{number}@r{]}
+@item --strip=@var{number}
 Set the file name strip count to @var{number}.  @xref{patch Directories}.
 
 @item --suffix=@var{backup-suffix}
@@ -3586,12 +3628,17 @@ and @var{to-file} may not begin with @samp{-}.  However, @samp{--} as an
 argument by itself treats the remaining arguments as file names even if
 they begin with @samp{-}.  You may not use @samp{-} as an input file.
 
-An exit status of 0 means no differences were found, 1 means some
-differences were found, and 2 means trouble.
-
 @code{sdiff} without @samp{-o} (or @samp{--output}) produces a
 side-by-side difference.  This usage is obsolete; use @samp{diff
 --side-by-side} instead.
+
+Normally @code{sdiff} invokes @code{diff} to do its work.  You can
+tell @code{sdiff} to use some other compatible comparison program
+by setting the @code{DIFF} environment variable to the name of the
+other program.
+
+An exit status of 0 means no differences were found, 1 means some
+differences were found, and 2 means trouble.
 
 @menu
 * sdiff Options::	Summary of options to @code{diff}.
