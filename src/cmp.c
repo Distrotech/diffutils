@@ -1,7 +1,7 @@
 /* cmp -- compare two files.
 
-   Copyright (C) 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1998, 2001
-   Free Software Foundation, Inc.
+   Copyright (C) 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1998, 2001,
+   2002 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -41,7 +41,7 @@ static char const authorship_msgid[] =
   N_("Written by Torbjorn Granlund and David MacKenzie.");
 
 static char const copyright_string[] =
-  "Copyright (C) 2001 Free Software Foundation, Inc.";
+  "Copyright (C) 2002 Free Software Foundation, Inc.";
 
 extern char const version_string[];
 
@@ -73,7 +73,7 @@ static size_t buf_size;
 static off_t ignore_initial[2];
 
 /* Number of bytes to compare.  */
-static uintmax_t bytes = -1;
+static uintmax_t bytes = UINTMAX_MAX;
 
 /* Output format:
    type_first_diff
@@ -134,7 +134,7 @@ parse_ignore_initial (char **argptr, char delimiter)
   strtol_error e = xstrtoumax (arg, argptr, 0, &val, valid_suffixes);
   if (! (e == LONGINT_OK
 	 || (e == LONGINT_INVALID_SUFFIX_CHAR && **argptr == delimiter))
-      || (o = val) < 0 || o != val || val == (uintmax_t) -1)
+      || (o = val) < 0 || o != val || val == UINTMAX_MAX)
     try_help ("invalid --ignore-initial value `%s'", arg);
   return o;
 }
@@ -168,17 +168,15 @@ usage (void)
 
   printf (_("Usage: %s [OPTION]... FILE1 [FILE2 [SKIP1 [SKIP2]]]\n"),
 	  program_name);
-  printf ("\n");
+  printf ("%s\n\n", _("If a FILE is `-' or missing, read standard input."));
   for (p = option_help_msgid;  *p;  p++)
     printf ("  %s\n", _(*p));
-  printf ("\n");
-  printf (_("If a FILE is `-' or missing, read standard input.\n"));
-  printf (_("SKIP1 and SKIP2 are the number of bytes to skip in each file.\n"));
-  printf (_("SKIP values may be followed by the following multiplicative suffixes:\n"));
-  printf (_("kB 1000, K 1024, MB 1,000,000, M 1,048,576,\n"));
-  printf (_("GB 1,000,000,000, G 1,073,741,824, and so on for T, P, E, Z, Y.\n"));
-  printf ("\n");
-  printf (_("Report bugs to <bug-gnu-utils@gnu.org>.\n"));
+  printf ("\n%s\n%s\n\n%s\n",
+	  _("SKIP1 and SKIP2 are the number of bytes to skip in each file."),
+	  _("SKIP values may be followed by the following multiplicative suffixes:\n\
+kB 1000, K 1024, MB 1,000,000, M 1,048,576,\n\
+GB 1,000,000,000, G 1,073,741,824, and so on for T, P, E, Z, Y."),
+	  _("Report bugs to <bug-gnu-utils@gnu.org>."));
 }
 
 int
@@ -407,7 +405,7 @@ cmp (void)
     {
       size_t bytes_to_read = buf_size;
 
-      if (remaining != (uintmax_t) -1)
+      if (remaining != UINTMAX_MAX)
 	{
 	  if (remaining < bytes_to_read)
 	    bytes_to_read = remaining;
@@ -415,10 +413,10 @@ cmp (void)
 	}
 
       read0 = block_read (file_desc[0], buf0, bytes_to_read);
-      if (read0 == (size_t) -1)
+      if (read0 == SIZE_MAX)
 	error (2, errno, "%s", file[0]);
       read1 = block_read (file_desc[1], buf1, bytes_to_read);
-      if (read1 == (size_t) -1)
+      if (read1 == SIZE_MAX)
 	error (2, errno, "%s", file[1]);
 
       /* Insert sentinels for the block compare.  */
