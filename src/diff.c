@@ -22,15 +22,18 @@
 
 #define GDIFF_MAIN
 #include "diff.h"
+#include "paths.h"
 #include <c-stack.h>
 #include <dirname.h>
 #include <error.h>
 #include <exclude.h>
 #include <exitfail.h>
+#include <file-type.h>
 #include <fnmatch.h>
 #include <freesoft.h>
 #include <getopt.h>
 #include <hard-locale.h>
+#include <posixver.h>
 #include <prepargs.h>
 #include <quotesys.h>
 #include <regex.h>
@@ -41,8 +44,8 @@ static char const authorship_msgid[] =
   N_("Written by Paul Eggert, Mike Haertel, David Hayes,\n\
 Richard Stallman, and Len Tower.");
 
-static char const copyright_string[] =
-  "Copyright (C) 2002 Free Software Foundation, Inc.";
+static char const copyright_notice[] =
+  "Copyright %s 2002 Free Software Foundation, Inc.";
 
 #ifndef GUTTER_WIDTH_MINIMUM
 # define GUTTER_WIDTH_MINIMUM 3
@@ -157,6 +160,7 @@ enum
   SDIFF_MERGE_ASSIST_OPTION,
   STRIP_TRAILING_CR_OPTION,
   SUPPRESS_COMMON_LINES_OPTION,
+  TABSIZE_OPTION,
   TO_FILE_OPTION,
 
   /* These options must be in sequence.  */
@@ -233,6 +237,7 @@ static struct option const longopts[] =
   {"starting-file", 1, 0, 'S'},
   {"strip-trailing-cr", 0, 0, STRIP_TRAILING_CR_OPTION},
   {"suppress-common-lines", 0, 0, SUPPRESS_COMMON_LINES_OPTION},
+  {"tabsize", 0, 0, TABSIZE_OPTION},
   {"text", 0, 0, 'a'},
   {"to-file", 1, 0, TO_FILE_OPTION},
   {"unchanged-group-format", 1, 0, UNCHANGED_GROUP_FORMAT_OPTION},
@@ -253,7 +258,7 @@ main (int argc, char **argv)
   int prev = -1;
   lin ocontext = -1;
   bool explicit_context = 0;
-  int width = 0;
+  size_t width = 0;
   bool show_c_function = 0;
   char const *from_file = 0;
   char const *to_file = 0;
@@ -267,7 +272,7 @@ main (int argc, char **argv)
   setlocale (LC_ALL, "");
   bindtextdomain (PACKAGE, LOCALEDIR);
   textdomain (PACKAGE);
-  c_stack_action (c_stack_die);
+  c_stack_action (argv, 0);
   function_regexp_list.buf = &function_regexp;
   ignore_regexp_list.buf = &ignore_regexp;
   re_set_syntax (RE_SYNTAX_GREP | RE_NO_POSIX_BACKTRACKING);
@@ -468,8 +473,9 @@ main (int argc, char **argv)
 	  break;
 
 	case 'v':
-	  printf ("diff %s\n%s\n\n%s\n\n%s\n",
-		  version_string, copyright_string,
+	  printf ("diff %s\n", version_string);
+	  printf (copyright_notice, _("(C)"));
+	  printf ("\n\n%s\n\n%s\n",
 		  _(free_software_msgid), _(authorship_msgid));
 	  check_stdout ();
 	  return EXIT_SUCCESS;
@@ -494,7 +500,7 @@ main (int argc, char **argv)
 
 	case 'W':
 	  numval = strtoumax (optarg, &numend, 10);
-	  if (! (0 < numval && numval <= INT_MAX) || *numend)
+	  if (! (0 < numval && numval <= SIZE_MAX) || *numend)
 	    try_help ("invalid width `%s'", optarg);
 	  if (width != numval)
 	    {
@@ -565,6 +571,18 @@ main (int argc, char **argv)
 
 	case SUPPRESS_COMMON_LINES_OPTION:
 	  suppress_common_lines = 1;
+	  break;
+
+	case TABSIZE_OPTION:
+	  numval = strtoumax (optarg, &numend, 10);
+	  if (! (0 < numval && numval <= SIZE_MAX) || *numend)
+	    try_help ("invalid tabsize `%s'", optarg);
+	  if (tabsize != numval)
+	    {
+	      if (tabsize)
+		fatal ("conflicting tabsize options");
+	      tabsize = numval;
+	    }
 	  break;
 
 	case TO_FILE_OPTION:
@@ -645,20 +663,25 @@ main (int argc, char **argv)
 	}
     }
 
+  if (! tabsize)
+    tabsize = 8;
+  if (! width)
+    width = 130;
+
   {
-    /*
-     *	We maximize first the half line width, and then the gutter width,
-     *	according to the following constraints:
-     *	1.  Two half lines plus a gutter must fit in a line.
-     *	2.  If the half line width is nonzero:
-     *	    a.  The gutter width is at least GUTTER_WIDTH_MINIMUM.
-     *	    b.  If tabs are not expanded to spaces,
-     *		a half line plus a gutter is an integral number of tabs,
-     *		so that tabs in the right column line up.
-     */
-    unsigned int t = expand_tabs ? 1 : TAB_WIDTH;
-    int w = width ? width : 130;
-    int off = (w + t + GUTTER_WIDTH_MINIMUM) / (2 * t)  *  t;
+    /* Maximize first the half line width, and then the gutter width,
+       according to the following constraints:
+
+	1.  Two half lines plus a gutter must fit in a line.
+	2.  If the half line width is nonzero:
+	    a.  The gutter width is at least GUTTER_WIDTH_MINIMUM.
+	    b.  If tabs are not expanded to spaces,
+		a half line plus a gutter is an integral number of tabs,
+		so that tabs in the right column line up.  */
+
+    intmax_t t = expand_tabs ? 1 : tabsize;
+    intmax_t w = width;
+    intmax_t off = (w + t + GUTTER_WIDTH_MINIMUM) / (2 * t)  *  t;
     sdiff_half_width = MAX (0, MIN (off - GUTTER_WIDTH_MINIMUM, w - off)),
     sdiff_column2_offset = sdiff_half_width ? off : w;
   }
@@ -886,6 +909,7 @@ static char const * const option_help_msgid[] = {
   N_("-l  --paginate  Pass the output through `pr' to paginate it."),
   N_("-t  --expand-tabs  Expand tabs to spaces in output."),
   N_("-T  --initial-tab  Make tabs line up by prepending a tab."),
+  N_("--tabsize=NUM  Tab stops are every NUM (default 8) print columns."),
   "",
   N_("-r  --recursive  Recursively compare any subdirectories found."),
   N_("-N  --new-file  Treat absent files as empty."),
@@ -962,48 +986,6 @@ specify_style (enum output_style style)
 	try_help ("conflicting output style options", 0);
       output_style = style;
     }
-}
-
-static char const *
-filetype (struct stat const *st)
-{
-  /* See POSIX 1003.1-2001 for these formats.
-
-     To keep diagnostics grammatical in English, the returned string
-     must start with a consonant.  */
-
-  if (S_ISREG (st->st_mode))
-    return st->st_size == 0 ? _("regular empty file") : _("regular file");
-
-  if (S_ISDIR (st->st_mode)) return _("directory");
-
-#ifdef S_ISBLK
-  if (S_ISBLK (st->st_mode)) return _("block special file");
-#endif
-#ifdef S_ISCHR
-  if (S_ISCHR (st->st_mode)) return _("character special file");
-#endif
-#ifdef S_ISFIFO
-  if (S_ISFIFO (st->st_mode)) return _("fifo");
-#endif
-  /* S_ISLNK is impossible with `fstat' and `stat'.  */
-#ifdef S_ISSOCK
-  if (S_ISSOCK (st->st_mode)) return _("socket");
-#endif
-#ifdef S_TYPEISMQ
-  if (S_TYPEISMQ (st)) return _("message queue");
-#endif
-#ifdef S_TYPEISSEM
-  if (S_TYPEISSEM (st)) return _("semaphore");
-#endif
-#ifdef S_TYPEISSHM
-  if (S_TYPEISSHM (st)) return _("shared memory object");
-#endif
-#ifdef S_TYPEISTMO
-  if (S_TYPEISTMO (st)) return _("typed memory object");
-#endif
-
-  return _("weird file");
 }
 
 /* Set the last-modified time of *ST to be the current time.  */
@@ -1265,9 +1247,9 @@ compare_files (struct comparison const *parent,
 	  /* See POSIX 1003.1-2001 for this format.  */
 	  message5 ("File %s is a %s while file %s is a %s\n",
 		    file_label[0] ? file_label[0] : cmp.file[0].name,
-		    filetype (&cmp.file[0].stat),
+		    file_type (&cmp.file[0].stat),
 		    file_label[1] ? file_label[1] : cmp.file[1].name,
-		    filetype (&cmp.file[1].stat));
+		    file_type (&cmp.file[1].stat));
 
 	  /* This is a difference.  */
 	  status = EXIT_FAILURE;
