@@ -1,4 +1,4 @@
-# Additional editing of Makefiles
+# Additional editing of Makefiles and of config.status
 
 # Copyright (C) 2001 Free Software Foundation, Inc.
 
@@ -44,26 +44,16 @@
 /CONFIG_FILES=/ s|po/Makefile\.in|&:po/Makefile.in-in|2
 
 # We always use _deps instead of .deps, because the latter is an
-# invalid name on 8+3 MS-DOS filesystem. This make the generated
+# invalid name on 8+3 MS-DOS filesystem.  This makes the generated
 # Makefiles good for every DJGPP installation, not only the one
 # where the package was configured (which could happen to be a
 # Windows box, where leading dots in file names are allowed).
 s,\.deps,_deps,g
 
-# Prevent the splitting of conftest.subs.
-# The sed script: conftest.subs is split into 48 or 90 lines long files.
-# This will produce sed scripts called conftest.s1, conftest.s2, etc.
-# that will not work if conftest.subs contains a multi line sed command
-# at line #90. In this case the first part of the sed command will be the
-# last line of conftest.s1 and the rest of the command will be the first lines
-# of conftest.s2. So both script will not work properly.
-# This matches the configure script produced by Autoconf 2.52
-/ac_max_sed_lines=[0-9]/ s,=.*$,=`sed -n "$=" $tmp/subs.sed`,
-
 # The following two items are changes needed for configuring
 # and compiling across partitions.
-# 1) The given srcdir value is always translated from the
-#    "x:" syntax into "/dev/x" syntax while we run configure.
+# The given srcdir value is always translated from the
+# "x:" syntax into "/dev/x" syntax while we run configure.
 /^[ 	]*-srcdir=\*.*$/ a\
     ac_optarg=`echo "$ac_optarg" | sed "s,^\\([A-Za-z]\\):,/dev/\\1,"`
 /set X `ls -Lt \$srcdir/ i\
@@ -71,16 +61,15 @@ s,\.deps,_deps,g
      srcdir=`echo "$srcdir" | sed -e "s%^/dev/%%" -e "s%/%:/%"`\
    fi
 
-# Autoconf 2.52e generated configure scripts
-# write absolute paths into Makefiles making
-# them useless for DJGPP installations for which
-# the package has not been configured for.
+# Autoconf 2.52e generated configure scripts write absolute paths into
+# Makefiles, making them useless for DJGPP installations other than the
+# one for which the package has been configured.
 /MISSING=/,/^$/ {
   /^fi$/ a\
-am_missing_run=`echo "$am_missing_run" | sed 's%/dev.*/diffutil.273%${top_srcdir}%'`
+am_missing_run=`echo "$am_missing_run" | sed 's%/dev.*/diffutil.*[-.]2.*[7-9].*[0-9]%${top_srcdir}%'`
 }
 /^install_sh=/a\
-install_sh=`echo "$install_sh" | sed 's%/dev.*/diffutil.273%${top_srcdir}%'`
+install_sh=`echo "$install_sh" | sed 's%/dev.*/diffutil.*[-.]2.*[7-9].*[0-9]%${top_srcdir}%'`
 
 
 # The following makes sure we are not going to remove a directory
