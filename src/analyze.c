@@ -862,7 +862,7 @@ diff_2_files (filevec, depth)
 	      /* Disconnect them from the rest of the changes, making them
 		 a hunk, and remember the rest for next iteration.  */
 	      next = end->link;
-	      end->link = NULL;
+	      end->link = 0;
 
 	      /* Determine whether this hunk is really a difference.  */
 	      analyze_hunk (this, &first0, &last0, &first1, &last1,
