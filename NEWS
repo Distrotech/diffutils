@@ -1,5 +1,9 @@
 User-visible changes in test version 2.7.8:
 
+* cmp and diff now conform to POSIX 1003.1-2001 (IEEE Std 1003.1-2001)
+  if the underlying system conforms to POSIX and if the _POSIX2_VERSION
+  environment variable is set to 200112.  Conformance removes support
+  for `diff -NUM', where NUM is a number.  Use -C NUM or -U NUM instead.
 * cmp now supports trailing operands SKIP1 and SKIP2, like BSD cmp.
 * cmp -i or --ignore-initial now accepts SKIP1:SKIP2 option value.
 * New cmp option: -n or --bytes.
@@ -7,9 +11,6 @@ User-visible changes in test version 2.7.8:
   use -b or --print-bytes instead.
 * cmp now outputs "byte" rather than "char" outside the POSIX locale.
 * cmp -l's index column width now autoadjusts to fit larger (or smaller) files.
-* diff -NUM, where NUM is a number, is no longer supported on systems
-  conforming to POSIX 1003.1-2001, which prohibits most digit-string options.
-  Instead, use -C NUM or -U NUM.
 * diff uses ISO 8601 style time stamps for output times (e.g. "2001-11-23
   16:44:36.875702460 -0800") unless in the C or POSIX locale and the
   -c style is specified.
