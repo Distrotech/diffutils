@@ -672,7 +672,7 @@ xmalloc (size)
   value = (VOID *) malloc (size);
 
   if (!value)
-    fatal ("virtual memory exhausted");
+    fatal ("memory exhausted");
   return value;
 }
 
@@ -691,7 +691,7 @@ xrealloc (old, size)
   value = (VOID *) realloc (old, size);
 
   if (!value)
-    fatal ("virtual memory exhausted");
+    fatal ("memory exhausted");
   return value;
 }
 
