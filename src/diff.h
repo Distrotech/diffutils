@@ -297,9 +297,6 @@ EXTERN FILE *outfile;
 VOID *xmalloc ();
 VOID *xrealloc ();
 char *concat ();
-#if !HAVE_MEMCHR
-void *memchr ();
-#endif
 
 int excluded_filename ();
 int sip ();

@@ -684,16 +684,16 @@ debug_script (sp)
 }
 
 #if !HAVE_MEMCHR
-void *
+char *
 memchr (s, c, n)
-     const void *s;
+     char *s;
      int c;
      size_t n;
 {
-  const unsigned char *p = (const unsigned char *) s, *lim = p + n;
+  unsigned char *p = (unsigned char *) s, *lim = p + n;
   for (;  p < lim;  p++)
     if (*p == c)
-      return (void *) p;
+      return (char *) p;
   return 0;
 }
 #endif
