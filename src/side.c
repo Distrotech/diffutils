@@ -43,14 +43,15 @@ print_sdiff_script (struct change *script)
 
 /* Tab from column FROM to column TO, where FROM <= TO.  Yield TO.  */
 
-static unsigned int
-tab_from_to (unsigned int from, unsigned int to)
+static size_t
+tab_from_to (size_t from, size_t to)
 {
   FILE *out = outfile;
-  unsigned int tab;
+  size_t tab;
+  size_t tab_size = tabsize;
 
   if (!expand_tabs)
-    for (tab = from + TAB_WIDTH - from % TAB_WIDTH;  tab <= to;  tab += TAB_WIDTH)
+    for (tab = from + tab_size - from % tab_size;  tab <= to;  tab += tab_size)
       {
 	putc ('\t', out);
 	from = tab;
@@ -60,18 +61,16 @@ tab_from_to (unsigned int from, unsigned int to)
   return to;
 }
 
-/*
- * Print the text for half an sdiff line.  This means truncate to width
- * observing tabs, and trim a trailing newline.  Returns the last column
- * written (not the number of chars).
- */
-static unsigned int
-print_half_line (char const *const *line, unsigned int indent,
-		 unsigned int out_bound)
+/* Print the text for half an sdiff line.  This means truncate to
+   width observing tabs, and trim a trailing newline.  Return the
+   last column written (not the number of chars).  */
+
+static size_t
+print_half_line (char const *const *line, size_t indent, size_t out_bound)
 {
   FILE *out = outfile;
-  register unsigned int in_position = 0;
-  register unsigned int out_position = 0;
+  register size_t in_position = 0;
+  register size_t out_position = 0;
   register char const *text_pointer = line[0];
   register char const *text_limit = line[1];
 
@@ -83,10 +82,10 @@ print_half_line (char const *const *line, unsigned int indent,
 	{
 	case '\t':
 	  {
-	    unsigned int spaces = TAB_WIDTH - in_position % TAB_WIDTH;
+	    size_t spaces = tabsize - in_position % tabsize;
 	    if (in_position == out_position)
 	      {
-		unsigned int tabstop = out_position + spaces;
+		size_t tabstop = out_position + spaces;
 		if (expand_tabs)
 		  {
 		    if (out_bound < tabstop)
@@ -155,19 +154,18 @@ print_half_line (char const *const *line, unsigned int indent,
   return out_position;
 }
 
-/*
- * Print side by side lines with a separator in the middle.
- * 0 parameters are taken to indicate white space text.
- * Blank lines that can easily be caught are reduced to a single newline.
- */
+/* Print side by side lines with a separator in the middle.
+   0 parameters are taken to indicate white space text.
+   Blank lines that can easily be caught are reduced to a single newline.  */
 
 static void
 print_1sdiff_line (char const *const *left, char sep,
 		   char const *const *right)
 {
   FILE *out = outfile;
-  unsigned int hw = sdiff_half_width, c2o = sdiff_column2_offset;
-  unsigned int col = 0;
+  size_t hw = sdiff_half_width;
+  size_t c2o = sdiff_column2_offset;
+  size_t col = 0;
   bool put_newline = 0;
 
   if (left)
