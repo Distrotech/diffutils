@@ -1,5 +1,5 @@
 /* Support routines for GNU DIFF.
-   Copyright 1988, 1989, 1992, 1993, 1994 Free Software Foundation, Inc.
+   Copyright (C) 1988, 1989, 1992, 1993, 1994 Free Software Foundation, Inc.
 
 This file is part of GNU DIFF.
 
@@ -294,44 +294,32 @@ finish_output ()
 
 /* Compare two lines (typically one from each input file)
    according to the command line options.
-   Return 1 if the lines differ, like `memcmp'.  */
+   For efficiency, this is invoked only when the lines do not match exactly
+   but an option like -i might cause us to ignore the difference.
+   Return nonzero if the lines differ.  */
 
 int
-line_cmp (s1, len1, s2, len2)
+line_cmp (s1, s2)
      char const *s1, *s2;
-     size_t len1, len2;
 {
-  register unsigned char const *t1, *t2;
-  register unsigned char end_char = line_end_char;
+  register unsigned char const *t1 = (unsigned char const *) s1;
+  register unsigned char const *t2 = (unsigned char const *) s2;
 
-  /* Check first for exact identity.
-     If that is true, return 0 immediately.
-     This detects the common case of exact identity
-     faster than complete comparison would.  */
-
-  if (len1 == len2 && memcmp (s1, s2, len1) == 0)
-    return 0;
-
-  /* Not exactly identical, but perhaps they match anyway
-     when case or white space is ignored.  */
-
-  if (ignore_case_flag | ignore_space_change_flag | ignore_all_space_flag)
+  while (1)
     {
-      t1 = (unsigned char const *) s1;
-      t2 = (unsigned char const *) s2;
+      register unsigned char c1 = *t1++;
+      register unsigned char c2 = *t2++;
 
-      while (1)
+      /* Test for exact char equality first, since it's a common case.  */
+      if (c1 != c2)
 	{
-	  register unsigned char c1 = *t1++;
-	  register unsigned char c2 = *t2++;
-
 	  /* Ignore horizontal white space if -b or -w is specified.  */
 
 	  if (ignore_all_space_flag)
 	    {
 	      /* For -w, just skip past any white space.  */
-	      while (isspace (c1) && c1 != end_char) c1 = *t1++;
-	      while (isspace (c2) && c2 != end_char) c2 = *t2++;
+	      while (isspace (c1) && c1 != '\n') c1 = *t1++;
+	      while (isspace (c2) && c2 != '\n') c2 = *t2++;
 	    }
 	  else if (ignore_space_change_flag)
 	    {
@@ -340,7 +328,7 @@ line_cmp (s1, len1, s2, len2)
 		 if it is at the end of the line.  */
 	      if (isspace (c1))
 		{
-		  while (c1 != end_char)
+		  while (c1 != '\n')
 		    {
 		      c1 = *t1++;
 		      if (! isspace (c1))
@@ -355,7 +343,7 @@ line_cmp (s1, len1, s2, len2)
 	      /* Likewise for line 2.  */
 	      if (isspace (c2))
 		{
-		  while (c2 != end_char)
+		  while (c2 != '\n')
 		    {
 		      c2 = *t2++;
 		      if (! isspace (c2))
@@ -366,23 +354,44 @@ line_cmp (s1, len1, s2, len2)
 			}
 		    }
 		}
+
+	      if (c1 != c2)
+		{
+		  /* If we went too far when doing the simple test
+		     for equality, go back to the first non-white-space
+		     character in both sides and try again.  */
+		  if (c2 == ' ' && c1 != '\n'
+		      && (unsigned char const *) s1 + 1 < t1
+		      && isspace(t1[-2]))
+		    {
+		      --t1;
+		      continue;
+		    }
+		  if (c1 == ' ' && c2 != '\n'
+		      && (unsigned char const *) s2 + 1 < t2
+		      && isspace(t2[-2]))
+		    {
+		      --t2;
+		      continue;
+		    }
+		}
 	    }
 
-	  /* Upcase all letters if -i is specified.  */
+	  /* Lowercase all letters if -i is specified.  */
 
 	  if (ignore_case_flag)
 	    {
-	      if (islower (c1))
-		c1 = toupper (c1);
-	      if (islower (c2))
-		c2 = toupper (c2);
+	      if (isupper (c1))
+		c1 = tolower (c1);
+	      if (isupper (c2))
+		c2 = tolower (c2);
 	    }
 
 	  if (c1 != c2)
 	    break;
-	  if (c1 == end_char)
-	    return 0;
 	}
+      if (c1 == '\n')
+	return 0;
     }
 
   return (1);
@@ -473,8 +482,7 @@ print_1_line (line_flag, line)
 
   output_1_line (text, limit, flag_format, line_flag);
 
-  if ((!line_flag || line_flag[0]) && limit[-1] != '\n'
-      && line_end_char == '\n')
+  if ((!line_flag || line_flag[0]) && limit[-1] != '\n')
     fprintf (out, "\n\\ No newline at end of file\n");
 }
 
