@@ -1,5 +1,7 @@
 /* sdiff-format output routines for GNU DIFF.
-   Copyright 1991, 1992, 1993, 1998 Free Software Foundation, Inc.
+
+   Copyright (C) 1991, 1992, 1993, 1998, 2001 Free Software
+   Foundation, Inc.
 
    This file is part of GNU DIFF.
 
@@ -18,23 +20,18 @@
    file named COPYING.  Among other things, the copyright notice
    and this notice must be preserved on all copies.  */
 
-
 #include "diff.h"
 
-static unsigned print_half_line PARAMS((char const * const *, unsigned, unsigned));
-static unsigned tab_from_to PARAMS((unsigned, unsigned));
-static void print_1sdiff_line PARAMS((char const * const *, int, char const * const *));
-static void print_sdiff_common_lines PARAMS((int, int));
-static void print_sdiff_hunk PARAMS((struct change *));
+static void print_sdiff_common_lines (lin, lin);
+static void print_sdiff_hunk (struct change *);
 
 /* Next line number to be printed in the two input files.  */
-static int next0, next1;
+static lin next0, next1;
 
 /* Print the edit-script SCRIPT as a sdiff style output.  */
 
 void
-print_sdiff_script (script)
-     struct change *script;
+print_sdiff_script (struct change *script)
 {
   begin_output ();
 
@@ -47,13 +44,12 @@ print_sdiff_script (script)
 /* Tab from column FROM to column TO, where FROM <= TO.  Yield TO.  */
 
 static unsigned
-tab_from_to (from, to)
-     unsigned from, to;
+tab_from_to (unsigned from, unsigned to)
 {
   FILE *out = outfile;
   unsigned tab;
 
-  if (! tab_expand_flag)
+  if (!expand_tabs)
     for (tab = from + TAB_WIDTH - from % TAB_WIDTH;  tab <= to;  tab += TAB_WIDTH)
       {
 	putc ('\t', out);
@@ -70,9 +66,7 @@ tab_from_to (from, to)
  * written (not the number of chars).
  */
 static unsigned
-print_half_line (line, indent, out_bound)
-     char const * const *line;
-     unsigned indent, out_bound;
+print_half_line (char const *const *line, unsigned indent, unsigned out_bound)
 {
   FILE *out = outfile;
   register unsigned in_position = 0, out_position = 0;
@@ -92,7 +86,7 @@ print_half_line (line, indent, out_bound)
 	    if (in_position == out_position)
 	      {
 		unsigned tabstop = out_position + spaces;
-		if (tab_expand_flag)
+		if (expand_tabs)
 		  {
 		    if (out_bound < tabstop)
 		      tabstop = out_bound;
@@ -167,20 +161,17 @@ print_half_line (line, indent, out_bound)
  */
 
 static void
-print_1sdiff_line (left, sep, right)
-     char const * const *left;
-     int sep;
-     char const * const *right;
+print_1sdiff_line (char const *const *left, char sep,
+		   char const *const *right)
 {
   FILE *out = outfile;
   unsigned hw = sdiff_half_width, c2o = sdiff_column2_offset;
   unsigned col = 0;
-  int put_newline = 0;
+  bool put_newline = 0;
 
   if (left)
     {
-      if (left[1][-1] == '\n')
-	put_newline = 1;
+      put_newline |= left[1][-1] == '\n';
       col = print_half_line (left, 0, hw);
     }
 
@@ -194,8 +185,7 @@ print_1sdiff_line (left, sep, right)
 
   if (right)
     {
-      if (right[1][-1] == '\n')
-	put_newline = 1;
+      put_newline |= right[1][-1] == '\n';
       if (**right != '\n')
 	{
 	  col = tab_from_to (col, c2o);
@@ -209,20 +199,24 @@ print_1sdiff_line (left, sep, right)
 
 /* Print lines common to both files in side-by-side format.  */
 static void
-print_sdiff_common_lines (limit0, limit1)
-     int limit0, limit1;
+print_sdiff_common_lines (lin limit0, lin limit1)
 {
-  int i0 = next0, i1 = next1;
+  lin i0 = next0, i1 = next1;
 
-  if (! sdiff_skip_common_lines  &&  (i0 != limit0 || i1 != limit1))
+  if (!suppress_common_lines && (i0 != limit0 || i1 != limit1))
     {
-      if (sdiff_help_sdiff)
-	fprintf (outfile, "i%d,%d\n", limit0 - i0, limit1 - i1);
+      if (sdiff_merge_assist)
+	{
+	  long len0 = limit0 - i0;
+	  long len1 = limit1 - i1;
+	  fprintf (outfile, "i%ld,%ld\n", len0, len1);
+	}
 
-      if (! sdiff_left_only)
+      if (!left_column)
 	{
 	  while (i0 != limit0 && i1 != limit1)
-	    print_1sdiff_line (&files[0].linbuf[i0++], ' ', &files[1].linbuf[i1++]);
+	    print_1sdiff_line (&files[0].linbuf[i0++], ' ',
+			       &files[1].linbuf[i1++]);
 	  while (i1 != limit1)
 	    print_1sdiff_line (0, ')', &files[1].linbuf[i1++]);
 	}
@@ -239,37 +233,39 @@ print_sdiff_common_lines (limit0, limit1)
    describing changes in consecutive lines.  */
 
 static void
-print_sdiff_hunk (hunk)
-     struct change *hunk;
+print_sdiff_hunk (struct change *hunk)
 {
-  int first0, last0, first1, last1, deletes, inserts;
-  register int i, j;
+  lin first0, last0, first1, last1;
+  register lin i, j;
 
   /* Determine range of line numbers involved in each file.  */
-  analyze_hunk (hunk, &first0, &last0, &first1, &last1, &deletes, &inserts);
-  if (!deletes && !inserts)
+  enum changes changes =
+    analyze_hunk (hunk, &first0, &last0, &first1, &last1);
+  if (!changes)
     return;
 
   /* Print out lines up to this change.  */
   print_sdiff_common_lines (first0, first1);
 
-  if (sdiff_help_sdiff)
-    fprintf (outfile, "c%d,%d\n", last0 - first0 + 1, last1 - first1 + 1);
+  if (sdiff_merge_assist)
+    {
+      long len0 = last0 - first0 + 1;
+      long len1 = last1 - first1 + 1;
+      fprintf (outfile, "c%ld,%ld\n", len0, len1);
+    }
 
   /* Print ``xxx  |  xxx '' lines */
-  if (inserts && deletes)
+  if (changes == CHANGED)
     {
-      for (i = first0, j = first1;  i <= last0 && j <= last1; ++i, ++j)
+      for (i = first0, j = first1;  i <= last0 && j <= last1;  i++, j++)
 	print_1sdiff_line (&files[0].linbuf[i], '|', &files[1].linbuf[j]);
-      deletes = i <= last0;
-      inserts = j <= last1;
+      changes = (i <= last0 ? OLD : 0) + (j <= last1 ? NEW : 0);
       next0 = first0 = i;
       next1 = first1 = j;
     }
 
-
   /* Print ``     >  xxx '' lines */
-  if (inserts)
+  if (changes & NEW)
     {
       for (j = first1; j <= last1; ++j)
 	print_1sdiff_line (0, '>', &files[1].linbuf[j]);
@@ -277,7 +273,7 @@ print_sdiff_hunk (hunk)
     }
 
   /* Print ``xxx  <     '' lines */
-  if (deletes)
+  if (changes & OLD)
     {
       for (i = first0; i <= last0; ++i)
 	print_1sdiff_line (&files[0].linbuf[i], '<', 0);
