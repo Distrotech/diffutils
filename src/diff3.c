@@ -173,10 +173,7 @@ static int finalwrite;
 /* If nonzero, output a merged file.  */
 static int merge;
 
-static char *program_name;
-
-static VOID *xmalloc PARAMS((size_t));
-static VOID *xrealloc PARAMS((VOID *, size_t));
+char *program_name;
 
 static char *read_diff PARAMS((char const *, char const *, char **));
 static char *scan_diff_line PARAMS((char *, char **, size_t *, char *, int));
@@ -199,6 +196,11 @@ static void perror_with_exit PARAMS((char const *));
 static void try_help PARAMS((char const *));
 static void undotlines PARAMS((FILE *, int, int, int));
 static void usage PARAMS((void));
+
+void error PARAMS((int, int, char const *, ...));
+VOID *xmalloc PARAMS((size_t));
+VOID *xrealloc PARAMS((VOID *, size_t));
+extern int xmalloc_exit_failure;
 
 static char const diff_program[] = DIFF_PROGRAM;
 
@@ -242,6 +244,7 @@ main (argc, argv)
 
   initialize_main (&argc, &argv);
   program_name = argv[0];
+  xmalloc_exit_failure = 2;
 
   while ((c = getopt_long (argc, argv, "aeimvx3AEL:TX", longopts, 0)) != EOF)
     {
@@ -352,15 +355,11 @@ main (argc, argv)
       {
 	if (stat (file[i], &statb) < 0)
 	  perror_with_exit (file[i]);
-	else if (S_ISDIR(statb.st_mode))
-	  {
-	    fprintf (stderr, "%s: %s: Is a directory\n",
-		     program_name, file[i]);
-	    exit (2);
-	  }
+	else if (S_ISDIR (statb.st_mode))
+	  error (2, EISDIR, "%s", file[i]);
       }
 
-#if !defined(SIGCHLD) && defined(SIGCLD)
+#if !defined (SIGCHLD) && defined (SIGCLD)
 #define SIGCHLD SIGCLD
 #endif
 #ifdef SIGCHLD
@@ -408,10 +407,8 @@ try_help (reason)
      char const *reason;
 {
   if (reason)
-    fprintf (stderr, "%s: %s\n", program_name, reason);
-  fprintf (stderr, "%s: Try `%s --help' for more information.\n",
-	   program_name, program_name);
-  exit (2);
+    error (0, 0, "%s", reason);
+  error (2, 0, "Try `%s --help' for more information.", program_name);
 }
 
 static void
@@ -1138,7 +1135,7 @@ read_diff (filea, fileb, output_placement)
 
   /* 302 / 1000 is log10(2.0) rounded up.  Subtract 1 for the sign bit;
      add 1 for integer division truncation; add 1 more for a minus sign.  */
-#define INT_STRLEN_BOUND(type) ((sizeof(type)*CHAR_BIT - 1) * 302 / 1000 + 2)
+#define INT_STRLEN_BOUND(t) ((sizeof (t) * CHAR_BIT - 1) * 302 / 1000 + 2)
 
 #if HAVE_FORK
 
@@ -1737,42 +1734,16 @@ myread (fd, ptr, size)
   return result;
 }
 
-static VOID *
-xmalloc (size)
-     size_t size;
-{
-  VOID *result = (VOID *) malloc (size ? size : 1);
-  if (!result)
-    fatal ("memory exhausted");
-  return result;
-}
-
-static VOID *
-xrealloc (ptr, size)
-     VOID *ptr;
-     size_t size;
-{
-  VOID *result = (VOID *) realloc (ptr, size ? size : 1);
-  if (!result)
-    fatal ("memory exhausted");
-  return result;
-}
-
 static void
 fatal (string)
      char const *string;
 {
-  fprintf (stderr, "%s: %s\n", program_name, string);
-  exit (2);
+  error (2, 0, "%s", string);
 }
 
 static void
 perror_with_exit (string)
      char const *string;
 {
-  int e = errno;
-  fprintf (stderr, "%s: ", program_name);
-  errno = e;
-  perror (string);
-  exit (2);
+  error (2, errno, "%s", string);
 }
