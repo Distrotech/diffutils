@@ -4,19 +4,19 @@ AC_CONFIG_HEADER(config.h)
 AC_PROG_CC
 AC_PROG_CPP
 AC_PROG_INSTALL
-AC_MINIX
-AC_ISC_POSIX
+AC_OS_MINIX
+AC_OS_ISC
 AC_DIR_HEADER
-AC_CONST
-AC_STDC_HEADERS
-AC_HAVE_HEADERS(unistd.h fcntl.h limits.h stdlib.h string.h sys/wait.h time.h)
-AC_PID_T
-AC_RETSIGTYPE
-AC_HAVE_FUNCS(dup2 memchr sigaction strerror waitpid)
-AC_VFORK
-AC_VPRINTF
-AC_ALLOCA
-AC_ST_BLKSIZE
-AC_STAT_MACROS_BROKEN
-AC_XENIX_DIR
+AC_C_CONST
+AC_HEADER_STDC
+AC_CHECK_HEADERS(unistd.h fcntl.h limits.h stdlib.h string.h sys/file.h sys/wait.h time.h)
+AC_TYPE_PID_T
+AC_TYPE_SIGNAL
+AC_CHECK_FUNCS(dup2 memchr sigaction strerror waitpid)
+AC_FUNC_VFORK
+AC_FUNC_VPRINTF
+AC_FUNC_ALLOCA
+AC_STRUCT_ST_BLKSIZE
+AC_HEADER_STAT
+AC_OS_XENIX
 AC_OUTPUT(Makefile)
