@@ -729,9 +729,8 @@ trapsigs ()
   for (i = 0;  i < NUM_SIGS;  i++)
     {
       initial_action[i] = signal (sigs[i], SIG_IGN);
-      if (initial_handler (i) != SIG_IGN
-	  && signal (sigs[i], catchsig) != SIG_IGN)
-	fatal ("signal error");
+      if (initial_action[i] != SIG_IGN)
+	signal (sigs[i], catchsig);
     }
 #endif /* ! HAVE_SIGACTION */
 
