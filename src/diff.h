@@ -1,5 +1,5 @@
 /* Shared definitions for GNU DIFF
-   Copyright (C) 1988, 1989 Free Software Foundation, Inc.
+   Copyright (C) 1988, 89, 91, 92 Free Software Foundation, Inc.
 
 This file is part of GNU DIFF.
 
@@ -29,9 +29,9 @@ the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 /* Character classes.  */
 extern const char textchar[];
 
-/* is_space is a little broader than ctype.h's isspace,
+/* Is_space is a little broader than ctype.h's isspace,
    because it also includes backspace and no-break space.  */
-#define is_space(c) (textchar[c] & 2)
+#define Is_space(c) (textchar[c] & 2)
 
 #define TAB_WIDTH 8
 
@@ -197,14 +197,6 @@ struct change
 
 /* Structures that describe the input files.  */
 
-/* Data on one line of text.  */
-
-struct line_def {
-    char        *text;
-    int         length;
-    unsigned	hash;
-};
-
 /* Data on one input file being compared.  */
 
 struct file_data {
@@ -220,26 +212,24 @@ struct file_data {
     /* Number of valid characters now in the buffer. */
     int		    buffered_chars;
 
-    /* Array of data on analyzed lines of this chunk of this file.  */
-    struct line_def *linbuf;
+    /* Array of pointers to lines in the file.  */
+    const char **linbuf;
 
-    /* Allocated size of linbuf array (# of elements).  */
-    int		    linbufsize;
-
-    /* Number of elements of linbuf containing valid data. */
-    int		    buffered_lines;
+    /* linbuf_base <= buffered_lines <= valid_lines <= alloc_lines.
+       linebuf[linbuf_base ... buffered_lines - 1] are possibly differing.
+       linebuf[linbuf_base ... valid_lines - 1] contain valid data.
+       linebuf[linbuf_base ... alloc_lines - 1] are allocated.  */
+    int linbuf_base, buffered_lines, valid_lines, alloc_lines;
 
     /* Pointer to end of prefix of this file to ignore when hashing. */
-    char *prefix_end;
+    const char *prefix_end;
 
-    /* Count of lines in the prefix. */
+    /* Count of lines in the prefix.
+       There are this many lines in the file before linbuf[0].  */
     int prefix_lines;
 
     /* Pointer to start of suffix of this file to ignore when hashing. */
-    char *suffix_begin;
-
-    /* Count of lines in the suffix. */
-    int suffix_lines;
+    const char *suffix_begin;
 
     /* Vector, indexed by line number, containing an equivalence code for
        each line.  It is this vector that is actually compared with that
@@ -268,13 +258,6 @@ struct file_data {
     /* 1 more than the maximum equivalence value used for this or its
        sibling file. */
     int equiv_max;
-
-    /* Table translating diff's internal line numbers 
-       to actual line numbers in the file.
-       This is needed only when some lines have been discarded.
-       The allocated size is always linbufsize
-       and the number of valid elements is buffered_lines.  */
-    int		   *ltran;
 };
 
 /* Describe the two files currently being compared.  */
@@ -314,6 +297,12 @@ EXTERN FILE *outfile;
 VOID *xmalloc ();
 VOID *xrealloc ();
 char *concat ();
+#if !HAVE_MEMCHR
+void *memchr ();
+#endif
+
+int excluded_filename ();
+int sip ();
 
 struct change *find_change ();
 
@@ -329,4 +318,5 @@ void print_context_header ();
 void print_message_queue ();
 void print_number_range ();
 void print_script ();
+void slurp ();
 void translate_range ();

@@ -1,5 +1,5 @@
 /* Support routines for GNU DIFF.
-   Copyright (C) 1988, 1989 Free Software Foundation, Inc.
+   Copyright (C) 1988-1992 Free Software Foundation, Inc.
 
 This file is part of GNU DIFF.
 
@@ -235,42 +235,22 @@ finish_output ()
 
 /* Compare two lines (typically one from each input file)
    according to the command line options.
-   Each line is described by a `struct line_def'.
    Return 1 if the lines differ, like `bcmp'.  */
 
 int
-line_cmp (s1, s2)
-     struct line_def *s1, *s2;
+line_cmp (s1, len1, s2, len2)
+     const char *s1, *s2;
+     int len1, len2;
 {
-  register unsigned char *t1, *t2;
+  register const unsigned char *t1, *t2;
   register unsigned char end_char = line_end_char;
-  int savechar;
 
   /* Check first for exact identity.
      If that is true, return 0 immediately.
      This detects the common case of exact identity
      faster than complete comparison would.  */
 
-  t1 = (unsigned char *)s1->text;
-  t2 = (unsigned char *)s2->text;
-
-  /* Alter the character following line 2 so it doesn't
-     match that following line 1.
-     (We used to alter the character after line 1,
-     but that caused trouble if line 2 directly follows line 1.)  */
-  savechar = s2->text[s2->length];
-  s2->text[s2->length] = s1->text[s1->length] + 1;
-
-  /* Now find the first mismatch; this won't go past the
-     character we just changed.  */
-  while (*t1++ == *t2++);
-
-  /* Undo the alteration.  */
-  s2->text[s2->length] = savechar;
-
-  /* If the comparison stopped at the alteration,
-     the two lines are identical.  */
-  if (t2 == (unsigned char *) s2->text + s2->length + 1)
+  if (len1 == len2 && bcmp (s1, s2, len1) == 0)
     return 0;
 
   /* Not exactly identical, but perhaps they match anyway
@@ -278,8 +258,8 @@ line_cmp (s1, s2)
 
   if (ignore_case_flag || ignore_space_change_flag || ignore_all_space_flag)
     {
-      t1 = (unsigned char *) s1->text;
-      t2 = (unsigned char *) s2->text;
+      t1 = (const unsigned char *) s1;
+      t2 = (const unsigned char *) s2;
 
       while (1)
 	{
@@ -291,8 +271,8 @@ line_cmp (s1, s2)
 	  if (ignore_all_space_flag)
 	    {
 	      /* For -w, just skip past any white space.  */
-	      while (is_space (c1)) c1 = *t1++;
-	      while (is_space (c2)) c2 = *t2++;
+	      while (Is_space (c1)) c1 = *t1++;
+	      while (Is_space (c2)) c2 = *t2++;
 	    }
 	  else if (ignore_space_change_flag)
 	    {
@@ -420,10 +400,10 @@ print_script (script, hunkfun, printfun)
 void
 print_1_line (line_flag, line)
      char *line_flag;
-     struct line_def *line;
+     const char * const *line;
 {
-  int length = line->length; /* must be nonzero */
-  const char *text = line->text; /* Help the compiler.  */
+  const char *text = line[0]; /* Help the compiler.  */
+  int length = line[1] - text; /* must be nonzero */
   FILE *out = outfile; /* Help the compiler some more.  */
   const char *flag_format = 0;
 
@@ -508,18 +488,15 @@ change_letter (inserts, deletes)
    into an actual line number in the input file.
    The internal line number is LNUM.  FILE points to the data on the file.
 
-   Internal line numbers count from 0 within the current chunk.
-   Actual line numbers count from 1 within the entire file;
-   in addition, they include lines ignored for comparison purposes.
-
-   The `ltran' feature is no longer in use.  */
+   Internal line numbers count from 0 starting after the prefix.
+   Actual line numbers count from 1 within the entire file.  */
 
 int
 translate_line_number (file, lnum)
      struct file_data *file;
      int lnum;
 {
-  return lnum + 1;
+  return lnum + file->prefix_lines + 1;
 }
 
 void
@@ -593,47 +570,39 @@ analyze_hunk (hunk, first0, last0, first1, last1, deletes, inserts)
       show_to += next->inserted;
 
       for (i = next->line0; i <= l0 && ! nontrivial; i++)
-	if (!ignore_blank_lines_flag || files[0].linbuf[i].length > 1)
+	if (ignore_blank_lines_flag && files[0].linbuf[i][0] == '\n')
+	  nontrivial = 1;
+	else
 	  {
-	    if (!ignore_regexp_list)
-	      nontrivial = 1;
-	    else
-	      {
-		struct regexp_list *r;
+	    struct regexp_list *r;
+	    const char *line = files[0].linbuf[i];
+	    int len = files[0].linbuf[i + 1] - line;
 
-		for (r = ignore_regexp_list; r; r = r->next)
-		  if (0 <= re_search (&r->buf,
-				      files[0].linbuf[i].text,
-				      files[0].linbuf[i].length, 0,
-				      files[0].linbuf[i].length, 0))
-		    break;	/* Found a match.  Ignore this line.  */
-		/* If we got all the way through the regexp list without
-		   finding a match, then it's nontrivial.  */
-		if (r == NULL)
-		  nontrivial = 1;
-	      }
+	    for (r = ignore_regexp_list; r; r = r->next)
+	      if (0 <= re_search (&r->buf, line, len, 0, len, 0))
+		break;	/* Found a match.  Ignore this line.  */
+	    /* If we got all the way through the regexp list without
+	       finding a match, then it's nontrivial.  */
+	    if (r == NULL)
+	      nontrivial = 1;
 	  }
-	    
-      for (i = next->line1; i <= l1 && ! nontrivial; i++)
-	if (!ignore_blank_lines_flag || files[1].linbuf[i].length > 1)
-	  {
-	    if (!ignore_regexp_list)
-	      nontrivial = 1;
-	    else
-	      {
-		struct regexp_list *r;
 
-		for (r = ignore_regexp_list; r; r = r->next)
-		  if (0 <= re_search (&r->buf,
-				      files[1].linbuf[i].text,
-				      files[1].linbuf[i].length, 0,
-				      files[1].linbuf[i].length, 0))
-		    break;	/* Found a match.  Ignore this line.  */
-		/* If we got all the way through the regexp list without
-		   finding a match, then it's nontrivial.  */
-		if (r == NULL)
-		  nontrivial = 1;
-	      }
+      for (i = next->line1; i <= l1 && ! nontrivial; i++)
+	if (ignore_blank_lines_flag && files[1].linbuf[i][0] == '\n')
+	  nontrivial = 1;
+	else
+	  {
+	    struct regexp_list *r;
+	    const char *line = files[1].linbuf[i];
+	    int len = files[1].linbuf[i + 1] - line;
+
+	    for (r = ignore_regexp_list; r; r = r->next)
+	      if (0 <= re_search (&r->buf, line, len, 0, len, 0))
+		break;	/* Found a match.  Ignore this line.  */
+	    /* If we got all the way through the regexp list without
+	       finding a match, then it's nontrivial.  */
+	    if (r == NULL)
+	      nontrivial = 1;
 	  }
     }
 
@@ -713,3 +682,18 @@ debug_script (sp)
 	     sp->line0, sp->line1, sp->deleted, sp->inserted);
   fflush (stderr);
 }
+
+#if !HAVE_MEMCHR
+void *
+memchr (s, c, n)
+     const void *s;
+     int c;
+     size_t n;
+{
+  const unsigned char *p = (const unsigned char *) s, *lim = p + n;
+  for (;  p < lim;  p++)
+    if (*p == c)
+      return (void *) p;
+  return 0;
+}
+#endif
