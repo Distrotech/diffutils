@@ -19,13 +19,14 @@
 
 AC_PREREQ(2.53)
 
-AC_INIT(GNU diffutils, 2.8.1, bug-gnu-utils@gnu.org)
+AC_INIT(GNU diffutils, 2.8.2, bug-gnu-utils@gnu.org)
 AC_CONFIG_SRCDIR(src/diff.c)
 
 AC_CONFIG_AUX_DIR(config)
 AM_CONFIG_HEADER([config.h:config.hin])
 AM_INIT_AUTOMAKE([gnits])
 
+AC_GNU_SOURCE
 AC_PROG_AWK
 AC_PROG_CC
 AC_ISC_POSIX
@@ -35,16 +36,12 @@ AM_MISSING_PROG(HELP2MAN, help2man)
 AC_PROG_INSTALL
 AC_PROG_RANLIB
 
-AC__GNU_SOURCE
 AC_DEFINE([__EXTENSIONS__], 1, [Enable Solaris extensions.])
 AC_SYS_LARGEFILE
 
 AC_C_CONST
 AC_C_INLINE
 AC_C_VARARRAYS
-
-AC_DEFINE(DEFAULT_DIFF_PROGRAM, "diff",
-  [Name of "diff" program, unless overridden.])
 
 AC_DEFINE(DEFAULT_EDITOR_PROGRAM, "ed",
   [Name of editor program, unless overridden.])
@@ -60,6 +57,7 @@ AC_CHECK_MEMBERS([struct stat.st_blksize])
 AC_CHECK_MEMBERS([struct stat.st_rdev])
 AC_CHECK_TYPE(ptrdiff_t, int)
 AC_CHECK_TYPE(ssize_t, int)
+jm_AC_TYPE_INTMAX_T
 jm_AC_TYPE_UINTMAX_T
 AM_GNU_GETTEXT([external])
 XGETTEXT="AWK='$AWK' \$(SHELL) \$(top_srcdir)/exgettext $XGETTEXT"
@@ -68,7 +66,6 @@ AC_HEADER_STAT
 AC_HEADER_SYS_WAIT
 AC_STRUCT_ST_MTIM_NSEC
 AC_TYPE_PID_T
-AC_TYPE_SIGNAL
 
 AC_CHECK_FUNCS(diraccess dup2 gettimeofday \
   sigaction sigprocmask strchr strerror tmpnam)
@@ -109,18 +106,12 @@ AC_CHECK_FUNCS(clock_gettime)
 LIBS=$diff_saved_libs
 
 # fnmatch
-AC_FUNC_FNMATCH
-if test $ac_cv_func_fnmatch_works = yes; then
-  rm -f lib/fnmatch.h
-else
-  AC_LIBOBJ(fnmatch)
-  AC_CONFIG_LINKS(lib/fnmatch.h:lib/fnmatch.hin)
-fi
+AC_FUNC_FNMATCH_GNU
 
 # regex
 jm_INCLUDED_REGEX([lib/regex.c])
 if test "$jm_with_regex" = yes; then
-  AC_CONFIG_LINKS(lib/regex.h:lib/regex.hin)
+  AC_CONFIG_LINKS(lib/regex.h:lib/regex_.h)
 else
   rm -f lib/regex.h
 fi
