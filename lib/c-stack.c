@@ -122,7 +122,7 @@ die (int signo)
   abort ();
 }
 
-#if HAVE_DECL_SIGALTSTACK
+#if HAVE_SIGALTSTACK && HAVE_DECL_SIGALTSTACK
 
 /* Direction of the C runtime stack.  This function is
    async-signal-safe.  */
@@ -204,7 +204,7 @@ get_stack_location (char * const *argv)
       size_t page_size = sysconf (_SC_PAGESIZE);
       int stack_direction = find_stack_direction (0);
 
-#if HAVE_DECL_GETCONTEXT
+#   if HAVE_GETCONTEXT && HAVE_DECL_GETCONTEXT
       ucontext_t context;
       if (getcontext (&context) == 0)
 	{
@@ -213,7 +213,7 @@ get_stack_location (char * const *argv)
 	    base -= size - context.uc_stack.ss_size;
 	}
       else
-#endif
+#   endif
 	{
 	  if (stack_direction < 0)
 	    {
@@ -381,7 +381,7 @@ c_stack_action (char * const *argv __attribute__ ((unused)),
   }
 }
 
-#else /* ! HAVE_DECL_SIGALTSTACK */
+#else /* ! (HAVE_SIGALTSTACK && HAVE_DECL_SIGALTSTACK) */
 
 int
 c_stack_action (char * const *argv __attribute__ ((unused)),
