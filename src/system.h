@@ -1,5 +1,5 @@
 /* System dependent declarations.
-   Copyright 1988, 1989, 1992, 1993, 1994 Free Software Foundation, Inc.
+   Copyright (C) 1988, 1989, 1992, 1993, 1994 Free Software Foundation, Inc.
 
 This file is part of GNU DIFF.
 
@@ -136,7 +136,7 @@ the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 
 #if HAVE_DIRENT_H
 # include <dirent.h>
-# define NAMLEN(dirent) (strlen((dirent)->d_name))
+# define NAMLEN(dirent) strlen((dirent)->d_name)
 #else
 # define dirent direct
 # define NAMLEN(dirent) ((dirent)->d_namlen)
@@ -175,28 +175,21 @@ char *getenv ();
 #define CHAR_BIT 8
 #endif
 
-#if HAVE_STRING_H
-#include <string.h>
-#ifndef bzero
-#define bzero(s,n) memset (s,0,n)
-#endif
-#else /* !HAVE_STRING_H */
-#include <strings.h>
-#ifndef strchr
-#define strchr index
-#endif
-#ifndef strrchr
-#define strrchr rindex
-#endif
-#ifndef memcpy
-#define memcpy(d,s,n) bcopy (s,d,n)
-#endif
-#ifndef memcmp
-#define memcmp(s1,s2,n) bcmp (s1,s2,n)
-#endif
-#endif /* !HAVE_STRING_H */
-#if !HAVE_MEMCHR
-char *memchr ();
+#if STDC_HEADERS
+# include <string.h>
+# ifndef bzero
+#  define bzero(s, n) memset (s, 0, n)
+# endif
+#else
+# if !HAVE_STRCHR
+#  define strchr index
+#  define strrchr rindex
+# endif
+char *strchr (), *strrchr ();
+void *memchr ();
+# if !HAVE_MEMCPY
+#  define memcpy(d, s, n) bcopy (s, d, n)
+# endif
 #endif
 
 #include <errno.h>
