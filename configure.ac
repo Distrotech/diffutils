@@ -20,7 +20,7 @@
 
 AC_PREREQ(2.53)
 
-AC_INIT([GNU diffutils], [2.8.6], [bug-gnu-utils@gnu.org])
+AC_INIT([GNU diffutils], [2.8.7], [bug-gnu-utils@gnu.org])
 AC_CONFIG_SRCDIR([src/diff.c])
 AC_CONFIG_AUX_DIR([config])
 AC_CONFIG_MACRO_DIR([m4])
@@ -64,6 +64,8 @@ AC_DEFINE([REGEX_MALLOC], 1,
 
 
 GNULIB_AUTOCONF_SNIPPET
+AM_GNU_GETTEXT_VERSION([0.14.1])
+XGETTEXT="AWK='$AWK' \$(SHELL) \$(top_srcdir)/exgettext $XGETTEXT"
 
 
 # Check for clock_gettime and its library.  Solaris puts it in -lrt or
