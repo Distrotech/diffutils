@@ -537,12 +537,11 @@ main (argc, argv)
 	int i;
 
 	for (i = 0;  diffargv[i];  i++)
-	  cmdsize += 4 * strlen (diffargv[i]) + 3;
+	  cmdsize += system_quote_arg ((char *) 0, diffargv[i]) + 1;
 	command = p = xmalloc (cmdsize);
 	for (i = 0;  diffargv[i];  i++)
 	  {
-	    char const *a = diffargv[i];
-	    SYSTEM_QUOTE_ARG (p, a);
+	    p += system_quote_arg (p, diffargv[i]);
 	    *p++ = ' ';
 	  }
 	p[-1] = '\0';
@@ -882,6 +881,7 @@ edit (left, lenl, right, lenr, outfile)
 		  continue;
 		}
 	      break;
+
 	    case EOF:
 	      if (feof (stdin))
 		{
@@ -889,10 +889,10 @@ edit (left, lenl, right, lenr, outfile)
 		  cmd0 = 'q';
 		  break;
 		}
-	      /* falls through */
+	      /* Fall through.  */
 	    default:
 	      flush_line ();
-	      /* falls through */
+	      /* Fall through.  */
 	    case '\n':
 	      give_help ();
 	      continue;
