@@ -31,7 +31,9 @@ the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 #define GUESS_LINES(n,s,t) (((t) - (s)) / ((n) < 10 ? 32 : (s) / ((n)-1)) + 5)
 
 /* Type used for fast prefix comparison in find_identical_ends.  */
+#ifndef word
 #define word int
+#endif
 
 /* Lines are put into equivalence classes (of lines that match in line_cmp).
    Each equivalence class is represented by one of these structures,
@@ -221,42 +223,52 @@ find_and_hash_each_line (current)
 	  if (ignore_all_space_flag)
 	    while ((c = *p++) != '\n')
 	      {
-		if (! isspace (c))
-		  h = HASH (h, isupper (c) ? tolower (c) : c);
+		if (! ISSPACE (c))
+		  h = HASH (h, ISUPPER (c) ? tolower (c) : c);
 	      }
 	  else if (ignore_space_change_flag)
 	    while ((c = *p++) != '\n')
 	      {
-		if (isspace (c))
+		if (ISSPACE (c))
 		  {
-		    while (isspace (c = *p++))
-		      if (c == '\n')
-			goto hashing_done;
+		    for (;;)
+		      {
+			c = *p++;
+			if (!ISSPACE (c))
+			  break;
+			if (c == '\n')
+			  goto hashing_done;
+		      }
 		    h = HASH (h, ' ');
 		  }
 		/* C is now the first non-space.  */
-		h = HASH (h, isupper (c) ? tolower (c) : c);
+		h = HASH (h, ISUPPER (c) ? tolower (c) : c);
 	      }
 	  else
 	    while ((c = *p++) != '\n')
-	      h = HASH (h, isupper (c) ? tolower (c) : c);
+	      h = HASH (h, ISUPPER (c) ? tolower (c) : c);
 	}
       else
 	{
 	  if (ignore_all_space_flag)
 	    while ((c = *p++) != '\n')
 	      {
-		if (! isspace (c))
+		if (! ISSPACE (c))
 		  h = HASH (h, c);
 	      }
 	  else if (ignore_space_change_flag)
 	    while ((c = *p++) != '\n')
 	      {
-		if (isspace (c))
+		if (ISSPACE (c))
 		  {
-		    while (isspace (c = *p++))
-		      if (c == '\n')
-			goto hashing_done;
+		    for (;;)
+		      {
+			c = *p++;
+			if (!ISSPACE (c))
+			  break;
+			if (c == '\n')
+			  goto hashing_done;
+		      }
 		    h = HASH (h, ' ');
 		  }
 		/* C is now the first non-space.  */
@@ -666,7 +678,13 @@ read_files (filevec, pretend_binary)
       filevec[1].buffered_chars = filevec[0].buffered_chars;
     }
   if (appears_binary)
-    return 1;
+    {
+#if HAVE_SETMODE
+      setmode (filevec[0].desc, O_BINARY);
+      setmode (filevec[1].desc, O_BINARY);
+#endif
+      return 1;
+    }
 
   find_identical_ends (filevec);
 
