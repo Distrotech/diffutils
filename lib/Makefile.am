@@ -22,18 +22,19 @@ AUTOMAKE_OPTIONS = gnits
 noinst_LIBRARIES = libdiffutils.a
 
 EXTRA_DIST = alloca.c fnmatch.c inttostr.c malloc.c memchr.c mkstemp.c \
-  realloc.c regex.c strcasecmp.c strtoimax.c strtol.c tempname.c waitpid.c
+  realloc.c regex.c strcasecmp.c strtoimax.c strtol.c tempname.c waitpid.c \
+  xstrtol.c
 SUBDIRS = posix
 
 noinst_HEADERS = \
   cmpbuf.h error.h exclude.h fnmatch.hin freesoft.h getopt.h \
   hard-locale.h inttostr.h prepargs.h quotesys.h \
-  regex.hin unlocked-io.h xalloc.h
+  regex.hin unlocked-io.h xalloc.h xstrtol.h
 
 libdiffutils_a_SOURCES = \
   cmpbuf.c error.c exclude.c freesoft.c getopt.c getopt1.c \
   hard-locale.c imaxtostr.c offtostr.c prepargs.c quotesys.c \
-  strftime.c umaxtostr.c xmalloc.c
+  strftime.c umaxtostr.c xmalloc.c xstrtoumax.c
 
 INCLUDES = -I../intl
 
