@@ -1,5 +1,5 @@
 /* cmp -- compare two files.
-   Copyright (C) 1988, 1990, 1991 Free Software Foundation, Inc.
+   Copyright (C) 1990, 1991, 1992 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -22,15 +22,11 @@
    * -c option to print the differing characters like `cat -t'
      (except that newlines are printed as `^J'), with or without -l.
 
-   By Torbjorn Granlund and David MacKenzie. */
+   Written by Torbjorn Granlund and David MacKenzie. */
 
 #include <stdio.h>
-#include <getopt.h>
-#include <sys/types.h>
 #include "system.h"
-
-#define max(h, i)	((h) > (i) ? (h) : (i))
-#define min(l, o)	((l) < (o) ? (l) : (o))
+#include "getopt.h"
 
 char *xmalloc ();
 int bcmp_cnt ();
@@ -41,26 +37,21 @@ void printc ();
 void error ();
 
 /* Name under which this program was invoked.  */
-
 char *program_name;
 
 /* Filenames of the compared files.  */
-
 char *file1;
 char *file2;
 
 /* File descriptors of the files.  */
-
 int file1_desc;
 int file2_desc;
 
 /* Read buffers for the files.  */
-
 char *buf1;
 char *buf2;
 
 /* Optimal block size for the files.  */
-
 int buf_size;
 
 /* Output format:
@@ -70,7 +61,6 @@ int buf_size;
      to print the (decimal) offsets and (octal) values of all differing bytes
    type_status
      to only return an exit status indicating whether the files differ */
-
 enum
   {
     type_first_diff, type_all_diffs, type_status
@@ -81,10 +71,10 @@ int opt_print_chars = 0;
 
 struct option long_options[] =
 {
-  {"print-chars", 0, &opt_print_chars, 1},
+  {"print-chars", 0, NULL, 'c'},
+  {"verbose", 0, NULL, 'l'},
   {"silent", 0, NULL, 's'},
   {"quiet", 0, NULL, 's'},
-  {"verbose", 0, NULL, 'l'},
   {NULL, 0, NULL, 0}
 };
 
@@ -97,13 +87,12 @@ usage (reason)
 
   fprintf (stderr, "\
 Usage: %s [-cls] [--print-chars] [--verbose] [--silent] [--quiet]\n\
-       file1 [file2]\n",
-	   program_name);
+       from-file [to-file]\n", program_name);
 
   exit (2);
 }
 
-void
+int
 main (argc, argv)
      int argc;
      char *argv[];
@@ -125,9 +114,6 @@ main (argc, argv)
   while ((c = getopt_long (argc, argv, "cls", long_options, (int *) 0)) != EOF)
     switch (c)
       {
-      case 0:
-	break;
-
       case 'c':
 	opt_print_chars = 1;
 	break;
@@ -232,7 +218,7 @@ main (argc, argv)
 
   /* Get the optimal block size of the files.  */
 
-  buf_size = max (ST_BLKSIZE (stat_buf1), ST_BLKSIZE (stat_buf2));
+  buf_size = 8 * 1024;		/* Keep it simple.  */
 
   /* Allocate buffers, with space for sentinels at the end.  */
 
@@ -249,6 +235,7 @@ main (argc, argv)
       && (ferror (stdout) || fclose (stdout) == EOF))
     error (2, errno, "write error");
   exit (exit_status);
+  return exit_status;
 }
 
 /* Compare the two files already open on `file1_desc' and `file2_desc',

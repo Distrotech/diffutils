@@ -25,55 +25,8 @@
 
 #include <stdio.h>
 #include <ctype.h>
-#include <sys/types.h>
-#include <sys/stat.h>
 #include "getopt.h"
-
-#if defined (USG) || defined (STDC_HEADERS)
-#include <string.h>
-#define bcmp(s1,s2,n)	memcmp (s1,s2,n)
-#define bzero(s,n)	memset (s,0,n)
-#else
-#include <strings.h>
-#endif
-
-#ifdef STDC_HEADERS
-#include <stdlib.h>
-#else
-char *malloc ();
-char *realloc ();
-#endif
-
-#ifndef HAVE_DUP2
-#define dup2(f,t)	(close (t),  fcntl (f, F_DUPFD, t))
-#endif
-
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif
-
-#if defined (USG) || defined (_POSIX_VERSION)
-#include <fcntl.h>
-#endif
-#if !defined (USG) || defined (_POSIX_VERSION)
-#include <sys/wait.h>
-#endif
-
-#ifndef S_ISDIR
-#define S_ISDIR(mode) (((mode) & S_IFMT) == S_IFDIR)
-#endif
-
-#ifndef WEXITSTATUS
-#define WEXITSTATUS(stat_val) ((unsigned)(stat_val) >> 8)
-#undef WIFEXITED		/* Avoid 4.3BSD incompatibility with Posix.  */
-#endif
-#ifndef WIFEXITED
-#define WIFEXITED(stat_val) (((stat_val) & 255) == 0)
-#endif
-
-#ifdef HAVE_VFORK_H
-#include <vfork.h>
-#endif
+#include "system.h"
 
 /*
  * Internal data structures and macros for the diff3 program; includes
@@ -250,6 +203,7 @@ struct option longopts[] =
   {"merge", 0, NULL, 'm'},
   {"overlap-only", 0, NULL, 'x'},
   {"easy-only", 0, NULL, '3'},
+  {"version", 0, NULL, 'v'},
   {0, 0, 0, 0}
 };
 
@@ -262,6 +216,7 @@ main (argc, argv)
      int argc;
      char **argv;
 {
+  extern char *version_string;
   int c, i;
   int mapping[3];
   int rev_mapping[3];
@@ -281,7 +236,7 @@ main (argc, argv)
 
   argv0 = argv[0];
   
-  while ((c = getopt_long (argc, argv, "aeimx3EXL:", longopts, (int *) 0))
+  while ((c = getopt_long (argc, argv, "aeimvx3EXL:", longopts, (int *) 0))
 	 != EOF)
     {
       switch (c)
@@ -312,6 +267,9 @@ main (argc, argv)
 	case 'e':
 	  incompat++;
 	  break;
+	case 'v':
+	  fprintf (stderr, "GNU diff3 version %s\n", version_string);
+	  break;
 	case 'L':
 	  /* Handle one or two -L arguments.  */
 	  if (tag_count < 2)
@@ -320,7 +278,6 @@ main (argc, argv)
 	      break;
 	    }
 	  /* Falls through */
-	case '?':
 	default:
 	  usage ();
 	  /* NOTREACHED */
@@ -417,9 +374,9 @@ usage ()
   fprintf (stderr, "\
 Usage: %s [options] my-file older-file your-file\n\
 Options:\n\
-       [-exEX3] [-i|-m] [-L my-label [-L your-label]] [--text] [--ed]\n\
+       [-exEX3v] [-i|-m] [-L my-label [-L your-label]] [--text] [--ed]\n\
        [--merge] [--show-overlap] [--overlap-only] [--easy-only]\n\
-       [--label=my-label [--label=your-label]]\n\
+       [--label=my-label [--label=your-label]] [--version]\n\
        Only one of [exEX3] is allowed\n", argv0);
   exit (2);
 }
