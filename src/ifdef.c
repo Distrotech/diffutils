@@ -28,6 +28,7 @@ struct group
 };
 
 static char *format_group PARAMS((FILE *, char *, int, struct group const[]));
+static char *scan_char_literal PARAMS((char *, int *));
 static char *scan_printf_spec PARAMS((char *));
 static int groups_letter_value PARAMS((struct group const[], int));
 static void format_ifdef PARAMS((char *, int, int, int, int));
@@ -184,40 +185,41 @@ format_group (out, format, endchar, groups)
 	      print_ifdef_lines (out, line_format[NEW], &groups[1]);
 	      continue;
 
-	    case '?':
-	      if (!(c = *f++))
-		goto bad_format;
-	      break;
-
-	    case '0':
-	      c = 0;
-	      break;
-
-	    case '-': case '.':
-	    case '1': case '2': case '3': case '4':
-	    case '5': case '6': case '7': case '8': case '9':
-	    case 'd': case 'o': case 'x': case 'X':
-	      f = scan_printf_spec (spec);
-	      if (!f)
-		goto bad_format;
-	      c = *f;
+	    default:
 	      {
-		int value = groups_letter_value (groups, c);
-		if (value < 0)
+		int value;
+		char *speclim;
+
+		f = scan_printf_spec (spec);
+		if (!f)
 		  goto bad_format;
+		speclim = f;
+		c = *f++;
+		switch (c)
+		  {
+		    case '\'':
+		      f = scan_char_literal (f, &value);
+		      if (!f)
+			goto bad_format;
+		      break;
+
+		    default:
+		      value = groups_letter_value (groups, c);
+		      if (value < 0)
+			goto bad_format;
+		      break;
+		  }
 		if (out)
 		  {
 		    /* Temporarily replace e.g. "%3dnx" with "%3d\0x".  */
-		    *f = 0;
-		    fprintf (out, f == spec ? "%d" : spec - 1, value);
+		    *speclim = 0;
+		    fprintf (out, spec - 1, value);
 		    /* Undo the temporary replacement.  */
-		    *f = c;
+		    *speclim = c;
 		  }
 	      }
-	      f++;
 	      continue;
 
-	    default:
 	    bad_format:
 	      c = '%';
 	      f = spec;
@@ -301,15 +303,6 @@ print_ifdef_lines (out, format, group)
 		case '%':
 		  break;
 
-		case '?':
-		  if (!(c = *f++))
-		    goto bad_format;
-		  break;
-
-		case '0':
-		  c = 0;
-		  break;
-
 		case 'l':
 		  output_1_line (linbuf[from],
 				 linbuf[from + 1]
@@ -320,22 +313,39 @@ print_ifdef_lines (out, format, group)
 		  output_1_line (linbuf[from], linbuf[from + 1], 0, 0);
 		  continue;
 
-		case '-': case '.':
-		case '1': case '2': case '3': case '4':
-		case '5': case '6': case '7': case '8': case '9':
-		case 'd': case 'o': case 'x': case 'X':
-		  f = scan_printf_spec (spec);
-		  if (!f || *f != 'n')
-		    goto bad_format;
-		  /* Temporarily replace e.g. "%3dnx" with "%3d\0x".  */
-		  *f = 0;
-		  fprintf (out, f == spec ? "%d" : spec - 1,
-			   translate_line_number (file, from));
-		  /* Undo the temporary replacement.  */
-		  *f++ = 'n';
+		default:
+		  {
+		    int value;
+		    char *speclim;
+
+		    f = scan_printf_spec (spec);
+		    if (!f)
+		      goto bad_format;
+		    speclim = f;
+		    c = *f++;
+		    switch (c)
+		      {
+			case '\'':
+			  f = scan_char_literal (f, &value);
+			  if (!f)
+			    goto bad_format;
+			  break;
+
+		        case 'n':
+			  value = translate_line_number (file, from);
+			  break;
+			
+			default:
+			  goto bad_format;
+		      }
+		    /* Temporarily replace e.g. "%3dnx" with "%3d\0x".  */
+		    *speclim = 0;
+		    fprintf (out, spec - 1, value);
+		    /* Undo the temporary replacement.  */
+		    *speclim = c;
+		  }
 		  continue;
 
-		default:
 		bad_format:
 		  c = '%';
 		  f = spec;
@@ -347,7 +357,50 @@ print_ifdef_lines (out, format, group)
     }
 }
 
-/* Scan optional printf-style SPEC of the form `-*[0-9]*(.[0-9]*)?[doxX]'.
+/* Scan the character literal represented in the string LIT; LIT points just
+   after the initial apostrophe.  Put the literal's value into *INTPTR.
+   Yield the address of the first character after the closing apostrophe,
+   or zero if the literal is ill-formed.  */
+static char *
+scan_char_literal (lit, intptr)
+     char *lit;
+     int *intptr;
+{
+  register char *p = lit;
+  int value, digits;
+  char c = *p++;
+
+  switch (c)
+    {
+      case 0:
+      case '\'':
+	return 0;
+
+      case '\\':
+	value = 0;
+	while ((c = *p++) != '\'')
+	  {
+	    unsigned digit = c - '0';
+	    if (8 <= digit)
+	      return 0;
+	    value = 8 * value + digit;
+	  }
+	digits = p - lit - 2;
+	if (! (1 <= digits && digits <= 3))
+	  return 0;
+	break;
+
+      default:
+	value = c;
+	if (*p++ != '\'')
+	  return 0;
+	break;
+    }
+  *intptr = value;
+  return p;
+}
+
+/* Scan optional printf-style SPEC of the form `-*[0-9]*(.[0-9]*)?[cdoxX]'.
    Return the address of the character following SPEC, or zero if failure.  */
 static char *
 scan_printf_spec (spec)
@@ -364,7 +417,7 @@ scan_printf_spec (spec)
       continue;
   switch (c)
     {
-      case 'd': case 'o': case 'x': case 'X':
+      case 'c': case 'd': case 'o': case 'x': case 'X':
 	return spec;
 
       default:
