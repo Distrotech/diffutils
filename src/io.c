@@ -23,6 +23,7 @@
 #include "diff.h"
 #include <cmpbuf.h>
 #include <regex.h>
+#include <setmode.h>
 #include <xalloc.h>
 
 /* Rotate an unsigned value to the left.  */
