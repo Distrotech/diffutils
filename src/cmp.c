@@ -37,7 +37,9 @@ static size_t block_compare PARAMS((char const *, char const *));
 static size_t block_compare_and_count PARAMS((char const *, char const *, long *));
 static size_t block_read PARAMS((int, char *, size_t));
 static void printc PARAMS((int, unsigned));
-static void usage PARAMS((char const *));
+static void try_help PARAMS((char const *));
+static void check_stdout PARAMS((void));
+static void usage PARAMS((void));
 
 /* Name under which this program was invoked.  */
 char const *program_name;
@@ -88,20 +90,35 @@ static struct option const long_options[] =
 };
 
 static void
-usage (reason)
+try_help (reason)
      char const *reason;
 {
-  if (reason && *reason)
-    fprintf (stderr, "%s: %s\n", program_name, reason);
-  fflush (stderr);
-  printf ("\
-Usage: %s [options] from-file [to-file]\n\
-Options:\n\
-	[-clsv] [-i bytes] [--help] [--ignore-initial=bytes]\n\
-	[--print-chars] [--quiet] [--silent] [--verbose] [--version]\n",
-	  program_name);
+  if (reason)
+    error (0, 0, "%s", reason);
+  error (2, 0, "Try `%s --help' for more information.", program_name);
+}
 
-  exit (reason ? 2 : 0);
+static void
+check_stdout ()
+{
+  if (ferror (stdout))
+    error (2, 0, "write error");
+  else if (fclose (stdout) != 0)
+    error (2, errno, "write error");
+}
+
+static void
+usage ()
+{
+  printf ("Usage: %s [OPTION]... FILE1 [FILE2]\n", program_name);
+  printf ("%s", "\
+  -c  --print-chars  Output differing bytes as characters.\n\
+  -i N  --ignore-initial=N  Ignore differences in the first N bytes of input.\n\
+  -l  --verbose  Output offsets and codes of all differing bytes.\n\
+  -s  --quiet  --silent  Output nothing; yield exit status only.\n\
+  -v  --version  Output version info.\n\
+  --help  Output this help.\n");
+  printf ("If a FILE is `-' or missing, read standard input.\n");
 }
 
 int
@@ -132,7 +149,7 @@ main (argc, argv)
 	    /* Don't use `atol', because `off_t' may be longer than `long'.  */
 	    unsigned digit = *optarg++ - '0';
 	    if (9 < digit)
-	      usage ("non-digit in --ignore-initial value");
+	      try_help ("non-digit in --ignore-initial value");
 	    ignore_initial = 10 * ignore_initial + digit;
 	  }
 	break;
@@ -146,24 +163,26 @@ main (argc, argv)
 	break;
 
       case 'v':
-	printf ("GNU cmp version %s\n", version_string);
+	printf ("cmp - GNU diffutils version %s\n", version_string);
 	exit (0);
 
       case 129:
-	usage (0);
+	usage ();
+	check_stdout ();
+	exit (0);
 
       default:
-	usage ("");
+	try_help (0);
       }
 
   if (optind == argc)
-    usage ("missing operand");
+    try_help ("missing operand");
 
   file[0] = argv[optind++];
   file[1] = optind < argc ? argv[optind++] : "-";
 
   if (optind < argc)
-    usage ("extra operands");
+    try_help ("extra operands");
 
   for (i = 0; i < 2; i++)
     {
@@ -237,13 +256,8 @@ main (argc, argv)
   for (i = 0; i < 2; i++)
     if (close (file_desc[i]) != 0)
       error (2, errno, "%s", file[i]);
-  if (comparison_type != type_status)
-    {
-      if (ferror (stdout))
-	error (2, 0, "write error");
-      else if (fclose (stdout) != 0)
-	error (2, errno, "write error");
-    }
+  if (exit_status != 0  &&  comparison_type != type_status)
+    check_stdout ();
   exit (exit_status);
   return exit_status;
 }
