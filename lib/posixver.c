@@ -37,6 +37,8 @@ char *getenv ();
 # define _POSIX2_VERSION 0
 #endif
 
+#include "posixver.h"
+
 /* The POSIX version that utilities should conform to.  The default is
    specified by the system.  */
 
