@@ -1,4 +1,4 @@
-/* GNU SDIFF: interactive merge front end to diff
+/* SDIFF -- interactive merge front end to diff
    Copyright (C) 1988, 1989 Free Software Foundation, Inc.
 
 This file is part of GNU DIFF.
@@ -19,73 +19,15 @@ the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 
 /* GNU SDIFF was written by Thomas Lord. */
 
-/* Support old-fashioned C compilers.  */
-#if !__STDC__
-#define const
-#define volatile
-#endif
-
-#include <signal.h>
 #include <stdio.h>
-#include <string.h>
 #include <ctype.h>
-#include <errno.h>
-#include <sys/types.h>
-#include <sys/stat.h>
+#include "system.h"
+#include <signal.h>
 #include "getopt.h"
-
-#if ! defined (USG) && ! defined (STDC_HEADERS)
-#define strchr index
-#define strrchr rindex
-#else
-#define bcopy(s,d,n)	memcpy (d,s,n)
-#endif
-
-#ifdef HAVE_VFORK_H
-#include <vfork.h>
-#endif
-
-#if defined (STDC_HEADERS) || defined (__GNU_LIBRARY__)
-#include <stdlib.h>
-#else /* STDC_HEADERS or __GNU_LIBRARY__ */
-extern int errno;
-char *malloc ();
-char *realloc ();
-char *getenv ();
-char *strchr ();
-char *strrchr ();
-#endif /* STDC_HEADERS or __GNU_LIBRARY__ */
-
-#if defined (HAVE_UNISTD_H)
-#include <unistd.h>
-#endif /* HAVE_UNISTD_H */
-
-#if defined (USG) || defined (_POSIX_VERSION)
-#include <fcntl.h>
-#else
-#include <sys/file.h>
-#endif
-#if ! defined (USG) || defined (_POSIX_VERSION)
-#include <sys/wait.h>
-#endif
 
 #ifndef SEEK_SET
 #define SEEK_SET 0
 #endif
-
-#ifndef S_ISDIR
-#define S_ISDIR(mode) (((mode) & S_IFMT) == S_IFDIR)
-#endif
-
-#ifndef WEXITSTATUS
-#define WEXITSTATUS(stat_val) ((unsigned)(stat_val) >> 8)
-#undef WIFEXITED		/* Avoid 4.3BSD incompatibility with POSIX.  */
-#endif
-#ifndef WIFEXITED
-#define WIFEXITED(stat_val) (((stat_val) & 255) == 0)
-#endif
-
-#define max(a,b) ((a) >= (b) ? (a) : (b))
 
 /* Size of chunks read from files which must be parsed into lines. */
 #define SDIFF_BUFSIZE 65536
@@ -95,7 +37,7 @@ char *strrchr ();
 #define DIFF_PROGRAM "/usr/bin/diff"
 #endif
 
-/* Users editor of nonchoice */
+/* Users' editor of nonchoice */
 #ifndef DEFAULT_EDITOR
 #define DEFAULT_EDITOR "ed"
 #endif
@@ -134,9 +76,9 @@ static int suppress_common_flag;
 
 static struct option longopts[] =
 {
-  {"ignore-blank-lines", 0, 0, 'B'},
+  {"ignore-blank-lines", 0, NULL, 'B'},
   {"speed-large-files", 0, NULL, 'H'},
-  {"ignore-matching-lines", 1, 0, 'I'},
+  {"ignore-matching-lines", 1, NULL, 'I'},
   {"ignore-all-space", 0, NULL, 'W'}, /* swap W and w for historical reasons */
   {"text", 0, NULL, 'a'},
   {"ignore-space-change", 0, NULL, 'b'},
@@ -209,7 +151,7 @@ ck_malloc (size)
 {
   char *r = malloc (size);
   if (!r)
-    fatal ("out of memory");
+    fatal ("virtual memory exhausted");
   return r;
 }
 
@@ -317,7 +259,7 @@ expand_name (name, isdir, other_name)
     {
       /* Yield NAME/BASE, where BASE is OTHER_NAME's basename.  */
       const char
-	*p = strrchr (other_name, '/'),
+	*p = rindex (other_name, '/'),
 	*base = p ? p+1 : other_name;
       size_t namelen = strlen (name), baselen = strlen (base);
       char *r = ck_malloc (namelen + baselen + 2);
@@ -370,7 +312,7 @@ lf_copy (lf, lines, outfile)
 
   while (lines)
     {
-      lf->bufpos = strchr (lf->bufpos, '\n');
+      lf->bufpos = index (lf->bufpos, '\n');
       if (lf->bufpos == lf->buflim)
 	{
 	  ck_fwrite (start, lf->buflim - start, outfile);
@@ -396,7 +338,7 @@ lf_skip (lf, lines)
 {
   while (lines)
     {
-      lf->bufpos = strchr (lf->bufpos, '\n');
+      lf->bufpos = index (lf->bufpos, '\n');
       if (lf->bufpos == lf->buflim)
 	{
 	  if (! lf_refill (lf))
@@ -421,7 +363,7 @@ lf_snarf (lf, buffer, bufsize)
 
   for (;;)
     {
-      char *next = strchr (start, '\n');
+      char *next = index (start, '\n');
       size_t s = next - start;
       if (bufsize <= s)
 	return -1;
@@ -942,7 +884,7 @@ interact (diff, left, right, outfile)
 	case 'i':
 	  {
 	    int lenl = atoi (diff_help + 1);
-	    int lenr = atoi (strchr (diff_help, ',') + 1);
+	    int lenr = atoi (index (diff_help, ',') + 1);
 	    int lenmax = max (lenl, lenr);
 
 	    if (suppress_common_flag)
@@ -957,7 +899,7 @@ interact (diff, left, right, outfile)
 	case 'c':
 	  {
 	    int lenl = atoi (diff_help + 1);
-	    int lenr = atoi (strchr (diff_help, ',') + 1);
+	    int lenr = atoi (index (diff_help, ',') + 1);
 	    lf_copy (diff, max (lenl, lenr), stdout);
 	    if (! edit (left, lenl, right, lenr, outfile))
 	      return 0;
