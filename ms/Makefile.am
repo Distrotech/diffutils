@@ -1,6 +1,6 @@
 # Makefile for GNU diffutils sources used on Microsoft operating systems.
 
-# Copyright (C) 2001 Free Software Foundation, Inc.
+# Copyright (C) 2001, 2002 Free Software Foundation, Inc.
 
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -15,7 +15,5 @@
 ## You should have received a copy of the GNU General Public License
 ## along with this program; if not, write to the Free Software Foundation,
 ## Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-
-AUTOMAKE_OPTIONS = gnits
 
 EXTRA_DIST = config.bat config.sed config.site
