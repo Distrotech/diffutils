@@ -323,7 +323,8 @@ find_and_hash_each_line (current)
       /* Maybe increase the size of the line table. */
       if (line == alloc_lines)
 	{
-	  alloc_lines = max (2 * alloc_lines, 32);
+	  /* Double (alloc_lines - linbuf_base) by adding to alloc_lines.  */
+	  alloc_lines = 2 * alloc_lines - linbuf_base;
 	  cureqs = (int *) xrealloc (cureqs, alloc_lines * sizeof (*cureqs));
 	  linbuf = (const char **) xrealloc (linbuf + linbuf_base,
 					     (alloc_lines - linbuf_base)
@@ -344,10 +345,11 @@ find_and_hash_each_line (current)
 	 so that we can compute the length of any buffered line.  */
       if (line == alloc_lines)
 	{
-	  alloc_lines = max (2 * alloc_lines, 32);
+	  /* Double (alloc_lines - linbuf_base) by adding to alloc_lines.  */
+	  alloc_lines = 2 * alloc_lines - linbuf_base;
 	  linbuf = (const char **) xrealloc (linbuf + linbuf_base,
 					     (alloc_lines - linbuf_base)
-					     * sizeof(*linbuf))
+					     * sizeof (*linbuf))
 		   - linbuf_base;
 	}
       linbuf[line] = (const char *) p;
