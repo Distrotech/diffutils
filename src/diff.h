@@ -1,7 +1,7 @@
 /* Shared definitions for GNU DIFF
 
    Copyright (C) 1988, 1989, 1991, 1992, 1993, 1994, 1995, 1998, 2001,
-   2002 Free Software Foundation, Inc.
+   2002, 2004 Free Software Foundation, Inc.
 
    This file is part of GNU DIFF.
 
@@ -21,7 +21,9 @@
    59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
 
 #include "system.h"
+#include <regex.h>
 #include <stdio.h>
+#include <unlocked-io.h>
 
 /* What kind of changes a hunk contains.  */
 enum changes
@@ -278,9 +280,9 @@ struct file_data {
     lin nondiscarded_lines;
 
     /* Vector, indexed by real origin-0 line number,
-       containing TRUE for a line that is an insertion or a deletion.
+       containing 1 for a line that is an insertion or a deletion.
        The results of comparison are stored here.  */
-    bool *changed;
+    char *changed;
 
     /* 1 if file ends in a line with no final newline.  */
     bool missing_newline;
@@ -370,4 +372,4 @@ void print_message_queue (void);
 void print_number_range (char, struct file_data *, lin, lin);
 void print_script (struct change *, struct change * (*) (struct change *), void (*) (struct change *));
 void setup_output (char const *, char const *, bool);
-void translate_range (struct file_data const *, lin, lin, long *, long *);
+void translate_range (struct file_data const *, lin, lin, long int *, long int *);
