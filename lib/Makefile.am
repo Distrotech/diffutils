@@ -27,17 +27,16 @@ EXTRA_DIST = alloca.c fnmatch.c inttostr.c malloc.c memchr.c mkstemp.c \
 SUBDIRS = posix
 
 noinst_HEADERS = \
-  cmpbuf.h dirname.h error.h exclude.h fnmatch.hin freesoft.h getopt.h \
-  gettext.h hard-locale.h inttostr.h prepargs.h quotesys.h \
+  c-stack.h cmpbuf.h dirname.h error.h exclude.h exitfail.h \
+  fnmatch.hin freesoft.h getopt.h \
+  gettext.h hard-locale.h inttostr.h prepargs.h posixver.h quotesys.h \
   regex.hin setmode.h unlocked-io.h xalloc.h xstrtol.h
 
 libdiffutils_a_SOURCES = \
-  basename.c cmpbuf.c error.c exclude.c \
+  basename.c c-stack.c cmpbuf.c error.c exclude.c exitfail.c \
   freesoft.c getopt.c getopt1.c \
-  hard-locale.c imaxtostr.c offtostr.c prepargs.c quotesys.c \
+  hard-locale.c imaxtostr.c offtostr.c prepargs.c posixver.c quotesys.c \
   setmode.c strftime.c umaxtostr.c xmalloc.c xstrtoumax.c
-
-INCLUDES = -I../intl
 
 libdiffutils_a_LIBADD = @ALLOCA@ @LIBOBJS@
 libdiffutils_a_DEPENDENCIES = $(libdiffutils_a_LIBADD)
