@@ -1,3 +1,9 @@
+* new diff options
+  --from-file=FILE, --to-file=FILE
+* The new sdiff interactive command `ed' precedes each version with a header.
+* The `DIFF' environment variable tells diff3 and sdiff which `diff' program
+  to use.
+
 User-visible changes in version 2.7.1 alpha:
 
 * Internationalization support is being added.
