@@ -1,7 +1,7 @@
 /* Context-format output routines for GNU DIFF.
 
-   Copyright (C) 1988, 1989, 1991, 1992, 1993, 1994, 1995, 1998, 2001
-   Free Software Foundation, Inc.
+   Copyright (C) 1988, 1989, 1991, 1992, 1993, 1994, 1995, 1998, 2001,
+   2002 Free Software Foundation, Inc.
 
    This file is part of GNU DIFF.
 
@@ -121,9 +121,15 @@ print_context_number_range (struct file_data const *file, lin a, lin b)
   long trans_a, trans_b;
   translate_range (file, a, b, &trans_a, &trans_b);
 
-  /* Note: we can have B <= A in the case of a range of no lines.
+  /* We can have B <= A in the case of a range of no lines.
      In this case, we should print the line number before the range,
-     which is B.  */
+     which is B.
+
+     POSIX 1003.1-2001 requires two line numbers separated by a comma
+     even if the line numbers are the same.  However, this does not
+     match existing practice and is surely an error in the
+     specification.  */
+
   if (trans_b <= trans_a)
     fprintf (outfile, "%ld", trans_b);
   else
@@ -167,8 +173,14 @@ pr_context_hunk (struct change *hunk)
   i = - files[0].prefix_lines;
   first0 = MAX (first0 - context, i);
   first1 = MAX (first1 - context, i);
-  last0 = MIN (last0 + context, files[0].valid_lines - 1);
-  last1 = MIN (last1 + context, files[1].valid_lines - 1);
+  if (last0 < files[0].valid_lines - context)
+    last0 += context;
+  else
+    last0 = files[0].valid_lines - 1;
+  if (last1 < files[1].valid_lines - context)
+    last1 += context;
+  else
+    last1 = files[1].valid_lines - 1;
 
   /* If desired, find the preceding function definition line in file 0.  */
   function = 0;
@@ -290,8 +302,14 @@ pr_unidiff_hunk (struct change *hunk)
   i = - files[0].prefix_lines;
   first0 = MAX (first0 - context, i);
   first1 = MAX (first1 - context, i);
-  last0 = MIN (last0 + context, files[0].valid_lines - 1);
-  last1 = MIN (last1 + context, files[1].valid_lines - 1);
+  if (last0 < files[0].valid_lines - context)
+    last0 += context;
+  else
+    last0 = files[0].valid_lines - 1;
+  if (last1 < files[1].valid_lines - context)
+    last1 += context;
+  else
+    last1 = files[1].valid_lines - 1;
 
   /* If desired, find the preceding function definition line in file 0.  */
   function = 0;
@@ -369,6 +387,13 @@ find_hunk (struct change *start)
   lin top0, top1;
   lin thresh;
 
+  /* Threshold distance is 2 * CONTEXT + 1 between two non-ignorable
+     changes, but only CONTEXT if one is ignorable.  Watch out for
+     integer overflow, though.  */
+  lin non_ignorable_threshold =
+    (LIN_MAX - 1) / 2 < context ? LIN_MAX : 2 * context + 1;
+  lin ignorable_threshold = context;
+
   do
     {
       /* Compute number of first line in each file beyond this changed.  */
@@ -376,11 +401,9 @@ find_hunk (struct change *start)
       top1 = start->line1 + start->inserted;
       prev = start;
       start = start->link;
-      /* Threshold distance is 2*CONTEXT between two non-ignorable changes,
-	 but only CONTEXT if one is ignorable.  */
       thresh = (prev->ignore || (start && start->ignore)
-		? context
-		: 2 * context + 1);
+		? ignorable_threshold
+		: non_ignorable_threshold);
       /* It is not supposed to matter which file we check in the end-test.
 	 If it would matter, crash.  */
       if (start && start->line0 - top0 != start->line1 - top1)
@@ -388,7 +411,7 @@ find_hunk (struct change *start)
     } while (start
 	     /* Keep going if less than THRESH lines
 		elapse before the affected line.  */
-	     && start->line0 < top0 + thresh);
+	     && start->line0 - top0 < thresh);
 
   return prev;
 }
