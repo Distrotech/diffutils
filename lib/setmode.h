@@ -1,6 +1,6 @@
 /* Set a file descriptor's mode to binary or to text.
 
-   Copyright (C) 2001 Free Software Foundation, Inc.
+   Copyright (C) 2001, 2004 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -22,6 +22,6 @@
 #ifndef set_binary_mode
 bool set_binary_mode (int, bool);
 # if ! HAVE_SETMODE_DOS
-#  define set_binary_mode(fd, mode) 1
+#  define set_binary_mode(fd, mode) true
 # endif
 #endif
