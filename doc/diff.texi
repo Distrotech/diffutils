@@ -7,6 +7,8 @@
 
 @include version.texi
 
+@syncodeindex vr cp
+
 @dircategory GNU Packages
 @direntry
 Diff: (diff).                 Comparing and merging files.
@@ -26,8 +28,8 @@ This file documents the @sc{gnu} @command{diff}, @command{diff3},
 between files and the @sc{gnu} @command{patch} command for using
 their output to update files.
 
-Copyright @copyright{} 1992, 1993, 1994, 1998, 2001 Free Software
-Foundation, Inc.
+Copyright @copyright{} 1992, 1993, 1994, 1998, 2001, 2002 Free
+Software Foundation, Inc.
 
 Permission is granted to copy, distribute and/or modify this document
 under the terms of the GNU Free Documentation License, Version 1.1
@@ -48,8 +50,8 @@ Free Documentation License''.
 
 @page
 @vskip 0pt plus 1filll
-Copyright @copyright{} 1992, 1993, 1994, 1998, 2001 Free Software
-Foundation, Inc.
+Copyright @copyright{} 1992, 1993, 1994, 1998, 2001, 2002 Free
+Software Foundation, Inc.
 
 Permission is granted to copy, distribute and/or modify this document
 under the terms of the GNU Free Documentation License, Version 1.1
@@ -94,8 +96,9 @@ for @code{diffutils} @value{VERSION} and @code{patch} 2.2.
 * Invoking patch::      How to run @command{patch} and a summary of its options.
 * Invoking sdiff::      How to run @command{sdiff} and a summary of its options.
 
-* Incomplete Lines::    Lines that lack trailing newlines.
-* Projects::            If you think you've found a bug or other shortcoming.
+* Incomplete Lines::      Lines that lack trailing newlines.
+* Projects::              If you think you've found a bug or other shortcoming.
+* Standards conformance:: Conformance to the @sc{posix} standard.
 
 * Copying This Manual:: How to make copies of this manual.
 * Concept Index::       Index of concepts.
@@ -428,7 +431,15 @@ contain.
 
 You can also force @command{diff} to consider all files to be binary files,
 and report only whether they differ (but not how).  Use the
-@option{--brief} option for this.
+@option{-q} or @option{--brief} option for this.
+
+Differing binary files are considered to cause trouble because the
+resulting @command{diff} output does not capture all the differences.
+This trouble causes @command{diff} to exit with status 2.  However,
+this trouble cannot occur with the @option{--a} or @option{--text}
+option, or with the @option{-q} or @option{--brief} option, as these
+options both cause @command{diff} to treat binary files like text
+files.
 
 In operating systems that distinguish between text and binary files,
 @command{diff} normally reads and writes all data as text.  Use the
@@ -688,10 +699,12 @@ like this:
 @end example
 
 @noindent
-The time stamp format depends on the @env{LC_TIME} locale category.
-It looks like @samp{Fri Nov 23 16:44:36 2001} in the traditional
-@samp{C} and @samp{POSIX} locales, and like @samp{2001-11-23
-16:44:36.875702460 -0800} otherwise.
+@vindex LC_TIME
+The time stamp normally looks like @samp{2002-02-21 23:30:39.942229878
+-0800} to indicate the date, time with fractional seconds, and time
+zone.  However, a traditional time stamp like @samp{Thu Feb 21
+23:30:39 2002} is used if the @env{LC_TIME} locale category is either
+@samp{C} or @samp{POSIX}.
 
 You can change the header's content with the @option{-L @var{label}} or
 @option{--label=@var{label}} option; see @ref{Alternate Names}.
@@ -742,8 +755,8 @@ different; they are the context lines.  Also notice that the first two
 hunks have run together, because their contents overlap.
 
 @example
-*** lao	Sat Jan 26 23:30:39 1991
---- tzu	Sat Jan 26 23:30:50 1991
+*** lao	2002-02-21 23:30:39.942229878 -0800
+--- tzu	2002-02-21 23:30:50.442260588 -0800
 ***************
 *** 1,7 ****
 - The Way that can be told of is not the eternal Way;
@@ -774,13 +787,13 @@ hunks have run together, because their contents overlap.
 @node Less Context
 @subsubsection An Example of Context Format with Less Context
 
-Here is the output of @samp{diff --context=1 lao tzu} (@pxref{Sample
-diff Input}, for the complete contents of the two files).  Notice that
-at most one context line is reported here.
+Here is the output of @samp{diff -C 1 lao tzu} (@pxref{Sample diff
+Input}, for the complete contents of the two files).  Notice that at
+most one context line is reported here.
 
 @example
-*** lao	Sat Jan 26 23:30:39 1991
---- tzu	Sat Jan 26 23:30:50 1991
+*** lao	2002-02-21 23:30:39.942229878 -0800
+--- tzu	2002-02-21 23:30:50.442260588 -0800
 ***************
 *** 1,5 ****
 - The Way that can be told of is not the eternal Way;
@@ -836,6 +849,9 @@ like this:
 @end example
 
 @noindent
+The time stamp looks like @samp{2002-02-21 23:30:39.942229878 -0800}
+to indicate the date, time with fractional seconds, and time zone.
+
 You can change the header's content with the @option{-L @var{label}} or
 @option{--label=@var{label}} option; see @xref{Alternate Names}.
 
@@ -867,8 +883,8 @@ Here is the output of the command @samp{diff -u lao tzu}
 (@pxref{Sample diff Input}, for the complete contents of the two files):
 
 @example
---- lao	Sat Jan 26 23:30:39 1991
-+++ tzu	Sat Jan 26 23:30:50 1991
+--- lao	2002-02-21 23:30:39.942229878 -0800
++++ tzu	2002-02-21 23:30:50.442260588 -0800
 @@@@ -1,7 +1,6 @@@@
 -The Way that can be told of is not the eternal Way;
 -The name that can be named is not the eternal name.
@@ -978,8 +994,8 @@ twice, @command{diff} reports an error.  The @option{-L} option does not
 affect the file names in the @command{pr} header when the @option{-l} or
 @option{--paginate} option is used (@pxref{Pagination}).
 
-Here are the first two lines of the output from @samp{diff -C2
--Loriginal -Lmodified lao tzu}:
+Here are the first two lines of the output from @samp{diff -C 2 -L
+original -L modified lao tzu}:
 
 @example
 *** original
@@ -1439,6 +1455,7 @@ Likewise, for lines in the new file.
 
 @end table
 
+@vindex LC_NUMERIC
 The @code{printf} conversion specification can be @samp{%d},
 @samp{%o}, @samp{%x}, or @samp{%X}, specifying decimal, octal,
 lower case hexadecimal, or upper case hexadecimal output
@@ -1654,6 +1671,7 @@ The door of all subtleties!
 @node Comparing Directories
 @chapter Comparing Directories
 
+@vindex LC_COLLATE
 You can use @command{diff} to compare some or all of the files in two
 directory trees.  When both file name arguments to @command{diff} are
 directories, it compares each file that is contained in both
@@ -1779,7 +1797,7 @@ The @option{-l} and @option{--paginate} options do this by sending the
 header might look like for @samp{diff -lc lao tzu}:
 
 @example
-Mar 11 13:37 1991  diff -lc lao tzu Page 1
+2002-02-22 14:20                 diff -lc lao tzu                 Page 1
 @end example
 
 @node diff Performance
@@ -2357,6 +2375,7 @@ Silently copy common lines.
 Verbosely copy common lines.  This is the default.
 @end table
 
+@vindex EDITOR
 The text editor invoked is specified by the @env{EDITOR} environment
 variable if it is set.  The default is system-dependent.
 
@@ -2713,8 +2732,9 @@ them from the patch by giving @command{diff} the @option{-x @var{pattern}}
 option (@pxref{Comparing Directories}).
 
 Now you can create the patch.  The de-facto standard @command{diff} format
-for patch distributions is context format with two lines of context,
-produced by giving @command{diff} the @option{-C 2} option.  Do not use less
+for patch distributions is context or unified format with two lines of
+context, produced by giving @command{diff} the @option{-C 2} or
+@option{-U 2} options.  Do not use less
 than two lines of context, because @command{patch} typically needs at
 least two lines for proper operation.  Give @command{diff} the @option{-P}
 option in case the newer version of the package contains any files that
@@ -2958,13 +2978,6 @@ any unique prefix of their name.  Brackets ([ and ]) indicate that an
 option takes an optional argument.
 
 @table @option
-@item -@var{lines}
-Show @var{lines} (an integer) lines of context.  This option does not
-specify an output format by itself; it has no effect unless it is
-combined with @option{-c} (@pxref{Context Format}) or @option{-u}
-(@pxref{Unified Format}).  This option is obsolete.  For proper
-operation, @command{patch} typically needs at least two lines of context.
-
 @item -a
 Treat all files as text and compare them line-by-line, even if they
 do not seem to be text.  @xref{Binary}.
@@ -2992,6 +3005,12 @@ Use the context output format, showing @var{lines} (an integer) lines of
 context, or three if @var{lines} is not given.  @xref{Context Format}.
 For proper operation, @command{patch} typically needs at least two lines of
 context.
+
+On older systems, @command{diff} supports an obsolete option
+@option{-@var{lines}} that has effect when combined with @option{-c}
+or @option{-p}.  @sc{posix} 1003.1-2001 (@pxref{Standards
+conformance}) does not allow this; use @option{-C @var{lines}}
+instead.
 
 @item --changed-group-format=@var{format}
 Use @var{format} to output a line group containing differing lines from
@@ -3257,6 +3276,11 @@ context, or three if @var{lines} is not given.  @xref{Unified Format}.
 For proper operation, @command{patch} typically needs at least two lines of
 context.
 
+On older systems, @command{diff} supports an obsolete option
+@option{-@var{lines}} that has effect when combined with @option{-u}.
+@sc{posix} 1003.1-2001 (@pxref{Standards conformance}) does not allow
+this; use @option{-U @var{lines}} instead.
+
 @item -v
 @itemx --version
 Output the version number of @command{diff}.
@@ -3520,6 +3544,7 @@ systems that do not support long file names.  The @option{-b
 @var{backup-suffix}} or @option{--suffix=@var{backup-suffix}} option uses
 @var{backup-suffix} as the backup extension instead.
 
+@vindex SIMPLE_BACKUP_SUFFIX
 Alternately, you can specify the extension for backup files with the
 @env{SIMPLE_BACKUP_SUFFIX} environment variable, which the options
 override.
@@ -3530,6 +3555,7 @@ does.  With this method, instead of having a single backup of each file,
 For example, the backups of a file named @file{sink} would be called,
 successively, @file{sink.~1~}, @file{sink.~2~}, @file{sink.~3~}, etc.
 
+@vindex VERSION_CONTROL
 The @option{-V @var{backup-style}} or
 @option{--version-control=@var{backup-style}} option takes as an argument
 a method for creating backup file names.  You can alternately control
@@ -4123,6 +4149,42 @@ nontrivial fix for the bug, please send it as well.  If you have a
 patch, please send it too.  It may simplify the maintainer's job if
 the patch is relative to a recent test release, which you can find in
 the directory @uref{ftp://alpha.gnu.org/gnu/diffutils/}.
+
+@node Standards conformance
+@chapter Standards conformance
+
+@vindex POSIXLY_CORRECT
+In a few cases, the @sc{gnu} utilities' default behavior is
+incompatible with the @sc{posix} standard.  To suppress these
+incompatibilities, define the @env{POSIXLY_CORRECT} environment
+variable.  Unless you are checking for @sc{posix} conformance, you
+probably do not need to define @env{POSIXLY_CORRECT}.
+
+Normally options and operands can appear in any order, and programs act
+as if all the options appear before any operands.  For example,
+@samp{diff lao tzu -C 2} acts like @samp{diff -C 2 lao tzu}, since
+@samp{2} is an option-argument of @option{-C}.  However, if the
+@env{POSIXLY_CORRECT} environment variable is set, options must appear
+before operands, unless otherwise specified for a particular command.
+
+Newer versions of @sc{posix} are occasionally incompatible with older
+versions.  For example, older versions of @sc{posix} allowed the
+command @samp{diff -c -10} to have the same meaning as @samp{diff -C
+10}, but @sc{posix} 1003.1-2001 @samp{diff} no longer allows
+digit-string options like @option{-10}.
+
+@vindex _POSIX2_VERSION
+The @sc{gnu} utilities normally conform to the version of @sc{posix}
+that is standard for your system.  To cause them to conform to a
+different version of @sc{posix}, define the @env{_POSIX2_VERSION}
+environment variable to a value of the form @var{yyyymm} specifying
+the year and month the standard was adopted.  Two values are currently
+supported for @env{_POSIX2_VERSION}: @samp{199209} stands for
+@sc{posix} 1003.2-1992, and @samp{200112} stands for @sc{posix}
+1003.1-2001.  For example, if you are running older software that
+assumes an older version of @sc{posix} and uses @samp{diff -c -10},
+you can work around the compatibility problems by setting
+@samp{_POSIX2_VERSION=199209} in your environment.
 
 @node Copying This Manual
 @appendix Copying This Manual
