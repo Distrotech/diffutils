@@ -19,12 +19,14 @@
    59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
 
 #include "system.h"
+#include "paths.h"
 
 #include <stdio.h>
 #include <cmpbuf.h>
 #include <c-stack.h>
 #include <error.h>
 #include <exitfail.h>
+#include <file-type.h>
 #include <freesoft.h>
 #include <getopt.h>
 #include <hard-locale.h>
@@ -42,8 +44,8 @@
 static char const authorship_msgid[] =
   N_("Written by Torbjorn Granlund and David MacKenzie.");
 
-static char const copyright_string[] =
-  "Copyright (C) 2002 Free Software Foundation, Inc.";
+static char const copyright_notice[] =
+  "Copyright %s 2002 Free Software Foundation, Inc.";
 
 extern char const version_string[];
 
@@ -200,7 +202,7 @@ main (int argc, char **argv)
   setlocale (LC_ALL, "");
   bindtextdomain (PACKAGE, LOCALEDIR);
   textdomain (PACKAGE);
-  c_stack_action (c_stack_die);
+  c_stack_action (argv, 0);
 
   /* Parse command line options.  */
 
@@ -239,8 +241,9 @@ main (int argc, char **argv)
 	break;
 
       case 'v':
-	printf ("cmp %s\n%s\n\n%s\n\n%s\n",
-		version_string, copyright_string,
+	printf ("cmp %s\n", version_string);
+	printf (copyright_notice, _("(C)"));
+	printf ("\n\n%s\n\n%s\n",
 		_(free_software_msgid), _(authorship_msgid));
 	check_stdout ();
 	return EXIT_SUCCESS;
@@ -479,9 +482,7 @@ cmp (void)
 		    bool use_byte_message = (byte_message != byte_msgid
 					     || hard_locale_LC_MESSAGES);
 
-		    printf ((use_byte_message
-			     ? byte_message
-			     : "%s %s differ: char %s, line %s\n"),
+		    printf (use_byte_message ? byte_message : char_message,
 			    file[0], file[1], byte_num, line_num);
 		  }
 		else
