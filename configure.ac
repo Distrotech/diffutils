@@ -24,7 +24,7 @@ AC_CONFIG_SRCDIR(src/diff.c)
 
 AC_CONFIG_AUX_DIR(config)
 AM_CONFIG_HEADER([config.h:config.hin])
-AM_INIT_AUTOMAKE([gnits dist-shar])
+AM_INIT_AUTOMAKE([gnits])
 
 AC_PROG_AWK
 AC_PROG_CC
