@@ -1,7 +1,7 @@
 /* Support routines for GNU DIFF.
 
-   Copyright (C) 1988, 1989, 1992, 1993, 1994, 1995, 1998, 2001, 2002
-   Free Software Foundation, Inc.
+   Copyright (C) 1988, 1989, 1992, 1993, 1994, 1995, 1998, 2001, 2002,
+   2004 Free Software Foundation, Inc.
 
    This file is part of GNU DIFF.
 
@@ -24,7 +24,6 @@
 #include <dirname.h>
 #include <error.h>
 #include <quotesys.h>
-#include <regex.h>
 #include <xalloc.h>
 
 char const pr_program[] = PR_PROGRAM;
@@ -215,8 +214,8 @@ begin_output (void)
 		close (pipes[0]);
 	      }
 
-	    execl (pr_program, pr_program, "-h", name, 0);
-	    _exit (errno == ENOEXEC ? 126 : 127);
+	    execl (pr_program, pr_program, "-h", name, (char *) 0);
+	    _exit (errno == ENOENT ? 127 : 126);
 	  }
 	else
 	  {
@@ -260,11 +259,11 @@ begin_output (void)
   switch (output_style)
     {
     case OUTPUT_CONTEXT:
-      print_context_header (files, 0);
+      print_context_header (files, false);
       break;
 
     case OUTPUT_UNIFIED:
-      print_context_header (files, 1);
+      print_context_header (files, true);
       break;
 
     default:
@@ -280,6 +279,7 @@ finish_output (void)
 {
   if (outfile != 0 && outfile != stdout)
     {
+      int status;
       int wstatus;
       int werrno = 0;
       if (ferror (outfile))
@@ -294,21 +294,19 @@ finish_output (void)
       if (waitpid (pr_pid, &wstatus, 0) < 0)
 	pfatal_with_name ("waitpid");
 #endif
-      if (werrno | wstatus)
-	{
-	  char const *failure_msgid = N_("subsidiary program `%s' failed");
-	  if (! werrno && WIFEXITED (wstatus))
-	    switch (WEXITSTATUS (wstatus))
-	      {
-	      case 126:
-		failure_msgid = N_("subsidiary program `%s' not executable");
-		break;
-	      case 127:
-		failure_msgid = N_("subsidiary program `%s' not found");
-		break;
-	      }
-	  error (EXIT_TROUBLE, werrno, _(failure_msgid), pr_program);
-	}
+      status = (! werrno && WIFEXITED (wstatus)
+		? WEXITSTATUS (wstatus)
+		: INT_MAX);
+      if (status)
+	error (EXIT_TROUBLE, werrno,
+	       _(status == 126
+		 ? "subsidiary program `%s' could not be invoked"
+		 : status == 127
+		 ? "subsidiary program `%s' not found"
+		 : status == INT_MAX
+		 ? "subsidiary program `%s' failed"
+		 : "subsidiary program `%s' failed (exit status %d)"),
+	       pr_program, status);
     }
 
   outfile = 0;
@@ -323,8 +321,8 @@ finish_output (void)
 bool
 lines_differ (char const *s1, char const *s2)
 {
-  register unsigned char const *t1 = (unsigned char const *) s1;
-  register unsigned char const *t2 = (unsigned char const *) s2;
+  register char const *t1 = s1;
+  register char const *t2 = s2;
   size_t column = 0;
 
   while (1)
@@ -339,20 +337,20 @@ lines_differ (char const *s1, char const *s2)
 	    {
 	    case IGNORE_ALL_SPACE:
 	      /* For -w, just skip past any white space.  */
-	      while (ISSPACE (c1) && c1 != '\n') c1 = *t1++;
-	      while (ISSPACE (c2) && c2 != '\n') c2 = *t2++;
+	      while (isspace (c1) && c1 != '\n') c1 = *t1++;
+	      while (isspace (c2) && c2 != '\n') c2 = *t2++;
 	      break;
 
 	    case IGNORE_SPACE_CHANGE:
 	      /* For -b, advance past any sequence of white space in
 		 line 1 and consider it just one space, or nothing at
 		 all if it is at the end of the line.  */
-	      if (ISSPACE (c1))
+	      if (isspace (c1))
 		{
 		  while (c1 != '\n')
 		    {
 		      c1 = *t1++;
-		      if (! ISSPACE (c1))
+		      if (! isspace (c1))
 			{
 			  --t1;
 			  c1 = ' ';
@@ -362,12 +360,12 @@ lines_differ (char const *s1, char const *s2)
 		}
 
 	      /* Likewise for line 2.  */
-	      if (ISSPACE (c2))
+	      if (isspace (c2))
 		{
 		  while (c2 != '\n')
 		    {
 		      c2 = *t2++;
-		      if (! ISSPACE (c2))
+		      if (! isspace (c2))
 			{
 			  --t2;
 			  c2 = ' ';
@@ -382,15 +380,15 @@ lines_differ (char const *s1, char const *s2)
 		     for equality, go back to the first non-white-space
 		     character in both sides and try again.  */
 		  if (c2 == ' ' && c1 != '\n'
-		      && (unsigned char const *) s1 + 1 < t1
-		      && ISSPACE (t1[-2]))
+		      && s1 + 1 < t1
+		      && isspace ((unsigned char) t1[-2]))
 		    {
 		      --t1;
 		      continue;
 		    }
 		  if (c1 == ' ' && c2 != '\n'
-		      && (unsigned char const *) s2 + 1 < t2
-		      && ISSPACE (t2[-2]))
+		      && s2 + 1 < t2
+		      && isspace ((unsigned char) t2[-2]))
 		    {
 		      --t2;
 		      continue;
@@ -423,7 +421,7 @@ lines_differ (char const *s1, char const *s2)
 			break;
 		    }
 		  if (column != column2)
-		    return 1;
+		    return true;
 		}
 	      break;
 
@@ -435,20 +433,20 @@ lines_differ (char const *s1, char const *s2)
 
 	  if (ignore_case)
 	    {
-	      c1 = TOLOWER (c1);
-	      c2 = TOLOWER (c2);
+	      c1 = tolower (c1);
+	      c2 = tolower (c2);
 	    }
 
 	  if (c1 != c2)
 	    break;
 	}
       if (c1 == '\n')
-	return 0;
+	return false;
 
       column += c1 == '\t' ? tabsize - column % tabsize : 1;
     }
 
-  return 1;
+  return true;
 }
 
 /* Find the consecutive changes at the start of the script START.
@@ -545,7 +543,7 @@ output_1_line (char const *base, char const *limit, char const *flag_format,
 	       char const *line_flag)
 {
   if (!expand_tabs)
-    fwrite (base, limit - base, 1, outfile);
+    fwrite (base, sizeof (char), limit - base, outfile);
   else
     {
       register FILE *out = outfile;
@@ -582,8 +580,7 @@ output_1_line (char const *base, char const *limit, char const *flag_format,
 	    break;
 
 	  default:
-	    if (ISPRINT (c))
-	      column++;
+	    column += isprint (c) != 0;
 	    putc (c, out);
 	    break;
 	  }
@@ -606,13 +603,13 @@ translate_line_number (struct file_data const *file, lin i)
 }
 
 /* Translate a line number range.  This is always done for printing,
-   so for convenience translate to long rather than lin, so that the
+   so for convenience translate to long int rather than lin, so that the
    caller can use printf with "%ld" without casting.  */
 
 void
 translate_range (struct file_data const *file,
 		 lin a, lin b,
-		 long *aptr, long *bptr)
+		 long int *aptr, long int *bptr)
 {
   *aptr = translate_line_number (file, a - 1) + 1;
   *bptr = translate_line_number (file, b + 1) - 1;
@@ -627,7 +624,7 @@ translate_range (struct file_data const *file,
 void
 print_number_range (char sepchar, struct file_data *file, lin a, lin b)
 {
-  long trans_a, trans_b;
+  long int trans_a, trans_b;
   translate_range (file, a, b, &trans_a, &trans_b);
 
   /* Note: we can have B < A in the case of a range of no lines.
@@ -662,7 +659,7 @@ analyze_hunk (struct change *hunk,
   lin show_from, show_to;
   lin i;
   bool trivial = ignore_blank_lines || ignore_regexp.fastmap;
-  size_t trivial_length = (int) ignore_blank_lines - 1;
+  size_t trivial_length = ignore_blank_lines - 1;
     /* If 0, ignore zero-length lines;
        if SIZE_MAX, do not ignore lines just because of their length.  */
   bool skip_leading_white_space =
@@ -691,7 +688,7 @@ analyze_hunk (struct change *hunk,
 	  size_t len = newline - line;
 	  char const *p = line;
 	  if (skip_leading_white_space)
-	    while (ISSPACE ((unsigned char) *p) && *p != '\n')
+	    while (isspace ((unsigned char) *p) && *p != '\n')
 	      p++;
 	  if (newline - p != trivial_length
 	      && (! ignore_regexp.fastmap
@@ -706,7 +703,7 @@ analyze_hunk (struct change *hunk,
 	  size_t len = newline - line;
 	  char const *p = line;
 	  if (skip_leading_white_space)
-	    while (ISSPACE ((unsigned char) *p) && *p != '\n')
+	    while (isspace ((unsigned char) *p) && *p != '\n')
 	      p++;
 	  if (newline - p != trivial_length
 	      && (! ignore_regexp.fastmap
@@ -766,10 +763,10 @@ debug_script (struct change *sp)
 
   for (; sp; sp = sp->link)
     {
-      long line0 = sp->line0;
-      long line1 = sp->line1;
-      long deleted = sp->deleted;
-      long inserted = sp->inserted;
+      long int line0 = sp->line0;
+      long int line1 = sp->line1;
+      long int deleted = sp->deleted;
+      long int inserted = sp->inserted;
       fprintf (stderr, "%3ld %3ld delete %ld insert %ld\n",
 	       line0, line1, deleted, inserted);
     }
