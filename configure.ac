@@ -19,7 +19,7 @@
 
 AC_PREREQ(2.53)
 
-AC_INIT(GNU diffutils, 2.8.3, bug-gnu-utils@gnu.org)
+AC_INIT(GNU diffutils, 2.8.4, bug-gnu-utils@gnu.org)
 AC_CONFIG_SRCDIR(src/diff.c)
 
 AC_CONFIG_AUX_DIR(config)
