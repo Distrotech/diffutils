@@ -1,5 +1,5 @@
 # Makefile for GNU DIFF
-# Copyright (C) 1988, 89, 90, 92 Free Software Foundation, Inc.
+# Copyright (C) 1988-1992 Free Software Foundation, Inc.
 #
 # This file is part of GNU DIFF.
 #
@@ -38,7 +38,9 @@ MAKEINFO = makeinfo
 # -DHAVE_VFORK_H	If you have vfork and it needs vfork.h.
 # -DHAVE_DUP2		If you have dup2 system call.
 # -DHAVE_WAITPID	If you have waitpid system call.
+# -DHAVE_ST_BLKSIZE	If your FILE type has a st_blksize member.
 # -DHAVE_STRERROR	If you have strerror function.
+# -DHAVE_ALLOCA_H	If you have a working alloca.h.
 
 DEFS = @DEFS@
 
@@ -66,12 +68,12 @@ SHELL = /bin/sh
 
 # The source files for all of the programs.
 srcs=diff.c analyze.c io.c context.c ed.c normal.c ifdef.c util.c dir.c \
-	version.c diff.h regex.c regex.h side.c system.h limits.h \
+	wildmat.c version.c diff.h regex.c regex.h side.c system.h limits.h \
 	diff3.c sdiff.c cmp.c error.c xmalloc.c getopt.c getopt1.c getopt.h \
 	alloca.c
 # Object files for diff only.
 objs=diff.o analyze.o io.o context.o \
-     ed.o normal.o util.o dir.o \
+     ed.o normal.o util.o dir.o wildmat.o \
      regex.o side.o ifdef.o version.o \
      getopt.o getopt1.o $(ALLOCA)
 distfiles = $(srcs) README INSTALL diagmeet.note Makefile.in configure \
