@@ -29,7 +29,7 @@ INSTALL_DATA = @INSTALL_DATA@
 MAKEINFO = makeinfo
 
 CFLAGS = -g
-LDFLAGS = -g
+LDFLAGS =
 LIBS = @LIBS@
 
 # Some System V machines do not come with libPW.
@@ -72,19 +72,19 @@ diff_o = diff.o analyze.o cmpbuf.o dir.o io.o util.o \
 	context.o ed.o ifdef.o normal.o side.o \
 	fnmatch.o getopt.o getopt1.o regex.o version.o $(ALLOCA)
 diff: $(diff_o)
-	$(CC) -o $@ $(LDFLAGS) $(diff_o) $(LIBS)
+	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $(diff_o) $(LIBS)
 
 diff3_o = diff3.o getopt.o getopt1.o version.o
 diff3: $(diff3_o)
-	$(CC) -o $@ $(LDFLAGS) $(diff3_o) $(LIBS)
+	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $(diff3_o) $(LIBS)
 
 sdiff_o = sdiff.o getopt.o getopt1.o version.o
 sdiff: $(sdiff_o)
-	$(CC) -o $@ $(LDFLAGS) $(sdiff_o) $(LIBS)
+	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $(sdiff_o) $(LIBS)
 
 cmp_o = cmp.o cmpbuf.o error.o getopt.o getopt1.o xmalloc.o version.o
 cmp: $(cmp_o)
-	$(CC) -o $@ $(LDFLAGS) $(cmp_o) $(LIBS)
+	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $(cmp_o) $(LIBS)
 
 diff.info: diff.texi
 	$(MAKEINFO) $(srcdir)/diff.texi
