@@ -1,5 +1,6 @@
-To build under OS/2:
+To make for OS/2:
 
-	copy Makefile ../Makefile
-	cd ..
-	make
+1. change to toplevel directory
+
+2. enter "make -f os2/Makefile"
+
