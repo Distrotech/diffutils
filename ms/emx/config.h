@@ -1,6 +1,6 @@
 /* emx configuration */
 
-#include <pc/config.h>
+#include <pc\config.h>
 
 #define initialize_main(pargc, pargv) \
   { \
@@ -12,4 +12,4 @@
 
 #define pid_t int
 
-#define STAT_BLOCKSIZE(s) (64 * 1024)
+#define STAT_BLOCKSIZE(s) 65536
