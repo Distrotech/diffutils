@@ -115,20 +115,25 @@ sip (struct file_data *current, bool skip_test)
       if (! skip_test)
 	{
 	  /* Check first part of file to see if it's a binary file.  */
-#if HAVE_SETMODE
-	  int oldmode = setmode (current->desc, O_BINARY);
-#endif
+
+	  bool was_binary = set_binary_mode (current->desc, 1);
 	  file_block_read (current, current->bufsize);
-#if HAVE_SETMODE
-	  if (oldmode != O_BINARY)
+
+	  if (! was_binary)
 	    {
-	      if (lseek (current->desc, - (off_t) n, SEEK_CUR) == -1)
+	      /* Revert to text mode and seek back to the beginning to
+		 reread the file.  Use relative seek, since file
+		 descriptors like stdin might not start at offset
+		 zero.  */
+
+	      off_t buffered = current->buffered;
+	      if (lseek (current->desc, - buffered, SEEK_CUR) == -1)
 		pfatal_with_name (current->name);
-	      setmode (current->desc, oldmode);
+	      set_binary_mode (current->desc, 0);
 	      current->buffered = 0;
 	      current->eof = 0;
 	    }
-#endif
+
 	  return binary_file_p (current->buffer, current->buffered);
 	}
     }
@@ -768,10 +773,8 @@ read_files (struct file_data filevec[], bool pretend_binary)
     }
   if (appears_binary)
     {
-#if HAVE_SETMODE
-      setmode (filevec[0].desc, O_BINARY);
-      setmode (filevec[1].desc, O_BINARY);
-#endif
+      set_binary_mode (filevec[0].desc, 1);
+      set_binary_mode (filevec[1].desc, 1);
       return 1;
     }
 
