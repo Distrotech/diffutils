@@ -350,7 +350,7 @@ cmp ()
 		  printc (0, c1);
 		}
 	      putchar ('\n');
-	      /* Fall through. */
+	      /* Fall through.  */
 	    case type_status:
 	      return 1;
 
