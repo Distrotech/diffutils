@@ -1,21 +1,22 @@
 /* Analyze file differences for GNU DIFF.
-   Copyright (C) 1988, 1989, 1992, 1993, 1994 Free Software Foundation, Inc.
+   Copyright 1988, 89, 92, 93, 94, 95, 1997 Free Software Foundation, Inc.
 
-This file is part of GNU DIFF.
+   This file is part of GNU DIFF.
 
-GNU DIFF is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
-any later version.
+   GNU DIFF is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation; either version 2, or (at your option)
+   any later version.
 
-GNU DIFF is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+   GNU DIFF is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
 
-You should have received a copy of the GNU General Public License
-along with GNU DIFF; see the file COPYING.  If not, write to
-the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
+   You should have received a copy of the GNU General Public License
+   along with this program; see the file COPYING.
+   If not, write to the Free Software Foundation, 
+   59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
 
 /* The basic algorithm is described in:
    "An O(ND) Difference Algorithm and its Variations", Eugene Myers,
@@ -32,8 +33,6 @@ the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 
 #include "diff.h"
 #include "cmpbuf.h"
-
-extern int no_discards;
 
 static int *xvec, *yvec;	/* Vectors being compared. */
 static int *fdiag;		/* Vector, indexed by diagonal, containing
@@ -56,11 +55,11 @@ struct partition
   int hi_minimal;	/* Likewise for high half.  */
 };
 
+static int briefly_report PARAMS((int, struct file_data const[]));
 static int diag PARAMS((int, int, int, int, int, struct partition *));
 static struct change *add_change PARAMS((int, int, int, int, struct change *));
 static struct change *build_reverse_script PARAMS((struct file_data const[]));
 static struct change *build_script PARAMS((struct file_data const[]));
-static void briefly_report PARAMS((int, struct file_data const[]));
 static void compareseq PARAMS((int, int, int, int, int));
 static void discard_confusing_lines PARAMS((struct file_data[]));
 static void shift_boundaries PARAMS((struct file_data[]));
@@ -616,16 +615,11 @@ discard_confusing_lines (filevec)
    but usually it is cleaner to consider the following identical line
    to be the "change".  */
 
-int inhibit;
-
 static void
 shift_boundaries (filevec)
      struct file_data filevec[];
 {
   int f;
-
-  if (inhibit)
-    return;
 
   for (f = 0; f < 2; f++)
     {
@@ -668,18 +662,21 @@ shift_boundaries (filevec)
 		 we can later determine whether the run has grown.  */
 	      runlength = i - start;
 
-	      /* Move the changed region back, so long as the
-		 previous unchanged line matches the last changed one.
-		 This merges with previous changed regions.  */
-
-	      while (start && equivs[start - 1] == equivs[i - 1])
+	      if (! inhibit_hunk_merge)
 		{
-		  changed[--start] = 1;
-		  changed[--i] = 0;
-		  while (changed[start - 1])
-		    start--;
-		  while (other_changed[--j])
-		    continue;
+		  /* Move the changed region back, so long as the
+		     previous unchanged line matches the last changed one.
+		     This merges with previous changed regions.  */
+
+		  while (start && equivs[start - 1] == equivs[i - 1])
+		    {
+		      changed[--start] = 1;
+		      changed[--i] = 0;
+		      while (changed[start - 1])
+			start--;
+		      while (other_changed[--j])
+			continue;
+		    }
 		}
 
 	      /* Set CORRESPONDING to the end of the changed run, at the last
@@ -687,13 +684,15 @@ shift_boundaries (filevec)
 		 CORRESPONDING == I_END means no such point has been found.  */
 	      corresponding = other_changed[j - 1] ? i : i_end;
 
-	      /* Move the changed region forward, so long as the
-		 first changed line matches the following unchanged one.
-		 This merges with following changed regions.
+	      /* Shift the changed region forward, so long as the
+		 first changed line matches the following unchanged one,
+		 but if INHIBIT_HUNK_MERGE is 1 do not shift if
+		 this would merge with another changed region.
 		 Do this second, so that if there are no merges,
 		 the changed region is moved forward as far as possible.  */
 
-	      while (i != i_end && equivs[start] == equivs[i])
+	      while (i != i_end && equivs[start] == equivs[i]
+		     && ! (inhibit_hunk_merge & other_changed[j + 1]))
 		{
 		  changed[start++] = 0;
 		  changed[i++] = 1;
@@ -815,8 +814,9 @@ build_script (filevec)
   return script;
 }
 
-/* If CHANGES, briefly report that two files differed.  */
-static void
+/* If CHANGES, briefly report that two files differed.
+   Return 2 if trouble, CHANGES otherwise.  */
+static int
 briefly_report (changes, filevec)
      int changes;
      struct file_data const filevec[];
@@ -829,16 +829,19 @@ briefly_report (changes, filevec)
       if (no_details_flag)
 	message ("Files %s and %s differ\n", label0, label1);
       else
-	message ("Binary files %s and %s differ\n", label0, label1);
+	{
+	  message ("Binary files %s and %s differ\n", label0, label1);
+	  changes = 2;
+	}
     }
+
+  return changes;
 }
 
-/* Report the differences of two files.  DEPTH is the current directory
-   depth. */
+/* Report the differences of two files.  */
 int
-diff_2_files (filevec, depth)
-     struct file_data filevec[];
-     int depth;
+diff_2_files (cmp)
+     struct comparison *cmp;
 {
   int diags;
   int i;
@@ -853,58 +856,58 @@ diff_2_files (filevec, depth)
      Also, --brief without any --ignore-* options means
      we can speed things up by treating the files as binary.  */
 
-  if (read_files (filevec, no_details_flag & ~ignore_some_changes))
+  if (read_files (cmp->file, no_details_flag & ~ignore_some_changes))
     {
       /* Files with different lengths must be different.  */
-      if (filevec[0].stat.st_size != filevec[1].stat.st_size
-	  && (filevec[0].desc < 0 || S_ISREG (filevec[0].stat.st_mode))
-	  && (filevec[1].desc < 0 || S_ISREG (filevec[1].stat.st_mode)))
+      if (cmp->file[0].stat.st_size != cmp->file[1].stat.st_size
+	  && (cmp->file[0].desc < 0 || S_ISREG (cmp->file[0].stat.st_mode))
+	  && (cmp->file[1].desc < 0 || S_ISREG (cmp->file[1].stat.st_mode)))
 	changes = 1;
 
       /* Standard input equals itself.  */
-      else if (filevec[0].desc == filevec[1].desc)
+      else if (cmp->file[0].desc == cmp->file[1].desc)
 	changes = 0;
 
       else
 	/* Scan both files, a buffer at a time, looking for a difference.  */
 	{
 	  /* Allocate same-sized buffers for both files.  */
-	  size_t buffer_size = buffer_lcm (STAT_BLOCKSIZE (filevec[0].stat),
-					   STAT_BLOCKSIZE (filevec[1].stat));
+	  size_t buffer_size = buffer_lcm (STAT_BLOCKSIZE (cmp->file[0].stat),
+					   STAT_BLOCKSIZE (cmp->file[1].stat));
 	  for (i = 0; i < 2; i++)
-	    filevec[i].buffer = xrealloc (filevec[i].buffer, buffer_size);
+	    cmp->file[i].buffer = xrealloc (cmp->file[i].buffer, buffer_size);
 
-	  for (;;  filevec[0].buffered_chars = filevec[1].buffered_chars = 0)
+	  for (;;cmp->file[0].buffered_chars = cmp->file[1].buffered_chars = 0)
 	    {
 	      /* Read a buffer's worth from both files.  */
 	      for (i = 0; i < 2; i++)
-		if (0 <= filevec[i].desc)
-		  while (filevec[i].buffered_chars != buffer_size)
+		if (0 <= cmp->file[i].desc)
+		  while (cmp->file[i].buffered_chars != buffer_size)
 		    {
-		      int r = read (filevec[i].desc,
-				    filevec[i].buffer
-				    + filevec[i].buffered_chars,
-				    buffer_size - filevec[i].buffered_chars);
+		      int r = read (cmp->file[i].desc,
+				    cmp->file[i].buffer
+				    + cmp->file[i].buffered_chars,
+				    buffer_size - cmp->file[i].buffered_chars);
 		      if (r == 0)
 			break;
 		      if (r < 0)
-			pfatal_with_name (filevec[i].name);
-		      filevec[i].buffered_chars += r;
+			pfatal_with_name (cmp->file[i].name);
+		      cmp->file[i].buffered_chars += r;
 		    }
 
 	      /* If the buffers differ, the files differ.  */
-	      if (filevec[0].buffered_chars != filevec[1].buffered_chars
-		  || (filevec[0].buffered_chars != 0
-		      && memcmp (filevec[0].buffer,
-				 filevec[1].buffer,
-				 filevec[0].buffered_chars) != 0))
+	      if (cmp->file[0].buffered_chars != cmp->file[1].buffered_chars
+		  || (cmp->file[0].buffered_chars != 0
+		      && memcmp (cmp->file[0].buffer,
+				 cmp->file[1].buffer,
+				 cmp->file[0].buffered_chars) != 0))
 		{
 		  changes = 1;
 		  break;
 		}
 
 	      /* If we reach end of file, the files are the same.  */
-	      if (filevec[0].buffered_chars != buffer_size)
+	      if (cmp->file[0].buffered_chars != buffer_size)
 		{
 		  changes = 0;
 		  break;
@@ -912,7 +915,7 @@ diff_2_files (filevec, depth)
 	    }
 	}
 
-      briefly_report (changes, filevec);
+      changes = briefly_report (changes, cmp->file);
     }
   else
     {
@@ -921,58 +924,57 @@ diff_2_files (filevec, depth)
 	 is an insertion or deletion.
 	 Allocate an extra element, always zero, at each end of each vector.  */
 
-      size_t s = filevec[0].buffered_lines + filevec[1].buffered_lines + 4;
-      filevec[0].changed_flag = xmalloc (s);
-      bzero (filevec[0].changed_flag, s);
-      filevec[0].changed_flag++;
-      filevec[1].changed_flag = filevec[0].changed_flag
-				+ filevec[0].buffered_lines + 2;
+      size_t s = cmp->file[0].buffered_lines + cmp->file[1].buffered_lines + 4;
+      char *flag_space = xmalloc (s);
+      bzero (flag_space, s);
+      cmp->file[0].changed_flag = flag_space + 1;
+      cmp->file[1].changed_flag = flag_space + cmp->file[0].buffered_lines + 3;
 
       /* Some lines are obviously insertions or deletions
 	 because they don't match anything.  Detect them now, and
 	 avoid even thinking about them in the main comparison algorithm.  */
 
-      discard_confusing_lines (filevec);
+      discard_confusing_lines (cmp->file);
 
       /* Now do the main comparison algorithm, considering just the
 	 undiscarded lines.  */
 
-      xvec = filevec[0].undiscarded;
-      yvec = filevec[1].undiscarded;
-      diags = filevec[0].nondiscarded_lines + filevec[1].nondiscarded_lines + 3;
+      xvec = cmp->file[0].undiscarded;
+      yvec = cmp->file[1].undiscarded;
+      diags = (cmp->file[0].nondiscarded_lines
+	       + cmp->file[1].nondiscarded_lines + 3);
       fdiag = (int *) xmalloc (diags * (2 * sizeof (int)));
       bdiag = fdiag + diags;
-      fdiag += filevec[1].nondiscarded_lines + 1;
-      bdiag += filevec[1].nondiscarded_lines + 1;
+      fdiag += cmp->file[1].nondiscarded_lines + 1;
+      bdiag += cmp->file[1].nondiscarded_lines + 1;
 
       /* Set TOO_EXPENSIVE to be approximate square root of input size,
 	 bounded below by 256.  */
       too_expensive = 1;
-      for (i = filevec[0].nondiscarded_lines + filevec[1].nondiscarded_lines;
-	   i != 0; i >>= 2)
+      for (i = diags;  i != 0;  i >>= 2)
 	too_expensive <<= 1;
       too_expensive = max (256, too_expensive);
 
-      files[0] = filevec[0];
-      files[1] = filevec[1];
+      files[0] = cmp->file[0];
+      files[1] = cmp->file[1];
 
-      compareseq (0, filevec[0].nondiscarded_lines,
-		  0, filevec[1].nondiscarded_lines, no_discards);
+      compareseq (0, cmp->file[0].nondiscarded_lines,
+		  0, cmp->file[1].nondiscarded_lines, no_discards);
 
-      free (fdiag - (filevec[1].nondiscarded_lines + 1));
+      free (fdiag - (cmp->file[1].nondiscarded_lines + 1));
 
       /* Modify the results slightly to make them prettier
 	 in cases where that can validly be done.  */
 
-      shift_boundaries (filevec);
+      shift_boundaries (cmp->file);
 
       /* Get the results of comparison in the form of a chain
 	 of `struct change's -- an edit script.  */
 
       if (output_style == OUTPUT_ED)
-	script = build_reverse_script (filevec);
+	script = build_reverse_script (cmp->file);
       else
-	script = build_script (filevec);
+	script = build_script (cmp->file);
 
       /* Set CHANGES if we had any diffs.
 	 If some changes are ignored, we must scan the script to decide.  */
@@ -1010,16 +1012,16 @@ diff_2_files (filevec, depth)
 	changes = (script != 0);
 
       if (no_details_flag)
-	briefly_report (changes, filevec);
+	changes = briefly_report (changes, cmp->file);
       else
 	{
 	  if (changes || ! no_diff_means_no_output)
 	    {
 	      /* Record info for starting up output,
 		 to be used if and when we have some output to print.  */
-	      setup_output (file_label[0] ? file_label[0] : files[0].name,
-			    file_label[1] ? file_label[1] : files[1].name,
-			    depth);
+	      setup_output (file_label[0] ? file_label[0] : cmp->file[0].name,
+			    file_label[1] ? file_label[1] : cmp->file[1].name,
+			    cmp->parent != 0);
 
 	      switch (output_style)
 		{
@@ -1059,15 +1061,15 @@ diff_2_files (filevec, depth)
 	    }
 	}
 
-      free (filevec[0].undiscarded);
+      free (cmp->file[0].undiscarded);
 
-      free (filevec[0].changed_flag - 1);
+      free (flag_space);
 
       for (i = 1; i >= 0; --i)
-	free (filevec[i].equivs);
+	free (cmp->file[i].equivs);
 
       for (i = 0; i < 2; ++i)
-	free (filevec[i].linbuf + filevec[i].linbuf_base);
+	free (cmp->file[i].linbuf + cmp->file[i].linbuf_base);
 
       for (e = script; e; e = p)
 	{
@@ -1077,18 +1079,18 @@ diff_2_files (filevec, depth)
 
       if (! ROBUST_OUTPUT_STYLE (output_style))
 	for (i = 0; i < 2; ++i)
-	  if (filevec[i].missing_newline)
+	  if (cmp->file[i].missing_newline)
 	    {
 	      error (0, 0, "%s: %s\n",
-		     file_label[i] ? file_label[i] : filevec[i].name,
-		     gettext ("No newline at end of file"));
+		     file_label[i] ? file_label[i] : cmp->file[i].name,
+		     _("No newline at end of file"));
 	      changes = 2;
 	    }
     }
 
-  if (filevec[0].buffer != filevec[1].buffer)
-    free (filevec[0].buffer);
-  free (filevec[1].buffer);
+  if (cmp->file[0].buffer != cmp->file[1].buffer)
+    free (cmp->file[0].buffer);
+  free (cmp->file[1].buffer);
 
   return changes;
 }
