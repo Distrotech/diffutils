@@ -83,7 +83,7 @@ distfiles = $(srcs) README INSTALL NEWS diagmeet.note Makefile.in configure \
 all: diff diff3 sdiff cmp diff.info
 
 .c.o:
-	$(CC) -c $(DEFS) $(CPPFLAGS) $(CFLAGS) -I. $<
+	$(CC) -c $(DEFS) $(CPPFLAGS) -I. -I$(srcdir) $(CFLAGS) $<
 
 diff: $(objs)
 	$(CC) -o $@ $(LDFLAGS) $(objs) $(LIBS)
