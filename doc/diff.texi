@@ -2886,7 +2886,7 @@ Ignore changes that just insert or delete lines that match @var{regexp}.
 @xref{Specified Folding}.
 
 @item --ifdef=@var{name}
-Make merged if-then-else output using @var{format}.  @xref{If-then-else}.
+Make merged if-then-else output using @var{name}.  @xref{If-then-else}.
 
 @item --ignore-all-space
 Ignore white space when comparing lines.  @xref{White Space}.
