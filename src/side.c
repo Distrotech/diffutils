@@ -88,19 +88,24 @@ print_half_line (line, indent, out_bound)
 	case '\t':
 	  {
 	    unsigned spaces = TAB_WIDTH - in_position % TAB_WIDTH;
+	    if (in_position == out_position)
+	      {
+		unsigned tabstop = out_position + spaces;
+		if (tab_expand_flag)
+		  {
+		    if (out_bound < tabstop)
+		      tabstop = out_bound;
+		    for (;  out_position < tabstop;  out_position++)
+		      putc (' ', out);
+		  }
+		else
+		  if (tabstop < out_bound)
+		    {
+		      out_position = tabstop;
+		      putc (c, out);
+		    }
+	      }
 	    in_position += spaces;
-	    if (tab_expand_flag)
-	      while (out_position < out_bound && spaces--)
-		{
-		  out_position++;
-		  putc (' ', out);
-		}
-	    else
-	      if (out_position + spaces < out_bound)
-		{
-		  out_position += spaces;
-		  putc (c, out);
-		}
 	  }
 	  break;
 
