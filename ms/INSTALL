@@ -1,0 +1,5 @@
+To build under OS/2:
+
+	copy Makefile ../Makefile
+	cd ..
+	make
