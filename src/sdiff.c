@@ -49,7 +49,7 @@ static char const *not_found;
 static char * volatile tmpname;
 static FILE *tmp;
 
-#if HAVE_FORK
+#if HAVE_WORKING_FORK || HAVE_WORKING_VFORK
 static pid_t volatile diffpid;
 #endif
 
@@ -209,7 +209,7 @@ usage (void)
 static void
 cleanup (void)
 {
-#if HAVE_FORK
+#if HAVE_WORKING_FORK || HAVE_WORKING_VFORK
   if (0 < diffpid)
     kill (diffpid, SIGPIPE);
 #endif
@@ -558,7 +558,7 @@ main (int argc, char *argv[])
 
       trapsigs ();
 
-#if ! HAVE_FORK
+#if ! (HAVE_WORKING_FORK || HAVE_WORKING_VFORK)
       {
 	size_t cmdsize = 1;
 	char *p, *command;
@@ -578,26 +578,26 @@ main (int argc, char *argv[])
 	  perror_fatal (command);
 	free (command);
       }
-#else /* HAVE_FORK */
+#else
       {
 	int diff_fds[2];
-#if HAVE_VFORK
+# if HAVE_WORKING_VFORK
 	sigset_t procmask;
 	sigset_t blocked;
-#endif
+# endif
 
 	if (pipe (diff_fds) != 0)
 	  perror_fatal ("pipe");
 
 	not_found = _(": not found\n");
 
-#if HAVE_VFORK
+# if HAVE_WORKING_VFORK
 	/* Block SIGINT and SIGPIPE.  */
 	sigemptyset (&blocked);
 	sigaddset (&blocked, SIGINT);
 	sigaddset (&blocked, SIGPIPE);
 	sigprocmask (SIG_BLOCK, &blocked, &procmask);
-#endif
+# endif
 	diffpid = vfork ();
 	if (diffpid < 0)
 	  perror_fatal ("fork");
@@ -610,10 +610,10 @@ main (int argc, char *argv[])
 	    if (initial_handler (SIGINT) != SIG_IGN)
 	      signal_handler (SIGINT, SIG_IGN);
 	    signal_handler (SIGPIPE, SIG_DFL);
-#if HAVE_VFORK
+# if HAVE_WORKING_VFORK
 	    /* Stop blocking SIGINT and SIGPIPE in the child.  */
 	    sigprocmask (SIG_SETMASK, &procmask, 0);
-#endif
+# endif
 	    close (diff_fds[0]);
 	    if (diff_fds[1] != STDOUT_FILENO)
 	      {
@@ -624,7 +624,7 @@ main (int argc, char *argv[])
 	    execdiff ();
 	  }
 
-#if HAVE_VFORK
+# if HAVE_WORKING_VFORK
 	/* Restore the parent's SIGINT and SIGPIPE behavior.  */
 	if (initial_handler (SIGINT) != SIG_IGN)
 	  signal_handler (SIGINT, catchsig);
@@ -635,14 +635,14 @@ main (int argc, char *argv[])
 
 	/* Stop blocking SIGINT and SIGPIPE in the parent.  */
 	sigprocmask (SIG_SETMASK, &procmask, 0);
-#endif
+# endif
 
 	close (diff_fds[1]);
 	diffout = fdopen (diff_fds[0], "r");
 	if (! diffout)
 	  perror_fatal ("fdopen");
       }
-#endif /* HAVE_FORK */
+#endif
 
       lf_init (&diff_filt, diffout);
       lf_init (&lfilt, left);
@@ -657,7 +657,7 @@ main (int argc, char *argv[])
       {
 	int wstatus;
 
-#if ! HAVE_FORK
+#if ! (HAVE_WORKING_FORK || HAVE_WORKING_VFORK)
 	wstatus = pclose (diffout);
 #else
 	ck_fclose (diffout);
@@ -747,11 +747,11 @@ trapsigs (void)
   int i;
 
 #if HAVE_SIGACTION
-#ifdef SA_INTERRUPT
+# ifdef SA_INTERRUPT
   /* Non-POSIX BSD-style systems like SunOS 4.1.x need this
      so that `read' calls are interrupted properly.  */
   catchaction.sa_flags = SA_INTERRUPT;
-#endif
+# endif
   sigemptyset (&catchaction.sa_mask);
   for (i = 0;  i < NUM_SIGS;  i++)
     sigaddset (&catchaction.sa_mask, sigs[i]);
@@ -953,12 +953,12 @@ edit (struct line_filter *left, char const *lname, lin lline, lin llen,
 	    int fd;
 
 	    if (tmpname)
-	      tmp = fopen (tmpname, "w+");
+	      tmp = fopen (tmpname, "w");
 	    else
 	      {
 		if ((fd = temporary_file ()) < 0)
 		  perror_fatal ("mkstemp");
-		tmp = fdopen (fd, "w+");
+		tmp = fdopen (fd, "w");
 	      }
 
 	    if (! tmp)
@@ -1006,11 +1006,11 @@ edit (struct line_filter *left, char const *lname, lin lline, lin llen,
 		break;
 	      }
 
-	    ck_fflush (tmp);
+	    ck_fclose (tmp);
 
 	    {
 	      int wstatus;
-#if ! HAVE_FORK
+#if ! (HAVE_WORKING_FORK || HAVE_WORKING_VFORK)
 	      char *command =
 		xmalloc (quote_system_arg (0, editor_program)
 			 + 1 + strlen (tmpname) + 1);
@@ -1018,7 +1018,7 @@ edit (struct line_filter *left, char const *lname, lin lline, lin llen,
 		       " %s", tmpname);
 	      wstatus = system (command);
 	      free (command);
-#else /* HAVE_FORK */
+#else
 	      pid_t pid;
 
 	      ignore_SIGINT = 1;
@@ -1052,18 +1052,16 @@ edit (struct line_filter *left, char const *lname, lin lline, lin llen,
 		  perror_fatal ("waitpid");
 
 	      ignore_SIGINT = 0;
-#endif /* HAVE_FORK */
+#endif
 
 	      if (wstatus != 0)
 		fatal ("subsidiary program failed");
 	    }
 
-	    if (fseek (tmp, 0L, SEEK_SET) != 0)
-	      perror_fatal ("fseek");
 	    {
 	      char buf[SDIFF_BUFSIZE];
 	      size_t size;
-
+	      tmp = ck_fopen (tmpname, "r");
 	      while ((size = ck_fread (buf, SDIFF_BUFSIZE, tmp)) != 0)
 		{
 		  checksigs ();
@@ -1156,11 +1154,11 @@ diraccess (char const *dir)
   return stat (dir, &buf) == 0 && S_ISDIR (buf.st_mode);
 }
 
-#ifndef PVT_tmpdir
-#define PVT_tmpdir "/tmp"
+#ifndef P_tmpdir
+# define P_tmpdir "/tmp"
 #endif
 #ifndef TMPDIR_ENV
-#define TMPDIR_ENV "TMPDIR"
+# define TMPDIR_ENV "TMPDIR"
 #endif
 
 /* Open a temporary file and return its file descriptor.  Put into
@@ -1170,7 +1168,7 @@ static int
 temporary_file (void)
 {
   char const *tmpdir = getenv (TMPDIR_ENV);
-  char const *dir = tmpdir ? tmpdir : PVT_tmpdir;
+  char const *dir = tmpdir ? tmpdir : P_tmpdir;
   char *buf = xmalloc (strlen (dir) + 1 + 5 + 6 + 1);
   int fd;
   int e;
