@@ -1,3 +1,8 @@
+User-visible changes since version 2.6:
+
+* New diff option: --binary
+
+
 User-visible changes in version 2.6:
 
 * New cmp, diff, diff3, sdiff option: --help
