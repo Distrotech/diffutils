@@ -1,7 +1,7 @@
 /* System dependent declarations.
 
-   Copyright (C) 1988, 1989, 1992, 1993, 1994, 1995, 1998, 2001 Free
-   Software Foundation, Inc.
+   Copyright (C) 1988, 1989, 1992, 1993, 1994, 1995, 1998, 2001, 2002
+   Free Software Foundation, Inc.
 
    This file is part of GNU DIFF.
 
@@ -224,6 +224,9 @@ void *alloca (size_t);
 #ifndef SIZE_MAX
 # define SIZE_MAX TYPE_MAXIMUM (size_t)
 #endif
+#ifndef UINTMAX_MAX
+# define UINTMAX_MAX TYPE_MAXIMUM (uintmax_t)
+#endif
 #if ! HAVE_STRTOUMAX  && ! defined strtoumax
 uintmax_t strtoumax (char const *, char **, int);
 #endif
@@ -251,10 +254,10 @@ void *memchr ();
 # define setlocale(category, locale)
 #endif
 
-#include <libgettext.h>
+#include <gettext.h>
 
 #define _(msgid) gettext (msgid)
-#define N_(msgid) (msgid)
+#define N_(msgid) msgid
 
 #include <ctype.h>
 
