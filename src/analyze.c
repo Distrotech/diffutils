@@ -17,7 +17,7 @@ You should have received a copy of the GNU General Public License
 along with GNU DIFF; see the file COPYING.  If not, write to
 the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 
-/* The basic algorithm is described in: 
+/* The basic algorithm is described in:
    "An O(ND) Difference Algorithm and its Variations", Eugene Myers,
    Algorithmica Vol. 1 No. 2, 1986, p 251.  */
 
@@ -249,7 +249,7 @@ compareseq (xoff, xlim, yoff, ylim)
   /* Slide up the top initial diagonal. */
   while (xlim > xoff && ylim > yoff && xvec[xlim - 1] == yvec[ylim - 1])
     --xlim, --ylim;
-  
+
   /* Handle simple cases. */
   if (xoff == xlim)
     while (yoff < ylim)
@@ -705,7 +705,7 @@ briefly_report (changes, filevec)
      int changes;
      struct file_data const filevec[];
 {
-  if (changes) 
+  if (changes)
     message (no_details_flag ? "Files %s and %s differ\n"
 	     : "Binary files %s and %s differ\n",
 	     filevec[0].name, filevec[1].name);
@@ -772,9 +772,9 @@ diff_2_files (filevec, depth)
 
 	      /* If the buffers differ, the files differ.  */
 	      if (filevec[0].buffered_chars != filevec[1].buffered_chars
-	          || bcmp (filevec[0].buffer,
-			   filevec[1].buffer,
-			   filevec[0].buffered_chars) != 0)
+		  || memcmp (filevec[0].buffer,
+			     filevec[1].buffer,
+			     filevec[0].buffered_chars) != 0)
 		{
 		  changes = 1;
 		  break;
