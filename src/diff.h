@@ -1,5 +1,5 @@
 /* Shared definitions for GNU DIFF
-   Copyright (C) 1988, 89, 91, 92, 93 Free Software Foundation, Inc.
+   Copyright (C) 1988,1989,1991,1992,1993,1994 Free Software Foundation, Inc.
 
 This file is part of GNU DIFF.
 
@@ -89,17 +89,11 @@ EXTERN int      ignore_case_flag;
 /* File labels for `-c' output headers (-L).  */
 EXTERN char *file_label[2];
 
-struct regexp_list
-{
-  struct re_pattern_buffer buf;
-  struct regexp_list *next;
-};
-
 /* Regexp to identify function-header lines (-F).  */
-EXTERN struct regexp_list *function_regexp_list;
+EXTERN struct re_pattern_buffer function_regexp;
 
 /* Ignore changes that affect only lines matching this regexp (-I).  */
-EXTERN struct regexp_list *ignore_regexp_list;
+EXTERN struct re_pattern_buffer ignore_regexp;
 
 /* Say only whether files differ, not how (-q).  */
 EXTERN int 	no_details_flag;
