@@ -1,6 +1,13 @@
-To make for OS/2:
+This directory is for building GNU diffutils on PC operating systems.
+It currently assumes GCC and emx.
 
-1. change to toplevel directory
+To build, check `Makefile' (particularly its configuration section)
+and then do the following:
 
-2. enter "make -f os2/Makefile"
+	cd ..
+	make -f pc/Makefile OS-TARGET
 
+where OS is either `dos' or `os2', and TARGET is either `debug' or `release'.
+
+If you change pc/Makefile, check your changes by running
+`make -f pc/Makefile pc/Makefile.chk'.
