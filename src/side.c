@@ -139,7 +139,7 @@ print_half_line (line, indent, out_bound)
 	  break;
 
 	default:
-	  if (! isprint (c))
+	  if (! ISPRINT (c))
 	    goto control_char;
 	  /* falls through */
 	case ' ':
@@ -174,7 +174,7 @@ print_1sdiff_line (left, sep, right)
   unsigned hw = sdiff_half_width, c2o = sdiff_column2_offset;
   unsigned col = 0;
   int put_newline = 0;
-  
+
   if (left)
     {
       if (left[1][-1] == '\n')
