@@ -822,8 +822,6 @@ static char const * const option_help_msgid[] = {
   N_("--strip-trailing-cr  Strip trailing carriage return on input."),
 #if HAVE_SETMODE
   N_("--binary  Read and write data in binary mode."),
-#else
-  N_("--binary  Read and write data in binary mode (no effect on this platform)."),
 #endif
   N_("-a  --text  Treat all files as text."),
   "",
