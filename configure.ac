@@ -9,12 +9,13 @@ AC_ISC_POSIX
 AC_MINIX
 AC_C_CONST
 AC_HEADER_STDC
-AC_CHECK_HEADERS(unistd.h fcntl.h limits.h stdlib.h string.h sys/file.h sys/wait.h time.h)
+AC_CHECK_HEADERS(unistd.h fcntl.h limits.h stdlib.h string.h sys/file.h time.h)
 AC_HEADER_DIRENT
 AC_HEADER_STAT
+AC_HEADER_SYS_WAIT
 AC_TYPE_PID_T
 AC_TYPE_SIGNAL
-AC_CHECK_FUNCS(dup2 memchr sigaction strchr strerror)
+AC_CHECK_FUNCS(dup2 memchr sigaction strchr strerror tmpnam)
 AC_REPLACE_FUNCS(memchr waitpid)
 AC_FUNC_ALLOCA
 AC_FUNC_CLOSEDIR_VOID
