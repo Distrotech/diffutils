@@ -116,6 +116,7 @@
 
 /* PC specific definitions */
 
+#include <io.h>
 #include <process.h>
 
 #define DIFF_PROGRAM "diff.exe"
