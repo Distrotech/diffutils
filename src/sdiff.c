@@ -1,5 +1,5 @@
 /* SDIFF -- interactive merge front end to diff
-   Copyright (C) 1992, 1993 Free Software Foundation, Inc.
+   Copyright 1992, 1993, 1994 Free Software Foundation, Inc.
 
 This file is part of GNU DIFF.
 
@@ -42,14 +42,17 @@ extern char version_string[];
 static char const *prog;
 static char const *diffbin = DIFF_PROGRAM;
 static char const *edbin = DEFAULT_EDITOR;
+static char const **diffargv;
 
 static char *tmpname;
 static int volatile tmpmade;
+
+#if HAVE_FORK
 static pid_t volatile diffpid;
+#endif
 
 struct line_filter;
 
-static FILE *ck_fdopen PARAMS((int, char const *));
 static FILE *ck_fopen PARAMS((char const *, char const *));
 static RETSIGTYPE catchsig PARAMS((int));
 static VOID *xmalloc PARAMS((size_t));
@@ -66,7 +69,7 @@ static void ck_fflush PARAMS((FILE *));
 static void ck_fwrite PARAMS((char const *, size_t, FILE *));
 static void cleanup PARAMS((void));
 static void diffarg PARAMS((char const *));
-static void execdiff PARAMS((int, char const *, char const *, char const *));
+static void execdiff PARAMS((void));
 static void exiterr PARAMS((void));
 static void fatal PARAMS((char const *));
 static void flush_line PARAMS((void));
@@ -80,7 +83,9 @@ static void untrapsig PARAMS((int));
 static void usage PARAMS((int));
 
 /* this lossage until the gnu libc conquers the universe */
+#ifndef PVT_tmpdir
 #define PVT_tmpdir "/tmp"
+#endif
 static char *private_tempnam PARAMS((char const *, char const *, int, size_t *));
 static int diraccess PARAMS((char const *));
 static int exists PARAMS((char const *));
@@ -132,8 +137,10 @@ usage (status)
 static void
 cleanup ()
 {
+#if HAVE_FORK
   if (0 < diffpid)
     kill (diffpid, SIGPIPE);
+#endif
   if (tmpmade)
     unlink (tmpname);
 }
@@ -186,18 +193,6 @@ ck_fopen (fname, type)
   FILE *r = fopen (fname, type);
   if (!r)
     perror_fatal (fname);
-  return r;
-}
-
-
-static FILE *
-ck_fdopen (fd, type)
-     int fd;
-     char const *type;
-{
-  FILE *r = fdopen (fd, type);
-  if (!r)
-    perror_fatal ("fdopen");
   return r;
 }
 
@@ -254,7 +249,7 @@ memchr (s, c, n)
 }
 #endif
 
-#ifndef HAVE_WAITPID
+#if HAVE_FORK && ! HAVE_WAITPID
 /* Emulate waitpid well enough for sdiff, which has at most two children.  */
 static pid_t
 waitpid (pid, stat_loc, options)
@@ -430,12 +425,16 @@ main (argc, argv)
      char *argv[];
 {
   int opt;
-  char *editor = getenv ("EDITOR");
-  char *differ = getenv ("DIFF");
+  char *editor;
+  char *differ;
 
+  initialize_main (&argc, &argv);
   prog = argv[0];
+
+  editor = getenv ("EDITOR");
   if (editor)
     edbin = editor;
+  differ = getenv ("DIFF");
   if (differ)
     diffbin = differ;
 
@@ -517,14 +516,21 @@ main (argc, argv)
     usage (2);
 
   if (! out_file)
-    /* easy case: diff does everything for us */
-    execdiff (suppress_common_flag, "-y", argv[optind], argv[optind + 1]);
+    {
+      /* easy case: diff does everything for us */
+      if (suppress_common_flag)
+	diffarg ("--suppress-common-lines");
+      diffarg ("-y");
+      diffarg ("--");
+      diffarg (argv[optind]);
+      diffarg (argv[optind + 1]);
+      diffarg (0);
+      execdiff ();
+    }
   else
     {
       FILE *left, *right, *out, *diffout;
-      int diff_fds[2];
       int interact_ok;
-      pid_t pid;
       struct line_filter lfilt;
       struct line_filter rfilt;
       struct line_filter diff_filt;
@@ -538,34 +544,75 @@ main (argc, argv)
       ;
       right = ck_fopen (expand_name (argv[optind + 1], rightdir, argv[optind]), "r");
       out = ck_fopen (out_file, "w");
-
-      if (pipe (diff_fds))
-	perror_fatal ("pipe");
+      
+      diffarg ("--sdiff-merge-assist");
+      diffarg ("--");
+      diffarg (argv[optind]);
+      diffarg (argv[optind + 1]);
+      diffarg (0);
 
       trapsigs ();
 
-      diffpid = pid = vfork ();
+#if ! HAVE_FORK
+      {
+	size_t cmdsize = 1;
+	char *p, *command;
+	char const *q;
+	int i;
 
-      if (pid == 0)
-	{
-	  signal (SIGINT, SIG_IGN);  /* in case user interrupts editor */
-	  signal (SIGPIPE, SIG_DFL);
+	for (i = 0;  diffargv[i];  i++)
+	  cmdsize += 4 * strlen (diffargv[i]) + 3;
+	command = p = xmalloc (cmdsize);
+	for (i = 0;  diffargv[i];  i++)
+	  {
+	    *p++ = ' ';
+	    *p++ = '\'';
+	    for (q = diffargv[i];  *q;  *p++ = *q++)
+	      if (*q == '\'')
+		{
+		  *p++ = '\'';
+		  *p++ = '\\';
+		  *p++ = '\'';
+		}
+	    *p++ = '\'';
+	    *p = '\0';
+	  }
+	diffout = popen (command, "r");
+	if (!diffout)
+	  perror_fatal (command);
+	free (command);
+      }
+#else /* HAVE_FORK */
+      {
+	int diff_fds[2];
 
-	  close (diff_fds[0]);
-	  if (diff_fds[1] != STDOUT_FILENO)
-	    {
-	      dup2 (diff_fds[1], STDOUT_FILENO);
-	      close (diff_fds[1]);
-	    }
+	if (pipe (diff_fds) != 0)
+	  perror_fatal ("pipe");
 
-	  execdiff (0, "--sdiff-merge-assist", argv[optind], argv[optind + 1]);
-	}
+	diffpid = vfork ();
+	if (diffpid < 0)
+	  perror_fatal ("fork failed");
+	if (!diffpid)
+	  {
+	    signal (SIGINT, SIG_IGN);  /* in case user interrupts editor */
+	    signal (SIGPIPE, SIG_DFL);
 
-      if (pid < 0)
-	perror_fatal ("fork failed");
+	    close (diff_fds[0]);
+	    if (diff_fds[1] != STDOUT_FILENO)
+	      {
+		dup2 (diff_fds[1], STDOUT_FILENO);
+		close (diff_fds[1]);
+	      }
 
-      close (diff_fds[1]);
-      diffout = ck_fdopen (diff_fds[0], "r");
+	    execdiff ();
+	  }
+
+	close (diff_fds[1]);
+	diffout = fdopen (diff_fds[0], "r");
+	if (!diffout)
+	  perror_fatal ("fdopen");
+      }
+#endif /* HAVE_FORK */
 
       lf_init (&diff_filt, diffout);
       lf_init (&lfilt, left);
@@ -573,7 +620,6 @@ main (argc, argv)
 
       interact_ok = interact (&diff_filt, &lfilt, &rfilt, out);
 
-      ck_fclose (diffout);
       ck_fclose (left);
       ck_fclose (right);
       ck_fclose (out);
@@ -581,12 +627,17 @@ main (argc, argv)
       {
 	int wstatus;
 
-	while (waitpid (pid, &wstatus, 0) < 0)
+#if ! HAVE_FORK
+	wstatus = pclose (diffout);
+#else
+	ck_fclose (diffout);
+	while (waitpid (diffpid, &wstatus, 0) < 0)
 	  if (errno == EINTR)
 	    checksigs ();
 	  else
 	    perror_fatal ("wait failed");
 	diffpid = 0;
+#endif
 
 	if (tmpmade)
 	  {
@@ -607,8 +658,6 @@ main (argc, argv)
     }
   return 0;			/* Fool -Wall . . . */
 }
-
-static char const **diffargv;
 
 static void
 diffarg (a)
@@ -633,18 +682,8 @@ diffarg (a)
 }
 
 static void
-execdiff (differences_only, option, file1, file2)
-     int differences_only;
-     char const *option, *file1, *file2;
+execdiff ()
 {
-  if (differences_only)
-    diffarg ("--suppress-common-lines");
-  diffarg (option);
-  diffarg ("--");
-  diffarg (file1);
-  diffarg (file2);
-  diffarg (0);
-
   execvp (diffbin, (char **) diffargv);
   write (STDERR_FILENO, diffbin, strlen (diffbin));
   write (STDERR_FILENO, ": not found\n", 12);
@@ -734,6 +773,15 @@ trapsigs ()
 	fatal ("signal error");
     }
 #endif /* ! HAVE_SIGACTION */
+
+#if !defined(SIGCHLD) && defined(SIGCLD)
+#define SIGCHLD SIGCLD
+#endif
+#ifdef SIGCHLD
+  /* System V fork+wait does not work if SIGCHLD is ignored.  */
+  signal (SIGCHLD, SIG_DFL);
+#endif
+
   sigs_trapped = 1;
 }
 
@@ -924,8 +972,14 @@ edit (left, lenl, right, lenr, outfile)
 	    ck_fflush (tmp);
 
 	    {
-	      pid_t pid;
 	      int wstatus;
+#if ! HAVE_FORK
+	      char *command = xmalloc (strlen (edbin) + strlen (tmpname) + 2);
+	      sprintf (command, "%s %s", edbin, tmpname);
+	      wstatus = system (command);
+	      free (command);
+#else /* HAVE_FORK */
+	      pid_t pid;
 
 	      ignore_SIGINT = 1;
 	      checksigs ();
@@ -956,8 +1010,9 @@ edit (left, lenl, right, lenr, outfile)
 		  perror_fatal ("wait failed");
 
 	      ignore_SIGINT = 0;
+#endif /* HAVE_FORK */
 
-	      if (! (WIFEXITED (wstatus) && WEXITSTATUS (wstatus) < 1))
+	      if (wstatus != 0)
 		fatal ("Subsidiary editor failed");
 	    }
 
@@ -1117,6 +1172,8 @@ private_tempnam (dir, pfx, dir_search, lenptr)
       register char const *d = getenv ("TMPDIR");
       if (d && !diraccess (d))
 	d = 0;
+      if (!d && (d = getenv ("TMP")) && !diraccess (d))
+	d = 0;
       if (!d && dir && diraccess (dir))
 	d = dir;
       if (!d && diraccess (tmpdir))
@@ -1136,8 +1193,8 @@ private_tempnam (dir, pfx, dir_search, lenptr)
   if (pfx && *pfx)
     {
       plen = strlen (pfx);
-      if (plen > 5)
-	plen = 5;
+      if (plen > 3)
+	plen = 3;
     }
   else
     plen = 0;
@@ -1170,7 +1227,7 @@ private_tempnam (dir, pfx, dir_search, lenptr)
   for (;;)
     {
       *info->s = letters[info->i];
-      sprintf (buf, "%s/%.*s%.5lu%.3s", dir, (int) plen, pfx,
+      sprintf (buf, "%s/%.*s%.5lu.%.3s", dir, (int) plen, pfx,
 	       (unsigned long) pid % 100000, info->buf);
       if (!exists (buf))
 	break;
