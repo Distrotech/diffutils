@@ -1658,7 +1658,7 @@ static VOID *
 xmalloc (size)
      size_t size;
 {
-  VOID *result = malloc (size ? size : 1);
+  VOID *result = (VOID *) malloc (size ? size : 1);
   if (!result)
     fatal ("virtual memory exhausted");
   return result;
@@ -1669,7 +1669,7 @@ xrealloc (ptr, size)
      VOID *ptr;
      size_t size;
 {
-  VOID *result = realloc (ptr, size ? size : 1);
+  VOID *result = (VOID *) realloc (ptr, size ? size : 1);
   if (!result)
     fatal ("virtual memory exhausted");
   return result;
