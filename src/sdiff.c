@@ -433,10 +433,9 @@ lf_snarf (lf, buffer, bufsize)
      char *buffer;
      size_t bufsize;
 {
-  char *start = lf->bufpos;
-
   for (;;)
     {
+      char *start = lf->bufpos;
       char *next = (char *) memchr (start, '\n', lf->buflim + 1 - start);
       size_t s = next - start;
       if (bufsize <= s)
@@ -452,7 +451,6 @@ lf_snarf (lf, buffer, bufsize)
 	return s ? 0 : EOF;
       buffer += s;
       bufsize -= s;
-      start = next;
     }
 }
 
