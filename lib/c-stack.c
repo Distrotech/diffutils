@@ -148,12 +148,14 @@ c_stack_die (int signo, siginfo_t *info, void *context)
   write (STDERR_FILENO, "\n", 1);
   if (! signo)
     _exit (exit_failure);
+#if HAVE_SIGINFO_T
   if (context && info && 0 <= info->si_code)
     {
       /* Re-raise the exception at the same address.  */
       char *addr = info->si_addr;
       *addr = 0;
     }
+#endif
   kill (getpid (), signo);
 }
 
