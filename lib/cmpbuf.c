@@ -22,9 +22,7 @@
 #endif
 
 #include <errno.h>
-#if !STDC_HEADERS
- extern int errno;
-#endif
+#include <limits.h>
 
 #include <signal.h>
 #ifndef SA_RESTART
@@ -41,9 +39,6 @@
 
 #if HAVE_INTTYPES_H
 # include <inttypes.h>
-#endif
-#ifndef PTRDIFF_MAX
-# define PTRDIFF_MAX TYPE_MAXIMUM (ptrdiff_t)
 #endif
 
 #include <sys/types.h>
@@ -66,9 +61,23 @@
 # define TYPE_MAXIMUM(t) ((t) (~ (t) 0 - TYPE_MINIMUM (t)))
 #endif
 
+#ifndef PTRDIFF_MAX
+# define PTRDIFF_MAX TYPE_MAXIMUM (ptrdiff_t)
+#endif
+#ifndef SIZE_MAX
+# define SIZE_MAX TYPE_MAXIMUM (size_t)
+#endif
+#ifndef SSIZE_MAX
+# define SSIZE_MAX TYPE_MAXIMUM (ssize_t)
+#endif
+
+#undef MIN
+#define MIN(a, b) ((a) <= (b) ? (a) : (b))
+
 /* Read NBYTES bytes from descriptor FD into BUF.
+   NBYTES must not be SIZE_MAX.
    Return the number of characters successfully read.
-   On error, return SIZE_MAX.
+   On error, return SIZE_MAX, setting errno.
    The number returned is always NBYTES unless end-of-file or error.  */
 
 size_t
@@ -76,22 +85,34 @@ block_read (int fd, char *buf, size_t nbytes)
 {
   char *bp = buf;
   char const *buflim = buf + nbytes;
+  size_t readlim = SSIZE_MAX;
 
   do
     {
-      ssize_t nread = read (fd, bp, buflim - bp);
+      size_t bytes_to_read = MIN (buflim - bp, readlim);
+      ssize_t nread = read (fd, bp, bytes_to_read);
       if (nread <= 0)
 	{
 	  if (nread == 0)
 	    break;
 
-	  /* Accommodate ancient AIX hosts that set errno to EINTR
-	     after uncaught SIGCONT.  See
-	     <news:1r77ojINN85n@ftp.UU.NET> (1993-04-22).  */
+	  /* Accommodate Tru64 5.1, which can't read more than INT_MAX
+	     bytes at a time.  They call that a 64-bit OS?  */
+	  if (errno == EINVAL && INT_MAX < bytes_to_read)
+	    {
+	      readlim = INT_MAX;
+	      continue;
+	    }
+
+	  /* This is needed for programs that have signal handlers on
+	     older hosts without SA_RESTART.  It also accommodates
+	     ancient AIX hosts that set errno to EINTR after uncaught
+	     SIGCONT.  See <news:1r77ojINN85n@ftp.UU.NET>
+	     (1993-04-22).  */
 	  if (! SA_RESTART && errno == EINTR)
 	    continue;
 
-	  return -1;
+	  return SIZE_MAX;
 	}
       bp += nread;
     }
