@@ -294,12 +294,21 @@ finish_output (void)
       if (waitpid (pr_pid, &wstatus, 0) < 0)
 	pfatal_with_name ("waitpid");
 #endif
-      if (! werrno && WIFEXITED (wstatus) && WEXITSTATUS (wstatus) == 127)
-	error (EXIT_TROUBLE, 0, _("subsidiary program `%s' not found"),
-	       pr_program);
-      if (wstatus != 0)
-	error (EXIT_TROUBLE, werrno, _("subsidiary program `%s' failed"),
-	       pr_program);
+      if (werrno | wstatus)
+	{
+	  char const *failure_msgid = N_("subsidiary program `%s' failed");
+	  if (! werrno && WIFEXITED (wstatus))
+	    switch (WEXITSTATUS (wstatus))
+	      {
+	      case 126:
+		failure_msgid = N_("subsidiary program `%s' not executable");
+		break;
+	      case 127:
+		failure_msgid = N_("subsidiary program `%s' not found");
+		break;
+	      }
+	  error (EXIT_TROUBLE, werrno, _(failure_msgid), pr_program);
+	}
     }
 
   outfile = 0;
@@ -400,7 +409,7 @@ lines_differ (char const *s1, char const *s2)
 		      if (c1 == ' ')
 			column++;
 		      else if (c1 == '\t')
-			column += TAB_WIDTH - column % TAB_WIDTH;
+			column += tabsize - column % tabsize;
 		      else
 			break;
 		    }
@@ -409,7 +418,7 @@ lines_differ (char const *s1, char const *s2)
 		      if (c2 == ' ')
 			column2++;
 		      else if (c2 == '\t')
-			column2 += TAB_WIDTH - column2 % TAB_WIDTH;
+			column2 += tabsize - column2 % tabsize;
 		      else
 			break;
 		    }
@@ -436,7 +445,7 @@ lines_differ (char const *s1, char const *s2)
       if (c1 == '\n')
 	return 0;
 
-      column += c1 == '\t' ? TAB_WIDTH - column % TAB_WIDTH : 1;
+      column += c1 == '\t' ? tabsize - column % tabsize : 1;
     }
 
   return 1;
@@ -542,14 +551,15 @@ output_1_line (char const *base, char const *limit, char const *flag_format,
       register FILE *out = outfile;
       register unsigned char c;
       register char const *t = base;
-      register unsigned int column = 0;
+      register size_t column = 0;
+      size_t tab_size = tabsize;
 
       while (t < limit)
 	switch ((c = *t++))
 	  {
 	  case '\t':
 	    {
-	      unsigned int spaces = TAB_WIDTH - column % TAB_WIDTH;
+	      size_t spaces = tab_size - column % tab_size;
 	      column += spaces;
 	      do
 		putc (' ', out);
@@ -655,6 +665,8 @@ analyze_hunk (struct change *hunk,
   size_t trivial_length = (int) ignore_blank_lines - 1;
     /* If 0, ignore zero-length lines;
        if SIZE_MAX, do not ignore lines just because of their length.  */
+  bool skip_leading_white_space =
+    (ignore_blank_lines && IGNORE_SPACE_CHANGE <= ignore_white_space);
 
   char const * const *linbuf0 = files[0].linbuf;  /* Help the compiler.  */
   char const * const *linbuf1 = files[1].linbuf;
@@ -675,8 +687,13 @@ analyze_hunk (struct change *hunk,
       for (i = next->line0; i <= l0 && trivial; i++)
 	{
 	  char const *line = linbuf0[i];
-	  size_t len = linbuf0[i + 1] - line - 1;
-	  if (len != trivial_length
+	  char const *newline = linbuf0[i + 1] - 1;
+	  size_t len = newline - line;
+	  char const *p = line;
+	  if (skip_leading_white_space)
+	    while (ISSPACE ((unsigned char) *p) && *p != '\n')
+	      p++;
+	  if (newline - p != trivial_length
 	      && (! ignore_regexp.fastmap
 		  || re_search (&ignore_regexp, line, len, 0, len, 0) < 0))
 	    trivial = 0;
@@ -685,8 +702,13 @@ analyze_hunk (struct change *hunk,
       for (i = next->line1; i <= l1 && trivial; i++)
 	{
 	  char const *line = linbuf1[i];
-	  size_t len = linbuf1[i + 1] - line - 1;
-	  if (len != trivial_length
+	  char const *newline = linbuf1[i + 1] - 1;
+	  size_t len = newline - line;
+	  char const *p = line;
+	  if (skip_leading_white_space)
+	    while (ISSPACE ((unsigned char) *p) && *p != '\n')
+	      p++;
+	  if (newline - p != trivial_length
 	      && (! ignore_regexp.fastmap
 		  || re_search (&ignore_regexp, line, len, 0, len, 0) < 0))
 	    trivial = 0;
