@@ -20,6 +20,7 @@ the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 
 #include "diff.h"
 
+int change_letter ();
 void print_normal_hunk ();
 void print_number_range ();
 struct change *find_change ();
