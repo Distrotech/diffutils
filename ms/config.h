@@ -92,8 +92,14 @@
 /* Define if you have the <fcntl.h> header file.  */
 #define HAVE_FCNTL_H 1
 
+/* Define if you have the <libintl.h> header file.  */
+#undef HAVE_LIBINTL_H
+
 /* Define if you have the <limits.h> header file.  */
 #define HAVE_LIMITS_H 1
+
+/* Define if you have the <locale.h> header file.  */
+#undef HAVE_LOCALE_H
 
 /* Define if you have the <ndir.h> header file.  */
 #undef HAVE_NDIR_H
@@ -118,6 +124,9 @@
 
 /* Define if you have the <unistd.h> header file.  */
 #define HAVE_UNISTD_H 1
+
+/* Define if you have the intl library (-lintl).  */
+#undef HAVE_LIBINTL
 
 
 /* PC specific definitions */
