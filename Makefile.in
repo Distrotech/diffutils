@@ -161,7 +161,7 @@ distclean: clean
 	rm -f Makefile config.cache config.h config.log config.status stamp-h
 
 realclean: distclean
-	rm -f TAGS *.info version.*
+	rm -f TAGS *.info messages.po version.*
 
 install: all installdirs
 	for p in $(PROGRAMS); do \
