@@ -434,7 +434,7 @@ Options:\n\
  *	    Create a diff3_block, reserving space as indicated by the ranges.
  *
  *	 3) Copy all of the pointers for file2 in.  At least for now,
- *	    do bcmp's between corresponding strings in the two diffs.
+ *	    do memcmp's between corresponding strings in the two diffs.
  *
  *	 4) Copy all of the pointers for file0 and 1 in.  Get what you
  *	    need from file2 (when there isn't a diff block, it's
@@ -445,8 +445,8 @@ Options:\n\
  *	    the common file in that diff) is the odd person out.  If you used
  *	    diff blocks from both sets, check to see if files 0 and 1 match:
  *
- *		Same number of lines?  If so, do a set of bcmp's (if a
- *	    bcmp matches; copy the pointer over; it'll be easier later
+ *		Same number of lines?  If so, do a set of memcmp's (if a
+ *	    memcmp matches; copy the pointer over; it'll be easier later
  *	    if you have to do any compares).  If they match, 0 & 1 are
  *	    the same.  If not, all three different.
  *
@@ -783,7 +783,7 @@ copy_stringlist (fromptrs, fromlengths, toptrs, tolengths, copynum)
   while (copynum--)
     {
       if (*t)
-	{ if (*fl != *tl || bcmp (*f, *t, *fl)) return 0; }
+	{ if (*fl != *tl || memcmp (*f, *t, *fl)) return 0; }
       else
 	{ *t = *f ; *tl = *fl; }
 
@@ -881,7 +881,7 @@ compare_line_list (list1, lengths1, list2, lengths2, nl)
 
   while (nl--)
     if (!*l1 || !*l2 || *lgths1 != *lgths2++
-	|| bcmp (*l1++, *l2++, *lgths1++))
+	|| memcmp (*l1++, *l2++, *lgths1++))
       return 0;
   return 1;
 }
