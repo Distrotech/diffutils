@@ -473,7 +473,7 @@ output_1_line (text, limit, flag_format, line_flag)
   else
     {
       register FILE *out = outfile;
-      register char c;
+      register unsigned char c;
       register char const *t = text;
       register unsigned column = 0;
 
@@ -505,7 +505,7 @@ output_1_line (text, limit, flag_format, line_flag)
 	    break;
 
 	  default:
-	    if (isgraph (c) || c == ' ')
+	    if (isprint (c))
 	      column++;
 	    putc (c, out);
 	    break;
@@ -669,7 +669,7 @@ xmalloc (size)
   if (size == 0)
     size = 1;
 
-  value = (VOID *) malloc (size);
+  value = malloc (size);
 
   if (!value)
     fatal ("virtual memory exhausted");
@@ -688,7 +688,7 @@ xrealloc (old, size)
   if (size == 0)
     size = 1;
 
-  value = (VOID *) realloc (old, size);
+  value = realloc (old, size);
 
   if (!value)
     fatal ("virtual memory exhausted");
