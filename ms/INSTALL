@@ -1,20 +1,17 @@
 This directory is for building GNU diffutils on PC operating systems.
 It currently assumes GCC with either DJGPP or emx.
 
-To build, check `pc/LIB/Makefile' (particularly its definitions for
-`prefix' and `exec_prefix') and then do the following:
+To build, do the following:
 
 	cd ..
-	make -f pc/LIB/Makefile OS-TARGET
+	make -f pc\makefile env=ENV
+	# edit makefile, particularly checking `prefix' and `exec_prefix'
+	make OS-TARGET
 
 where
 
-	LIB is either `djgpp' or `emx'.
-	OS is either `dos' or `os2'.
+	ENV is either `djgpp' or `emx',
+	OS is either `dos' or `os2', and
 	TARGET is either `debug' or `release'.
 
-If you change pc/djgpp/Makefile, check your changes by running
-`make -f pc/Makefile.add check-makefile ENV=djgpp'; likewise for emx.
-
-The makefiles have the minimal changes from `../Makefile'
-and may therefore contain targets that may not apply on your hosts.
+Makefiles may contain targets that do not apply on your host.
