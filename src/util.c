@@ -1,28 +1,27 @@
 /* Support routines for GNU DIFF.
-   Copyright (C) 1988, 1989, 1992, 1993, 1994 Free Software Foundation, Inc.
+   Copyright 1988, 89, 92, 93, 94, 95, 1997 Free Software Foundation, Inc.
 
-This file is part of GNU DIFF.
+   This file is part of GNU DIFF.
 
-GNU DIFF is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
-any later version.
+   GNU DIFF is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation; either version 2, or (at your option)
+   any later version.
 
-GNU DIFF is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+   GNU DIFF is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
 
-You should have received a copy of the GNU General Public License
-along with GNU DIFF; see the file COPYING.  If not, write to
-the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
+   You should have received a copy of the GNU General Public License
+   along with this program; see the file COPYING.
+   If not, write to the Free Software Foundation, 
+   59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
 
 #include "diff.h"
+#include "quotearg.h"
 
-#ifndef PR_PROGRAM
-#define PR_PROGRAM "/bin/pr"
-#endif
-static char const pr_program[] = PR_PROGRAM;
+char const pr_program[] = PR_PROGRAM;
 
 /* Queue up one-line messages to be printed at the end,
    when -l is specified.  Each message is recorded with a `struct msg'.  */
@@ -60,6 +59,7 @@ pfatal_with_name (text)
   int e = errno;
   print_message_queue ();
   error (2, e, "%s", text);
+  abort ();
 }
 
 /* Print an error message containing MSGID, then exit.  */
@@ -69,7 +69,8 @@ fatal (msgid)
      char const *msgid;
 {
   print_message_queue ();
-  error (2, 0, "%s", gettext (msgid));
+  error (2, 0, "%s", _(msgid));
+  abort ();
 }
 
 /* Like printf, except if -l in effect then save the message and print later.
@@ -117,7 +118,7 @@ message5 (format_msgid, arg1, arg2, arg3, arg4)
     {
       if (sdiff_help_sdiff)
 	putchar (' ');
-      printf (gettext (format_msgid), arg1, arg2, arg3, arg4);
+      printf (_(format_msgid), arg1, arg2, arg3, arg4);
     }
 }
 
@@ -128,14 +129,17 @@ print_message_queue ()
 {
   char const *arg[5];
   int i;
-  struct msg *m;
+  struct msg *m = msg_chain;
 
-  for (m = msg_chain; m; m = m->next)
+  while (m)
     {
+      struct msg *next = m->next;
       arg[0] = m->args;
       for (i = 0;  i < 4;  i++)
 	arg[i + 1] = arg[i] + strlen (arg[i]) + 1;
-      printf (gettext (arg[0]), arg[1], arg[2], arg[3], arg[4]);
+      printf (_(arg[0]), arg[1], arg[2], arg[3], arg[4]);
+      free (m);
+      m = next;
     }
 }
 
@@ -148,16 +152,16 @@ print_message_queue ()
 
 static char const *current_name0;
 static char const *current_name1;
-static int current_depth;
+static int currently_recursive;
 
 void
-setup_output (name0, name1, depth)
+setup_output (name0, name1, recursive)
      char const *name0, *name1;
-     int depth;
+     int recursive;
 {
   current_name0 = name0;
   current_name1 = name1;
-  current_depth = depth;
+  currently_recursive = recursive;
   outfile = 0;
 }
 
@@ -185,53 +189,60 @@ begin_output ()
 
   if (paginate_flag)
     {
+      if (fflush (stdout) != 0)
+	pfatal_with_name (_("write failed"));
+
       /* Make OUTFILE a pipe to a subsidiary `pr'.  */
-
+      {
 #if HAVE_FORK
-      int pipes[2];
+	int pipes[2];
+	char const *not_found = _(": not found\n");
 
-      if (pipe (pipes) != 0)
-	pfatal_with_name ("pipe");
+	if (pipe (pipes) != 0)
+	  pfatal_with_name ("pipe");
 
-      fflush (stdout);
+	pr_pid = vfork ();
+	if (pr_pid < 0)
+	  pfatal_with_name ("fork");
 
-      pr_pid = vfork ();
-      if (pr_pid < 0)
-	pfatal_with_name ("fork");
+	if (pr_pid == 0)
+	  {
+	    close (pipes[1]);
+	    if (pipes[0] != STDIN_FILENO)
+	      {
+		if (dup2 (pipes[0], STDIN_FILENO) < 0)
+		  pfatal_with_name ("dup2");
+		close (pipes[0]);
+	      }
 
-      if (pr_pid == 0)
-	{
-	  close (pipes[1]);
-	  if (pipes[0] != STDIN_FILENO)
-	    {
-	      if (dup2 (pipes[0], STDIN_FILENO) < 0)
-		pfatal_with_name ("dup2");
-	      close (pipes[0]);
-	    }
-
-	  execl (pr_program, pr_program, "-f", "-h", name, 0);
-	  pfatal_with_name (pr_program);
-	}
-      else
-	{
-	  close (pipes[0]);
-	  outfile = fdopen (pipes[1], "w");
-	  if (!outfile)
-	    pfatal_with_name ("fdopen");
-	}
+	    execl (pr_program, pr_program, "-f", "-h", name, 0);
+	    /* Avoid stdio, because the parent process's buffers are inherited.
+	       Also, avoid gettext since it may modify the parent buffers.  */
+	    write (STDERR_FILENO, pr_program, strlen (pr_program));
+	    write (STDERR_FILENO, not_found, strlen (not_found));
+	    _exit (1);
+	  }
+	else
+	  {
+	    close (pipes[0]);
+	    outfile = fdopen (pipes[1], "w");
+	    if (!outfile)
+	      pfatal_with_name ("fdopen");
+	  }
 #else /* ! HAVE_FORK */
-      char *command = xmalloc (sizeof (pr_program) - 1 + 7
-			       + system_quote_arg ((char *) 0, name) + 1);
-      char *p;
-      sprintf (command, "%s -f -h ", pr_program);
-      p = command + sizeof (pr_program) - 1 + 7;
-      p += system_quote_arg (p, name);
-      *p = 0;
-      outfile = popen (command, "w");
-      if (!outfile)
-	pfatal_with_name (command);
-      free (command);
+	char *command = xmalloc (sizeof (pr_program) - 1 + 7
+				 + quote_system_arg ((char *) 0, name) + 1);
+	char *p;
+	sprintf (command, "%s -f -h ", pr_program);
+	p = command + sizeof (pr_program) - 1 + 7;
+	p += quote_system_arg (p, name);
+	*p = 0;
+	outfile = popen (command, "w");
+	if (!outfile)
+	  pfatal_with_name (command);
+	free (command);
 #endif /* ! HAVE_FORK */
+      }
     }
   else
     {
@@ -242,7 +253,7 @@ begin_output ()
 
       /* If handling multiple files (because scanning a directory),
 	 print which files the following output is about.  */
-      if (current_depth > 0)
+      if (currently_recursive)
 	printf ("%s\n", name);
     }
 
@@ -279,7 +290,7 @@ finish_output ()
       wstatus = pclose (outfile);
 #else /* HAVE_FORK */
       if (fclose (outfile) != 0)
-	pfatal_with_name (gettext ("write failed"));
+	pfatal_with_name (_("write failed"));
       if (waitpid (pr_pid, &wstatus, 0) < 0)
 	pfatal_with_name ("waitpid");
 #endif /* HAVE_FORK */
@@ -481,7 +492,7 @@ print_1_line (line_flag, line)
   output_1_line (text, limit, flag_format, line_flag);
 
   if ((!line_flag || line_flag[0]) && limit[-1] != '\n')
-    fprintf (out, "\n\\ %s\n", gettext ("No newline at end of file"));
+    fprintf (out, "\n\\ %s\n", _("No newline at end of file"));
 }
 
 /* Output a line from TEXT up to LIMIT.  Without -t, output verbatim.
