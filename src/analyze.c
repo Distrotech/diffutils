@@ -1,7 +1,7 @@
 /* Analyze file differences for GNU DIFF.
 
-   Copyright (C) 1988, 1989, 1992, 1993, 1994, 1995, 1998, 2001 Free
-   Software Foundation, Inc.
+   Copyright (C) 1988, 1989, 1992, 1993, 1994, 1995, 1998, 2001, 2002
+   Free Software Foundation, Inc.
 
    This file is part of GNU DIFF.
 
@@ -853,7 +853,9 @@ diff_2_files (struct comparison *cmp)
 	  size_t buffer_size =
 	    buffer_lcm (sizeof (word),
 			buffer_lcm (STAT_BLOCKSIZE (cmp->file[0].stat),
-				    STAT_BLOCKSIZE (cmp->file[1].stat)));
+				    STAT_BLOCKSIZE (cmp->file[1].stat),
+				    PTRDIFF_MAX - 1),
+			PTRDIFF_MAX - 1);
 	  for (f = 0; f < 2; f++)
 	    cmp->file[f].buffer = xrealloc (cmp->file[f].buffer, buffer_size);
 
