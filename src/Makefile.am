@@ -35,9 +35,10 @@ diff_SOURCES = \
   analyze.c context.c diff.c diff.h dir.c ed.c ifdef.c io.c \
   normal.c side.c util.c
 
-MOSTLYCLEANFILES = paths.h
+MOSTLYCLEANFILES = paths.h paths.ht
 
 cmp.$(OBJEXT) diff3.$(OBJECT) diff.$(OBJECT) sdiff.$(OBJECT): paths.h
 paths.h:
 	(echo '#define DEFAULT_DIFF_PROGRAM "$(bindir)/'`echo diff|sed '$(transform)'`'"' && \
-	 echo '#define LOCALEDIR "$(localedir)"') >$@
+	 echo '#define LOCALEDIR "$(localedir)"') >$@t
+	mv $@t $@
