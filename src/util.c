@@ -198,7 +198,6 @@ begin_output (void)
       {
 #if HAVE_WORKING_FORK || HAVE_WORKING_VFORK
 	int pipes[2];
-	char const *not_found = _(": not found\n");
 
 	if (pipe (pipes) != 0)
 	  pfatal_with_name ("pipe");
@@ -218,11 +217,7 @@ begin_output (void)
 	      }
 
 	    execl (pr_program, pr_program, "-h", name, 0);
-	    /* Avoid stdio, because the parent process's buffers are inherited.
-	       Also, avoid gettext since it may modify the parent buffers.  */
-	    write (STDERR_FILENO, pr_program, strlen (pr_program));
-	    write (STDERR_FILENO, not_found, strlen (not_found));
-	    _exit (1);
+	    _exit (127);
 	  }
 	else
 	  {
@@ -239,6 +234,7 @@ begin_output (void)
 	p = command + sizeof pr_program - 1 + 7;
 	p += quote_system_arg (p, name);
 	*p = 0;
+	errno = 0;
 	outfile = popen (command, "w");
 	if (!outfile)
 	  pfatal_with_name (command);
@@ -286,18 +282,23 @@ finish_output (void)
   if (outfile != 0 && outfile != stdout)
     {
       int wstatus;
+      int werrno;
       if (ferror (outfile))
 	fatal ("write failed");
 #if ! (HAVE_WORKING_FORK || HAVE_WORKING_VFORK)
       wstatus = pclose (outfile);
+      if (wstatus == -1)
+	werrno = errno;
 #else
       if (fclose (outfile) != 0)
 	pfatal_with_name (_("write failed"));
       if (waitpid (pr_pid, &wstatus, 0) < 0)
 	pfatal_with_name ("waitpid");
 #endif
+      if (! werrno && WIFEXITED (wstatus) && WEXITSTATUS (wstatus) == 127)
+	error (2, 0, _("subsidiary program `%s' not found"), pr_program);
       if (wstatus != 0)
-	fatal ("subsidiary program failed");
+	error (2, werrno, _("subsidiary program `%s' failed"), pr_program);
     }
 
   outfile = 0;
