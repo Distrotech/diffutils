@@ -13,7 +13,7 @@ AC_UNISTD_H
 AC_PID_T
 AC_RETSIGTYPE
 AC_HAVE_FUNCS(dup2 memchr sigaction strerror waitpid)
-AC_HAVE_HEADERS(fcntl.h string.h sys/wait.h time.h)
+AC_HAVE_HEADERS(fcntl.h limits.h stdlib.h string.h sys/wait.h time.h)
 AC_VFORK
 AC_VPRINTF
 AC_ALLOCA
