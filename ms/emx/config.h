@@ -11,8 +11,6 @@
     setvbuf (stdout, NULL, _IOFBF, BUFSIZ); \
   }
 
-#define pid_t int
-
 /* diffutils doesn't need re_comp,
    but the shared library that diffutils builds
    is used by other (old-fashioned) programs that need re_comp.  */
