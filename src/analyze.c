@@ -36,6 +36,7 @@
 #include "diff.h"
 #include <cmpbuf.h>
 #include <error.h>
+#include <file-type.h>
 #include <regex.h>
 #include <xalloc.h>
 
