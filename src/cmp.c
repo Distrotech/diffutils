@@ -43,7 +43,7 @@ static void check_stdout PARAMS((void));
 static void usage PARAMS((void));
 
 /* Name under which this program was invoked.  */
-char const *program_name;
+char *program_name;
 
 /* Filenames of the compared files.  */
 static char const *file[2];
@@ -131,6 +131,7 @@ main (argc, argv)
 {
   int c, i, exit_status;
   struct stat stat_buf[2];
+  size_t alloc_size;
 
   initialize_main (&argc, &argv);
   program_name = argv[0];
@@ -253,10 +254,12 @@ main (argc, argv)
   buf_size = buffer_lcm (STAT_BLOCKSIZE (stat_buf[0]),
 			 STAT_BLOCKSIZE (stat_buf[1]));
 
-  /* Allocate buffers, with space for sentinels at the end.  */
+  /* Allocate word-aligned buffers, with space for sentinels at the end.  */
 
-  for (i = 0; i < 2; i++)
-    buffer[i] = xmalloc (buf_size + sizeof (word));
+  alloc_size = buf_size + 2 * sizeof (word) - 1;
+  alloc_size -= alloc_size % sizeof (word);
+  buffer[0] = xmalloc (2 * alloc_size);
+  buffer[1] = buffer[0] + alloc_size;
 
   exit_status = cmp ();
 
