@@ -141,8 +141,16 @@ __xstrtol (const char *s, char **ptr, int strtol_base,
   tmp = __strtol (s, p, strtol_base);
   if (errno != 0)
     return LONGINT_OVERFLOW;
+
   if (*p == s)
-    return LONGINT_INVALID;
+    {
+      /* If there is no number but there is a valid suffix, assume the
+	 number is 1.  The string is invalid otherwise.  */
+      if (valid_suffixes && **p && strchr (valid_suffixes, **p))
+	tmp = 1;
+      else
+	return LONGINT_INVALID;
+    }
 
   /* Let valid_suffixes == NULL mean `allow any suffix'.  */
   /* FIXME: update all callers except the ones that allow suffixes
@@ -169,27 +177,22 @@ __xstrtol (const char *s, char **ptr, int strtol_base,
 	{
 	  /* The ``valid suffix'' '0' is a special flag meaning that
 	     an optional second suffix is allowed, which can change
-	     the base.
-
-	     A suffix "B" (e.g. "100MB") stands for a power of 1000,
-	     whereas a suffix "iB" (e.g. "100MiB") stands for a power
-	     of 1024.  See IEC 60027-2, Second edition, 2000-11,
-	     Letter symbols to be used in electrical technology - Part
-	     2: Telecommunications and electronics
-	     <http://physics.nist.gov/cuu/Units/binary.html>.
-
-	     If no suffix (e.g. "100M"), assume power-of-1024.  */
+	     the base.  A suffix "B" (e.g. "100MB") stands for a power
+	     of 1000, whereas a suffix "iB" (e.g. "100MiB") stands for
+	     a power of 1024.  If no suffix (e.g. "100M"), assume
+	     power-of-1024.  */
 
 	  switch (p[0][1])
 	    {
 	    case 'i':
 	      if (p[0][2] == 'B')
-		suffixes = 3;
+		suffixes += 2;
 	      break;
 
 	    case 'B':
-	      suffixes = 2;
+	    case 'D': /* 'D' is obsolescent */
 	      base = 1000;
+	      suffixes++;
 	      break;
 	    }
 	}
@@ -240,11 +243,11 @@ __xstrtol (const char *s, char **ptr, int strtol_base,
 	  overflow = bkm_scale (&tmp, 2);
 	  break;
 
-	case 'Y': /* yotta */
+	case 'Y': /* yotta or 2**80 */
 	  overflow = bkm_scale_by_power (&tmp, base, 8);
 	  break;
 
-	case 'Z': /* zetta */
+	case 'Z': /* zetta or 2**70 */
 	  overflow = bkm_scale_by_power (&tmp, base, 7);
 	  break;
 
