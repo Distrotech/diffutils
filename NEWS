@@ -1,4 +1,4 @@
-User-visible changes in test version 2.7.10:
+User-visible changes in version 2.8:
 
 * cmp and diff now conform to POSIX 1003.1-2001 (IEEE Std 1003.1-2001)
   if the underlying system conforms to POSIX and if the _POSIX2_VERSION
@@ -42,7 +42,8 @@ User-visible changes in test version 2.7.10:
   are still not completely supported yet.
 * Some diagnostics have been reworded slightly for consistency.
   Also, `diff -D FOO' now outputs `/* ! FOO */' instead of `/* not FOO */'.
-* Manual pages are now distributed and installed.
+* The `patch' part of the manual now describes `patch' version 2.5.4.
+* Man pages are now distributed and installed.
 * There is support for DJGPP; see the 'ms' subdirectory and the files
   m4/dos.m4 and */setmode.*.
 
