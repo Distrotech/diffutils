@@ -1,4 +1,5 @@
-/* Copyright (C) 1991-1993, 1996-2000, 2001 Free Software Foundation, Inc.
+/* Copyright (C) 1991, 1992, 1993, 1996, 1997, 1998, 1999, 2000, 2001,
+   2002 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -1007,7 +1008,7 @@ EXT (INT opt, const CHAR *pattern, const CHAR *string, const CHAR *string_end,
   struct patternlist
   {
     struct patternlist *next;
-    CHAR str[0];
+    CHAR str[1];
   } *list = NULL;
   struct patternlist **lastp = &list;
   size_t pattern_len = STRLEN (pattern);
@@ -1052,10 +1053,10 @@ EXT (INT opt, const CHAR *pattern, const CHAR *string, const CHAR *string_end,
 	    struct patternlist *newp;					      \
 									      \
 	    if (opt == L('?') || opt == L('@'))				      \
-	      newp = alloca (sizeof (struct patternlist)		      \
+	      newp = alloca (offsetof (struct patternlist, str)		      \
 			     + (pattern_len * sizeof (CHAR)));		      \
 	    else							      \
-	      newp = alloca (sizeof (struct patternlist)		      \
+	      newp = alloca (offsetof (struct patternlist, str)		      \
 			     + ((p - startp + 1) * sizeof (CHAR)));	      \
 	    *((CHAR *) MEMPCPY (newp->str, startp, p - startp)) = L('\0');    \
 	    newp->next = NULL;						      \
