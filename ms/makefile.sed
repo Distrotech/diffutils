@@ -13,8 +13,8 @@ s|@INSTALL_PROGRAM@|xcopy|g
 s|@LDFLAGS@|-s|g
 s|@LIBOBJS@|pc.o|g
 s|@VPATH@|.|g
-s|@exec_prefix@|c:\\$(ENV)|g
-s|@prefix@|c:\\$(ENV)\\docs|g
+s|@exec_prefix@|c:\\$(env)|g
+s|@prefix@|c:\\$(env)\\docs|g
 s|@srcdir@|.|g
 s|@[0-9A-Z_a-z]*@||g
 
@@ -52,6 +52,10 @@ s|rm -f|del|g
 
 s|^clean:|& pc-clean|
 s|^config.h:|#&|
+
 /^dist:/,/^[	]*$/d
+/^Makefile:/,/^[	]*$/d
 
 s|[	 ]*$||
+
+$r pc/makefile
