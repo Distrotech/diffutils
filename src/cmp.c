@@ -69,6 +69,9 @@ static enum
     type_first_diff, type_all_diffs, type_status
   } comparison_type;
 
+/* Type used for fast comparison of several bytes at a time.  */
+typedef int word;
+
 /* If nonzero, print values of bytes quoted like cat -t does. */
 static int opt_print_chars;
 
@@ -80,6 +83,7 @@ static struct option const long_options[] =
   {"silent", 0, 0, 's'},
   {"quiet", 0, 0, 's'},
   {"version", 0, 0, 'v'},
+  {"help", 0, 0, 129},
   {0, 0, 0, 0}
 };
 
@@ -87,15 +91,17 @@ static void
 usage (reason)
      char const *reason;
 {
-  if (reason)
+  if (reason && *reason)
     fprintf (stderr, "%s: %s\n", program_name, reason);
+  fflush (stderr);
+  printf ("\
+Usage: %s [options] from-file [to-file]\n\
+Options:\n\
+	[-clsv] [-i bytes] [--help] [--ignore-initial=bytes]\n\
+	[--print-chars] [--quiet] [--silent] [--verbose] [--version]\n",
+	  program_name);
 
-  fprintf (stderr, "\
-Usage: %s [-clsv] [-i chars] [--ignore-initial=bytes]\n\
-	[--print-chars] [--quiet] [--silent] [--verbose] [--version]\n\
-	from-file [to-file]\n", program_name);
-
-  exit (2);
+  exit (reason ? 2 : 0);
 }
 
 int
@@ -110,7 +116,7 @@ main (argc, argv)
 
   /* Parse command line options.  */
 
-  while ((c = getopt_long (argc, argv, "ci:ls", long_options, 0))
+  while ((c = getopt_long (argc, argv, "ci:lsv", long_options, 0))
 	 != EOF)
     switch (c)
       {
@@ -125,7 +131,7 @@ main (argc, argv)
 	    /* Don't use `atol', because `off_t' may be longer than `long'.  */
 	    unsigned digit = *optarg++ - '0';
 	    if (9 < digit)
-	      usage ("--ignore-initial value must be a nonnegative integer");
+	      usage ("non-digit in --ignore-initial value");
 	    ignore_initial = 10 * ignore_initial + digit;
 	  }
 	break;
@@ -139,21 +145,24 @@ main (argc, argv)
 	break;
 
       case 'v':
-	fprintf (stderr, "GNU cmp version %s\n", version_string);
-	break;
+	printf ("GNU cmp version %s\n", version_string);
+	exit (0);
+
+      case 129:
+	usage (0);
 
       default:
-	usage (0);
+	usage ("");
       }
 
   if (optind == argc)
-    usage (0);
+    usage ("missing operand");
 
   file[0] = argv[optind++];
   file[1] = optind < argc ? argv[optind++] : "-";
 
   if (optind < argc)
-    usage ("extra arguments");
+    usage ("extra operands");
 
   for (i = 0; i < 2; i++)
     {
@@ -166,21 +175,16 @@ main (argc, argv)
       if (i && strcmp (file[0], file[1]) == 0)
 	exit (0);
 
-      if (strcmp (file[i1], "-") == 0)
-	file_desc[i1] = STDIN_FILENO;
-      else
+      file_desc[i1] = (strcmp (file[i1], "-") == 0
+		       ? STDIN_FILENO
+		       : open (file[i1], O_RDONLY));
+      if (file_desc[i1] < 0 || fstat (file_desc[i1], &stat_buf[i1]) != 0)
 	{
-	  file_desc[i1] = open (file[i1], O_RDONLY);
-	  if (file_desc[i1] < 0)
-	    {
-	      if (comparison_type == type_status)
-		exit (2);
-	      else
-		error (2, errno, "%s", file[i1]);
-	    }
+	  if (file_desc[i1] < 0 && comparison_type == type_status)
+	    exit (2);
+	  else
+	    error (2, errno, "%s", file[i1]);
 	}
-      if (fstat (file_desc[i1], &stat_buf[i1]) != 0)
-	error (2, errno, "%s", file[i1]);
     }
 
   /* If the files are links to the same inode and have the same file position,
@@ -227,7 +231,7 @@ main (argc, argv)
   /* Allocate buffers, with space for sentinels at the end.  */
 
   for (i = 0; i < 2; i++)
-    buffer[i] = xmalloc (buf_size + sizeof (long));
+    buffer[i] = xmalloc (buf_size + sizeof (word));
 
   exit_status = cmp ();
 
@@ -371,7 +375,7 @@ cmp ()
 /* Compare two blocks of memory P0 and P1 until they differ,
    and count the number of '\n' occurrences in the common
    part of P0 and P1.
-   Assumes that P0 and P1 are aligned at long addresses!
+   Assumes that P0 and P1 are aligned at word addresses!
    If the blocks are not guaranteed to be different, put sentinels at the ends
    of the blocks before calling this function.
 
@@ -383,27 +387,27 @@ block_compare_and_count (p0, p1, count)
      char const *p0, *p1;
      long *count;
 {
-  long l;		/* One word from first buffer. */
-  long const *l0, *l1;	/* Pointers into each buffer. */
+  word l;		/* One word from first buffer. */
+  word const *l0, *l1;	/* Pointers into each buffer. */
   char const *c0, *c1;	/* Pointers for finding exact address. */
   long cnt = 0;		/* Number of '\n' occurrences. */
-  long nnnn;		/* Newline, sizeof (long) times.  */
+  word nnnn;		/* Newline, sizeof (word) times.  */
   int i;
 
-  l0 = (long const *) p0;
-  l1 = (long const *) p1;
+  l0 = (word const *) p0;
+  l1 = (word const *) p1;
 
   nnnn = 0;
-  for (i = 0; i < sizeof (long); i++)
+  for (i = 0; i < sizeof (word); i++)
     nnnn = (nnnn << CHAR_BIT) | '\n';
 
-  /* Find the rough position of the first difference by reading long ints,
+  /* Find the rough position of the first difference by reading words,
      not bytes.  */
 
   while ((l = *l0++) == *l1++)
     {
       l ^= nnnn;
-      for (i = 0; i < sizeof (long); i++)
+      for (i = 0; i < sizeof (word); i++)
 	{
 	  cnt += ! (unsigned char) l;
 	  l >>= CHAR_BIT;
@@ -426,7 +430,7 @@ block_compare_and_count (p0, p1, count)
 }
 
 /* Compare two blocks of memory P0 and P1 until they differ.
-   Assumes that P0 and P1 are aligned at long addresses!
+   Assumes that P0 and P1 are aligned at word addresses!
    If the blocks are not guaranteed to be different, put sentinels at the ends
    of the blocks before calling this function.
 
@@ -436,13 +440,13 @@ static size_t
 block_compare (p0, p1)
      char const *p0, *p1;
 {
-  long const *l0, *l1;
+  word const *l0, *l1;
   char const *c0, *c1;
 
-  l0 = (long const *) p0;
-  l1 = (long const *) p1;
+  l0 = (word const *) p0;
+  l1 = (word const *) p1;
 
-  /* Find the rough position of the first difference by reading long ints,
+  /* Find the rough position of the first difference by reading words,
      not bytes.  */
 
   while (*l0++ == *l1++)
