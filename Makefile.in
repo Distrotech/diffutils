@@ -1,4 +1,3 @@
-# @configure_input@
 # Makefile for GNU DIFF
 # Copyright (C) 1988,1989,1991,1992,1993,1994 Free Software Foundation, Inc.
 #
@@ -35,6 +34,7 @@ DEFS = @DEFS@
 CFLAGS = @CFLAGS@
 LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
+LIBOBJS = @LIBOBJS@
 
 # Some System V machines do not come with libPW.
 # If this is true for you, use the GNU alloca.o here.
@@ -42,13 +42,16 @@ ALLOCA = @ALLOCA@
 
 prefix = @prefix@
 exec_prefix = @exec_prefix@
-
-# Prefix for each installed program, normally empty or `g'.
-binprefix =
+edit_program_name = sed '@program_transform_name@'
 
 bindir = $(exec_prefix)/bin
 
 infodir = $(prefix)/info
+
+DEFAULT_EDITOR_PROGRAM = ed
+DIFF_PROGRAM = $(bindir)/`echo diff | $(edit_program_name)`
+NULL_DEVICE = /dev/null
+PR_PROGRAM = /bin/pr
 
 #### End of system configuration section. ####
 
@@ -61,11 +64,13 @@ srcs=diff.c analyze.c cmpbuf.c cmpbuf.h io.c context.c ed.c normal.c ifdef.c \
 	diff3.c sdiff.c cmp.c error.c xmalloc.c getopt.c getopt1.c getopt.h \
 	fnmatch.c fnmatch.h alloca.c
 distfiles = $(srcs) README INSTALL NEWS diagmeet.note Makefile.in \
-	config.hin configure configure.in COPYING ChangeLog \
+	stamp-h.in config.hin configure configure.in COPYING ChangeLog \
 	diff.texi diff.info* texinfo.tex \
 	install-sh mkinstalldirs
 
-all: diff diff3 sdiff cmp info
+PROGRAMS = cmp diff diff3 sdiff
+
+all: $(PROGRAMS) info
 
 COMPILE = $(CC) -c $(CPPFLAGS) $(DEFS) -I. -I$(srcdir) $(CFLAGS)
 
@@ -86,7 +91,7 @@ sdiff_o = sdiff.o getopt.o getopt1.o version.o $(LIBOBJS)
 sdiff: $(sdiff_o)
 	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $(sdiff_o) $(LIBS)
 
-cmp_o = cmp.o cmpbuf.o error.o getopt.o getopt1.o xmalloc.o version.o
+cmp_o = cmp.o cmpbuf.o error.o getopt.o getopt1.o xmalloc.o version.o $(LIBOBJS)
 cmp: $(cmp_o)
 	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $(cmp_o) $(LIBS)
 
@@ -105,54 +110,78 @@ cmp.o diff.o diff3.o sdiff.o getopt.o getopt1.o: getopt.h
 diff.o fnmatch.o: fnmatch.h
 analyze.o cmpbuf.o cmp.o: cmpbuf.h
 
+cmp.o: cmp.c
+	$(COMPILE) -DNULL_DEVICE=\"$(NULL_DEVICE)\" $(srcdir)/cmp.c
+
 diff3.o: diff3.c
-	$(COMPILE) -DDIFF_PROGRAM=\"$(bindir)/$(binprefix)diff\" $(srcdir)/diff3.c
+	$(COMPILE) -DDIFF_PROGRAM=\"$(DIFF_PROGRAM)\" $(srcdir)/diff3.c
 
 sdiff.o: sdiff.c
-	$(COMPILE) -DDIFF_PROGRAM=\"$(bindir)/$(binprefix)diff\" $(srcdir)/sdiff.c
+	$(COMPILE) -DDEFAULT_EDITOR_PROGRAM=\"$(DEFAULT_EDITOR_PROGRAM)\" \
+		-DDIFF_PROGRAM=\"$(DIFF_PROGRAM)\" $(srcdir)/sdiff.c
+
+util.o: util.c
+	$(COMPILE) -DPR_PROGRAM=\"$(PR_PROGRAM)\" $(srcdir)/util.c
 
 TAGS: $(srcs)
 	etags $(srcs)
 
 clean:
-	rm -f *.o diff diff3 sdiff cmp core
+	rm -f *.o $(PROGRAMS) core
 	rm -f *.aux *.cp *.cps *.dvi *.fn *.fns *.ky *.kys *.log
 	rm -f *.pg *.pgs *.toc *.tp *.tps *.vr *.vrs
 
 mostlyclean: clean
 
 distclean: clean
-	rm -f Makefile config.cache config.h config.log config.status
+	rm -f Makefile config.cache config.h config.log config.status stamp-h
 
 realclean: distclean
 	rm -f TAGS *.info*
 
 install: all installdirs
-	for p in diff diff3 sdiff cmp; do \
-		$(INSTALL_PROGRAM) $$p $(bindir)/$(binprefix)$$p; done
-	cd $(srcdir) && for f in diff.info*; do \
-		$(INSTALL_DATA) $$f $(infodir)/$$f; done
+	for p in $(PROGRAMS); do \
+	  $(INSTALL_PROGRAM) $$p $(bindir)/`echo $$p | $(edit_program_name)`; \
+	done
+	{ test -f diff.info || cd $(srcdir); } && \
+	for f in diff.info*; do \
+	  $(INSTALL_DATA) $$f $(infodir)/$$f; \
+	done
 
 installdirs:
 	$(SHELL) ${srcdir}/mkinstalldirs $(bindir) $(infodir)
 
+# We need more tests.
+check:
+	./cmp cmp cmp
+	./diff diff diff
+	./diff3 diff3 diff3 diff3
+	./sdiff sdiff sdiff
+
 uninstall:
-	for p in diff diff3 sdiff cmp; do \
-		rm -f $(bindir)/$(binprefix)$$p; done
+	for p in $(PROGRAMS); do \
+	  rm -f $(bindir)/`echo $$p | $(edit_program_name)`; \
+	done
 	rm -f $(infodir)/diff.info*
 
 configure: configure.in
 	cd $(srcdir) && autoconf
-config.hin: configure.in
-	rm -f $(srcdir)/config.hin
+
+# autoheader might not change config.hin.
+config.hin: stamp-h.in
+stamp-h.in: configure.in
 	cd $(srcdir) && autoheader
+	date > $(srcdir)/stamp-h.in
+
 config.status: configure
 	./config.status --recheck
-config.h: config.hin config.status
-	rm -f $@
-	CONFIG_FILES= ./config.status
+
+# config.status might not change config.h, but it changes stamp-h.
+config.h: stamp-h
+stamp-h: config.hin config.status
+	./config.status
 Makefile: Makefile.in config.status
-	CONFIG_HEADERS= ./config.status
+	./config.status
 
 dist: $(distfiles)
 	echo diffutils-`sed -e '/version_string/!d' -e 's/[^0-9]*\([0-9a-z.]*\).*/\1/' -e q version.c` > .fname
