@@ -1,5 +1,7 @@
 /* Output routines for ed-script format.
-   Copyright 1988, 89, 91, 92, 93, 95, 1998 Free Software Foundation, Inc.
+
+   Copyright (C) 1988, 1989, 1991, 1992, 1993, 1995, 1998, 2001 Free
+   Software Foundation, Inc.
 
    This file is part of GNU DIFF.
 
@@ -15,20 +17,19 @@
 
    You should have received a copy of the GNU General Public License
    along with this program; see the file COPYING.
-   If not, write to the Free Software Foundation, 
+   If not, write to the Free Software Foundation,
    59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
 
 #include "diff.h"
 
-static void print_ed_hunk PARAMS((struct change *));
-static void print_rcs_hunk PARAMS((struct change *));
-static void pr_forward_ed_hunk PARAMS((struct change *));
+static void print_ed_hunk (struct change *);
+static void print_rcs_hunk (struct change *);
+static void pr_forward_ed_hunk (struct change *);
 
 /* Print our script as ed commands.  */
 
 void
-print_ed_script (script)
-    struct change *script;
+print_ed_script (struct change *script)
 {
   print_script (script, find_reverse_change, print_ed_hunk);
 }
@@ -36,63 +37,45 @@ print_ed_script (script)
 /* Print a hunk of an ed diff */
 
 static void
-print_ed_hunk (hunk)
-     struct change *hunk; 
+print_ed_hunk (struct change *hunk)
 {
-  int f0, l0, f1, l1;
-  int deletes, inserts;
+  lin f0, l0, f1, l1;
+  enum changes changes;
 
 #ifdef DEBUG
   debug_script (hunk);
 #endif
 
   /* Determine range of line numbers involved in each file.  */
-  analyze_hunk (hunk, &f0, &l0, &f1, &l1, &deletes, &inserts);
-  if (!deletes && !inserts)
+  changes = analyze_hunk (hunk, &f0, &l0, &f1, &l1);
+  if (!changes)
     return;
 
   begin_output ();
 
   /* Print out the line number header for this hunk */
   print_number_range (',', &files[0], f0, l0);
-  fprintf (outfile, "%c\n", change_letter (inserts, deletes));
+  fprintf (outfile, "%c\n", change_letter[changes]);
 
   /* Print new/changed lines from second file, if needed */
-  if (inserts)
+  if (changes != OLD)
     {
-      int i;
-      int inserting = 1;
+      lin i;
       for (i = f1; i <= l1; i++)
 	{
-	  /* Resume the insert, if we stopped.  */
-	  if (! inserting)
-	    fprintf (outfile, "%da\n",
-		     i - f1 + translate_line_number (&files[0], f0) - 1);
-	  inserting = 1;
-
-	  /* If the file's line is just a dot, it would confuse `ed'.
-	     So output it with a double dot, and set the flag LEADING_DOT
-	     so that we will output another ed-command later
-	     to change the double dot into a single dot.  */
-
-	  if (files[1].linbuf[i][0] == '.'
-	      && files[1].linbuf[i][1] == '\n')
+	  if (files[1].linbuf[i][0] == '.' && files[1].linbuf[i][1] == '\n')
 	    {
-	      fprintf (outfile, "..\n");
-	      fprintf (outfile, ".\n");
-	      /* Now change that double dot to the desired single dot.  */
-	      fprintf (outfile, "%ds/^\\.\\././\n",
-		       i - f1 + translate_line_number (&files[0], f0));
-	      inserting = 0;
+	      /* The file's line is just a dot, and it would exit
+		 insert mode.  Precede the dot with another dot, exit
+		 insert mode, remove the extra dot, and then resume
+		 insert mode.  */
+	      fprintf (outfile, "..\n.\ns/.//\na\n");
 	    }
 	  else
-	    /* Line is not `.', so output it unmodified.  */
 	    print_1_line ("", &files[1].linbuf[i]);
 	}
 
-      /* End insert mode, if we are still in it.  */
-      if (inserting)
-	fprintf (outfile, ".\n");
+      fprintf (outfile, ".\n");
     }
 }
 
@@ -101,34 +84,30 @@ print_ed_hunk (hunk)
    which means that the commands are not truly useful with ed.  */
 
 void
-pr_forward_ed_script (script)
-     struct change *script;
+pr_forward_ed_script (struct change *script)
 {
   print_script (script, find_change, pr_forward_ed_hunk);
 }
 
 static void
-pr_forward_ed_hunk (hunk)
-     struct change *hunk;
+pr_forward_ed_hunk (struct change *hunk)
 {
-  int i;
-  int f0, l0, f1, l1;
-  int deletes, inserts;
+  lin i, f0, l0, f1, l1;
 
   /* Determine range of line numbers involved in each file.  */
-  analyze_hunk (hunk, &f0, &l0, &f1, &l1, &deletes, &inserts);
-  if (!deletes && !inserts)
+  enum changes changes = analyze_hunk (hunk, &f0, &l0, &f1, &l1);
+  if (!changes)
     return;
 
   begin_output ();
 
-  fprintf (outfile, "%c", change_letter (inserts, deletes));
+  fprintf (outfile, "%c", change_letter[changes]);
   print_number_range (' ', files, f0, l0);
   fprintf (outfile, "\n");
 
   /* If deletion only, print just the number range.  */
 
-  if (!inserts)
+  if (changes == OLD)
     return;
 
   /* For insertion (with or without deletion), print the number range
@@ -145,8 +124,7 @@ pr_forward_ed_hunk (hunk)
    This format is used for RCS.  */
 
 void
-print_rcs_script (script)
-     struct change *script;
+print_rcs_script (struct change *script)
 {
   print_script (script, find_change, print_rcs_hunk);
 }
@@ -154,42 +132,35 @@ print_rcs_script (script)
 /* Print a hunk of an RCS diff */
 
 static void
-print_rcs_hunk (hunk)
-     struct change *hunk;
+print_rcs_hunk (struct change *hunk)
 {
-  int i;
-  int f0, l0, f1, l1;
-  int deletes, inserts;
-  int tf0, tl0, tf1, tl1;
+  lin i, f0, l0, f1, l1;
+  long tf0, tl0, tf1, tl1;
 
   /* Determine range of line numbers involved in each file.  */
-  analyze_hunk (hunk, &f0, &l0, &f1, &l1, &deletes, &inserts);
-  if (!deletes && !inserts)
+  enum changes changes = analyze_hunk (hunk, &f0, &l0, &f1, &l1);
+  if (!changes)
     return;
 
   begin_output ();
 
   translate_range (&files[0], f0, l0, &tf0, &tl0);
 
-  if (deletes)
+  if (changes & OLD)
     {
       fprintf (outfile, "d");
       /* For deletion, print just the starting line number from file 0
 	 and the number of lines deleted.  */
-      fprintf (outfile, "%d %d\n",
-	       tf0,
-	       (tl0 >= tf0 ? tl0 - tf0 + 1 : 1));	     
+      fprintf (outfile, "%ld %ld\n", tf0, tf0 <= tl0 ? tl0 - tf0 + 1 : 1);
     }
 
-  if (inserts)
+  if (changes & NEW)
     {
       fprintf (outfile, "a");
 
       /* Take last-line-number from file 0 and # lines from file 1.  */
       translate_range (&files[1], f1, l1, &tf1, &tl1);
-      fprintf (outfile, "%d %d\n",
-	       tl0,
-	       (tl1 >= tf1 ? tl1 - tf1 + 1 : 1));	     
+      fprintf (outfile, "%ld %ld\n", tl0, tf1 <= tl1 ? tl1 - tf1 + 1 : 1);
 
       /* Print the inserted lines.  */
       for (i = f1; i <= l1; i++)
