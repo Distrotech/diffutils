@@ -41,8 +41,6 @@ print_sdiff_script (script)
   print_script (script, find_change, print_sdiff_hunk);
 
   print_sdiff_common_lines (files[0].valid_lines, files[1].valid_lines);
-  if (sdiff_help_sdiff)
-    fputs ("q\n", outfile);
 }
 
 /* Tab from column FROM to column TO, where FROM <= TO.  Yield TO.  */
@@ -168,21 +166,37 @@ print_1sdiff_line (left, sep, right)
 {
   FILE *out = outfile;
   unsigned hw = sdiff_half_width, c2o = sdiff_column2_offset;
-  unsigned col = left ? print_half_line (left, 0, hw) : 0;
+  unsigned col = 0;
+  int put_newline = 0;
+  
+  if (left)
+    {
+      if (left[1][-1] == '\n')
+	put_newline = 1;
+      col = print_half_line (left, 0, hw);
+    }
 
   if (sep != ' ')
     {
       col = tab_from_to (col, (hw + c2o - 1) / 2) + 1;
+      if (sep == '|' && put_newline != (right[1][-1] == '\n'))
+	sep = put_newline ? '/' : '\\';
       putc (sep, out);
     }
 
-  if (right && **right != '\n')
+  if (right)
     {
-      col = tab_from_to (col, c2o);
-      print_half_line (right, col, hw);
+      if (right[1][-1] == '\n')
+	put_newline = 1;
+      if (**right != '\n')
+	{
+	  col = tab_from_to (col, c2o);
+	  print_half_line (right, col, hw);
+	}
     }
 
-  putc ('\n', out);
+  if (put_newline)
+    putc ('\n', out);
 }
 
 /* Print lines common to both files in side-by-side format.  */

@@ -65,8 +65,8 @@ enum output_style {
 /* True for output styles that are robust,
    i.e. can handle a file that ends in a non-newline.  */
 #define ROBUST_OUTPUT_STYLE(S) \
- ((S) == OUTPUT_CONTEXT || (S) == OUTPUT_UNIFIED || (S) == OUTPUT_RCS \
-  || (S) == OUTPUT_NORMAL)
+ ((S) == OUTPUT_NORMAL || (S) == OUTPUT_CONTEXT || (S) == OUTPUT_UNIFIED \
+  || (S) == OUTPUT_RCS || (S) == OUTPUT_SDIFF)
 
 EXTERN enum output_style output_style;
 
@@ -147,8 +147,8 @@ EXTERN int	unidirectional_new_file_flag;
 /* Pipe each file's output through pr (-l).  */
 EXTERN int	paginate_flag;
 
-/* String to use for #ifdef (-D).  */
-EXTERN char *	ifdef_string;
+/* Formats to use for --ifdef (-D).  */
+EXTERN const char *ifndef_format, *ifdef_format, *ifnelse_format;
 
 /* If using OUTPUT_SDIFF print extra information to help the sdiff filter. */
 EXTERN int sdiff_help_sdiff;  

@@ -215,6 +215,21 @@ ck_fflush (f)
     perror_fatal ("output error");
 }
 
+#if !HAVE_MEMCHR
+char *
+memchr (s, c, n)
+     char *s;
+     int c;
+     size_t n;
+{
+  unsigned char *p = (unsigned char *) s, *lim = p + n;
+  for (;  p < lim;  p++)
+    if (*p == c)
+      return (char *) p;
+  return 0;
+}
+#endif
+
 #ifndef HAVE_WAITPID
 /* Emulate waitpid well enough for sdiff, which has at most two children.  */
 static pid_t
@@ -312,8 +327,8 @@ lf_copy (lf, lines, outfile)
 
   while (lines)
     {
-      lf->bufpos = index (lf->bufpos, '\n');
-      if (lf->bufpos == lf->buflim)
+      lf->bufpos = memchr (lf->bufpos, '\n', lf->buflim - lf->bufpos);
+      if (! lf->bufpos)
 	{
 	  ck_fwrite (start, lf->buflim - start, outfile);
 	  if (! lf_refill (lf))
@@ -338,8 +353,8 @@ lf_skip (lf, lines)
 {
   while (lines)
     {
-      lf->bufpos = index (lf->bufpos, '\n');
-      if (lf->bufpos == lf->buflim)
+      lf->bufpos = memchr (lf->bufpos, '\n', lf->buflim - lf->bufpos);
+      if (! lf->bufpos)
 	{
 	  if (! lf_refill (lf))
 	    break;
@@ -352,7 +367,7 @@ lf_skip (lf, lines)
     }
 }
 
-/* Snarf a line into a buffer.  */
+/* Snarf a line into a buffer.  Return EOF if EOF, 0 if error, 1 if OK.  */
 static int
 lf_snarf (lf, buffer, bufsize)
      struct line_filter *lf;
@@ -363,19 +378,19 @@ lf_snarf (lf, buffer, bufsize)
 
   for (;;)
     {
-      char *next = index (start, '\n');
+      char *next = memchr (start, '\n', lf->buflim + 1 - start);
       size_t s = next - start;
       if (bufsize <= s)
-	return -1;
+	return 0;
       bcopy (start, buffer, s);
       if (next < lf->buflim)
 	{
 	  buffer[s] = 0;
 	  lf->bufpos = next + 1;
-	  return 0;
+	  return 1;
 	}
       if (! lf_refill (lf))
-	return -1;
+	return s ? 0 : EOF;
       buffer += s;
       bufsize -= s;
       start = next;
@@ -870,22 +885,25 @@ interact (diff, left, right, outfile)
   for (;;)
     {
       char diff_help[256];
+      int snarfed = lf_snarf (diff, diff_help, sizeof (diff_help));
 
-      if (lf_snarf (diff, diff_help, sizeof (diff_help)) != 0)
-	return 0;
+      if (snarfed <= 0)
+	return snarfed;
 
       switch (diff_help[0])
 	{
 	case ' ':
 	  puts (diff_help + 1);
 	  break;
-	case 'q':
-	  return 1;
 	case 'i':
 	  {
-	    int lenl = atoi (diff_help + 1);
-	    int lenr = atoi (index (diff_help, ',') + 1);
-	    int lenmax = max (lenl, lenr);
+	    int lenl = atoi (diff_help + 1), lenr, lenmax;
+	    char *p = index (diff_help, ',');
+
+	    if (!p)
+	      fatal (diff_help);
+	    lenr = atoi (p + 1);
+	    lenmax = max (lenl, lenr);
 
 	    if (suppress_common_flag)
 	      lf_skip (diff, lenmax);
@@ -898,8 +916,12 @@ interact (diff, left, right, outfile)
 	  }
 	case 'c':
 	  {
-	    int lenl = atoi (diff_help + 1);
-	    int lenr = atoi (index (diff_help, ',') + 1);
+	    int lenl = atoi (diff_help + 1), lenr;
+	    char *p = index (diff_help, ',');
+
+	    if (!p)
+	      fatal (diff_help);
+	    lenr = atoi (p + 1);
 	    lf_copy (diff, max (lenl, lenr), stdout);
 	    if (! edit (left, lenl, right, lenr, outfile))
 	      return 0;
