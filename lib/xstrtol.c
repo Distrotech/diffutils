@@ -169,19 +169,32 @@ __xstrtol (const char *s, char **ptr, int strtol_base,
 	{
 	  /* The ``valid suffix'' '0' is a special flag meaning that
 	     an optional second suffix is allowed, which can change
-	     the base, e.g. "100MD" for 100 megabytes decimal.  */
+	     the base.
+
+	     A suffix "B" (e.g. "100MB") stands for a power of 1000,
+	     whereas a suffix "iB" (e.g. "100MiB") stands for a power
+	     of 1024.  See IEC 60027-2, Second edition, 2000-11,
+	     Letter symbols to be used in electrical technology - Part
+	     2: Telecommunications and electronics
+	     <http://physics.nist.gov/cuu/Units/binary.html>.
+
+	     If no suffix (e.g. "100M"), assume power-of-1024.  */
 
 	  switch (p[0][1])
 	    {
-	    case 'B':
+	    case 'i':
 	      suffixes++;
 	      break;
 
-	    case 'D':
+	    case '\0':
+	      break;
+
+	    default:
 	      base = 1000;
-	      suffixes++;
 	      break;
 	    }
+
+	  suffixes += (p[0][suffixes] == 'B');
 	}
 
       switch (**p)
@@ -198,29 +211,30 @@ __xstrtol (const char *s, char **ptr, int strtol_base,
 	  overflow = 0;
 	  break;
 
-	case 'E': /* Exa */
+	case 'E': /* Exa or exbi */
 	  overflow = bkm_scale_by_power (&tmp, base, 6);
 	  break;
 
-	case 'G': /* Giga */
+	case 'G': /* Giga or gibi */
 	case 'g': /* 'g' is undocumented; for compatibility only */
 	  overflow = bkm_scale_by_power (&tmp, base, 3);
 	  break;
 
 	case 'k': /* kilo */
+	case 'K': /* kibi */
 	  overflow = bkm_scale_by_power (&tmp, base, 1);
 	  break;
 
-	case 'M': /* Mega */
+	case 'M': /* Mega or mebi */
 	case 'm': /* 'm' is undocumented; for compatibility only */
 	  overflow = bkm_scale_by_power (&tmp, base, 2);
 	  break;
 
-	case 'P': /* Peta */
+	case 'P': /* Peta or pebi */
 	  overflow = bkm_scale_by_power (&tmp, base, 5);
 	  break;
 
-	case 'T': /* Tera */
+	case 'T': /* Tera or tebi */
 	case 't': /* 't' is undocumented; for compatibility only */
 	  overflow = bkm_scale_by_power (&tmp, base, 4);
 	  break;
