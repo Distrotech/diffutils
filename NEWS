@@ -1,17 +1,31 @@
-User-visible changes in test version 2.7.4:
+User-visible changes in test version 2.7.5:
+
+* cmp now outputs "byte" rather than "char" outside the POSIX locale.
+* cmp -l's index column width now autoadjusts to fit larger (or smaller) files.
+* Later, conflicting diff options now silently override earlier ones.
+  For example, `diff -c -u' is now equivalent to `diff -u'.
+* diff file name exclusion is now case insensitive when file name case
+  is being ignored.
+* New diff option --no-ignore-file-name-case, to revert to default behavior.
+* The summary output of diff now notes whether regular files are executable.
+* There is limited support for some Microsoft operating systems; see
+  the 'ms' subdirectory and the files m4/dos.m4 and */setmode.*.
+  We don't build or test these configurations ourselves, and there are
+  several evolving development environments, so it's likely that this
+  won't work for you without some hacking.
+
+
+Other user-visible changes since version 2.7:
 
 * cmp now supports trailing operands SKIP1 and SKIP2, a la BSD cmp.
 * cmp -i or --ignore-initial now accepts SKIP1:SKIP2 option value.
 * New cmp option: -n or --bytes.
-
-Other user-visible changes since version 2.7:
-
 * cmp's old -c or --print-chars option has been renamed;
   use -b or --print-bytes instead.
 * Recursive diffs now sort file names according to the LC_COLLATE locale
   category, instead of using native byte comparison.
 * diff uses ISO 8601 format for output times (e.g. "2001-11-23
-  16:44:36.875702460 -0800") unless in the C or POSIX LC_TIME locale.
+  16:44:36.875702460 -0800") unless in the C or POSIX locale.
 * diff's -I and -F options use the regexp syntax of grep, not of Emacs.
 * New diff options:
   --from-file=FILE, --to-file=FILE
@@ -28,12 +42,6 @@ Other user-visible changes since version 2.7:
 * Some internationalization support has been added.
   Some diagnostics have been reworded slightly for consistency.
   Also, `diff -D FOO' now outputs `/* ! FOO */' instead of `/* not FOO */'.
-* diffutils can now run on some PC configurations.
-  This is still under construction.
-  We don't plan to support all PC configurations, just the easy ones.
-  Also, we don't build or test the PC configurations ourselves,
-  and the PC world has several evolving development environments,
-  so it's likely that this won't work for you without some hacking.
 
 
 User-visible changes in version 2.7:
