@@ -149,7 +149,7 @@ add_exclude_file (name)
 
   for (p = f.buffer, lim = p + f.buffered_chars;  p < lim;  p = q)
     {
-      q = memchr (p, '\n', lim - p);
+      q = (char *) memchr (p, '\n', lim - p);
       if (!q)
 	q = lim;
       *q++ = 0;
