@@ -243,6 +243,7 @@ main (argc, argv)
   struct stat statb;
 
   initialize_main (&argc, &argv);
+  setlocale (LC_ALL, "");
   program_name = argv[0];
   xmalloc_exit_failure = 2;
 
@@ -285,7 +286,7 @@ main (argc, argv)
 	  tab_align_flag = 1;
 	  break;
 	case 'v':
-	  printf ("diff3 - GNU diffutils version %s\n", version_string);
+	  printf ("diff3 - %s\n", version_string);
 	  exit (0);
 	case 129:
 	  usage ();
@@ -298,7 +299,7 @@ main (argc, argv)
 	      tag_strings[tag_count++] = optarg;
 	      break;
 	    }
-	  try_help ("Too many labels were given.  The limit is 3.");
+	  try_help ("too many file label options");
 	default:
 	  try_help (0);
 	}
@@ -389,7 +390,7 @@ main (argc, argv)
 	= output_diff3_merge (stdin, stdout, diff3, mapping, rev_mapping,
 			      tag_strings[0], tag_strings[1], tag_strings[2]);
       if (ferror (stdin))
-	fatal ("read error");
+	fatal ("read failed");
     }
   else
     {
@@ -403,46 +404,55 @@ main (argc, argv)
 }
 
 static void
-try_help (reason)
-     char const *reason;
+try_help (reason_msgid)
+     char const *reason_msgid;
 {
-  if (reason)
-    error (0, 0, "%s", reason);
-  error (2, 0, "Try `%s --help' for more information.", program_name);
+  if (reason_msgid)
+    error (0, 0, "%s", gettext (reason_msgid));
+  error (2, 0, gettext ("Try `%s --help' for more information."), program_name);
 }
 
 static void
 check_stdout ()
 {
   if (ferror (stdout) || fclose (stdout) != 0)
-    fatal ("write error");
+    fatal ("write failed");
 }
 
-/*
- * Explain, patiently and kindly, how to use this program.
- */
+static char const * const option_help_msgid[] = {
+  "",
+  "-e  --ed  Output unmerged changes from OLDFILE to YOURFILE into MYFILE.",
+  "-E  --show-overlap  Output unmerged changes, bracketing conflicts.",
+  "-A  --show-all  Output all changes, bracketing conflicts.",
+  "-x  --overlap-only  Output overlapping changes.",
+  "-X  Output overlapping changes, bracketing them.",
+  "-3  --easy-only  Output unmerged nonoverlapping changes."
+  "",
+  "-m  --merge  Output merged file instead of ed script (default -A).",
+  "-L LABEL  --label=LABEL  Use LABEL instead of file name.",
+  "-i  Append `w' and `q' commands to ed scripts.",
+  "-a  --text  Treat all files as text.",
+  "-T  --initial-tab  Make tabs line up by prepending a tab.",
+  "",
+  "-v  --version  Output version info.",
+  "--help  Output this help.",
+  "",
+  0
+};
+
 static void
 usage ()
 {
-  printf ("Usage: %s [OPTION]... MYFILE OLDFILE YOURFILE\n\n", program_name);
+  char const * const *p;
 
-  printf ("%s", "\
-  -e  --ed  Output unmerged changes from OLDFILE to YOURFILE into MYFILE.\n\
-  -E  --show-overlap  Output unmerged changes, bracketing conflicts.\n\
-  -A  --show-all  Output all changes, bracketing conflicts.\n\
-  -x  --overlap-only  Output overlapping changes.\n\
-  -X  Output overlapping changes, bracketing them.\n\
-  -3  --easy-only  Output unmerged nonoverlapping changes.\n\n");
-  printf ("%s", "\
-  -m  --merge  Output merged file instead of ed script (default -A).\n\
-  -L LABEL  --label=LABEL  Use LABEL instead of file name.\n\
-  -i  Append `w' and `q' commands to ed scripts.\n\
-  -a  --text  Treat all files as text.\n\
-  -T  --initial-tab  Make tabs line up by prepending a tab.\n\n");
-  printf ("%s", "\
-  -v  --version  Output version info.\n\
-  --help  Output this help.\n\n");
-  printf ("If a FILE is `-', read standard input.\n");
+  printf (gettext ("Usage: %s [OPTION]... MYFILE OLDFILE YOURFILE\n"),
+	  program_name);
+  for (p = option_help_msgid;  *p;  p++)
+    if (**p)
+      printf ("  %s\n", gettext (*p));
+    else
+      putchar ('\n');
+  printf (gettext ("If a FILE is `-', read standard input.\n"));
 }
 
 /*
@@ -958,7 +968,7 @@ process_diff (filea, fileb, last_block)
       dt = process_diff_control (&scan_diff, bptr);
       if (dt == ERROR || *scan_diff != '\n')
 	{
-	  fprintf (stderr, "%s: diff error: ", program_name);
+	  fprintf (stderr, gettext ("%s: diff failed: "), program_name);
 	  do
 	    {
 	      putc (*scan_diff, stderr);
@@ -1177,7 +1187,7 @@ read_diff (filea, fileb, output_placement)
     }
 
   if (pid == -1)
-    perror_with_exit ("fork failed");
+    perror_with_exit ("fork");
 
   close (fds[1]);		/* Prevent erroneous lack of EOF */
   fd = fds[0];
@@ -1223,7 +1233,7 @@ read_diff (filea, fileb, output_placement)
 	else if (current_chunk_size < (size_t) -1)
 	  current_chunk_size = (size_t) -1;
 	else
-	  fatal ("files are too large to fit into memory");
+	  fatal ("memory exhausted");
 	diff_result = xrealloc (diff_result, (current_chunk_size *= 2));
       }
   } while (bytes);
@@ -1240,14 +1250,14 @@ read_diff (filea, fileb, output_placement)
 #else /* HAVE_FORK */
 
   if (close (fd) != 0)
-    perror_with_exit ("pipe close");
+    perror_with_exit ("close");
   if (waitpid (pid, &wstatus, 0) < 0)
-    perror_with_exit ("waitpid failed");
+    perror_with_exit ("waitpid");
 
 #endif /* HAVE_FORK */
 
   if (! (WIFEXITED (wstatus) && WEXITSTATUS (wstatus) < 2))
-    fatal ("subsidiary diff failed");
+    fatal ("subsidiary program failed");
 
   return diff_result + total;
 }
@@ -1390,7 +1400,8 @@ output_diff3 (outputfile, diff, mapping, rev_mapping)
 		}
 	      while (++line < hight - lowt + 1);
 	      if (cp[length - 1] != '\n')
-		fprintf (outputfile, "\n\\ No newline at end of file\n");
+		fprintf (outputfile, "\n\\ %s\n",
+			 gettext ("No newline at end of file"));
 	    }
 	}
     }
@@ -1638,7 +1649,7 @@ output_diff3_merge (infile, outputfile, diff, mapping, rev_mapping,
 	    c = getc (infile);
 	    if (c == EOF)
 	      if (ferror (infile))
-		perror_with_exit ("input file");
+		perror_with_exit (gettext ("read failed"));
 	      else if (feof (infile))
 		fatal ("input file shrank");
 	    putc (c, outputfile);
@@ -1691,7 +1702,7 @@ output_diff3_merge (infile, outputfile, diff, mapping, rev_mapping,
 	while ((c = getc (infile)) != '\n')
 	  if (c == EOF)
 	    if (ferror (infile))
-	      perror_with_exit ("input file");
+	      perror_with_exit (gettext ("read failed"));
 	    else if (feof (infile))
 	      {
 		if (i || b->next)
@@ -1732,15 +1743,15 @@ myread (fd, ptr, size)
 {
   size_t result = read (fd, ptr, size);
   if (result == -1)
-    perror_with_exit ("read failed");
+    perror_with_exit (gettext ("read failed"));
   return result;
 }
 
 static void
-fatal (string)
-     char const *string;
+fatal (msgid)
+     char const *msgid;
 {
-  error (2, 0, "%s", string);
+  error (2, 0, "%s", gettext (msgid));
 }
 
 static void
