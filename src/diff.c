@@ -1,5 +1,5 @@
 /* GNU DIFF main routine.
-   Copyright 1988, 1989, 1992, 1993, 1994 Free Software Foundation, Inc.
+   Copyright (C) 1988, 1989, 1992, 1993, 1994 Free Software Foundation, Inc.
 
 This file is part of GNU DIFF.
 
@@ -240,7 +240,6 @@ main (argc, argv)
   program = argv[0];
   output_style = OUTPUT_NORMAL;
   context = -1;
-  line_end_char = '\n';
 
   /* Decode the options.  */
 
@@ -280,8 +279,8 @@ main (argc, argv)
 	case 'b':
 	  /* Ignore changes in amount of white space.  */
 	  ignore_space_change_flag = 1;
-	  length_varies = 1;
 	  ignore_some_changes = 1;
+	  ignore_some_line_changes = 1;
 	  break;
 
 	case 'B':
@@ -372,6 +371,7 @@ main (argc, argv)
 	  /* Ignore changes in case.  */
 	  ignore_case_flag = 1;
 	  ignore_some_changes = 1;
+	  ignore_some_line_changes = 1;
 	  break;
 
 	case 'I':
@@ -476,7 +476,7 @@ main (argc, argv)
 	  /* Ignore horizontal white space when comparing lines.  */
 	  ignore_all_space_flag = 1;
 	  ignore_some_changes = 1;
-	  length_varies = 1;
+	  ignore_some_line_changes = 1;
 	  break;
 
 	case 'x':
