@@ -1,0 +1,264 @@
+/* sdiff-format output routines for GNU DIFF.
+   Copyright (C) 1991 Free Software Foundation, Inc.
+
+This file is part of GNU DIFF.
+
+GNU DIFF is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY.  No author or distributor
+accepts responsibility to anyone for the consequences of using it
+or for whether it serves any particular purpose or works at all,
+unless he says so in writing.  Refer to the GNU DIFF General Public
+License for full details.
+
+Everyone is granted permission to copy, modify and redistribute
+GNU DIFF, but only under the conditions described in the
+GNU DIFF General Public License.   A copy of this license is
+supposed to have been given to you along with GNU DIFF so you
+can know your rights and responsibilities.  It should be in a
+file named COPYING.  Among other things, the copyright notice
+and this notice must be preserved on all copies.  */
+
+
+#include "diff.h"
+
+
+static void print_sdiff_hunk ();
+static void print_sdiff_common_lines ();
+static void print_1sdiff_line ();
+
+/* Next line number to be printed in the two input files.  */
+static int next0, next1;
+
+/* Print the edit-script SCRIPT as a sdiff style output.  */
+
+void
+print_sdiff_script (script)
+     struct change *script;
+{
+  begin_output ();
+
+  next0 = next1 = 0;
+  print_script (script, find_change, print_sdiff_hunk);
+
+  print_sdiff_common_lines (files[0].buffered_lines, files[1].buffered_lines);
+  if (sdiff_help_sdiff)
+    fputs ("q\n", outfile);
+}
+
+/* Tab from column FROM to column TO, where FROM <= TO.  Yield TO.  */
+
+static unsigned
+tab_from_to (from, to)
+     unsigned from, to;
+{
+  FILE *out = outfile;
+  unsigned tab;
+
+  if (! tab_expand_flag)
+    for (tab = from + TAB_WIDTH - from % TAB_WIDTH;  tab <= to;  tab += TAB_WIDTH)
+      {
+	putc ('\t', out);
+	from = tab;
+      }
+  while (from++ < to)
+    putc (' ', out);
+  return to;
+}
+
+/*
+ * Print the text for half an sdiff line.  This means truncate to width
+ * observing tabs, and trim a trailing newline.  Returns the last column
+ * written (not the number of chars).
+ */
+static unsigned
+print_half_line (line, indent, out_bound)
+     struct line_def *line;
+     unsigned indent, out_bound;
+{
+  FILE *out = outfile;
+  register unsigned in_position = 0, out_position = 0;
+  register char const
+	*text_pointer = line->text,
+	*text_limit = text_pointer + line->length;
+
+  while (text_pointer < text_limit)
+    {
+      register unsigned char c = *text_pointer++;
+
+      switch (c)
+	{
+	case '\t':
+	  {
+	    unsigned spaces = TAB_WIDTH - in_position % TAB_WIDTH;
+	    in_position += spaces;
+	    if (tab_expand_flag)
+	      while (out_position < out_bound && spaces--)
+		{
+		  out_position++;
+		  putc (' ', out);
+		}
+	    else
+	      if (out_position + spaces < out_bound)
+		{
+		  out_position += spaces;
+		  putc (c, out);
+		}
+	  }
+	  break;
+
+	case '\r':
+	  {
+	    putc (c, out);
+	    tab_from_to (0, indent);
+	    in_position = out_position = 0;
+	  }
+	  break;
+
+	case '\b':
+	  if (in_position != 0 && --in_position < out_bound)
+	    if (out_position <= in_position)
+	      /* Add spaces to make up for suppressed tab past out_bound.  */
+	      for (;  out_position < in_position;  out_position++)
+		putc (' ', out);
+	    else
+	      {
+		out_position = in_position;
+		putc (c, out);
+	      }
+	  break;
+
+	case '\f':
+	case '\v':
+	  if (in_position < out_bound)
+	    putc (c, out);
+	  break;
+
+	default:
+	  {
+	    register unsigned p = in_position;
+	    if (textchar[c])
+	      in_position++;
+	    if (p < out_bound)
+	      {
+		out_position = in_position;
+		putc (c, out);
+	      }
+	  }
+	  break;
+
+	case '\n':
+	  return out_position;
+	}
+    }
+
+  return out_position;
+}
+
+/*
+ * Print side by side lines with a separator in the middle.
+ * NULL parameters are taken to indicate whitespace text.
+ * Blank lines that can easily be caught are reduced to a single newline.
+ */
+
+static void
+print_1sdiff_line (left, sep, right)
+     struct line_def *left;
+     int sep;
+     struct line_def *right;
+{
+  FILE *out = outfile;
+  unsigned hw = sdiff_half_width, c2o = sdiff_column2_offset;
+  unsigned col = left ? print_half_line (left, 0, hw) : 0;
+
+  if (sep != ' ')
+    {
+      col = tab_from_to (col, (hw + c2o - 1) / 2) + 1;
+      putc (sep, out);
+    }
+
+  if (right && right->text[0] != '\n')
+    {
+      col = tab_from_to (col, c2o);
+      print_half_line (right, col, hw);
+    }
+
+  putc ('\n', out);
+}
+
+/* Print lines common to both files in side-by-side format.  */
+static void
+print_sdiff_common_lines (limit0, limit1)
+     int limit0, limit1;
+{
+  int i0 = next0, i1 = next1;
+
+  if (! sdiff_skip_common_lines  &&  (i0 != limit0 || i1 != limit1))
+    {
+      if (sdiff_help_sdiff)
+	fprintf (outfile, "i%d,%d\n", limit0 - i0, limit1 - i1);
+
+      if (! sdiff_left_only)
+	{
+	  while (i0 != limit0 && i1 != limit1)
+	    print_1sdiff_line (&files[0].linbuf[i0++], ' ', &files[1].linbuf[i1++]);
+	  while (i1 != limit1)
+	    print_1sdiff_line (0, ')', &files[1].linbuf[i1++]);
+	}
+      while (i0 != limit0)
+	print_1sdiff_line (&files[0].linbuf[i0++], '(', 0);
+    }
+
+  next0 = limit0;
+  next1 = limit1;
+}
+
+/* Print a hunk of an sdiff diff.
+   This is a contiguous portion of a complete edit script,
+   describing changes in consecutive lines.  */
+
+static void
+print_sdiff_hunk (hunk)
+     struct change *hunk;
+{
+  int first0, last0, first1, last1, deletes, inserts;
+  register int i, j;
+
+  /* Determine range of line numbers involved in each file.  */
+  analyze_hunk (hunk, &first0, &last0, &first1, &last1, &deletes, &inserts);
+  if (!deletes && !inserts)
+    return;
+
+  /* Print out lines up to this change.  */
+  print_sdiff_common_lines (first0, first1);
+
+  if (sdiff_help_sdiff)
+    fprintf (outfile, "c%d,%d\n", last0 - first0 + 1, last1 - first1 + 1);
+
+  /* Print ``xxx  |  xxx '' lines */
+  if (inserts && deletes)
+    {
+      for (i = first0, j = first1;  i <= last0 && j <= last1; ++i, ++j)
+	print_1sdiff_line (&files[0].linbuf[i], '|', &files[1].linbuf[j]);
+      deletes = i <= last0;
+      inserts = j <= last1;
+      next0 = first0 = i;
+      next1 = first1 = j;
+    }
+
+
+  /* Print ``     >  xxx '' lines */
+  if (inserts)
+    {
+      for (j = first1; j <= last1; ++j)
+	print_1sdiff_line (0, '>', &files[1].linbuf[j]);
+      next1 = j;
+    }
+
+  /* Print ``xxx  <     '' lines */
+  if (deletes)
+    {
+      for (i = first0; i <= last0; ++i)
+	print_1sdiff_line (&files[0].linbuf[i], '<', 0);
+      next0 = i;
+    }
+}
