@@ -1,7 +1,7 @@
 /* File I/O for GNU DIFF.
 
-   Copyright (C) 1988, 1989, 1992, 1993, 1994, 1995, 1998, 2001, 2002
-   Free Software Foundation, Inc.
+   Copyright (C) 1988, 1989, 1992, 1993, 1994, 1995, 1998, 2001, 2002,
+   2004 Free Software Foundation, Inc.
 
    This file is part of GNU DIFF.
 
@@ -23,7 +23,6 @@
 #include "diff.h"
 #include <cmpbuf.h>
 #include <file-type.h>
-#include <regex.h>
 #include <setmode.h>
 #include <xalloc.h>
 
@@ -115,7 +114,7 @@ sip (struct file_data *current, bool skip_test)
 	{
 	  /* Check first part of file to see if it's a binary file.  */
 
-	  bool was_binary = set_binary_mode (current->desc, 1);
+	  bool was_binary = set_binary_mode (current->desc, true);
 	  off_t buffered;
 	  file_block_read (current, current->bufsize);
 	  buffered = current->buffered;
@@ -129,9 +128,9 @@ sip (struct file_data *current, bool skip_test)
 
 	      if (lseek (current->desc, - buffered, SEEK_CUR) == -1)
 		pfatal_with_name (current->name);
-	      set_binary_mode (current->desc, 0);
+	      set_binary_mode (current->desc, false);
 	      current->buffered = 0;
-	      current->eof = 0;
+	      current->eof = false;
 	    }
 
 	  return binary_file_p (current->buffer, buffered);
@@ -139,8 +138,8 @@ sip (struct file_data *current, bool skip_test)
     }
 
   current->buffered = 0;
-  current->eof = 0;
-  return 0;
+  current->eof = false;
+  return false;
 }
 
 /* Slurp the rest of the current file completely into memory.  */
@@ -218,7 +217,7 @@ static void
 find_and_hash_each_line (struct file_data *current)
 {
   hash_value h;
-  unsigned char const *p = (unsigned char const *) current->prefix_end;
+  char const *p = current->prefix_end;
   unsigned char c;
   lin i, *bucket;
   size_t length;
@@ -239,9 +238,9 @@ find_and_hash_each_line (struct file_data *current)
   bool same_length_diff_contents_compare_anyway =
     diff_length_compare_anyway | ignore_case;
 
-  while ((char const *) p < suffix_begin)
+  while (p < suffix_begin)
     {
-      char const *ip = (char const *) p;
+      char const *ip = p;
 
       h = 0;
 
@@ -251,25 +250,25 @@ find_and_hash_each_line (struct file_data *current)
 	  {
 	  case IGNORE_ALL_SPACE:
 	    while ((c = *p++) != '\n')
-	      if (! ISSPACE (c))
-		h = HASH (h, TOLOWER (c));
+	      if (! isspace (c))
+		h = HASH (h, tolower (c));
 	    break;
 
 	  case IGNORE_SPACE_CHANGE:
 	    while ((c = *p++) != '\n')
 	      {
-		if (ISSPACE (c))
+		if (isspace (c))
 		  {
 		    do
 		      if ((c = *p++) == '\n')
 			goto hashing_done;
-		    while (ISSPACE (c));
+		    while (isspace (c));
 
 		    h = HASH (h, ' ');
 		  }
 
 		/* C is now the first non-space.  */
-		h = HASH (h, TOLOWER (c));
+		h = HASH (h, tolower (c));
 	      }
 	    break;
 
@@ -299,7 +298,7 @@ find_and_hash_each_line (struct file_data *current)
 		      break;
 
 		    default:
-		      c = TOLOWER (c);
+		      c = tolower (c);
 		      column++;
 		      break;
 		    }
@@ -313,7 +312,7 @@ find_and_hash_each_line (struct file_data *current)
 
 	  default:
 	    while ((c = *p++) != '\n')
-	      h = HASH (h, TOLOWER (c));
+	      h = HASH (h, tolower (c));
 	    break;
 	  }
       else
@@ -321,19 +320,19 @@ find_and_hash_each_line (struct file_data *current)
 	  {
 	  case IGNORE_ALL_SPACE:
 	    while ((c = *p++) != '\n')
-	      if (! ISSPACE (c))
+	      if (! isspace (c))
 		h = HASH (h, c);
 	    break;
 
 	  case IGNORE_SPACE_CHANGE:
 	    while ((c = *p++) != '\n')
 	      {
-		if (ISSPACE (c))
+		if (isspace (c))
 		  {
 		    do
 		      if ((c = *p++) == '\n')
 			goto hashing_done;
-		    while (ISSPACE (c));
+		    while (isspace (c));
 
 		    h = HASH (h, ' ');
 		  }
@@ -389,9 +388,9 @@ find_and_hash_each_line (struct file_data *current)
    hashing_done:;
 
       bucket = &buckets[h % nbuckets];
-      length = (char const *) p - ip - 1;
+      length = p - ip - 1;
 
-      if ((char const *) p == bufend
+      if (p == bufend
 	  && current->missing_newline
 	  && ROBUST_OUTPUT_STYLE (output_style))
 	{
@@ -402,7 +401,7 @@ find_and_hash_each_line (struct file_data *current)
 
 	  /* Omit the inserted newline when computing linbuf later.  */
 	  p--;
-	  bufend = suffix_begin = (char const *) p;
+	  bufend = suffix_begin = p;
 	}
 
       for (i = *bucket;  ;  i = eqs[i].next)
@@ -487,9 +486,9 @@ find_and_hash_each_line (struct file_data *current)
 			     (alloc_lines - linbuf_base) * sizeof *linbuf);
 	  linbuf -= linbuf_base;
 	}
-      linbuf[line] = (char const *) p;
+      linbuf[line] = p;
 
-      if ((char const *) p == bufend)
+      if (p == bufend)
 	break;
 
       if (context <= i && no_diff_means_no_output)
@@ -524,11 +523,11 @@ prepare_text (struct file_data *current)
   char *dst;
 
   if (buffered == 0 || p[buffered - 1] == '\n')
-    current->missing_newline = 0;
+    current->missing_newline = false;
   else
     {
       p[buffered++] = '\n';
-      current->missing_newline = 1;
+      current->missing_newline = true;
     }
 
   if (!p)
@@ -822,9 +821,9 @@ read_files (struct file_data filevec[], bool pretend_binary)
     }
   if (appears_binary)
     {
-      set_binary_mode (filevec[0].desc, 1);
-      set_binary_mode (filevec[1].desc, 1);
-      return 1;
+      set_binary_mode (filevec[0].desc, true);
+      set_binary_mode (filevec[1].desc, true);
+      return true;
     }
 
   find_identical_ends (filevec);
@@ -856,5 +855,5 @@ read_files (struct file_data filevec[], bool pretend_binary)
   free (equivs);
   free (buckets - 1);
 
-  return 0;
+  return false;
 }
