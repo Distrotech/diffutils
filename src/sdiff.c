@@ -19,9 +19,9 @@ the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 
 /* GNU SDIFF was written by Thomas Lord. */
 
+#include "system.h"
 #include <stdio.h>
 #include <ctype.h>
-#include "system.h"
 #include <signal.h>
 #include "getopt.h"
 
@@ -167,7 +167,7 @@ perror_fatal (msg)
 
 
 /* malloc freely or DIE! */
-VOID *
+static VOID *
 xmalloc (size)
      size_t size;
 {
