@@ -19,6 +19,8 @@
 
 /* Written by Paul Eggert <eggert@twinsun.com>  */
 
+#include <stdbool.h>
+
 #ifndef set_binary_mode
 bool set_binary_mode (int, bool);
 # if ! HAVE_SETMODE_DOS
