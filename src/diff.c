@@ -42,7 +42,7 @@ static int specify_format PARAMS((char **, char *));
 static void add_exclude PARAMS((char const *));
 static void add_regexp PARAMS((struct regexp_list **, char const *));
 static void specify_style PARAMS((enum output_style));
-static void usage PARAMS((void));
+static void usage PARAMS((char const *));
 
 /* Nonzero for -r: if comparing two directories,
    compare their common subdirectories recursively.  */
@@ -212,6 +212,7 @@ static struct option const longopts[] =
   {"unchanged-group-format", 1, 0, 138},
   {"changed-group-format", 1, 0, 139},
   {"horizon-lines", 1, 0, 140},
+  {"help", 0, 0, 141},
   {0, 0, 0, 0}
 };
 
@@ -450,8 +451,8 @@ main (argc, argv)
 	  break;
 
 	case 'v':
-	  fprintf (stderr, "GNU diff version %s\n", version_string);
-	  break;
+	  printf ("GNU diff version %s\n", version_string);
+	  exit (0);
 
 	case 'w':
 	  /* Ignore horizontal white space when comparing lines.  */
@@ -527,14 +528,17 @@ main (argc, argv)
 	    fatal ("horizon must be a nonnegative integer");
 	  break;
 
+	case 141:
+	  usage (0);
+
 	default:
-	  usage ();
+	  usage ("");
 	}
       prev = c;
     }
 
   if (optind != argc - 2)
-    usage ();
+    usage (optind < argc - 2 ? "extra operand" : "missing operand");
 
 
   {
@@ -622,33 +626,37 @@ add_regexp (reglist, pattern)
 }
 
 static void
-usage ()
+usage (reason)
+     char const *reason;
 {
-  fprintf (stderr, "Usage: %s [options] from-file to-file\n", program);
-  fprintf (stderr, "Options:\n\
+  if (reason && *reason)
+    fprintf (stderr, "%s: %s\n", program, reason);
+  fflush (stderr);
+  printf ("Usage: %s [options] from-file to-file\n", program);
+  printf ("Options:\n\
 	[-abBcdefhHilnNpPqrstTuvwy] [-C lines] [-D name] [-F regexp]\n\
 	[-I regexp] [-L from-label [-L to-label]] [-S starting-file] [-U lines]\n\
 	[-W columns] [-x pattern] [-X pattern-file]\n");
-  fprintf (stderr, "\
+  printf ("\
 	[--brief] [--changed-group-format=format] [--context[=lines]] [--ed]\n\
 	[--exclude=pattern] [--exclude-from=pattern-file] [--expand-tabs]\n\
-	[--forward-ed] [--horizon-lines=lines] [--ifdef=name]\n\
+	[--forward-ed] [--help] [--horizon-lines=lines] [--ifdef=name]\n\
 	[--ignore-all-space] [--ignore-blank-lines] [--ignore-case]\n");
-  fprintf (stderr, "\
+  printf ("\
 	[--ignore-matching-lines=regexp] [--ignore-space-change]\n\
 	[--initial-tab] [--label=from-label [--label=to-label]]\n\
 	[--left-column] [--minimal] [--new-file] [--new-group-format=format]\n\
 	[--new-line-format=format] [--old-group-format=format]\n");
-  fprintf (stderr, "\
+  printf ("\
 	[--old-line-format=format] [--paginate] [--rcs] [--recursive]\n\
 	[--report-identical-files] [--sdiff-merge-assist] [--show-c-function]\n\
 	[--show-function-line=regexp] [--side-by-side] [--speed-large-files]\n\
 	[--starting-file=starting-file] [--suppress-common-lines] [--text]\n");
-  fprintf (stderr, "\
+  printf ("\
 	[--unchanged-group-format=format] [--unchanged-line-format=format]\n\
 	[--unidirectional-new-file] [--unified[=lines]] [--version]\n\
 	[--width=columns]\n");
-  exit (2);
+  exit (reason ? 2 : 0);
 }
 
 static int
@@ -747,6 +755,8 @@ compare_files (dir0, name0, dir1, name1, depth)
       return 1;
     }
 
+  bzero (inf, sizeof (inf));
+
   /* Mark any nonexistent file with -1 in the desc field.  */
   /* Mark unopened files (e.g. directories) with -2. */
 
@@ -767,9 +777,6 @@ compare_files (dir0, name0, dir1, name1, depth)
 
   for (i = 0; i <= 1; i++)
     {
-      bzero (&inf[i].stat, sizeof (struct stat));
-      inf[i].dir_p = 0;
-
       if (inf[i].desc != -1)
 	{
 	  int stat_result;
