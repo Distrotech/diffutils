@@ -4,6 +4,8 @@ o = .o\
 .SUFFIXES: .c $o\
 REGEX = regex$o
 
+: again
+
 s|@CC@|gcc|g
 s|@CFLAGS@|-Wall -O2|g
 s|@DEFS@|-DHAVE_CONFIG_H|g
@@ -41,13 +43,21 @@ SUBSHELL = command >nul /c
 }
 
 s|^	rm -f *\(.*\)|	$(SUBSHELL) for %%f in (\1) do del %%f|g
-s|^	for \([a-z]\) in \(.*\) do |	$(SUBSHELL) for %%\1 in (\2) do |g
+/^	for \([a-z]\) in \(.*\) do /{
+	s||	$(SUBSHELL) for %%\1 in (\2) do |
+	/\\$/{
+		N
+		s| *\\\n[	 ]*| |
+		b again
+	}
+}
 /^	done$/d
 s|`echo ||g
 s/ | \$[(]edit_program_name.*//g
 /test  *-f/d
 s|	.*/mkinstalldirs *\(.*\)|	$(SUBSHELL) for %%d in (\1) do md %%d|g
-s|\.info\*|.i*|g
+s|^	$(INSTALL_DATA)|	$(SUBSHELL) $(INSTALL_DATA)|
+s|\.info|.inf|g
 s|rm -f|del|g
 
 s|^clean:|& pc-clean|
@@ -55,6 +65,9 @@ s|^config.h:|#&|
 
 /^dist:/,/^[	]*$/d
 /^Makefile:/,/^[	]*$/d
+
+/^[A-Z_a-z][0-9A-Z_a-z]*[ 	]*=/s|/|\\|g
+/^	$(SUBSHELL)/s|/|\\|g
 
 s|[	 ]*$||
 
