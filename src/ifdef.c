@@ -1,47 +1,50 @@
 /* #ifdef-format output routines for GNU DIFF.
-   Copyright (C) 1989, 1991, 1992, 1993, 1994 Free Software Foundation, Inc.
 
-This file is part of GNU DIFF.
+   Copyright (C) 1989, 1991, 1992, 1993, 1994, 2001 Free Software
+   Foundation, Inc.
 
-GNU DIFF is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY.  No author or distributor
-accepts responsibility to anyone for the consequences of using it
-or for whether it serves any particular purpose or works at all,
-unless he says so in writing.  Refer to the GNU DIFF General Public
-License for full details.
+   This file is part of GNU DIFF.
 
-Everyone is granted permission to copy, modify and redistribute
-GNU DIFF, but only under the conditions described in the
-GNU DIFF General Public License.   A copy of this license is
-supposed to have been given to you along with GNU DIFF so you
-can know your rights and responsibilities.  It should be in a
-file named COPYING.  Among other things, the copyright notice
-and this notice must be preserved on all copies.  */
+   GNU DIFF is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY.  No author or distributor
+   accepts responsibility to anyone for the consequences of using it
+   or for whether it serves any particular purpose or works at all,
+   unless he says so in writing.  Refer to the GNU DIFF General Public
+   License for full details.
 
+   Everyone is granted permission to copy, modify and redistribute
+   GNU DIFF, but only under the conditions described in the
+   GNU DIFF General Public License.   A copy of this license is
+   supposed to have been given to you along with GNU DIFF so you
+   can know your rights and responsibilities.  It should be in a
+   file named COPYING.  Among other things, the copyright notice
+   and this notice must be preserved on all copies.  */
 
 #include "diff.h"
 
 struct group
 {
   struct file_data const *file;
-  int from, upto; /* start and limit lines for this group of lines */
+  lin from, upto; /* start and limit lines for this group of lines */
 };
 
-static char *format_group PARAMS((FILE *, char *, int, struct group const *));
-static char *scan_char_literal PARAMS((char *, int *));
-static char *scan_printf_spec PARAMS((char *));
-static int groups_letter_value PARAMS((struct group const *, int));
-static void format_ifdef PARAMS((char *, int, int, int, int));
-static void print_ifdef_hunk PARAMS((struct change *));
-static void print_ifdef_lines PARAMS((FILE *, char *, struct group const *));
+static char const *format_group (FILE *, char const *, char,
+				 struct group const *);
+static char const *do_printf_spec (FILE *, char const *,
+				   struct file_data const *, lin,
+				   struct group const *);
+static char const *scan_char_literal (char const *, char *);
+static lin groups_letter_value (struct group const *, char);
+static void format_ifdef (char const *, lin, lin, lin, lin);
+static void print_ifdef_hunk (struct change *);
+static void print_ifdef_lines (FILE *, char const *, struct group const *);
 
-static int next_line;
+static lin next_line;
 
 /* Print the edit-script SCRIPT as a merged #ifdef file.  */
 
 void
-print_ifdef_script (script)
-     struct change *script;
+print_ifdef_script (struct change *script)
 {
   next_line = - files[0].prefix_lines;
   print_script (script, find_change, print_ifdef_hunk);
@@ -59,19 +62,13 @@ print_ifdef_script (script)
    describing changes in consecutive lines.  */
 
 static void
-print_ifdef_hunk (hunk)
-     struct change *hunk;
+print_ifdef_hunk (struct change *hunk)
 {
-  int first0, last0, first1, last1, deletes, inserts;
-  char *format;
+  lin first0, last0, first1, last1;
 
   /* Determine range of line numbers involved in each file.  */
-  analyze_hunk (hunk, &first0, &last0, &first1, &last1, &deletes, &inserts);
-  if (inserts)
-    format = deletes ? group_format[CHANGED] : group_format[NEW];
-  else if (deletes)
-    format = group_format[OLD];
-  else
+  enum changes changes = analyze_hunk (hunk, &first0, &last0, &first1, &last1);
+  if (!changes)
     return;
 
   begin_output ();
@@ -83,7 +80,7 @@ print_ifdef_hunk (hunk)
 
   /* Print this change.  */
   next_line = last0 + 1;
-  format_ifdef (format, first0, next_line, first1, last1 + 1);
+  format_ifdef (group_format[changes], first0, next_line, first1, last1 + 1);
 }
 
 /* Print a set of lines according to FORMAT.
@@ -91,9 +88,7 @@ print_ifdef_hunk (hunk)
    lines BEG1 up to END1 are from the second file.  */
 
 static void
-format_ifdef (format, beg0, end0, beg1, end1)
-     char *format;
-     int beg0, end0, beg1, end1;
+format_ifdef (char const *format, lin beg0, lin end0, lin beg1, lin end1)
 {
   struct group groups[2];
 
@@ -103,7 +98,7 @@ format_ifdef (format, beg0, end0, beg1, end1)
   groups[1].file = &files[1];
   groups[1].from = beg1;
   groups[1].upto = end1;
-  format_group (outfile, format, '\0', groups);
+  format_group (outfile, format, 0, groups);
 }
 
 /* Print to file OUT a set of lines according to FORMAT.
@@ -112,140 +107,112 @@ format_ifdef (format, beg0, end0, beg1, end1)
    GROUPS specifies which lines to print.
    If OUT is zero, do not actually print anything; just scan the format.  */
 
-static char *
-format_group (out, format, endchar, groups)
-     register FILE *out;
-     char *format;
-     int endchar;
-     struct group const *groups;
+static char const *
+format_group (register FILE *out, char const *format, char endchar,
+	      struct group const *groups)
 {
   register char c;
-  register char *f = format;
+  register char const *f = format;
 
   while ((c = *f) != endchar && c != 0)
     {
       f++;
       if (c == '%')
-	{
-	  char *spec = f;
-	  switch ((c = *f++))
+	switch ((c = *f++))
+	  {
+	  case '%':
+	    break;
+
+	  case '(':
+	    /* Print if-then-else format e.g. `%(n=1?thenpart:elsepart)'.  */
 	    {
-	    case '%':
-	      break;
+	      int i;
+	      uintmax_t value[2];
+	      FILE *thenout, *elseout;
 
-	    case '(':
-	      /* Print if-then-else format e.g. `%(n=1?thenpart:elsepart)'.  */
-	      {
-		int i, value[2];
-		FILE *thenout, *elseout;
-
-		for (i = 0; i < 2; i++)
-		  {
-		    unsigned char f0 = f[0];
-		    if (ISDIGIT (f0))
-		      {
-			value[i] = atoi (f);
-			while (ISDIGIT ((unsigned char) *++f))
-			  continue;
-		      }
-		    else
-		      {
-			value[i] = groups_letter_value (groups, f0);
-			if (value[i] < 0)
-			  goto bad_format;
-			f++;
-		      }
-		    if (*f++ != "=?"[i])
-		      goto bad_format;
-		  }
-		if (value[0] == value[1])
-		  thenout = out, elseout = 0;
-		else
-		  thenout = 0, elseout = out;
-		f = format_group (thenout, f, ':', groups);
-		if (*f)
-		  {
-		    f = format_group (elseout, f + 1, ')', groups);
-		    if (*f)
+	      for (i = 0; i < 2; i++)
+		{
+		  if (ISDIGIT (*f))
+		    {
+		      char *fend;
+		      errno = 0;
+		      value[i] = strtoumax (f, &fend, 10);
+		      if (errno)
+			goto bad_format;
+		      f = fend;
+		    }
+		  else
+		    {
+		      value[i] = groups_letter_value (groups, *f);
+		      if (value[i] == -1)
+			goto bad_format;
 		      f++;
-		  }
-	      }
-	      continue;
-
-	    case '<':
-	      /* Print lines deleted from first file.  */
-	      print_ifdef_lines (out, line_format[OLD], &groups[0]);
-	      continue;
-
-	    case '=':
-	      /* Print common lines.  */
-	      print_ifdef_lines (out, line_format[UNCHANGED], &groups[0]);
-	      continue;
-
-	    case '>':
-	      /* Print lines inserted from second file.  */
-	      print_ifdef_lines (out, line_format[NEW], &groups[1]);
-	      continue;
-
-	    default:
-	      {
-		int value;
-		char *speclim;
-
-		f = scan_printf_spec (spec);
-		if (!f)
-		  goto bad_format;
-		speclim = f;
-		c = *f++;
-		switch (c)
-		  {
-		    case '\'':
-		      f = scan_char_literal (f, &value);
-		      if (!f)
-			goto bad_format;
-		      break;
-
-		    default:
-		      value = groups_letter_value (groups, c);
-		      if (value < 0)
-			goto bad_format;
-		      break;
-		  }
-		if (out)
-		  {
-		    /* Temporarily replace e.g. "%3dnx" with "%3d\0x".  */
-		    *speclim = 0;
-		    fprintf (out, spec - 1, value);
-		    /* Undo the temporary replacement.  */
-		    *speclim = c;
-		  }
-	      }
-	      continue;
-
-	    bad_format:
-	      c = '%';
-	      f = spec;
-	      break;
+		    }
+		  if (*f++ != "=?"[i])
+		    goto bad_format;
+		}
+	      if (value[0] == value[1])
+		thenout = out, elseout = 0;
+	      else
+		thenout = 0, elseout = out;
+	      f = format_group (thenout, f, ':', groups);
+	      if (*f)
+		{
+		  f = format_group (elseout, f + 1, ')', groups);
+		  if (*f)
+		    f++;
+		}
 	    }
-	}
+	    continue;
+
+	  case '<':
+	    /* Print lines deleted from first file.  */
+	    print_ifdef_lines (out, line_format[OLD], &groups[0]);
+	    continue;
+
+	  case '=':
+	    /* Print common lines.  */
+	    print_ifdef_lines (out, line_format[UNCHANGED], &groups[0]);
+	    continue;
+
+	  case '>':
+	    /* Print lines inserted from second file.  */
+	    print_ifdef_lines (out, line_format[NEW], &groups[1]);
+	    continue;
+
+	  default:
+	    f = do_printf_spec (out, f - 2, 0, 0, groups);
+	    if (!f)
+	      goto bad_format;
+	    continue;
+
+	  bad_format:
+	    c = '%';
+	    f--;
+	    break;
+	  }
+
       if (out)
 	putc (c, out);
     }
+
   return f;
 }
 
 /* For the line group pair G, return the number corresponding to LETTER.
    Return -1 if LETTER is not a group format letter.  */
-static int
-groups_letter_value (g, letter)
-     struct group const *g;
-     int letter;
+static lin
+groups_letter_value (struct group const *g, char letter)
 {
-  if (ISUPPER (letter))
+  switch (letter)
     {
-      g++;
-      letter = _tolower (letter);
+    case 'E': letter = 'e'; g++; break;
+    case 'F': letter = 'f'; g++; break;
+    case 'L': letter = 'l'; g++; break;
+    case 'M': letter = 'm'; g++; break;
+    case 'N': letter = 'n'; g++; break;
     }
+
   switch (letter)
     {
       case 'e': return translate_line_number (g->file, g->from) - 1;
@@ -260,20 +227,18 @@ groups_letter_value (g, letter)
 /* Print to file OUT, using FORMAT to print the line group GROUP.
    But do nothing if OUT is zero.  */
 static void
-print_ifdef_lines (out, format, group)
-     register FILE *out;
-     char *format;
-     struct group const *group;
+print_ifdef_lines (register FILE *out, char const *format,
+		   struct group const *group)
 {
   struct file_data const *file = group->file;
   char const * const *linbuf = file->linbuf;
-  int from = group->from, upto = group->upto;
+  lin from = group->from, upto = group->upto;
 
   if (!out)
     return;
 
   /* If possible, use a single fwrite; it's faster.  */
-  if (!tab_expand_flag && format[0] == '%')
+  if (!expand_tabs && format[0] == '%')
     {
       if (format[1] == 'l' && format[2] == '\n' && !format[3])
 	{
@@ -293,83 +258,136 @@ print_ifdef_lines (out, format, group)
   for (;  from < upto;  from++)
     {
       register char c;
-      register char *f = format;
+      register char const *f = format;
 
       while ((c = *f++) != 0)
 	{
 	  if (c == '%')
-	    {
-	      char *spec = f;
-	      switch ((c = *f++))
-		{
-		case '%':
-		  break;
+	    switch ((c = *f++))
+	      {
+	      case '%':
+		break;
 
-		case 'l':
-		  output_1_line (linbuf[from],
-				 linbuf[from + 1]
-				   - (linbuf[from + 1][-1] == '\n'), 0, 0);
-		  continue;
+	      case 'l':
+		output_1_line (linbuf[from],
+			       (linbuf[from + 1]
+				- (linbuf[from + 1][-1] == '\n')),
+			       0, 0);
+		continue;
 
-		case 'L':
-		  output_1_line (linbuf[from], linbuf[from + 1], 0, 0);
-		  continue;
+	      case 'L':
+		output_1_line (linbuf[from], linbuf[from + 1], 0, 0);
+		continue;
 
-		default:
-		  {
-		    int value;
-		    char *speclim;
+	      default:
+		f = do_printf_spec (out, f - 2, file, from, 0);
+		if (!f)
+		  goto bad_format;
+		continue;
 
-		    f = scan_printf_spec (spec);
-		    if (!f)
-		      goto bad_format;
-		    speclim = f;
-		    c = *f++;
-		    switch (c)
-		      {
-			case '\'':
-			  f = scan_char_literal (f, &value);
-			  if (!f)
-			    goto bad_format;
-			  break;
+	      bad_format:
+		c = '%';
+		f--;
+		break;
+	      }
 
-			case 'n':
-			  value = translate_line_number (file, from);
-			  break;
-
-			default:
-			  goto bad_format;
-		      }
-		    /* Temporarily replace e.g. "%3dnx" with "%3d\0x".  */
-		    *speclim = 0;
-		    fprintf (out, spec - 1, value);
-		    /* Undo the temporary replacement.  */
-		    *speclim = c;
-		  }
-		  continue;
-
-		bad_format:
-		  c = '%';
-		  f = spec;
-		  break;
-		}
-	    }
 	  putc (c, out);
 	}
     }
 }
 
+static char const *
+do_printf_spec (FILE *out, char const *spec,
+		struct file_data const *file, lin n,
+		struct group const *groups)
+{
+  char const *f = spec;
+  char c;
+  char c1;
+
+  /* Scan printf-style SPEC of the form %[-'0]*[0-9]*(.[0-9]*)?[cdoxX].  */
+  /* assert (*f == '%'); */
+  f++;
+  while ((c = *f++) == '-' || c == '\'' || c == '0')
+    continue;
+  while (ISDIGIT (c))
+    c = *f++;
+  if (c == '.')
+    while (ISDIGIT (c = *f++))
+      continue;
+  c1 = *f++;
+
+  switch (c)
+    {
+    case 'c':
+      if (c1 != '\'')
+	return 0;
+      else
+	{
+	  char value;
+	  f = scan_char_literal (f, &value);
+	  if (!f)
+	    return 0;
+	  if (out)
+	    putc (value, out);
+	}
+      break;
+
+    case 'd': case 'o': case 'x': case 'X':
+      {
+	lin value;
+
+	if (file)
+	  {
+	    if (c1 != 'n')
+	      return 0;
+	    value = translate_line_number (file, n);
+	  }
+	else
+	  {
+	    value = groups_letter_value (groups, c1);
+	    if (value < 0)
+	      return 0;
+	  }
+
+	if (out)
+	  {
+	    /* For example, if the spec is "%3xn", use the printf
+	       format spec "%3lx".  Here the spec prefix is "%3".  */
+	    long long_value = value;
+	    size_t spec_prefix_len = f - spec - 2;
+#if HAVE_C_VARARRAYS
+	    char format[spec_prefix_len + 3];
+#else
+	    char *format = alloca (spec_prefix_len + 3);
+#endif
+	    char *p = format + spec_prefix_len;
+	    memcpy (format, spec, spec_prefix_len);
+	    *p++ = 'l';
+	    *p++ = c;
+	    *p = '\0';
+	    fprintf (out, format, long_value);
+	  }
+      }
+      break;
+
+    default:
+      return 0;
+    }
+
+  return f;
+}
+
 /* Scan the character literal represented in the string LIT; LIT points just
-   after the initial apostrophe.  Put the literal's value into *INTPTR.
+   after the initial apostrophe.  Put the literal's value into *VALPTR.
    Yield the address of the first character after the closing apostrophe,
    or zero if the literal is ill-formed.  */
-static char *
-scan_char_literal (lit, intptr)
-     char *lit;
-     int *intptr;
+static char const *
+scan_char_literal (char const *lit, char *valptr)
 {
-  register char *p = lit;
-  int value, digits;
+  register char const *p = lit;
+  char value;
+  ptrdiff_t digits;
   char c = *p++;
 
   switch (c)
@@ -398,31 +416,7 @@ scan_char_literal (lit, intptr)
 	  return 0;
 	break;
     }
-  *intptr = value;
+
+  *valptr = value;
   return p;
-}
-
-/* Scan optional printf-style SPEC of the form `-*[0-9]*(.[0-9]*)?[cdoxX]'.
-   Return the address of the character following SPEC, or zero if failure.  */
-static char *
-scan_printf_spec (spec)
-     register char *spec;
-{
-  register unsigned char c;
-
-  while ((c = *spec++) == '-')
-    continue;
-  while (ISDIGIT (c))
-    c = *spec++;
-  if (c == '.')
-    while (ISDIGIT (c = *spec++))
-      continue;
-  switch (c)
-    {
-      case 'c': case 'd': case 'o': case 'x': case 'X':
-	return spec;
-
-      default:
-	return 0;
-    }
 }
