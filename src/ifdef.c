@@ -141,17 +141,19 @@ format_group (out, format, endchar, groups)
 
 		for (i = 0; i < 2; i++)
 		  {
-		    if (isdigit (*f))
+		    unsigned char f0 = f[0];
+		    if (isdigit (f0))
 		      {
 			value[i] = atoi (f);
-			while (isdigit (*++f))
+			while (isdigit ((unsigned char) *++f))
 			  continue;
 		      }
 		    else
 		      {
-			value[i] = groups_letter_value (groups, *f++);
+			value[i] = groups_letter_value (groups, f0);
 			if (value[i] < 0)
 			  goto bad_format;
+			f++;
 		      }
 		    if (*f++ != "=?"[i])
 		      goto bad_format;
