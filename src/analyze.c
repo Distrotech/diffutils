@@ -1071,7 +1071,7 @@ diff_2_files (filevec, depth)
 	for (i = 0; i < 2; ++i)
 	  if (filevec[i].missing_newline)
 	    {
-	      error ("No newline at end of file %s", filevec[i].name, "");
+	      error (0, 0, "No newline at end of file %s", filevec[i].name);
 	      changes = 2;
 	    }
     }
