@@ -27,6 +27,7 @@ INSTALL = @INSTALL@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_DATA = @INSTALL_DATA@
 MAKEINFO = makeinfo
+TEXI2DVI = texi2dvi
 
 CFLAGS = -g
 LDFLAGS =
@@ -61,7 +62,7 @@ distfiles = $(srcs) README INSTALL NEWS diagmeet.note Makefile.in \
 	diff.texi diff.info* texinfo.tex \
 	mkinstalldirs
 
-all: diff diff3 sdiff cmp diff.info
+all: diff diff3 sdiff cmp info
 
 COMPILE = $(CC) -c -DHAVE_CONFIG_H $(CPPFLAGS) -I. -I$(srcdir) $(CFLAGS)
 
@@ -86,8 +87,13 @@ cmp_o = cmp.o cmpbuf.o error.o getopt.o getopt1.o xmalloc.o version.o
 cmp: $(cmp_o)
 	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $(cmp_o) $(LIBS)
 
+info: diff.info
 diff.info: diff.texi
-	$(MAKEINFO) $(srcdir)/diff.texi
+	$(MAKEINFO) $(srcdir)/diff.texi --output=$@
+
+dvi: diff.dvi
+diff.dvi: diff.texi
+	$(TEXI2DVI) $(srcdir)/diff.texi
 
 $(diff_o): diff.h system.h
 cmp.o diff3.o sdiff.o: system.h
@@ -107,6 +113,8 @@ TAGS: $(srcs)
 
 clean:
 	rm -f *.o diff diff3 sdiff cmp core
+	rm -f *.aux *.cp *.cps *.dvi *.fn *.fns *.ky *.kys *.log
+	rm -f *.pg *.pgs *.toc *.tp *.tps *.vr *.vrs
 
 mostlyclean: clean
 
