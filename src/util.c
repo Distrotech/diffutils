@@ -30,11 +30,7 @@ static char const pr_program[] = PR_PROGRAM;
 struct msg
 {
   struct msg *next;
-  char const *format;
-  char const *arg1;
-  char const *arg2;
-  char const *arg3;
-  char const *arg4;
+  char args[1]; /* Format + 4 args, each '\0' terminated, concatenated.  */
 };
 
 /* Head of the chain of queues messages.  */
@@ -66,47 +62,62 @@ pfatal_with_name (text)
   error (2, e, "%s", text);
 }
 
-/* Print an error message containing the string TEXT, then exit.  */
+/* Print an error message containing MSGID, then exit.  */
 
 void
-fatal (m)
-     char const *m;
+fatal (msgid)
+     char const *msgid;
 {
   print_message_queue ();
-  error (2, 0, "%s", m);
+  error (2, 0, "%s", gettext (msgid));
 }
 
 /* Like printf, except if -l in effect then save the message and print later.
-   This is used for things like "binary files differ" and "Only in ...".  */
+   This is used for things like "Only in ...".  */
 
 void
-message (format, arg1, arg2)
-     char const *format, *arg1, *arg2;
+message (format_msgid, arg1, arg2)
+     char const *format_msgid, *arg1, *arg2;
 {
-  message5 (format, arg1, arg2, 0, 0);
+  message5 (format_msgid, arg1, arg2, 0, 0);
 }
 
 void
-message5 (format, arg1, arg2, arg3, arg4)
-     char const *format, *arg1, *arg2, *arg3, *arg4;
+message5 (format_msgid, arg1, arg2, arg3, arg4)
+     char const *format_msgid, *arg1, *arg2, *arg3, *arg4;
 {
   if (paginate_flag)
     {
-      struct msg *new = (struct msg *) xmalloc (sizeof (struct msg));
-      new->format = format;
-      new->arg1 = concat (arg1, "", "");
-      new->arg2 = concat (arg2, "", "");
-      new->arg3 = arg3 ? concat (arg3, "", "") : 0;
-      new->arg4 = arg4 ? concat (arg4, "", "") : 0;
-      new->next = 0;
+      char *p;
+      char const *arg[5];
+      int i;
+      size_t size[5];
+      size_t total_size = sizeof (struct msg);
+      struct msg *new;
+
+      arg[0] = format_msgid;
+      arg[1] = arg1;
+      arg[2] = arg2;
+      arg[3] = arg3 ? arg3 : "";
+      arg[4] = arg4 ? arg4 : "";
+
+      for (i = 0;  i < 5;  i++)
+	total_size += size[i] = strlen (arg[i]) + 1;
+
+      new = (struct msg *) xmalloc (total_size);
+
+      for (i = 0, p = new->args;  i < 5;  p += size[i++])
+	memcpy (p, arg[i], size[i]);
+
       *msg_chain_end = new;
+      new->next = 0;
       msg_chain_end = &new->next;
     }
   else
     {
       if (sdiff_help_sdiff)
 	putchar (' ');
-      printf (format, arg1, arg2, arg3, arg4);
+      printf (gettext (format_msgid), arg1, arg2, arg3, arg4);
     }
 }
 
@@ -115,10 +126,17 @@ message5 (format, arg1, arg2, arg3, arg4)
 void
 print_message_queue ()
 {
+  char const *arg[5];
+  int i;
   struct msg *m;
 
   for (m = msg_chain; m; m = m->next)
-    printf (m->format, m->arg1, m->arg2, m->arg3, m->arg4);
+    {
+      arg[0] = m->args;
+      for (i = 0;  i < 4;  i++)
+	arg[i + 1] = arg[i] + strlen (arg[i]) + 1;
+      printf (gettext (arg[0]), arg[1], arg[2], arg[3], arg[4]);
+    }
 }
 
 /* Call before outputting the results of comparing files NAME0 and NAME1
@@ -179,7 +197,7 @@ begin_output ()
 
       pr_pid = vfork ();
       if (pr_pid < 0)
-	pfatal_with_name ("vfork");
+	pfatal_with_name ("fork");
 
       if (pr_pid == 0)
 	{
@@ -256,17 +274,17 @@ finish_output ()
     {
       int wstatus;
       if (ferror (outfile))
-	fatal ("write error");
+	fatal ("write failed");
 #if ! HAVE_FORK
       wstatus = pclose (outfile);
 #else /* HAVE_FORK */
       if (fclose (outfile) != 0)
-	pfatal_with_name ("write error");
+	pfatal_with_name (gettext ("write failed"));
       if (waitpid (pr_pid, &wstatus, 0) < 0)
 	pfatal_with_name ("waitpid");
 #endif /* HAVE_FORK */
       if (wstatus != 0)
-	fatal ("subsidiary pr failed");
+	fatal ("subsidiary program failed");
     }
 
   outfile = 0;
@@ -463,7 +481,7 @@ print_1_line (line_flag, line)
   output_1_line (text, limit, flag_format, line_flag);
 
   if ((!line_flag || line_flag[0]) && limit[-1] != '\n')
-    fprintf (out, "\n\\ No newline at end of file\n");
+    fprintf (out, "\n\\ %s\n", gettext ("No newline at end of file"));
 }
 
 /* Output a line from TEXT up to LIMIT.  Without -t, output verbatim.
