@@ -1,21 +1,22 @@
 /* Shared definitions for GNU DIFF
-   Copyright (C) 1988,1989,1991,1992,1993,1994 Free Software Foundation, Inc.
+   Copyright 1988, 89, 91, 92, 93, 94, 95, 1997 Free Software Foundation, Inc.
 
-This file is part of GNU DIFF.
+   This file is part of GNU DIFF.
 
-GNU DIFF is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
-any later version.
+   GNU DIFF is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation; either version 2, or (at your option)
+   any later version.
 
-GNU DIFF is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+   GNU DIFF is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
 
-You should have received a copy of the GNU General Public License
-along with GNU DIFF; see the file COPYING.  If not, write to
-the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
+   You should have received a copy of the GNU General Public License
+   along with this program; see the file COPYING.
+   If not, write to the Free Software Foundation, 
+   59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
 
 #include "system.h"
 #include <stdio.h>
@@ -26,9 +27,9 @@ the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 /* Variables for command line options */
 
 #ifndef GDIFF_MAIN
-#define EXTERN extern
+# define XTERN extern
 #else
-#define EXTERN
+# define XTERN
 #endif
 
 enum output_style {
@@ -54,78 +55,64 @@ enum output_style {
    i.e. can handle a file that ends in a non-newline.  */
 #define ROBUST_OUTPUT_STYLE(S) ((S) != OUTPUT_ED && (S) != OUTPUT_FORWARD_ED)
 
-EXTERN enum output_style output_style;
+XTERN enum output_style output_style;
 
 /* Nonzero if output cannot be generated for identical files.  */
-EXTERN int no_diff_means_no_output;
+XTERN int no_diff_means_no_output;
 
 /* Number of lines of context to show in each set of diffs.
    This is zero when context is not to be shown.  */
-EXTERN int      context;
+XTERN int context;
 
 /* Consider all files as text files (-a).
    Don't interpret codes over 0177 as implying a "binary file".  */
-EXTERN int	always_text_flag;
+XTERN int always_text_flag;
 
 /* Number of lines to keep in identical prefix and suffix.  */
-EXTERN int      horizon_lines;
+XTERN int horizon_lines;
 
 /* Ignore changes in horizontal white space (-b).  */
-EXTERN int      ignore_space_change_flag;
+XTERN int ignore_space_change_flag;
 
 /* Ignore all horizontal white space (-w).  */
-EXTERN int      ignore_all_space_flag;
+XTERN int ignore_all_space_flag;
 
 /* Ignore changes that affect only blank lines (-B).  */
-EXTERN int      ignore_blank_lines_flag;
+XTERN int ignore_blank_lines_flag;
 
 /* 1 if files may match even if their contents are not byte-for-byte identical.
    This depends on various options.  */
-EXTERN int      ignore_some_changes;
+XTERN int ignore_some_changes;
 
 /* Ignore differences in case of letters (-i).  */
-EXTERN int      ignore_case_flag;
+XTERN int ignore_case_flag;
 
 /* File labels for `-c' output headers (-L).  */
-EXTERN char *file_label[2];
+XTERN char *file_label[2];
 
 /* Regexp to identify function-header lines (-F).  */
-EXTERN struct re_pattern_buffer function_regexp;
+XTERN struct re_pattern_buffer function_regexp;
 
 /* Ignore changes that affect only lines matching this regexp (-I).  */
-EXTERN struct re_pattern_buffer ignore_regexp;
+XTERN struct re_pattern_buffer ignore_regexp;
 
 /* Say only whether files differ, not how (-q).  */
-EXTERN int 	no_details_flag;
-
-/* Report files compared that match (-s).
-   Normally nothing is output when that happens.  */
-EXTERN int      print_file_same_flag;
+XTERN int no_details_flag;
 
 /* Output the differences with exactly 8 columns added to each line
    so that any tabs in the text line up properly (-T).  */
-EXTERN int	tab_align_flag;
+XTERN int tab_align_flag;
 
 /* Expand tabs in the output so the text lines up properly
    despite the characters added to the front of each line (-t).  */
-EXTERN int	tab_expand_flag;
+XTERN int tab_expand_flag;
 
 /* In directory comparison, specify file to start with (-S).
    All file names less than this name are ignored.  */
-EXTERN char	*dir_start_file;
-
-/* If a file is new (appears in only one dir)
-   include its entire contents (-N).
-   Then `patch' would create the file with appropriate contents.  */
-EXTERN int	entire_new_file_flag;
-
-/* If a file is new (appears in only the second dir)
-   include its entire contents (-P).
-   Then `patch' would create the file with appropriate contents.  */
-EXTERN int	unidirectional_new_file_flag;
+XTERN char *dir_start_file;
 
 /* Pipe each file's output through pr (-l).  */
-EXTERN int	paginate_flag;
+XTERN int paginate_flag;
 
 enum line_class {
   /* Lines taken from just the first file.  */
@@ -139,34 +126,40 @@ enum line_class {
 };
 
 /* Line group formats for old, new, unchanged, and changed groups.  */
-EXTERN char *group_format[CHANGED + 1];
+XTERN char *group_format[CHANGED + 1];
 
 /* Line formats for old, new, and unchanged lines.  */
-EXTERN char *line_format[UNCHANGED + 1];
+XTERN char *line_format[UNCHANGED + 1];
 
 /* If using OUTPUT_SDIFF print extra information to help the sdiff filter.  */
-EXTERN int sdiff_help_sdiff;
+XTERN int sdiff_help_sdiff;
 
 /* Tell OUTPUT_SDIFF to show only the left version of common lines.  */
-EXTERN int sdiff_left_only;
+XTERN int sdiff_left_only;
 
 /* Tell OUTPUT_SDIFF to not show common lines.  */
-EXTERN int sdiff_skip_common_lines;
+XTERN int sdiff_skip_common_lines;
 
 /* The half line width and column 2 offset for OUTPUT_SDIFF.  */
-EXTERN unsigned sdiff_half_width;
-EXTERN unsigned sdiff_column2_offset;
+XTERN unsigned sdiff_half_width;
+XTERN unsigned sdiff_column2_offset;
 
 /* String containing all the command options diff received,
    with spaces between and at the beginning but none at the end.
    If there were no options given, this string is empty.  */
-EXTERN char *	switch_string;
+XTERN char *switch_string;
 
 /* Nonzero means use heuristics for better speed.  */
-EXTERN int	heuristic;
+XTERN int heuristic;
+
+/* Nonzero means don't merge hunks.  */
+XTERN int inhibit_hunk_merge;
+
+/* For debugging: don't do discard_confusing_lines.  */
+XTERN int no_discards;
 
 /* Name of program the user invoked (for error messages).  */
-EXTERN char *program_name;
+XTERN char *program_name;
 
 /* The result of comparison is an "edit script": a chain of `struct change'.
    Each `struct change' represents one place where some lines are deleted
@@ -197,7 +190,6 @@ struct file_data {
     int             desc;	/* File descriptor  */
     char const      *name;	/* File name  */
     struct stat     stat;	/* File status */
-    int             dir_p;	/* nonzero if file is a directory  */
 
     /* Buffer in which text of file is read.  */
     char *	    buffer;
@@ -254,18 +246,26 @@ struct file_data {
     int equiv_max;
 };
 
+/* Data on two input files being compared.  */
+
+struct comparison
+  {
+    struct file_data file[2];
+    struct comparison const *parent;  /* parent, if a recursive comparison */
+  };
+
 /* Describe the two files currently being compared.  */
 
-EXTERN struct file_data files[2];
+XTERN struct file_data files[2];
 
 /* Stdio stream to output diffs to.  */
 
-EXTERN FILE *outfile;
+XTERN FILE *outfile;
 
 /* Declare various functions.  */
 
 /* analyze.c */
-int diff_2_files PARAMS((struct file_data[], int));
+int diff_2_files PARAMS((struct comparison *));
 
 /* context.c */
 void print_context_header PARAMS((struct file_data[], int));
@@ -275,14 +275,21 @@ void print_context_script PARAMS((struct change *, int));
 int excluded_filename PARAMS((char const *));
 
 /* dir.c */
-int diff_dirs PARAMS((struct file_data const[], int (*) PARAMS((char const *, char const *, char const *, char const *, int)), int));
+int diff_dirs PARAMS((struct comparison const *, int (*) PARAMS((struct comparison const *, char const *, char const *))));
 
 /* ed.c */
 void print_ed_script PARAMS((struct change *));
 void pr_forward_ed_script PARAMS((struct change *));
 
 /* error.c */
-void error PARAMS((int, int, char const *, ...));
+#if __STDC__ && (HAVE_VPRINTF || HAVE_DOPRNT)
+void error (int, int, char const *, ...) __attribute__((format (printf, 3, 4)));
+#else
+void error ();
+#endif
+
+/* freesoft.c */
+extern char const free_software_msgid[];
 
 /* ifdef.c */
 void print_ifdef_script PARAMS((struct change *));
@@ -302,6 +309,7 @@ void print_rcs_script PARAMS((struct change *));
 void print_sdiff_script PARAMS((struct change *));
 
 /* util.c */
+extern char const pr_program[];
 char *concat PARAMS((char const *, char const *, char const *));
 char *dir_file_pathname PARAMS((char const *, char const *));
 int change_letter PARAMS((int, int));
@@ -312,13 +320,13 @@ struct change *find_reverse_change PARAMS((struct change *));
 void analyze_hunk PARAMS((struct change *, int *, int *, int *, int *, int *, int *));
 void begin_output PARAMS((void));
 void debug_script PARAMS((struct change *));
-void fatal PARAMS((char const *));
+void fatal PARAMS((char const *)) __attribute__((noreturn));
 void finish_output PARAMS((void));
 void message PARAMS((char const *, char const *, char const *));
 void message5 PARAMS((char const *, char const *, char const *, char const *, char const *));
 void output_1_line PARAMS((char const *, char const *, char const *, char const *));
 void perror_with_name PARAMS((char const *));
-void pfatal_with_name PARAMS((char const *));
+void pfatal_with_name PARAMS((char const *)) __attribute__((noreturn));
 void print_1_line PARAMS((char const *, char const * const *));
 void print_message_queue PARAMS((void));
 void print_number_range PARAMS((int, struct file_data *, int, int));
