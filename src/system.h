@@ -140,9 +140,9 @@ the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 #define STAT_BLOCKSIZE(s) (8 * 1024)
 #endif
 
-#if DIRENT || defined (_POSIX_VERSION)
+#if DIRENT
 #include <dirent.h>
-#else /* ! (DIRENT || defined (_POSIX_VERSION)) */
+#else /* ! DIRENT */
 #if SYSNDIR
 #include <sys/ndir.h>
 #else
@@ -156,7 +156,7 @@ the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 #undef dirent
 #endif
 #define dirent direct
-#endif /* ! (DIRENT || defined (_POSIX_VERSION)) */
+#endif /* ! DIRENT */
 
 #if HAVE_VFORK_H
 #include <vfork.h>
