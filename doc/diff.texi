@@ -3254,7 +3254,7 @@ files).  You can also specify where to put the output with the @samp{-o
 @var{output-file}} or @samp{--output=@var{output-file}} option.
 
 @menu
-* patch Directories::	Changing directory and stripping paths.
+* patch Directories::	Changing directory and stripping directories.
 * Backups::		Backup file names.
 * Rejects::		Reject file names.
 * patch Options::	Summary table of options to @code{patch}.
@@ -3285,11 +3285,11 @@ option to set the file name strip count to @var{number}.  The strip
 count tells @code{patch} how many slashes, along with the directory
 names between them, to strip from the front of file names.  @samp{-p}
 with no @var{number} given is equivalent to @samp{-p0}.  By default,
-@code{patch} strips off all leading paths, leaving just the base file
+@code{patch} strips off all leading directories, leaving just the base file
 names, except that when a file name given in the patch is a relative
-path and all of its leading directories already exist, @code{patch} does
-not strip off the leading path.  (A @dfn{relative} path is one that does
-not start with a slash.)
+file name and all of its leading directories already exist, @code{patch} does
+not strip off the leading directory.  (A @dfn{relative} file name is one
+that does not start with a slash.)
 
 @code{patch} looks for each file (after any slashes have been stripped)
 in the current directory, or if you used the @samp{-d @var{directory}}
