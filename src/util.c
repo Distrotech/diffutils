@@ -1,7 +1,7 @@
 /* Support routines for GNU DIFF.
 
-   Copyright (C) 1988, 1989, 1992, 1993, 1994, 1995, 1998, 2001 Free
-   Software Foundation, Inc.
+   Copyright (C) 1988, 1989, 1992, 1993, 1994, 1995, 1998, 2001, 2002
+   Free Software Foundation, Inc.
 
    This file is part of GNU DIFF.
 
@@ -62,7 +62,7 @@ pfatal_with_name (char const *name)
 {
   int e = errno;
   print_message_queue ();
-  error (2, e, "%s", name);
+  error (EXIT_TROUBLE, e, "%s", name);
   abort ();
 }
 
@@ -72,7 +72,7 @@ void
 fatal (char const *msgid)
 {
   print_message_queue ();
-  error (2, 0, "%s", _(msgid));
+  error (EXIT_TROUBLE, 0, "%s", _(msgid));
   abort ();
 }
 
@@ -181,8 +181,7 @@ begin_output (void)
   name = xmalloc (strlen (current_name0) + strlen (current_name1)
 		  + strlen (switch_string) + 7);
 
-  /* POSIX 1003.2-1992 section 4.17.6.1.1 specifies this format.
-     POSIX 1003.1-2001 is unchanged here.  But there are some bugs in
+  /* POSIX 1003.1-2001 specifies this format.  But there are some bugs in
      the standard: it says that we must print only the last component
      of the pathnames, and it requires two spaces after "diff" if
      there are no options.  These requirements are silly and do not
@@ -217,7 +216,7 @@ begin_output (void)
 	      }
 
 	    execl (pr_program, pr_program, "-h", name, 0);
-	    _exit (127);
+	    _exit (errno == ENOEXEC ? 126 : 127);
 	  }
 	else
 	  {
@@ -296,9 +295,11 @@ finish_output (void)
 	pfatal_with_name ("waitpid");
 #endif
       if (! werrno && WIFEXITED (wstatus) && WEXITSTATUS (wstatus) == 127)
-	error (2, 0, _("subsidiary program `%s' not found"), pr_program);
+	error (EXIT_TROUBLE, 0, _("subsidiary program `%s' not found"),
+	       pr_program);
       if (wstatus != 0)
-	error (2, werrno, _("subsidiary program `%s' failed"), pr_program);
+	error (EXIT_TROUBLE, werrno, _("subsidiary program `%s' failed"),
+	       pr_program);
     }
 
   outfile = 0;
@@ -541,14 +542,14 @@ output_1_line (char const *base, char const *limit, char const *flag_format,
       register FILE *out = outfile;
       register unsigned char c;
       register char const *t = base;
-      register unsigned column = 0;
+      register unsigned int column = 0;
 
       while (t < limit)
 	switch ((c = *t++))
 	  {
 	  case '\t':
 	    {
-	      unsigned spaces = TAB_WIDTH - column % TAB_WIDTH;
+	      unsigned int spaces = TAB_WIDTH - column % TAB_WIDTH;
 	      column += spaces;
 	      do
 		putc (' ', out);
