@@ -505,7 +505,7 @@ block_read (fd, buf, nchars)
   return bp - buf;
 }
 
-/* Print character C, making nonvisible characters
+/* Print character C, making unprintable characters
    visible by quoting like cat -t does.
    Pad with spaces on the right to WIDTH characters.  */
 
@@ -516,24 +516,27 @@ printc (width, c)
 {
   register FILE *fs = stdout;
 
-  if (c >= 128)
+  if (! isprint (c))
     {
-      putc ('M', fs);
-      putc ('-', fs);
-      c -= 128;
-      width -= 2;
-    }
-  if (c < 32)
-    {
-      putc ('^', fs);
-      c += 64;
-      --width;
-    }
-  else if (c == 127)
-    {
-      putc ('^', fs);
-      c = '?';
-      --width;
+      if (c >= 128)
+	{
+	  putc ('M', fs);
+	  putc ('-', fs);
+	  c -= 128;
+	  width -= 2;
+	}
+      if (c < 32)
+	{
+	  putc ('^', fs);
+	  c += 64;
+	  --width;
+	}
+      else if (c == 127)
+	{
+	  putc ('^', fs);
+	  c = '?';
+	  --width;
+	}
     }
 
   putc (c, fs);
