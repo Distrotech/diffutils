@@ -1,5 +1,5 @@
 /* Three-way file comparison program (diff3) for Project GNU
-   Copyright (C) 1988, 1989 Free Software Foundation, Inc.
+   Copyright (C) 1988, 1989, 1992 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -14,36 +14,43 @@
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  */
-
 
 /* Written by Randy Smith */
 
-#ifdef __STDC__
+#if __STDC__
 #define VOID void
 #else
 #define VOID char
 #endif
 
-/* 
- * Include files.
- */
 #include <stdio.h>
 #include <ctype.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include "getopt.h"
 
 #if defined (USG) || defined (STDC_HEADERS)
+#include <string.h>
 #define bcmp(s1,s2,n)	memcmp (s1,s2,n)
 #define bzero(s,n)	memset (s,0,n)
+#else
+#include <strings.h>
+#endif
+
+#ifdef STDC_HEADERS
+#include <stdlib.h>
+#else
+char *malloc ();
+char *realloc ();
 #endif
 
 #ifndef HAVE_DUP2
 #define dup2(f,t)	(close (t),  fcntl (f, F_DUPFD, t))
 #endif
 
-#if defined (HAVE_UNISTD_H)
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
-#endif /* HAVE_UNISTD_H */
+#endif
 
 #if defined (USG) || defined (_POSIX_VERSION)
 #include <fcntl.h>
@@ -58,7 +65,7 @@
 
 #ifndef WEXITSTATUS
 #define WEXITSTATUS(stat_val) ((unsigned)(stat_val) >> 8)
-#undef WIFEXITED /* Avoid 4.3BSD incompatibility with Posix.  */
+#undef WIFEXITED		/* Avoid 4.3BSD incompatibility with Posix.  */
 #endif
 #ifndef WIFEXITED
 #define WIFEXITED(stat_val) (((stat_val) & 255) == 0)
@@ -177,43 +184,40 @@ struct diff3_block {
 #define	ALLOCATE(number, type)	\
   (type *) xmalloc ((number) * sizeof (type))
 
-/*
- * Options variables for flags set on command line.
- *
- * ALWAYS_TEXT: Treat all files as text files; never treat as binary.
- *
- * EDSCRIPT: Write out an ed script instead of the standard diff3 format.
- *
- * FLAGGING: Indicates that in the case of overlapping diffs (type
- * DIFF_ALL), the lines which would normally be deleted from file 1
- * should be preserved with a special flagging mechanism.
- *
- * DONT_WRITE_OVERLAP: 1 if information for overlapping diffs should
- * not be output.
- *
- * DONT_WRITE_SIMPLE: 1 if information for non-overlapping diffs
- * should not be output. 
- *
- * FINALWRITE: 1 if a :wq should be included at the end of the script
- * to write out the file being edited.
- *
- * MERGE: output a merged file.
- */
-int always_text;
-int edscript;
-int flagging;
-int dont_write_overlap;
-int dont_write_simple;
-int finalwrite;
-int merge;
+/* Options variables for flags set on command line.  */
 
-extern int optind;
+/* If nonzero, treat all files as text files, never as binary.  */
+int always_text;
+
+/* If nonzero, write out an ed script instead of the standard diff3 format.  */
+int edscript;
+
+/* If nonzero, in the case of overlapping diffs (type DIFF_ALL),
+   preserve the lines which would normally be deleted from
+   file 1 with a special flagging mechanism.  */
+int flagging;
+
+/* If nonzero, do not output information for overlapping diffs.  */
+int simple_only;
+
+/* If nonzero, do not output information for non-overlapping diffs.  */
+int overlap_only;
+
+/* If nonzero, include `:wq' at the end of the script
+   to write out the file being edited.   */
+int finalwrite;
+
+/* If nonzero, output a merged file.  */
+int merge;
 
 char *argv0;
 
 /*
  * Forward function declarations.
  */
+int myread ();
+void fatal ();
+void perror_with_exit ();
 struct diff_block *process_diff ();
 struct diff3_block *make_3way_diff ();
 void output_diff3 ();
@@ -237,10 +241,23 @@ VOID *xrealloc ();
 
 char diff_program[] = DIFF_PROGRAM;
 
+struct option longopts[] =
+{
+  {"text", 0, NULL, 'a'},
+  {"ed", 0, NULL, 'e'},
+  {"show-overlap", 0, NULL, 'E'},
+  {"label", 1, NULL, 'L'},
+  {"merge", 0, NULL, 'm'},
+  {"overlap-only", 0, NULL, 'x'},
+  {"easy-only", 0, NULL, '3'},
+  {0, 0, 0, 0}
+};
+
 /*
  * Main program.  Calls diff twice on two pairs of input files,
  * combines the two diffs, and outputs them.
  */
+int
 main (argc, argv)
      int argc;
      char **argv;
@@ -264,7 +281,8 @@ main (argc, argv)
 
   argv0 = argv[0];
   
-  while ((c = getopt (argc, argv, "aeimx3EXL:")) != EOF)
+  while ((c = getopt_long (argc, argv, "aeimx3EXL:", longopts, (int *) 0))
+	 != EOF)
     {
       switch (c)
 	{
@@ -272,11 +290,11 @@ main (argc, argv)
 	  always_text = 1;
 	  break;
 	case 'x':
-	  dont_write_simple = 1;
+	  overlap_only = 1;
 	  incompat++;
 	  break;
 	case '3':
-	  dont_write_overlap = 1;
+	  simple_only = 1;
 	  incompat++;
 	  break;
 	case 'i':
@@ -286,7 +304,7 @@ main (argc, argv)
 	  merge = 1;
 	  break;
 	case 'X':
-	  dont_write_simple = 1;
+	  overlap_only = 1;
 	  /* Falls through */
 	case 'E':
 	  flagging = 1;
@@ -387,6 +405,7 @@ main (argc, argv)
   if (ferror (stdout) || fflush (stdout) != 0)
     fatal ("write error");
   exit (overlaps_found);
+  return overlaps_found;
 }
       
 /*
@@ -395,9 +414,13 @@ main (argc, argv)
 void
 usage ()
 {
-  fprintf (stderr, "Usage:\t%s [-exEX3 [-i | -m] [-L label1 -L label3]] file1 file2 file3\n",
-	   argv0);
-  fprintf (stderr, "\tOnly one of [exEX3] allowed\n");
+  fprintf (stderr, "\
+Usage: %s [options] my-file older-file your-file\n\
+Options:\n\
+       [-exEX3] [-i|-m] [-L my-label [-L your-label]] [--text] [--ed]\n\
+       [--merge] [--show-overlap] [--overlap-only] [--easy-only]\n\
+       [--label=my-label [--label=your-label]]\n\
+       Only one of [exEX3] is allowed\n", argv0);
   exit (2);
 }
 
@@ -615,7 +638,7 @@ make_3way_diff (thread1, thread2)
 				       last_diff);
 
       if (!tmpblock)
-	fatal ("internal: screwup in format of diff blocks");
+	fatal ("internal error: screwup in format of diff blocks");
 
       /* Put it on the list */
       if (result)
@@ -1016,7 +1039,7 @@ process_diff (filea, fileb)
 	case CHANGE:
 	  break;
 	default:
-	  fatal ("internal: Bad diff type in process_diff");
+	  fatal ("internal error: invalid diff type in process_diff");
 	  break;
 	}
       
@@ -1043,7 +1066,7 @@ process_diff (filea, fileb)
       if (dt == CHANGE)
 	{
 	  if (strncmp (scan_diff, "---\n", 4))
-	    fatal ("Bad diff format: bad change separator");
+	    fatal ("invalid diff format; invalid change separator");
 	  scan_diff += 4;
 	}
       
@@ -1195,7 +1218,7 @@ read_diff (filea, fileb, output_placement)
   *ap = (char *) 0;
 
   if (pipe (fds) < 0)
-    perror_with_exit ("Pipe failed");
+    perror_with_exit ("pipe failed");
 
   pid = vfork ();
   if (pid == 0)
@@ -1215,7 +1238,7 @@ read_diff (filea, fileb, output_placement)
     }
 
   if (pid == -1)
-    perror_with_exit ("Fork failed");
+    perror_with_exit ("fork failed");
 
   close (fds[1]);		/* Prevent erroneous lack of EOF */
   current_chunk_size = DIFF_CHUNK_SIZE;
@@ -1231,17 +1254,17 @@ read_diff (filea, fileb, output_placement)
   } while (bytes);
 
   if (total != 0 && diff_result[total-1] != '\n')
-    fatal ("bad diff format; incomplete last line");
+    fatal ("invalid diff format; incomplete last line");
 
   *output_placement = diff_result;
 
   do
     if ((w = wait (&wstatus)) == -1)
-      perror_with_exit ("Wait failed");
+      perror_with_exit ("wait failed");
   while (w != pid);
 
   if (! (WIFEXITED (wstatus) && WEXITSTATUS (wstatus) < 2))
-    fatal ("Subsidiary diff failed");
+    fatal ("subsidiary diff failed");
 
   return diff_result + total;
 }
@@ -1265,7 +1288,7 @@ scan_diff_line (scan_ptr, set_start, set_length, limit, firstchar)
 
   if (!(scan_ptr[0] == (firstchar)
 	&& scan_ptr[1] == ' '))
-    fatal ("Bad diff format; incorrect leading line chars");
+    fatal ("invalid diff format; incorrect leading line chars");
 
   *set_start = line_ptr = scan_ptr + 2;
   while (*line_ptr++ != '\n')
@@ -1342,7 +1365,7 @@ output_diff3 (outputfile, diff, mapping, rev_mapping)
 	  dontprint = oddoneout==0;
 	  break;
 	default:
-	  fatal ("internal: Bad diff type passed to output");
+	  fatal ("internal error: invalid diff type passed to output");
 	}
       fprintf (outputfile, "====%s\n", x);
 
@@ -1435,8 +1458,8 @@ output_diff3_edscript (outputfile, diff, mapping, rev_mapping,
 
       /* If we aren't supposed to do this output block, skip it */
       if (type == DIFF_2ND || type == DIFF_1ST
-	  || (type == DIFF_3RD && dont_write_simple)
-	  || (type == DIFF_ALL && dont_write_overlap))
+	  || (type == DIFF_3RD && overlap_only)
+	  || (type == DIFF_ALL && simple_only))
 	continue;
 
       if (flagging && type == DIFF_ALL)
@@ -1567,8 +1590,8 @@ output_diff3_merge (commonfile, outputfile, diff, mapping, rev_mapping,
 
       /* If we aren't supposed to do this output block, skip it.  */
       if (type == DIFF_2ND || type == DIFF_1ST
-	  || (type == DIFF_3RD && dont_write_simple)
-	  || (type == DIFF_ALL && dont_write_overlap))
+	  || (type == DIFF_3RD && overlap_only)
+	  || (type == DIFF_ALL && simple_only))
 	continue;
 
       /* Copy I lines from common file.  */
@@ -1654,7 +1677,7 @@ myread (fd, ptr, size)
 {
   int result = read (fd, ptr, size);
   if (result < 0)
-    perror_with_exit ("Read failed");
+    perror_with_exit ("read failed");
   return result;
 }
 
@@ -1664,7 +1687,7 @@ xmalloc (size)
 {
   VOID *result = (VOID *) malloc (size ? size : 1);
   if (!result)
-    fatal ("Malloc failed");
+    fatal ("virtual memory exhausted");
   return result;
 }
 
@@ -1675,10 +1698,11 @@ xrealloc (ptr, size)
 {
   VOID *result = (VOID *) realloc (ptr, size ? size : 1);
   if (!result)
-    fatal ("Malloc failed");
+    fatal ("virtual memory exhausted");
   return result;
 }
 
+void
 fatal (string)
      char *string;
 {
@@ -1686,9 +1710,11 @@ fatal (string)
   exit (2);
 }
 
+void
 perror_with_exit (string)
      char *string;
 {
+  fprintf (stderr, "%s: ", argv0);
   perror (string);
   exit (2);
 }
