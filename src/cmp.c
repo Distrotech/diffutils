@@ -72,7 +72,9 @@ static enum
   } comparison_type;
 
 /* Type used for fast comparison of several bytes at a time.  */
+#ifndef word
 #define word int
+#endif
 
 /* If nonzero, print values of bytes quoted like cat -t does. */
 static int opt_print_chars;
@@ -197,7 +199,7 @@ main (argc, argv)
 
       file_desc[i1] = (strcmp (file[i1], "-") == 0
 		       ? STDIN_FILENO
-		       : open (file[i1], O_RDONLY | O_BINARY, 0));
+		       : open (file[i1], O_RDONLY, 0));
       if (file_desc[i1] < 0 || fstat (file_desc[i1], &stat_buf[i1]) != 0)
 	{
 	  if (file_desc[i1] < 0 && comparison_type == type_status)
@@ -205,6 +207,9 @@ main (argc, argv)
 	  else
 	    error (2, errno, "%s", file[i1]);
 	}
+#if HAVE_SETMODE
+      setmode (file_desc[i1], O_BINARY);
+#endif
     }
 
   /* If the files are links to the same inode and have the same file position,
@@ -214,14 +219,14 @@ main (argc, argv)
       && file_position (0) == file_position (1))
     exit (0);
 
-  /* If output is redirected to "/dev/null", we may assume `-s'.  */
+  /* If output is redirected to the null device, we may assume `-s'.  */
 
   if (comparison_type != type_status)
     {
       struct stat outstat, nullstat;
 
       if (fstat (STDOUT_FILENO, &outstat) == 0
-	  && stat ("/dev/null", &nullstat) == 0
+	  && stat (NULL_DEVICE, &nullstat) == 0
 	  && 0 < same_file (&outstat, &nullstat))
 	comparison_type = type_status;
     }
@@ -328,7 +333,7 @@ cmp ()
 	    {
 	    case type_first_diff:
 	      /* See Posix.2 section 4.10.6.1 for this format.  */
-	      printf ("%s %s differ: char %ld, line %ld",
+	      printf ("%s %s differ: char %lu, line %lu",
 		      file[0], file[1], char_number, line_number);
 	      if (opt_print_chars)
 		{
@@ -361,7 +366,7 @@ cmp ()
 			}
 		      else
 			/* See Posix.2 section 4.10.6.1 for this format.  */
-			printf ("%6ld %3o %3o\n", char_number, c0, c1);
+			printf ("%6lu %3o %3o\n", char_number, c0, c1);
 		    }
 		  char_number++;
 		  first_diff++;
@@ -516,7 +521,7 @@ printc (width, c)
 {
   register FILE *fs = stdout;
 
-  if (! isprint (c))
+  if (! ISPRINT (c))
     {
       if (c >= 128)
 	{
