@@ -1,5 +1,6 @@
 /* Buffer primitives for comparison operations.
-   Copyright 1993, 1995, 1997 Free Software Foundation, Inc.
+
+   Copyright (C) 1993, 1995, 1998, 2001 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -13,35 +14,41 @@
 
    You should have received a copy of the GNU General Public License
    along with this program; see the file COPYING.
-   If not, write to the Free Software Foundation, 
+   If not, write to the Free Software Foundation,
    59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
 
-#include "system.h"
+#if HAVE_CONFIG_H
+# include <config.h>
+#endif
+
+#if HAVE_UNISTD_H
+# include <unistd.h>
+#endif
+
+#include <sys/types.h>
 #include "cmpbuf.h"
 
-/* Read NCHARS bytes from descriptor FD into BUF.
+/* Read NBYTES bytes from descriptor FD into BUF.
    Return the number of characters successfully read.
-   The number returned is always NCHARS unless end-of-file or error.  */
+   On error, return (size_t) -1.
+   The number returned is always NBYTES unless end-of-file or error.  */
 
 size_t
-block_read (fd, buf, nchars)
-     int fd;
-     char *buf;
-     size_t nchars;
+block_read (int fd, char *buf, size_t nbytes)
 {
   char *bp = buf;
+  char const *buflim = buf + nbytes;
 
   do
     {
-      size_t nread = read (fd, bp, nchars);
-      if (nread == -1)
+      ssize_t nread = read (fd, bp, buflim - bp);
+      if (nread < 0)
 	return -1;
       if (nread == 0)
 	break;
       bp += nread;
-      nchars -= nread;
     }
-  while (nchars != 0);
+  while (bp < buflim);
 
   return bp - buf;
 }
@@ -49,8 +56,7 @@ block_read (fd, buf, nchars)
 /* Least common multiple of two buffer sizes A and B.  */
 
 size_t
-buffer_lcm (a, b)
-     size_t a, b;
+buffer_lcm (size_t a, size_t b)
 {
   size_t m, n, r;
 
