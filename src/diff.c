@@ -30,7 +30,6 @@
 #include <exitfail.h>
 #include <file-type.h>
 #include <fnmatch.h>
-#include <freesoft.h>
 #include <getopt.h>
 #include <hard-locale.h>
 #include <posixver.h>
@@ -38,14 +37,12 @@
 #include <quotesys.h>
 #include <regex.h>
 #include <setmode.h>
+#include <version-etc.h>
 #include <xalloc.h>
 
 static char const authorship_msgid[] =
   N_("Written by Paul Eggert, Mike Haertel, David Hayes,\n\
 Richard Stallman, and Len Tower.");
-
-static char const copyright_notice[] =
-  "Copyright %s 2002 Free Software Foundation, Inc.";
 
 #ifndef GUTTER_WIDTH_MINIMUM
 # define GUTTER_WIDTH_MINIMUM 3
@@ -473,10 +470,7 @@ main (int argc, char **argv)
 	  break;
 
 	case 'v':
-	  printf ("diff %s\n", version_string);
-	  printf (copyright_notice, _("(C)"));
-	  printf ("\n\n%s\n\n%s\n",
-		  _(free_software_msgid), _(authorship_msgid));
+	  version_etc ("diff", authorship_msgid);
 	  check_stdout ();
 	  return EXIT_SUCCESS;
 
