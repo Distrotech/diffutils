@@ -1,4 +1,4 @@
-# Translation catalog for English in the UK.
+# Translation catalog for English in Great Britain.
 # Only differences are given.
 
 # `Thou whoreson zed!  Thou unnecessary letter!'  -- Kent in _King Lear_
@@ -7,6 +7,3 @@ msgstr "%s: unrecognised option `%c%s'\n"
 
 msgid  "%s: unrecognized option `--%s'\n"
 msgstr "%s: unrecognised option `--%s'\n"
-
-msgid  "subsidiary program failed"
-msgstr "subsidiary programme failed"
