@@ -206,6 +206,7 @@ static struct option longopts[] =
   {"new-group-format", 1, 0, 136},
   {"unchanged-group-format", 1, 0, 137},
   {"changed-group-format", 1, 0, 138},
+  {"horizon-lines", 1, 0, 139},
   {0, 0, 0, 0}
 };
 
@@ -531,6 +532,11 @@ main (argc, argv)
 	  }
 	  break;
 
+	case 139:
+	  if (ck_atoi (optarg, &horizon_lines) || horizon_lines < 0)
+	    fatal ("horizon must be a nonnegative integer");
+	  break;
+
 	default:
 	  usage ();
 	}
@@ -648,7 +654,8 @@ usage ()
        [--old-line-format=format] [--new-line-format=format]\n\
        [--unchanged-line-format=format]\n\
        [--old-group-format=format] [--new-group-format=format]\n\
-       [--unchanged-group-format=format] [--changed-group-format=format]\n");
+       [--unchanged-group-format=format] [--changed-group-format=format]\n\
+       [--horizon-lines=lines]\n");
   exit (2);
 } 
 
