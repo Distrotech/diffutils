@@ -1,5 +1,5 @@
 /* System dependent declarations.
-   Copyright (C) 1988, 1989, 1992 Free Software Foundation, Inc.
+   Copyright (C) 1988, 1989, 1992, 1993 Free Software Foundation, Inc.
 
 This file is part of GNU DIFF.
 
@@ -27,19 +27,23 @@ the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 #define S_ISREG(mode) (((mode) & S_IFMT) == S_IFREG)
 #endif
 
-#ifdef HAVE_UNISTD_H
+#if HAVE_UNISTD_H
 #include <unistd.h>
 #endif
 
-#if defined (USG) || defined (_POSIX_VERSION)
+#if HAVE_TIME_H
 #include <time.h>
-#include <fcntl.h>
 #else
 #include <sys/time.h>
+#endif
+
+#if HAVE_FCNTL_H
+#include <fcntl.h>
+#else
 #include <sys/file.h>
 #endif
 
-#ifndef HAVE_DUP2
+#if !HAVE_DUP2
 #define dup2(f,t)	(close (t),  fcntl (f,F_DUPFD,t))
 #endif
 
@@ -47,9 +51,16 @@ the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 #define O_RDONLY 0
 #endif
 
-#if !defined (USG) || defined (_POSIX_VERSION)
-#include <sys/wait.h>
+#if HAVE_SYS_WAIT_H
+#ifndef _POSIX_VERSION
+/* Prevent the NeXT prototype using union wait from causing problems.  */
+#define wait system_wait
 #endif
+#include <sys/wait.h>
+#ifndef _POSIX_VERSION
+#undef wait
+#endif
+#endif /* HAVE_SYS_WAIT_H */
 
 #ifndef WEXITSTATUS
 #define WEXITSTATUS(stat_val) ((unsigned)(stat_val) >> 8)
@@ -65,40 +76,47 @@ the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 #define STAT_BLOCKSIZE(s) (S_ISREG ((s).st_mode) ? 8192 : 4096)
 #endif
 
-#if defined (DIRENT) || defined (_POSIX_VERSION)
+#if DIRENT || defined (_POSIX_VERSION)
 #include <dirent.h>
 #ifdef direct
 #undef direct
 #endif
 #define direct dirent
-#else /* not (DIRENT or _POSIX_VERSION) */
-#ifdef USG
-#ifdef SYSNDIR
+#else /* ! (DIRENT || defined (_POSIX_VERSION)) */
+#if SYSNDIR
 #include <sys/ndir.h>
-#else /* !SYSNDIR */
-#include <ndir.h>
-#endif /* SYSNDIR */
-#else /* !USG */
+#else
+#if SYSDIR
 #include <sys/dir.h>
-#endif /* USG */
-#endif /* DIRENT or _POSIX_VERSION */
+#else
+#include <ndir.h>
+#endif
+#endif
+#endif /* ! (DIRENT || defined (_POSIX_VERSION)) */
 
-#ifdef HAVE_VFORK_H
+#if HAVE_VFORK_H
 #include <vfork.h>
 #endif
 
-#if defined (USG) || defined (STDC_HEADERS)
+#if HAVE_STRING_H || STDC_HEADERS
 #include <string.h>
+#ifndef index
 #define index	strchr
+#endif
+#ifndef rindex
 #define rindex	strrchr
+#endif
 #define bcopy(s,d,n)	memcpy (d,s,n)
 #define bcmp(s1,s2,n)	memcmp (s1,s2,n)
 #define bzero(s,n)	memset (s,0,n)
 #else
 #include <strings.h>
 #endif
+#if !HAVE_MEMCHR && !STDC_HEADERS
+char *memchr ();
+#endif
 
-#if defined (STDC_HEADERS)
+#if STDC_HEADERS
 #include <stdlib.h>
 #include <limits.h>
 #else
@@ -114,7 +132,7 @@ char *realloc ();
 #endif
 
 #include <errno.h>
-#ifndef STDC_HEADERS
+#if !STDC_HEADERS
 extern int errno;
 #endif
 
@@ -128,7 +146,6 @@ extern int errno;
 #define	FALSE		0
 
 #if !__STDC__
-#define const
 #define volatile
 #endif
 
