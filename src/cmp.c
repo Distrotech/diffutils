@@ -25,9 +25,17 @@
 #include <error.h>
 #include <freesoft.h>
 #include <getopt.h>
+#include <hard-locale.h>
 #include <inttostr.h>
+#include <setmode.h>
 #include <xalloc.h>
 #include <xstrtol.h>
+
+#ifdef LC_MESSAGES
+# define hard_locale_LC_MESSAGES hard_locale (LC_MESSAGES)
+#else
+# define hard_locale_LC_MESSAGES 0
+#endif
 
 static char const authorship_msgid[] =
   N_("Written by Torbjorn Granlund and David MacKenzie.");
@@ -41,7 +49,7 @@ static int cmp (void);
 static off_t file_position (int);
 static size_t block_compare (word const *, word const *);
 static size_t block_compare_and_count (word const *, word const *, off_t *);
-static void sprintc (char *, int, unsigned char);
+static void sprintc (char *, unsigned char);
 
 /* Name under which this program was invoked.  */
 char *program_name;
@@ -51,6 +59,9 @@ static char const *file[2];
 
 /* File descriptors of the files.  */
 static int file_desc[2];
+
+/* Status of the files.  */
+static struct stat stat_buf[2];
 
 /* Read buffers for the files.  */
 static word *buffer[2];
@@ -109,7 +120,7 @@ try_help (char const *reason_msgid, char const *operand)
   abort ();
 }
 
-static char const valid_suffixes[] = "kMGTPEZY";
+static char const valid_suffixes[] = "kKMGTPEZY";
 
 /* Parse an operand *ARGPTR of --ignore-initial, updating *ARGPTR to
    point after the operand.  If DELIMITER is nonzero, the operand may
@@ -138,7 +149,7 @@ check_stdout (void)
 }
 
 static char const * const option_help_msgid[] = {
-  N_("-b  --print-bytes  Output differing bytes as characters."),
+  N_("-b  --print-bytes  Print differing bytes."),
   N_("-i SKIP  --ignore-initial=SKIP  Skip the first SKIP bytes of input."),
   N_("-i SKIP1:SKIP2  --ignore-initial=SKIP1:SKIP2"),
   N_("  Skip the first SKIP1 bytes of FILE1 and the first SKIP2 bytes of FILE2."),
@@ -174,15 +185,14 @@ int
 main (int argc, char **argv)
 {
   int c, f, exit_status;
-  struct stat stat_buf[2];
   size_t words_per_buffer;
 
+  xalloc_exit_failure = 2;
   initialize_main (&argc, &argv);
   program_name = argv[0];
   setlocale (LC_ALL, "");
   bindtextdomain (PACKAGE, LOCALEDIR);
   textdomain (PACKAGE);
-  xalloc_exit_failure = 2;
 
   /* Parse command line options.  */
 
@@ -297,7 +307,8 @@ main (int argc, char **argv)
 
   /* If only a return code is needed,
      and if both input descriptors are associated with plain files,
-     conclude that the files differ if they have different sizes.  */
+     conclude that the files differ if they have different sizes
+     and if more bytes will be compared than are in the smaller file.  */
 
   if (comparison_type == type_status
       && S_ISREG (stat_buf[0].st_mode)
@@ -305,8 +316,11 @@ main (int argc, char **argv)
     {
       off_t s0 = stat_buf[0].st_size - file_position (0);
       off_t s1 = stat_buf[1].st_size - file_position (1);
-
-      if (MAX (0, s0) != MAX (0, s1))
+      if (s0 < 0)
+	s0 = 0;
+      if (s1 < 0)
+	s1 = 0;
+      if (s0 != s1 && MIN (s0, s1) < bytes)
 	exit (1);
     }
 
@@ -340,7 +354,7 @@ static int
 cmp (void)
 {
   off_t line_number = 1;	/* Line number (1...) of first difference. */
-  off_t char_number = 1;	/* Index (1...) in files of 1st difference. */
+  off_t byte_number = 1;	/* Index (1...) in files of 1st difference. */
   uintmax_t remaining = bytes;	/* Remaining number of bytes to compare.  */
   size_t read0, read1;		/* Number of bytes read from each file. */
   size_t first_diff;		/* Offset (0...) in buffers of 1st diff. */
@@ -351,6 +365,23 @@ cmp (void)
   char *buf1 = (char *) buffer1;
   int ret = 0;
   int f;
+  int offset_width;
+
+  if (comparison_type == type_all_diffs)
+    {
+      off_t byte_number_max = MIN (bytes, TYPE_MAXIMUM (off_t));
+
+      for (f = 0; f < 2; f++)
+	if (S_ISREG (stat_buf[f].st_mode))
+	  {
+	    off_t file_bytes = stat_buf[f].st_size - file_position (f);
+	    if (file_bytes < byte_number_max)
+	      byte_number_max = file_bytes;
+	  }
+
+      for (offset_width = 1; (byte_number_max /= 10) != 0; offset_width++)
+	continue;
+    }
 
   for (f = 0; f < 2; f++)
     {
@@ -401,7 +432,7 @@ cmp (void)
 		    ? block_compare_and_count (buffer0, buffer1, &line_number)
 		    : block_compare (buffer0, buffer1));
 
-      char_number += first_diff;
+      byte_number += first_diff;
       smaller = MIN (read0, read1);
 
       if (first_diff < smaller)
@@ -410,25 +441,31 @@ cmp (void)
 	    {
 	    case type_first_diff:
 	      {
-		char char_buf[INT_BUFSIZE_BOUND (off_t)];
+		char byte_buf[INT_BUFSIZE_BOUND (off_t)];
 		char line_buf[INT_BUFSIZE_BOUND (off_t)];
-		char const *char_num = offtostr (char_number, char_buf);
+		char const *byte_num = offtostr (byte_number, byte_buf);
 		char const *line_num = offtostr (line_number, line_buf);
 		if (!opt_print_bytes)
-		  /* See POSIX 1003.2-1992 section 4.10.6.1 for this
-                     format.  */
-		  printf (_("%s %s differ: char %s, line %s\n"),
-			  file[0], file[1], char_num, line_num);
+		  {
+		    /* See POSIX 1003.2-1992 section 4.10.6.1 for this format.
+		       POSIX 1003.1-2001 is unchanged here.
+		       The POSIX rationale recommends using the word "byte"
+		       outside the POSIX locale.  */
+		    printf ((hard_locale_LC_MESSAGES
+			     ? _("%s %s differ: byte %s, line %s\n")
+			     : "%s %s differ: char %s, line %s\n"),
+			    file[0], file[1], byte_num, line_num);
+		  }
 		else
 		  {
 		    unsigned char c0 = buf0[first_diff];
 		    unsigned char c1 = buf1[first_diff];
 		    char s0[5];
 		    char s1[5];
-		    sprintc (s0, 0, c0);
-		    sprintc (s1, 0, c1);
+		    sprintc (s0, c0);
+		    sprintc (s1, c1);
 		    printf (_("%s %s differ: byte %s, line %s is %3o %s %3o %s\n"),
-			    file[0], file[1], char_num, line_num,
+			    file[0], file[1], byte_num, line_num,
 			    c0, s0, c1, s1);
 		}
 	      }
@@ -443,23 +480,26 @@ cmp (void)
 		  unsigned char c1 = buf1[first_diff];
 		  if (c0 != c1)
 		    {
-		      char char_buf[INT_BUFSIZE_BOUND (off_t)];
-		      char const *char_num = offtostr (char_number, char_buf);
+		      char byte_buf[INT_BUFSIZE_BOUND (off_t)];
+		      char const *byte_num = offtostr (byte_number, byte_buf);
 		      if (!opt_print_bytes)
-			/* See POSIX 1003.2-1992 section 4.10.6.1 for
-                           this format.  */
-			printf ("%6s %3o %3o\n", char_num, c0, c1);
+			{
+			  /* See POSIX 1003.2-1992 section 4.10.6.1 for this
+			     format.  POSIX 1003.1-2001 is unchanged here.  */
+			  printf ("%*s %3o %3o\n",
+				  offset_width, byte_num, c0, c1);
+			}
 		      else
 			{
 			  char s0[5];
 			  char s1[5];
-			  sprintc (s0, 4, c0);
-			  sprintc (s1, 0, c1);
-			  printf ("%6s %3o %s %3o %s\n",
-				  char_num, c0, s0, c1, s1);
+			  sprintc (s0, c0);
+			  sprintc (s1, c1);
+			  printf ("%*s %3o %-4s %3o %s\n",
+				  offset_width, byte_num, c0, s0, c1, s1);
 			}
 		    }
-		  char_number++;
+		  byte_number++;
 		  first_diff++;
 		}
 	      while (first_diff < smaller);
@@ -471,8 +511,11 @@ cmp (void)
       if (read0 != read1)
 	{
 	  if (comparison_type != type_status)
-	    /* See POSIX 1003.2-1992 section 4.10.6.2 for this format.  */
-	    fprintf (stderr, _("cmp: EOF on %s\n"), file[read1 < read0]);
+	    {
+	      /* See POSIX 1003.2-1992 section 4.10.6.2 for this format.
+		 POSIX 1003.1-2001 is unchanged here.  */
+	      fprintf (stderr, _("cmp: EOF on %s\n"), file[read1 < read0]);
+	    }
 
 	  return 1;
 	}
@@ -557,12 +600,11 @@ block_compare (word const *p0, word const *p1)
   return c0 - (char const *) p0;
 }
 
-/* Put into BUF the unsigned char C, making unprintable chars
-   visible by quoting like cat -t does.
-   Pad with spaces on the right to WIDTH characters.  */
+/* Put into BUF the unsigned char C, making unprintable bytes
+   visible by quoting like cat -t does.  */
 
 static void
-sprintc (char *buf, int width, unsigned char c)
+sprintc (char *buf, unsigned char c)
 {
   if (! ISPRINT (c))
     {
@@ -571,25 +613,20 @@ sprintc (char *buf, int width, unsigned char c)
 	  *buf++ = 'M';
 	  *buf++ = '-';
 	  c -= 128;
-	  width -= 2;
 	}
       if (c < 32)
 	{
 	  *buf++ = '^';
 	  c += 64;
-	  --width;
 	}
       else if (c == 127)
 	{
 	  *buf++ = '^';
 	  c = '?';
-	  --width;
 	}
     }
 
   *buf++ = c;
-  while (--width > 0)
-    *buf++ = ' ';
   *buf = 0;
 }
 
