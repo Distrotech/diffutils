@@ -19,12 +19,11 @@
 
 bin_PROGRAMS = cmp diff diff3 sdiff
 
-noinst_HEADERS = diff.h system.h
+noinst_HEADERS = system.h
 
 localedir = $(datadir)/locale
 
 AM_CPPFLAGS = -I../lib -I$(top_srcdir)/lib
-DEFS = -DLOCALEDIR=\"$(localedir)\" @DEFS@
 
 LDADD = ../lib/libdiffutils.a @LIBINTL@
 diff_LDADD = $(LDADD) @LIB_CLOCK_GETTIME@
@@ -33,10 +32,16 @@ cmp_SOURCES = cmp.c version.c
 diff3_SOURCES = diff3.c version.c
 sdiff_SOURCES = sdiff.c version.c
 diff_SOURCES = \
-  analyze.c context.c diff.c dir.c ed.c ifdef.c io.c \
+  analyze.c context.c diff.c diff.h dir.c ed.c ifdef.c io.c \
   normal.c side.c util.c version.c
 
+MOSTLYCLEANFILES = paths.h
 MAINTAINERCLEANFILES = $(srcdir)/version.c
+
+cmp.$(OBJEXT) diff3.$(OBJECT) diff.$(OBJECT) sdiff.$(OBJECT): paths.h
+paths.h:
+	(echo '#define DEFAULT_DIFF_PROGRAM "$(bindir)/'`echo diff|sed '$(transform)'`'"' && \
+	 echo '#define LOCALEDIR "$(localedir)"') >$@
 
 $(srcdir)/version.c: $(top_srcdir)/configure.ac
 	(echo '#include <config.h>' && \
