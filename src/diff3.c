@@ -1037,7 +1037,7 @@ skipwhite (char *s)
 static char *
 readnum (char *s, lin *pnum)
 {
-  unsigned char c = *s++;
+  unsigned char c = *s;
   lin num = 0;
 
   if (! ISDIGIT (c))
@@ -1046,7 +1046,7 @@ readnum (char *s, lin *pnum)
   do
     {
       num = c - '0' + num * 10;
-      c = *s++;
+      c = *++s;
     }
   while (ISDIGIT (c));
 
