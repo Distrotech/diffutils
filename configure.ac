@@ -19,7 +19,7 @@
 
 AC_PREREQ(2.53)
 
-AC_INIT(GNU diffutils, 2.8, bug-gnu-utils@gnu.org)
+AC_INIT(GNU diffutils, 2.8.1, bug-gnu-utils@gnu.org)
 AC_CONFIG_SRCDIR(src/diff.c)
 
 AC_CONFIG_AUX_DIR(config)
@@ -52,9 +52,10 @@ AC_DEFINE(DEFAULT_EDITOR_PROGRAM, "ed",
 AC_PATH_PROG(PR_PROGRAM, pr, "")
 AC_DEFINE_UNQUOTED(PR_PROGRAM, "$PR_PROGRAM", [Name of "pr" program.])
 
+AC_HEADER_STDBOOL
 AC_HEADER_STDC
 AC_CHECK_HEADERS(fcntl.h libintl.h limits.h locale.h \
-  stdbool.h stdlib.h string.h sys/file.h time.h unistd.h)
+  stdlib.h string.h sys/file.h time.h unistd.h)
 AC_CHECK_MEMBERS([struct stat.st_blksize])
 AC_CHECK_MEMBERS([struct stat.st_rdev])
 AC_CHECK_TYPE(ptrdiff_t, int)
