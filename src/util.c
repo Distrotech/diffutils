@@ -380,7 +380,7 @@ print_script (script, hunkfun, printfun)
       /* Disconnect them from the rest of the changes,
 	 making them a hunk, and remember the rest for next iteration.  */
       next = end->link;
-      end->link = NULL;
+      end->link = 0;
 #ifdef DEBUG
       debug_script (this);
 #endif
@@ -410,7 +410,7 @@ print_1_line (line_flag, line)
      Otherwise use a Space (as Unix diff does).
      Print neither space nor tab if line-flags are empty.  */
 
-  if (line_flag != NULL && line_flag[0] != 0)
+  if (line_flag && *line_flag)
     {
       flag_format = tab_align_flag ? "%s\t" : "%s ";
       fprintf (out, flag_format, line_flag);
@@ -418,7 +418,7 @@ print_1_line (line_flag, line)
 
   output_1_line (text, limit, flag_format, line_flag);
 
-  if ((line_flag == NULL || line_flag[0] != 0) && limit[-1] != '\n'
+  if ((!line_flag || line_flag[0]) && limit[-1] != '\n'
       && line_end_char == '\n')
     fprintf (out, "\n\\ No newline at end of file\n");
 }
@@ -589,7 +589,7 @@ analyze_hunk (hunk, first0, last0, first1, last1, deletes, inserts)
 		break;	/* Found a match.  Ignore this line.  */
 	    /* If we got all the way through the regexp list without
 	       finding a match, then it's nontrivial.  */
-	    if (r == NULL)
+	    if (!r)
 	      nontrivial = 1;
 	  }
 
@@ -605,7 +605,7 @@ analyze_hunk (hunk, first0, last0, first1, last1, deletes, inserts)
 		break;	/* Found a match.  Ignore this line.  */
 	    /* If we got all the way through the regexp list without
 	       finding a match, then it's nontrivial.  */
-	    if (r == NULL)
+	    if (!r)
 	      nontrivial = 1;
 	  }
     }
