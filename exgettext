@@ -1,7 +1,7 @@
 #! /bin/sh
 # Wrapper around gettext for programs using the msgid convention.
 
-# Copyright (C) 1998, 2001 Free Software Foundation, Inc.
+# Copyright (C) 1998, 2001, 2004 Free Software Foundation, Inc.
 
 # Written by Paul Eggert <eggert@twinsun.com>.
 
@@ -89,9 +89,8 @@ keyword_options=`(
   $AWK "$generate_keyword_options" $files < /dev/null
 )` || exit
 
-# Generate temporary file reflecting the %e strings in the scanned files.
-tmp=tmp-emsgids.c
-
+# Run the xgettext command, with extra input containing the extra
+# msgids that it wouldn't normally find.
 generate_emsgids='
   /%e.*}/ {
     line = $0
@@ -113,11 +112,4 @@ generate_emsgids='
 '
 (cd $directory &&
  $AWK "$generate_emsgids" $files < /dev/null
-) > $directory/$tmp || exit
-
-# Run the xgettext command, with temporary added as a file to scan.
-"$xgettext" $keyword_options ${1+"$@"} $tmp || exit
-
-# Clean up.
-# If we don't get here, `make clean' will remove this file later.
-rm -f $directory/$tmp
+) | "$xgettext" $keyword_options ${1+"$@"} -
