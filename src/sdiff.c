@@ -83,6 +83,9 @@ static void untrapsig PARAMS((int));
 static void usage PARAMS((void));
 
 /* this lossage until the gnu libc conquers the universe */
+#if HAVE_TMPNAM
+#define private_tempnam() tmpnam ((char *) 0)
+#else
 #ifndef PVT_tmpdir
 #define PVT_tmpdir "/tmp"
 #endif
@@ -90,8 +93,9 @@ static void usage PARAMS((void));
 #define TMPDIR_ENV "TMPDIR"
 #endif
 static char *private_tempnam PARAMS((void));
-static int diraccess PARAMS((char const *));
 static int exists PARAMS((char const *));
+#endif
+static int diraccess PARAMS((char const *));
 
 /* Options: */
 
@@ -273,9 +277,8 @@ expand_name (name, is_dir, other_name)
   else
     {
       /* Yield NAME/BASE, where BASE is OTHER_NAME's basename.  */
-      char const
-	*p = strrchr (other_name, '/'),
-	*base = p ? p+1 : other_name;
+      char const *p = filename_lastdirchar (other_name);
+      char const *base = p ? p+1 : other_name;
       size_t namelen = strlen (name), baselen = strlen (base);
       char *r = xmalloc (namelen + baselen + 2);
       memcpy (r, name, namelen);
@@ -1099,6 +1102,8 @@ diraccess (dir)
   return stat (dir, &buf) == 0 && S_ISDIR (buf.st_mode);
 }
 
+#if ! HAVE_TMPNAM
+
 /* Return zero if we know that FILE does not exist.  */
 static int
 exists (file)
@@ -1171,3 +1176,5 @@ private_tempnam ()
   /* Don't free buf; `free' might change errno.  We'll exit soon anyway.  */
   return 0;
 }
+
+#endif /* ! HAVE_TMPNAM */
