@@ -80,7 +80,7 @@ dir_read (struct file_data const *dir, struct dirdata *dirdata)
 
       /* Initialize the table of filenames.  */
 
-      data_alloc = MAX (1, (size_t) dir->stat.st_size);
+      data_alloc = 512;
       data_used = 0;
       dirdata->data = data = xmalloc (data_alloc);
 
@@ -101,7 +101,12 @@ dir_read (struct file_data const *dir, struct dirdata *dirdata)
 	    continue;
 
 	  while (data_alloc < data_used + d_size)
-	    dirdata->data = data = xrealloc (data, data_alloc *= 2);
+	    {
+	      if (PTRDIFF_MAX / 2 <= data_alloc)
+		xalloc_die ();
+	      dirdata->data = data = xrealloc (data, data_alloc *= 2);
+	    }
+
 	  memcpy (data + data_used, d_name, d_size);
 	  data_used += d_size;
 	  nnames++;
@@ -122,6 +127,8 @@ dir_read (struct file_data const *dir, struct dirdata *dirdata)
     }
 
   /* Create the `names' table from the `data' table.  */
+  if (PTRDIFF_MAX / sizeof *names - 1 <= nnames) 
+    xalloc_die ();
   dirdata->names = names = xmalloc ((nnames + 1) * sizeof *names);
   dirdata->nnames = nnames;
   for (i = 0;  i < nnames;  i++)
@@ -188,7 +195,7 @@ compare_names_for_qsort (void const *file1, void const *file2)
    to HANDLE_FILE is zero.
 
    Returns the maximum of all the values returned by HANDLE_FILE,
-   or 2 if trouble is encountered in opening files.  */
+   or EXIT_TROUBLE if trouble is encountered in opening files.  */
 
 int
 diff_dirs (struct comparison const *cmp,
@@ -196,7 +203,7 @@ diff_dirs (struct comparison const *cmp,
 			       char const *, char const *))
 {
   struct dirdata dirdata[2];
-  int volatile val = 0;
+  int volatile val = EXIT_SUCCESS;
   int i;
 
   if ((cmp->file[0].desc == -1 || dir_loop (cmp, 0))
@@ -204,7 +211,7 @@ diff_dirs (struct comparison const *cmp,
     {
       error (0, 0, "%s: recursive directory loop",
 	     cmp->file[cmp->file[0].desc == -1].name);
-      return 2;
+      return EXIT_TROUBLE;
     }
 
   /* Get contents of both dirs.  */
@@ -212,10 +219,10 @@ diff_dirs (struct comparison const *cmp,
     if (! dir_read (&cmp->file[i], &dirdata[i]))
       {
 	perror_with_name (cmp->file[i].name);
-	val = 2;
+	val = EXIT_TROUBLE;
       }
 
-  if (val == 0)
+  if (val == EXIT_SUCCESS)
     {
       char const **volatile names[2];
       names[0] = dirdata[0].names;
