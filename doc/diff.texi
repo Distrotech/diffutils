@@ -5,6 +5,9 @@
 @setchapternewpage odd
 @c %**end of header
 
+@c $Id$
+@include version.texi
+
 @ifinfo
 This file documents the the GNU @code{diff}, @code{diff3}, @code{sdiff},
 and @code{cmp} commands for showing the differences between text files
@@ -37,8 +40,8 @@ by the Foundation.
 @titlepage
 @title Comparing and Merging Files
 @subtitle @code{diff}, @code{diff3}, @code{sdiff}, @code{cmp}, and @code{patch}
-@subtitle Edition 1.3, for @code{diff} 2.7 and @code{patch} 2.1
-@subtitle September 1993
+@subtitle Edition @value{EDITION}, for @code{diffutils} @value{VERSION} and @code{patch} 2.1
+@subtitle @value{UPDATED}
 @author by David MacKenzie, Paul Eggert, and Richard Stallman
 
 @page
@@ -67,7 +70,8 @@ This file documents the the GNU @code{diff}, @code{diff3}, @code{sdiff},
 and @code{cmp} commands for showing the differences between text files
 and the @code{patch} command for using their output to update files.
 
-This is Edition 1.3, for @code{diff} 2.7 and @code{patch} 2.1.
+This is Edition @value{EDITION}, dated @value{UPDATED},
+for @code{diffutils} @value{VERSION} and @code{patch} 2.1.
 @end ifinfo
 
 @menu
@@ -1562,7 +1566,7 @@ the following sequence of options using shell syntax:
 
 @example
 --old-group-format='#ifndef @var{name}
-%<#endif /* not @var{name} */
+%<#endif /* ! @var{name} */
 ' \
 --new-group-format='#ifdef @var{name}
 %>#endif /* @var{name} */
@@ -1599,7 +1603,7 @@ diff Input}, for the complete contents of the two files):
 #ifndef TWO
 The Way that can be told of is not the eternal Way;
 The name that can be named is not the eternal name.
-#endif /* not TWO */
+#endif /* ! TWO */
 The Nameless is the origin of Heaven and Earth;
 #ifndef TWO
 The Named is the mother of all things.
