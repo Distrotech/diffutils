@@ -22,6 +22,8 @@
 #include "getopt.h"
 #include "cmpbuf.h"
 
+extern char const version_string[];
+
 #if __STDC__ && defined (HAVE_VPRINTF)
 void error (int, int, char const *, ...);
 #else
@@ -77,6 +79,7 @@ static struct option const long_options[] =
   {"verbose", 0, 0, 'l'},
   {"silent", 0, 0, 's'},
   {"quiet", 0, 0, 's'},
+  {"version", 0, 0, 'v'},
   {0, 0, 0, 0}
 };
 
@@ -88,8 +91,8 @@ usage (reason)
     fprintf (stderr, "%s: %s\n", program_name, reason);
 
   fprintf (stderr, "\
-Usage: %s [-cls] [-i chars] [--ignore-initial=bytes]\n\
-	[--print-chars] [--quiet] [--silent] [--verbose]\n\
+Usage: %s [-clsv] [-i chars] [--ignore-initial=bytes]\n\
+	[--print-chars] [--quiet] [--silent] [--verbose] [--version]\n\
 	from-file [to-file]\n", program_name);
 
   exit (2);
@@ -133,6 +136,10 @@ main (argc, argv)
 
       case 's':
 	comparison_type = type_status;
+	break;
+
+      case 'v':
+	fprintf (stderr, "GNU cmp version %s\n", version_string);
 	break;
 
       default:
