@@ -75,7 +75,7 @@ dir_sort (dir, dirdata)
       while ((errno = 0, (next = readdir (reading)) != 0))
 	{
 	  char *d_name = next->d_name;
-	  size_t d_size;
+	  size_t d_size = NAMLEN (next) + 1;
 
 	  /* Ignore the files `.' and `..' */
 	  if (d_name[0] == '.'
@@ -85,7 +85,6 @@ dir_sort (dir, dirdata)
 	  if (excluded_filename (d_name))
 	    continue;
 
-	  d_size = strlen (d_name) + 1;
 	  while (data_alloc < data_used + d_size)
 	    dirdata->data = data = xrealloc (data, data_alloc *= 2);
 	  memcpy (data + data_used, d_name, d_size);
@@ -99,7 +98,7 @@ dir_sort (dir, dirdata)
 	  errno = e;
 	  return -1;
 	}
-#if VOID_CLOSEDIR
+#if CLOSEDIR_VOID
       closedir (reading);
 #else
       if (closedir (reading) != 0)
