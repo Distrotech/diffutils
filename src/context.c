@@ -351,7 +351,7 @@ pr_unidiff_hunk (hunk)
     }
 }
 
-/* Scan a (forward-ordered) edit script for the first place that at least
+/* Scan a (forward-ordered) edit script for the first place that more than
    2*CONTEXT unchanged lines appear, and return a pointer
    to the `struct change' for the last change before those lines.  */
 
@@ -365,7 +365,7 @@ find_hunk (start)
 
   do
     {
-      /* Computer number of first line in each file beyond this changed.  */
+      /* Compute number of first line in each file beyond this changed.  */
       top0 = start->line0 + start->deleted;
       top1 = start->line1 + start->inserted;
       prev = start;
@@ -374,7 +374,7 @@ find_hunk (start)
 	 but only CONTEXT if one is ignorable.  */
       thresh = ((prev->ignore || (start && start->ignore))
 		? context
-		: 2 * context);
+		: 2 * context + 1);
       /* It is not supposed to matter which file we check in the end-test.
 	 If it would matter, crash.  */
       if (start && start->line0 - top0 != start->line1 - top1)

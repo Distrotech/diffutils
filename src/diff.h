@@ -148,7 +148,11 @@ EXTERN int	unidirectional_new_file_flag;
 EXTERN int	paginate_flag;
 
 /* Formats to use for --ifdef (-D).  */
+EXTERN const char *common_format;
 EXTERN const char *ifndef_format, *ifdef_format, *ifnelse_format;
+
+/* Line prefixes for file 0 lines, file 1 lines, and common lines.  */
+EXTERN const char *line_prefix[3];
 
 /* If using OUTPUT_SDIFF print extra information to help the sdiff filter. */
 EXTERN int sdiff_help_sdiff;  

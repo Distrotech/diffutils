@@ -21,6 +21,7 @@ and this notice must be preserved on all copies.  */
 
 #include "diff.h"
 
+static void format_ifdef ();
 static void print_ifdef_hunk ();
 static void print_ifdef_lines ();
 struct change *find_change ();
@@ -38,7 +39,7 @@ print_ifdef_script (script)
   if (next_line < files[0].valid_lines)
     {
       begin_output ();
-      print_ifdef_lines (&files[0], next_line, files[0].valid_lines);
+      format_ifdef (common_format, next_line, files[0].valid_lines, 0, -1);
     }
 }
 
@@ -50,9 +51,7 @@ static void
 print_ifdef_hunk (hunk)
      struct change *hunk;
 {
-  register FILE *out;
   int first0, last0, first1, last1, deletes, inserts;
-  register char c;
   const char *format;
 
   /* Determine range of line numbers involved in each file.  */
@@ -66,11 +65,27 @@ print_ifdef_hunk (hunk)
 
   begin_output ();
 
-  /* Print out lines up to this change.  */
-  print_ifdef_lines (&files[0], next_line, first0);
+  /* Print lines up to this change.  */
+  if (next_line < first0)
+    format_ifdef (common_format, next_line, first0, 0, -1);
 
+  /* Print this change.  */
   next_line = last0 + 1;
-  out = outfile;
+  format_ifdef (format, first0, next_line, first1, last1 + 1);
+}
+
+/* Print a set of lines according to FORMAT.
+   Lines BEG0 up to END0 are from the first file.
+   If END1 is -1, then the second file's lines are identical to the first;
+   otherwise, lines BEG1 up to END1 are from the second file.  */
+
+static void
+format_ifdef (format, beg0, end0, beg1, end1)
+     const char *format;
+     int beg0, end0, beg1, end1;
+{
+  register FILE *out = outfile;
+  register char c;
 
   while ((c = *format++) != 0)
     {
@@ -80,41 +95,51 @@ print_ifdef_hunk (hunk)
 	  case 0:
 	    return;
 
-	  default:
+	  case '<':
+	    /* Print lines deleted from first file.  */
+	    print_ifdef_lines (line_prefix[0], &files[0], beg0, end0);
 	    continue;
 
-	  case '<':
-	    /* Print out stuff deleted from first file.  */
-	    print_ifdef_lines (&files[0], first0, last0 + 1);
+	  case '=':
+	    /* Print common lines.  */
+	    print_ifdef_lines (line_prefix[2], &files[0], beg0, end0);
 	    continue;
 
 	  case '>':
-	    /* Print out stuff inserted from second file.  */
-	    print_ifdef_lines (&files[1], first1, last1 + 1);
+	    /* Print lines inserted from second file.  */
+	    if (end1 == -1)
+	      print_ifdef_lines (line_prefix[1], &files[0], beg0, end0);
+	    else
+	      print_ifdef_lines (line_prefix[1], &files[1], beg1, end1);
 	    continue;
 
 	  case 'n':
 	    c = '\n';
 	    break;
 
-	  case '%':
+	  default:
 	    break;
 	  }
       putc (c, out);
   }
 }
 
-/* Print lines of CURRENT starting with FROM and continuing up to UPTO.  */
+/* Print PREFIX before each line of CURRENT starting with FROM
+   and continuing up to UPTO.  */
 static void
-print_ifdef_lines (current, from, upto)
-     struct file_data *current;
+print_ifdef_lines (prefix, current, from, upto)
+     const char *prefix;
+     const struct file_data *current;
      int from, upto;
 {
-  const char **linbuf = current->linbuf;
+  const char * const *linbuf = current->linbuf;
 
-  if (tab_expand_flag)
-    while (from < upto)
-      print_1_line ("", &linbuf[from++]);
-  else
+  if (!*prefix && !tab_expand_flag)
     fwrite (linbuf[from], sizeof (char), linbuf[upto] - linbuf[from], outfile);
+  else
+    while (from < upto)
+      {
+	fputs (prefix, outfile);
+	print_1_line ((char *)0, &linbuf[from++]);
+      }
 }

@@ -399,7 +399,7 @@ print_script (script, hunkfun, printfun)
 
 void
 print_1_line (line_flag, line)
-     char *line_flag;
+     const char *line_flag;
      const char * const *line;
 {
   const char *text = line[0]; /* Help the compiler.  */
