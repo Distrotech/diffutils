@@ -128,7 +128,8 @@ static bool suppress_common_lines;
 /* Value for the long option that does not have single-letter equivalents.  */
 enum
 {
-  HELP_OPTION = CHAR_MAX + 1
+  HELP_OPTION = CHAR_MAX + 1,
+  STRIP_TRAILING_CR_OPTION
 };
 
 static struct option const longopts[] =
@@ -140,10 +141,12 @@ static struct option const longopts[] =
   {"ignore-case", 0, 0, 'i'},
   {"ignore-matching-lines", 1, 0, 'I'},
   {"ignore-space-change", 0, 0, 'b'},
+  {"ignore-tab-expansion", 0, 0, 'E'},
   {"left-column", 0, 0, 'l'},
   {"minimal", 0, 0, 'd'},
   {"output", 1, 0, 'o'},
   {"speed-large-files", 0, 0, 'H'},
+  {"strip-trailing-cr", 0, 0, STRIP_TRAILING_CR_OPTION},
   {"suppress-common-lines", 0, 0, 's'},
   {"text", 0, 0, 'a'},
   {"version", 0, 0, 'v'},
@@ -165,10 +168,12 @@ static char const * const option_help_msgid[] = {
   N_("-o FILE  --output=FILE  Operate interactively, sending output to FILE."),
   "",
   N_("-i  --ignore-case  Consider upper- and lower-case to be the same."),
-  N_("-W  --ignore-all-space  Ignore all white space."),
+  N_("-E  --ignore-tab-expansion  Ignore changes due to tab expansion."),
   N_("-b  --ignore-space-change  Ignore changes in the amount of white space."),
+  N_("-W  --ignore-all-space  Ignore all white space."),
   N_("-B  --ignore-blank-lines  Ignore changes whose lines are all blank."),
   N_("-I RE  --ignore-matching-lines=RE  Ignore changes whose lines all match RE."),
+  N_("--strip-trailing-cr  Strip trailing carriage return on input."),
   N_("-a  --text  Treat all files as text."),
   "",
   N_("-w NUM  --width=NUM  Output at most NUM (default 130) columns per line."),
@@ -442,6 +447,10 @@ main (int argc, char *argv[])
 	  diffarg ("-d");
 	  break;
 
+	case 'E':
+	  diffarg ("-E");
+	  break;
+
 	case 'H':
 	  diffarg ("-H");
 	  break;
@@ -491,6 +500,10 @@ main (int argc, char *argv[])
 	  if (ferror (stdout) || fclose (stdout) != 0)
 	    fatal ("write failed");
 	  exit (0);
+
+	case STRIP_TRAILING_CR_OPTION:
+	  diffarg ("--strip-trailing-cr");
+	  break;
 
 	default:
 	  try_help (0, 0);
@@ -1135,9 +1148,6 @@ interact (struct line_filter *diff,
     }
 }
 
-
-
-/* temporary lossage: this is torn from gnu libc */
 /* Return nonzero if DIR is an existing directory.  */
 static bool
 diraccess (char const *dir)
