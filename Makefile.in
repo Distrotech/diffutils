@@ -7,12 +7,12 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2, or (at your option)
 # any later version.
-# 
+#
 # GNU DIFF is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with GNU DIFF; see the file COPYING.  If not, write to
 # the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
@@ -40,7 +40,7 @@ prefix = /usr/local
 exec_prefix = $(prefix)
 
 # Prefix for each installed program, normally empty or `g'.
-binprefix = 
+binprefix =
 
 bindir = $(exec_prefix)/bin
 
@@ -56,11 +56,6 @@ srcs=diff.c analyze.c cmpbuf.c cmpbuf.h io.c context.c ed.c normal.c ifdef.c \
 	version.c diff.h regex.c regex.h side.c system.h \
 	diff3.c sdiff.c cmp.c error.c xmalloc.c getopt.c getopt1.c getopt.h \
 	fnmatch.c fnmatch.h alloca.c
-# Object files for diff only.
-objs=diff.o analyze.o cmpbuf.o io.o context.o \
-     ed.o normal.o util.o dir.o fnmatch.o \
-     regex.o side.o ifdef.o version.o \
-     getopt.o getopt1.o $(ALLOCA)
 distfiles = $(srcs) README INSTALL NEWS diagmeet.note Makefile.in \
 	config.h.in configure configure.in COPYING ChangeLog \
 	diff.texi diff.info* texinfo.tex \
@@ -73,22 +68,28 @@ COMPILE = $(CC) -c -DHAVE_CONFIG_H $(CPPFLAGS) -I. -I$(srcdir) $(CFLAGS)
 .c.o:
 	$(COMPILE) $<
 
-diff: $(objs)
-	$(CC) -o $@ $(LDFLAGS) $(objs) $(LIBS)
+diff_o = diff.o analyze.o cmpbuf.o dir.o io.o util.o \
+	context.o ed.o ifdef.o normal.o side.o \
+	fnmatch.o getopt.o getopt1.o regex.o version.o $(ALLOCA)
+diff: $(diff_o)
+	$(CC) -o $@ $(LDFLAGS) $(diff_o) $(LIBS)
 
-diff3: diff3.o getopt.o getopt1.o version.o
-	$(CC) -o $@ $(LDFLAGS) diff3.o getopt.o getopt1.o version.o $(LIBS)
+diff3_o = diff3.o getopt.o getopt1.o version.o
+diff3: $(diff3_o)
+	$(CC) -o $@ $(LDFLAGS) $(diff3_o) $(LIBS)
 
-sdiff: sdiff.o getopt.o getopt1.o version.o
-	$(CC) -o $@ $(LDFLAGS) sdiff.o getopt.o getopt1.o version.o $(LIBS)
+sdiff_o = sdiff.o getopt.o getopt1.o version.o
+sdiff: $(sdiff_o)
+	$(CC) -o $@ $(LDFLAGS) $(sdiff_o) $(LIBS)
 
-cmp: cmp.o cmpbuf.o getopt.o getopt1.o error.o xmalloc.o
-	$(CC) -o $@ $(LDFLAGS) cmp.o cmpbuf.o getopt.o getopt1.o error.o xmalloc.o $(LIBS)
+cmp_o = cmp.o cmpbuf.o error.o getopt.o getopt1.o xmalloc.o version.o
+cmp: $(cmp_o)
+	$(CC) -o $@ $(LDFLAGS) $(cmp_o) $(LIBS)
 
 diff.info: diff.texi
 	$(MAKEINFO) $(srcdir)/diff.texi
 
-$(objs): diff.h system.h
+$(diff_o): diff.h system.h
 cmp.o diff3.o sdiff.o: system.h
 context.o diff.o regex.o: regex.h
 cmp.o diff.o diff3.o sdiff.o getopt.o getopt1.o: getopt.h
