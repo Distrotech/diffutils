@@ -402,19 +402,13 @@ cmp (void)
 	  /* lseek failed; read and discard the ignored initial prefix.  */
 	  do
 	    {
-	      ssize_t r = read (file_desc[f], buf0, MIN (ig, buf_size));
-	      if (r <= 0)
+	      size_t bytes_to_read = MIN (ig, buf_size);
+	      size_t r = block_read (file_desc[f], buf0, bytes_to_read);
+	      if (r != bytes_to_read)
 		{
-		  if (r == 0)
-		    break;
-
-		  /* Accommodate ancient AIX hosts that set errno to
-		     EINTR after uncaught SIGCONT.  See
-		     <news:1r77ojINN85n@ftp.UU.NET> (1993-04-22).  */
-		  if (! SA_RESTART && errno == EINTR)
-		    continue;
-
-		  error (EXIT_TROUBLE, errno, "%s", file[f]);
+		  if (r == SIZE_MAX)
+		    error (EXIT_TROUBLE, errno, "%s", file[f]);
+		  break;
 		}
 	      ig -= r;
 	    }
