@@ -77,16 +77,12 @@ static off_t ignore_initial[2];
 /* Number of bytes to compare.  */
 static uintmax_t bytes = UINTMAX_MAX;
 
-/* Output format:
-   type_first_diff
-     to print the index and line number of the first differing bytes
-   type_all_diffs
-     to print the (decimal) indices and (octal) values of all differing bytes
-   type_status
-     to only return an exit status indicating whether the files differ */
-static enum
+/* Output format.  */
+static enum comparison_type
   {
-    type_first_diff, type_all_diffs, type_status
+    type_first_diff,	/* Print the first difference.  */
+    type_all_diffs,	/* Print all differences.  */
+    type_status		/* Exit status only.  */
   } comparison_type;
 
 /* If nonzero, print values of bytes quoted like cat -t does. */
@@ -142,6 +138,15 @@ parse_ignore_initial (char **argptr, char delimiter)
   return o;
 }
 
+/* Specify the output format.  */
+static void
+specify_comparison_type (enum comparison_type t)
+{
+  if (comparison_type)
+    try_help ("options -l and -s are incompatible", 0);
+  comparison_type = t;
+}
+
 static void
 check_stdout (void)
 {
@@ -156,7 +161,7 @@ static char const * const option_help_msgid[] = {
   N_("-i SKIP  --ignore-initial=SKIP  Skip the first SKIP bytes of input."),
   N_("-i SKIP1:SKIP2  --ignore-initial=SKIP1:SKIP2"),
   N_("  Skip the first SKIP1 bytes of FILE1 and the first SKIP2 bytes of FILE2."),
-  N_("-l  --verbose  Output indices and codes of all differing bytes."),
+  N_("-l  --verbose  Output byte numbers and values of all differing bytes."),
   N_("-n LIMIT  --bytes=LIMIT  Compare at most LIMIT bytes."),
   N_("-s  --quiet  --silent  Output nothing; yield exit status only."),
   N_("-v  --version  Output version info."),
@@ -216,7 +221,7 @@ main (int argc, char **argv)
 	break;
 
       case 'l':
-	comparison_type = type_all_diffs;
+	specify_comparison_type (type_all_diffs);
 	break;
 
       case 'n':
@@ -230,7 +235,7 @@ main (int argc, char **argv)
 	break;
 
       case 's':
-	comparison_type = type_status;
+	specify_comparison_type (type_status);
 	break;
 
       case 'v':
@@ -359,8 +364,8 @@ main (int argc, char **argv)
 static int
 cmp (void)
 {
-  off_t line_number = 1;	/* Line number (1...) of first difference. */
-  off_t byte_number = 1;	/* Index (1...) in files of 1st difference. */
+  off_t line_number = 1;	/* Line number (1...) of difference. */
+  off_t byte_number = 1;	/* Byte number (1...) of difference. */
   uintmax_t remaining = bytes;	/* Remaining number of bytes to compare.  */
   size_t read0, read1;		/* Number of bytes read from each file. */
   size_t first_diff;		/* Offset (0...) in buffers of 1st diff. */
@@ -464,7 +469,8 @@ cmp (void)
 		  {
 		    /* See POSIX 1003.1-2001 for this format.
 		       The POSIX rationale recommends using the word "byte"
-		       outside the POSIX locale.  */
+		       outside the POSIX locale, so the message with "char"
+		       need not be translated.  */
 		    printf ((hard_locale_LC_MESSAGES
 			     ? _("%s %s differ: byte %s, line %s\n")
 			     : "%s %s differ: char %s, line %s\n"),
