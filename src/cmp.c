@@ -22,7 +22,9 @@
 
 #include <stdio.h>
 #include <cmpbuf.h>
+#include <c-stack.h>
 #include <error.h>
+#include <exitfail.h>
 #include <freesoft.h>
 #include <getopt.h>
 #include <hard-locale.h>
@@ -31,7 +33,7 @@
 #include <xalloc.h>
 #include <xstrtol.h>
 
-#ifdef LC_MESSAGES
+#if defined LC_MESSAGES && ENABLE_NLS
 # define hard_locale_LC_MESSAGES hard_locale (LC_MESSAGES)
 #else
 # define hard_locale_LC_MESSAGES 0
@@ -116,7 +118,8 @@ try_help (char const *reason_msgid, char const *operand)
 {
   if (reason_msgid)
     error (0, 0, _(reason_msgid), operand);
-  error (2, 0, _("Try `%s --help' for more information."), program_name);
+  error (EXIT_TROUBLE, 0,
+	 _("Try `%s --help' for more information."), program_name);
   abort ();
 }
 
@@ -143,9 +146,9 @@ static void
 check_stdout (void)
 {
   if (ferror (stdout))
-    error (2, 0, "%s", _("write failed"));
+    error (EXIT_TROUBLE, 0, "%s", _("write failed"));
   else if (fclose (stdout) != 0)
-    error (2, errno, "%s", _("standard output"));
+    error (EXIT_TROUBLE, errno, "%s", _("standard output"));
 }
 
 static char const * const option_help_msgid[] = {
@@ -185,12 +188,13 @@ main (int argc, char **argv)
   int c, f, exit_status;
   size_t words_per_buffer;
 
-  xalloc_exit_failure = 2;
+  exit_failure = EXIT_TROUBLE;
   initialize_main (&argc, &argv);
   program_name = argv[0];
   setlocale (LC_ALL, "");
   bindtextdomain (PACKAGE, LOCALEDIR);
   textdomain (PACKAGE);
+  c_stack_action (c_stack_die);
 
   /* Parse command line options.  */
 
@@ -233,12 +237,12 @@ main (int argc, char **argv)
 		version_string, copyright_string,
 		_(free_software_msgid), _(authorship_msgid));
 	check_stdout ();
-	exit (0);
+	return EXIT_SUCCESS;
 
       case HELP_OPTION:
 	usage ();
 	check_stdout ();
-	exit (0);
+	return EXIT_SUCCESS;
 
       default:
 	try_help (0, 0);
@@ -268,7 +272,7 @@ main (int argc, char **argv)
       /* Two files with the same name are identical.
 	 But wait until we open the file once, for proper diagnostics.  */
       if (f && file_name_cmp (file[0], file[1]) == 0)
-	exit (0);
+	return EXIT_SUCCESS;
 
       file_desc[f1] = (strcmp (file[f1], "-") == 0
 		       ? STDIN_FILENO
@@ -276,9 +280,9 @@ main (int argc, char **argv)
       if (file_desc[f1] < 0 || fstat (file_desc[f1], stat_buf + f1) != 0)
 	{
 	  if (file_desc[f1] < 0 && comparison_type == type_status)
-	    exit (2);
+	    exit (EXIT_TROUBLE);
 	  else
-	    error (2, errno, "%s", file[f1]);
+	    error (EXIT_TROUBLE, errno, "%s", file[f1]);
 	}
 
       set_binary_mode (file_desc[f1], 1);
@@ -290,7 +294,7 @@ main (int argc, char **argv)
   if (0 < same_file (&stat_buf[0], &stat_buf[1])
       && same_file_attributes (&stat_buf[0], &stat_buf[1])
       && file_position (0) == file_position (1))
-    exit (0);
+    return EXIT_SUCCESS;
 
   /* If output is redirected to the null device, we may assume `-s'.  */
 
@@ -320,13 +324,14 @@ main (int argc, char **argv)
       if (s1 < 0)
 	s1 = 0;
       if (s0 != s1 && MIN (s0, s1) < bytes)
-	exit (1);
+	exit (EXIT_FAILURE);
     }
 
   /* Get the optimal block size of the files.  */
 
   buf_size = buffer_lcm (STAT_BLOCKSIZE (stat_buf[0]),
-			 STAT_BLOCKSIZE (stat_buf[1]));
+			 STAT_BLOCKSIZE (stat_buf[1]),
+			 PTRDIFF_MAX - sizeof (word));
 
   /* Allocate word-aligned buffers, with space for sentinels at the end.  */
 
@@ -338,7 +343,7 @@ main (int argc, char **argv)
 
   for (f = 0; f < 2; f++)
     if (close (file_desc[f]) != 0)
-      error (2, errno, "%s", file[f]);
+      error (EXIT_TROUBLE, errno, "%s", file[f]);
   if (exit_status != 0  &&  comparison_type != type_status)
     check_stdout ();
   exit (exit_status);
@@ -347,7 +352,8 @@ main (int argc, char **argv)
 
 /* Compare the two files already open on `file_desc[0]' and `file_desc[1]',
    using `buffer[0]' and `buffer[1]'.
-   Return 0 if identical, 1 if different, >1 if error. */
+   Return EXIT_SUCCESS if identical, EXIT_FAILURE if different,
+   >1 if error.  */
 
 static int
 cmp (void)
@@ -362,7 +368,7 @@ cmp (void)
   word *buffer1 = buffer[1];
   char *buf0 = (char *) buffer0;
   char *buf1 = (char *) buffer1;
-  int ret = 0;
+  int ret = EXIT_SUCCESS;
   int f;
   int offset_width;
 
@@ -391,10 +397,19 @@ cmp (void)
 	  do
 	    {
 	      ssize_t r = read (file_desc[f], buf0, MIN (ig, buf_size));
-	      if (!r)
-		break;
-	      if (r < 0)
-		error (2, errno, "%s", file[f]);
+	      if (r <= 0)
+		{
+		  if (r == 0)
+		    break;
+
+		  /* Accommodate ancient AIX hosts that set errno to
+		     EINTR after uncaught SIGCONT.  See
+		     <news:1r77ojINN85n@ftp.UU.NET> (1993-04-22).  */
+		  if (! SA_RESTART && errno == EINTR)
+		    continue;
+
+		  error (EXIT_TROUBLE, errno, "%s", file[f]);
+		}
 	      ig -= r;
 	    }
 	  while (ig);
@@ -414,10 +429,10 @@ cmp (void)
 
       read0 = block_read (file_desc[0], buf0, bytes_to_read);
       if (read0 == SIZE_MAX)
-	error (2, errno, "%s", file[0]);
+	error (EXIT_TROUBLE, errno, "%s", file[0]);
       read1 = block_read (file_desc[1], buf1, bytes_to_read);
       if (read1 == SIZE_MAX)
-	error (2, errno, "%s", file[1]);
+	error (EXIT_TROUBLE, errno, "%s", file[1]);
 
       /* Insert sentinels for the block compare.  */
 
@@ -446,8 +461,7 @@ cmp (void)
 		char const *line_num = offtostr (line_number, line_buf);
 		if (!opt_print_bytes)
 		  {
-		    /* See POSIX 1003.2-1992 section 4.10.6.1 for this format.
-		       POSIX 1003.1-2001 is unchanged here.
+		    /* See POSIX 1003.1-2001 for this format.
 		       The POSIX rationale recommends using the word "byte"
 		       outside the POSIX locale.  */
 		    printf ((hard_locale_LC_MESSAGES
@@ -470,7 +484,7 @@ cmp (void)
 	      }
 	      /* Fall through.  */
 	    case type_status:
-	      return 1;
+	      return EXIT_FAILURE;
 
 	    case type_all_diffs:
 	      do
@@ -483,8 +497,7 @@ cmp (void)
 		      char const *byte_num = offtostr (byte_number, byte_buf);
 		      if (!opt_print_bytes)
 			{
-			  /* See POSIX 1003.2-1992 section 4.10.6.1 for this
-			     format.  POSIX 1003.1-2001 is unchanged here.  */
+			  /* See POSIX 1003.1-2001 for this format.  */
 			  printf ("%*s %3o %3o\n",
 				  offset_width, byte_num, c0, c1);
 			}
@@ -502,7 +515,7 @@ cmp (void)
 		  first_diff++;
 		}
 	      while (first_diff < smaller);
-	      ret = 1;
+	      ret = EXIT_FAILURE;
 	      break;
 	    }
 	}
@@ -511,12 +524,11 @@ cmp (void)
 	{
 	  if (comparison_type != type_status)
 	    {
-	      /* See POSIX 1003.2-1992 section 4.10.6.2 for this format.
-		 POSIX 1003.1-2001 is unchanged here.  */
+	      /* See POSIX 1003.1-2001 for this format.  */
 	      fprintf (stderr, _("cmp: EOF on %s\n"), file[read1 < read0]);
 	    }
 
-	  return 1;
+	  return EXIT_FAILURE;
 	}
     }
   while (read0 == buf_size);
