@@ -21,6 +21,7 @@
    59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
 
 #include "diff.h"
+#include <dirname.h>
 #include <error.h>
 #include <quotesys.h>
 #include <regex.h>
@@ -179,12 +180,13 @@ begin_output (void)
   /* Construct the header of this piece of diff.  */
   name = xmalloc (strlen (current_name0) + strlen (current_name1)
 		  + strlen (switch_string) + 7);
-  /* POSIX 1003.2-1992 section 4.17.6.1.1 specifies this format.  But
-     there are some bugs in the first printing (IEEE Std 1003.2-1992
-     page 251 line 3304): it says that we must print only the last
-     component of the pathnames, and it requires two spaces after
-     "diff" if there are no options.  These requirements are silly and
-     do not match historical practice.  */
+
+  /* POSIX 1003.2-1992 section 4.17.6.1.1 specifies this format.
+     POSIX 1003.1-2001 is unchanged here.  But there are some bugs in
+     the standard: it says that we must print only the last component
+     of the pathnames, and it requires two spaces after "diff" if
+     there are no options.  These requirements are silly and do not
+     match historical practice.  */
   sprintf (name, "diff%s %s %s", switch_string, current_name0, current_name1);
 
   if (paginate)
@@ -725,8 +727,9 @@ zalloc (size_t size)
 char *
 dir_file_pathname (char const *dir, char const *file)
 {
-  char const *p = file_name_lastdirchar (dir);
-  return concat (dir, "/" + (p && !p[1]), file);
+  char const *base = base_name (dir);
+  bool omit_slash = !*base || base[strlen (base) - 1] == '/';
+  return concat (dir, "/" + omit_slash, file);
 }
 
 void
