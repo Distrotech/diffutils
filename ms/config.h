@@ -1,5 +1,4 @@
-/* config.h for emx and OS/2  */
-
+/* config.h for PC operating systems */
 
 /* Define if using alloca.c.  */
 #undef C_ALLOCA
@@ -115,26 +114,21 @@
 #define HAVE_UNISTD_H 1
 
 
-/* emx and/or OS/2 specific definitions */
+/* PC specific definitions */
+
+#include <process.h>
 
 #define DIFF_PROGRAM "diff.exe"
 
-#define filename_cmp(a, b) stricmp (a, b)
-
-#define filename_lastdirchar(filename) os2_filename_lastdirchar (filename)
-char *os2_filename_lastdirchar (char const *);
+#define filename_lastdirchar filename_lastdirchar
+char *filename_lastdirchar (char const *);
 
 #define HAVE_FORK 0
 
 #define HAVE_SETMODE 1
 
-#define initialize_main(pargc, pargv) os2_initialize_main (pargc, pargv)
-void os2_initialize_main (int *, char ***);
-
-#define quote_arg(b, a) os2_quote_arg(b, a)
-char *os2_quote_arg (char *, const char *);
-
-#define is_printable(c) (c >= 128 || isprint(c))
+#define initialize_main initialize_main
+void initialize_main (int *, char ***);
 
 #define PVT_tmpdir ""
 
@@ -142,4 +136,7 @@ char *os2_quote_arg (char *, const char *);
 
 #define STAT_BLOCKSIZE(s) (64 * 1024)
 
-#include <process.h>
+#define SYSTEM_QUOTE_ARG(q, a) ((q) = system_quote_arg (q, a))
+char *system_quote_arg (char *, char const *);
+
+#define TMPDIR_ENV "TEMP"
