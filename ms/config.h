@@ -148,6 +148,4 @@ char *filename_lastdirchar (char const *);
 #define HAVE_SETMODE 1
 int setmode (int, int);
 
-#define same_file(s,t) (-1)
-
 #define TMPDIR_ENV "TEMP"
