@@ -39,7 +39,8 @@ print_ifdef_script (script)
   if (next_line < files[0].valid_lines)
     {
       begin_output ();
-      format_ifdef (common_format, next_line, files[0].valid_lines, 0, -1);
+      format_ifdef (group_format[UNCHANGED], next_line, files[0].valid_lines,
+		    0, -1);
     }
 }
 
@@ -57,9 +58,9 @@ print_ifdef_hunk (hunk)
   /* Determine range of line numbers involved in each file.  */
   analyze_hunk (hunk, &first0, &last0, &first1, &last1, &deletes, &inserts);
   if (inserts)
-    format = deletes ? ifnelse_format : ifdef_format;
+    format = deletes ? group_format[CHANGED] : group_format[NEW];
   else if (deletes)
-    format = ifndef_format;
+    format = group_format[OLD];
   else
     return;
 
@@ -67,7 +68,7 @@ print_ifdef_hunk (hunk)
 
   /* Print lines up to this change.  */
   if (next_line < first0)
-    format_ifdef (common_format, next_line, first0, 0, -1);
+    format_ifdef (group_format[UNCHANGED], next_line, first0, 0, -1);
 
   /* Print this change.  */
   next_line = last0 + 1;
@@ -98,28 +99,24 @@ format_ifdef (format, beg0, end0, beg1, end1)
 
 	  case '<':
 	    /* Print lines deleted from first file.  */
-	    print_ifdef_lines (line_format[0], &files[0], beg0, end0);
+	    print_ifdef_lines (line_format[OLD], &files[0], beg0, end0);
 	    continue;
 
 	  case '=':
 	    /* Print common lines.  */
-	    print_ifdef_lines (line_format[2], &files[0], beg0, end0);
+	    print_ifdef_lines (line_format[UNCHANGED], &files[0], beg0, end0);
 	    continue;
 
 	  case '>':
 	    /* Print lines inserted from second file.  */
 	    if (end1 == -1)
-	      print_ifdef_lines (line_format[1], &files[0], beg0, end0);
+	      print_ifdef_lines (line_format[NEW], &files[0], beg0, end0);
 	    else
-	      print_ifdef_lines (line_format[1], &files[1], beg1, end1);
+	      print_ifdef_lines (line_format[NEW], &files[1], beg1, end1);
 	    continue;
 
 	  case '0':
 	    c = 0;
-	    break;
-
-	  case 'n':
-	    c = '\n';
 	    break;
 
 	  default:
@@ -128,8 +125,6 @@ format_ifdef (format, beg0, end0, beg1, end1)
       putc (c, out);
   }
 }
-
-const char default_line_format[] = "%l%n";
 
 /* Use FORMAT to print each line of CURRENT starting with FROM
    and continuing up to UPTO.  */
@@ -142,8 +137,12 @@ print_ifdef_lines (format, current, from, upto)
   const char * const *linbuf = current->linbuf;
 
   /* If possible, use a single fwrite; it's faster.  */
-  if (format == default_line_format && !tab_expand_flag)
-    fwrite (linbuf[from], sizeof (char), linbuf[upto] - linbuf[from], outfile);
+  if (!tab_expand_flag && strcmp (format, "%l\n") == 0)
+    fwrite (linbuf[from], sizeof (char),
+	    linbuf[upto] + (linbuf[upto][-1] != '\n') -  linbuf[from],
+	    outfile);
+  else if (!tab_expand_flag && strcmp (format, "%L") == 0)
+    fwrite (linbuf[from], sizeof (char), linbuf[upto] -  linbuf[from], outfile);
   else
     for (;  from < upto;  from++)
       {
@@ -158,17 +157,19 @@ print_ifdef_lines (format, current, from, upto)
 		{
 		case 0:
 		  goto format_done;
-		
+
 		case 'l':
-		  output_1_line (linbuf[from], linbuf[from + 1] - 1, 0, 0);
+		  output_1_line (linbuf[from],
+				 linbuf[from + 1]
+				   - (linbuf[from + 1][-1] == '\n'), 0, 0);
+		  continue;
+
+		case 'L':
+		  output_1_line (linbuf[from], linbuf[from + 1], 0, 0);
 		  continue;
 
 		case '0':
 		  c = 0;
-		  break;
-
-		case 'n':
-		  c = '\n';
 		  break;
 
 		default:

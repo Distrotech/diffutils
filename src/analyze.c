@@ -927,9 +927,7 @@ diff_2_files (filevec, depth)
 	  free (e);
 	}
 
-      if (! ROBUST_OUTPUT_STYLE (output_style)
-	  /* For -D, invent newlines silently.  That's ok in C code.  */
-	  && output_style != OUTPUT_IFDEF)
+      if (! ROBUST_OUTPUT_STYLE (output_style))
 	for (i = 0; i < 2; ++i)
 	  if (filevec[i].missing_newline)
 	    {
