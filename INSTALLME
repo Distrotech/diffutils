@@ -22,25 +22,36 @@ Installation instructions specific to GNU Diffutils
 
 Please send comments and problem reports to <bug-gnu-utils@gnu.org>.
 
-If you have a problem linking with libiconv or with other
-internationalization libraries, you might be able to work around the
-problem by invoking `configure' with the `--disable-nls' option.  If
-the problem seems isolated to diffutils, please report a bug.
+If you have a problem with internationalization, you might be able to
+work around it as described in ABOUT-NLS by invoking `./configure
+--disable-nls'.  Many of the problems arise from dynamic linking
+issues on non-GNU platforms (e.g. with the iconv library).  Such
+problems tend to be shared by other GNU applications on these
+platforms, and can usually be fixed by carefully tweaking your non-GNU
+installation.  If you have an older version of libiconv, please
+upgrade to the latest one, preferably libiconv-1.8 or newer.
+(libiconv-1.8 is not yet available as of this writing, but it should
+be out soon.)  If the problem seems isolated to diffutils, though,
+please report a bug.
 
 This program requires a Standard C compiler; if you have an older K&R
 compiler, please install GCC first.
 
-If you make changes to the source code, you may need fairly recent GNU
-build tools to regenerate the intermediate files.  The following tools
-were used to generate the intermediate files in this distribution:
+If you make changes to the source code, you may need recent test
+versions of GNU build tools to regenerate the intermediate files.  The
+following test versions were used to generate the intermediate files
+in this distribution:
 
-* GNU Gettext test version 0.11-pre5++
-  <ftp://alpha.gnu.org/gnu/gettext/gettext-0.11-pre5++.tar.gz>
+* GNU Autoconf test version 2.52h
+  <ftp://alpha.gnu.org/gnu/autoconf/autoconf-2.52h.tar.gz>
 
-* GNU Autoconf test version 2.52f
-  <ftp://alpha.gnu.org/gnu/autoconf/autoconf-2.52f.tar.gz>
+* GNU Automake 1.5 <ftp://ftp.gnu.org/gnu/automake/automake-1.5.tar.gz>,
+  patched as follows:
 
-* GNU Automake 1.5, patched as follows:
+2002-02-26  Paul Eggert  <eggert@twinsun.com>
+
+	* lib/depcomp: Don't use "tail +3"; it's not portable to
+	POSIX 1003.1-2001 hosts.
 
 2001-10-01  Paul Eggert  <eggert@twinsun.com>
 
@@ -186,6 +197,22 @@ diff -pu -r1.5 -r1.5.0.1
  	dot_seen=no; \
  ## For distclean and maintainer-clean we make sure to use the full
  ## list of subdirectories.  We do this so that `configure; make
+===================================================================
+RCS file: lib/depcomp,v
+retrieving revision 1.5
+retrieving revision 1.5.0.1
+diff -pu -r1.5 -r1.5.0.1
+--- lib/depcomp	2001/07/21 18:45:47	1.5
++++ lib/depcomp	2002/02/27 06:25:07	1.5.0.1
+@@ -314,7 +314,7 @@ makedepend)
+   if test "$stat" != 0; then exit $stat; fi
+   rm -f "$depfile"
+   cat < "$tmpdepfile" > "$depfile"
+-  tail +3 "$tmpdepfile" | tr ' ' '
++  sed '1,2d' "$tmpdepfile" | tr ' ' '
+ ' | \
+ ## Some versions of the HPUX 10.20 sed can't process this invocation
+ ## correctly.  Breaking it into two sed invocations is a workaround.
 ===================================================================
 RCS file: m4/header.m4,v
 retrieving revision 1.5
