@@ -418,6 +418,7 @@ find_identical_ends (filevec)
   int i, lines;
   int n0, n1, alloc_lines0, alloc_lines1;
   int buffered_prefix, prefix_count, prefix_mask;
+  int tem;
 
   slurp (&filevec[0]);
   if (filevec[0].desc != filevec[1].desc)
@@ -583,11 +584,12 @@ find_identical_ends (filevec)
   buffered_prefix = prefix_count && context < lines ? context : lines;
 
   /* Allocate line buffer 1.  */
+  tem = prefix_count ? filevec[1].suffix_begin - buffer1 : n1;
+
   alloc_lines1
-    = buffered_prefix
-      + GUESS_LINES (lines, filevec[1].prefix_end - buffer1,
-		     prefix_count ? filevec[1].suffix_begin - buffer1 : n1)
-      + context;
+    = (buffered_prefix
+       + GUESS_LINES (lines, filevec[1].prefix_end - buffer1, tem)
+       + context);
   linbuf1 = (const char **) xmalloc (alloc_lines1 * sizeof (*linbuf1));
 
   if (buffered_prefix != lines)
