@@ -110,7 +110,7 @@ generate_emsgids='
       line = substr(line, bracket_index + 1)
     }
   }
-' 
+'
 (cd $directory &&
  $AWK "$generate_emsgids" $files < /dev/null
 ) > $directory/$tmp || exit
