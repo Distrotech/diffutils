@@ -43,10 +43,6 @@ Richard Stallman, and Len Tower.");
 static char const copyright_string[] =
   "Copyright (C) 2001 Free Software Foundation, Inc.";
 
-#ifndef DEFAULT_WIDTH
-# define DEFAULT_WIDTH 130
-#endif
-
 #ifndef GUTTER_WIDTH_MINIMUM
 # define GUTTER_WIDTH_MINIMUM 3
 #endif
@@ -231,7 +227,7 @@ main (int argc, char **argv)
   int c;
   int i;
   int prev = -1;
-  int width = DEFAULT_WIDTH;
+  int width = 130;
   bool show_c_function = 0;
   char const *from_file = 0;
   char const *to_file = 0;
@@ -262,8 +258,6 @@ main (int argc, char **argv)
     }
 
   /* Decode the options.  */
-
-  prepend_default_options (getenv ("DIFF_OPTIONS"), &argc, &argv);
 
   while ((c = getopt_long (argc, argv,
 			   "0123456789abBcC:dD:eEfF:hHiI:lL:nNpPqrsS:tTuU:vwW:x:X:y",
@@ -804,8 +798,10 @@ try_help (char const *reason_msgid, char const *operand)
 static void
 check_stdout (void)
 {
-  if (ferror (stdout) || fclose (stdout) != 0)
+  if (ferror (stdout))
     fatal ("write failed");
+  else if (fclose (stdout) != 0)
+    pfatal_with_name (_("standard output"));
 }
 
 static char const * const option_help_msgid[] = {
@@ -827,8 +823,8 @@ static char const * const option_help_msgid[] = {
 #endif
   N_("-a  --text  Treat all files as text."),
   "",
-  N_("-c  -C NUM  --context[=NUM]  Output NUM (default 2) lines of copied context.\n\
--u  -U NUM  --unified[=NUM]  Output NUM (default 2) lines of unified context.\n\
+  N_("-c  -C NUM  --context[=NUM]  Output NUM (default 3) lines of copied context.\n\
+-u  -U NUM  --unified[=NUM]  Output NUM (default 3) lines of unified context.\n\
   -NUM  Use NUM context lines.\n\
   -L LABEL  --label LABEL  Use LABEL instead of file name.\n\
   -p  --show-c-function  Show which C function each change is in.\n\
@@ -909,7 +905,8 @@ usage (void)
 	  char const *nl;
 	  while ((nl = strchr (msg, '\n')))
 	    {
-	      printf ("  %.*s", nl + 1 - msg, msg);
+	      int msglen = nl + 1 - msg;
+	      printf ("  %.*s", msglen, msg);
 	      msg = nl + 1;
 	    }
 
