@@ -1,5 +1,5 @@
 /* #ifdef-format output routines for GNU DIFF.
-   Copyright (C) 1989, 91, 92, 93 Free Software Foundation, Inc.
+   Copyright 1989, 1991, 1992, 1993, 1994 Free Software Foundation, Inc.
 
 This file is part of GNU DIFF.
 
@@ -27,10 +27,10 @@ struct group
   int from, upto; /* start and limit lines for this group of lines */
 };
 
-static char *format_group PARAMS((FILE *, char *, int, struct group const[]));
+static char *format_group PARAMS((FILE *, char *, int, struct group const *));
 static char *scan_char_literal PARAMS((char *, int *));
 static char *scan_printf_spec PARAMS((char *));
-static int groups_letter_value PARAMS((struct group const[], int));
+static int groups_letter_value PARAMS((struct group const *, int));
 static void format_ifdef PARAMS((char *, int, int, int, int));
 static void print_ifdef_hunk PARAMS((struct change *));
 static void print_ifdef_lines PARAMS((FILE *, char *, struct group const *));
@@ -117,7 +117,7 @@ format_group (out, format, endchar, groups)
      register FILE *out;
      char *format;
      int endchar;
-     struct group const groups[];
+     struct group const *groups;
 {
   register char c;
   register char *f = format;
@@ -238,7 +238,7 @@ format_group (out, format, endchar, groups)
    Return -1 if LETTER is not a group format letter.  */
 static int
 groups_letter_value (g, letter)
-     struct group const g[];
+     struct group const *g;
      int letter;
 {
   if (isupper (letter))
