@@ -31,10 +31,6 @@
 
 /* Given a hash value and a new character, return a new hash value.  */
 #define HASH(h, c) ((c) + ROL (h, 7))
-
-/* Guess remaining number of lines from number N of lines so far,
-   size S so far, and total size T.  */
-#define GUESS_LINES(n,s,t) (((t) - (s)) / ((n) < 10 ? 32 : (s) / ((n)-1)) + 5)
 
 /* The type of a hash value.  */
 typedef size_t hash_value;
@@ -110,7 +106,8 @@ sip (struct file_data *current, bool skip_test)
   else
     {
       current->bufsize = buffer_lcm (sizeof (word),
-				     STAT_BLOCKSIZE (current->stat));
+				     STAT_BLOCKSIZE (current->stat),
+				     PTRDIFF_MAX - 2 * sizeof (word));
       current->buffer = xmalloc (current->bufsize);
 
       if (! skip_test)
@@ -152,9 +149,12 @@ slurp (struct file_data *current)
   size_t cc;
 
   if (current->desc < 0)
-    /* The file is nonexistent.  */
-    ;
-  else if (S_ISREG (current->stat.st_mode))
+    {
+      /* The file is nonexistent.  */
+      return;
+    }
+
+  if (S_ISREG (current->stat.st_mode))
     {
       /* It's a regular file; slurp in the rest all at once.  */
 
@@ -163,7 +163,8 @@ slurp (struct file_data *current)
 	 plus word-alignment since we want the buffer word-aligned.  */
       size_t file_size = current->stat.st_size;
       cc = file_size + 2 * sizeof (word) - file_size % sizeof (word);
-      if (file_size != current->stat.st_size || cc < file_size)
+      if (file_size != current->stat.st_size || cc < file_size
+	  || PTRDIFF_MAX <= cc)
 	xalloc_die ();
 
       if (current->bufsize < cc)
@@ -172,31 +173,39 @@ slurp (struct file_data *current)
 	  current->buffer = xrealloc (current->buffer, cc);
 	}
 
-      if (current->buffered < file_size)
-	file_block_read (current, file_size - current->buffered);
-    }
-  /* It's not a regular file; read it, growing the buffer as needed.  */
-  else
-    {
-      file_block_read (current, current->bufsize - current->buffered);
+      /* Try to read at least 1 more byte than the size indicates, to
+	 detect whether the file is growing.  This is a nicety for
+	 users who run 'diff' on files while they are changing.  */
 
-      if (current->buffered)
+      if (current->buffered <= file_size)
 	{
-	  while (current->buffered == current->bufsize)
-	    {
-	      if (2 * current->bufsize < current->bufsize)
-		xalloc_die ();
-	      current->bufsize *= 2;
-	      current->buffer = xrealloc (current->buffer, current->bufsize);
-	      file_block_read (current, current->bufsize - current->buffered);
-	    }
-
-	  /* Allocate just enough room for appended newline plus word
-	     sentinel, plus word-alignment.  */
-	  cc = current->buffered + 2 * sizeof (word);
-	  current->bufsize = cc - cc % sizeof (word);
-	  current->buffer = xrealloc (current->buffer, current->bufsize);
+	  file_block_read (current, file_size + 1 - current->buffered);
+	  if (current->buffered <= file_size)
+	    return;
 	}
+    }
+
+  /* It's not a regular file, or it's a growing regular file; read it,
+     growing the buffer as needed.  */
+
+  file_block_read (current, current->bufsize - current->buffered);
+
+  if (current->buffered)
+    {
+      while (current->buffered == current->bufsize)
+	{
+	  if (PTRDIFF_MAX / 2 - sizeof (word) < current->bufsize)
+	    xalloc_die ();
+	  current->bufsize *= 2;
+	  current->buffer = xrealloc (current->buffer, current->bufsize);
+	  file_block_read (current, current->bufsize - current->buffered);
+	}
+
+      /* Allocate just enough room for appended newline plus word
+	 sentinel, plus word-alignment.  */
+      cc = current->buffered + 2 * sizeof (word);
+      current->bufsize = cc - cc % sizeof (word);
+      current->buffer = xrealloc (current->buffer, current->bufsize);
     }
 }
 
@@ -396,8 +405,12 @@ find_and_hash_each_line (struct file_data *current)
 	    /* Create a new equivalence class in this bucket.  */
 	    i = eqs_index++;
 	    if (i == eqs_alloc)
-	      eqs = (struct equivclass *)
-		      xrealloc (eqs, (eqs_alloc *= 2) * sizeof *eqs);
+	      {
+		if (PTRDIFF_MAX / (2 * sizeof *eqs) <= eqs_alloc)
+		  xalloc_die ();
+		eqs_alloc *= 2;
+		eqs = xrealloc (eqs, eqs_alloc * sizeof *eqs);
+	      }
 	    eqs[i].next = *bucket;
 	    eqs[i].hash = h;
 	    eqs[i].line = ip;
@@ -432,6 +445,10 @@ find_and_hash_each_line (struct file_data *current)
       if (line == alloc_lines)
 	{
 	  /* Double (alloc_lines - linbuf_base) by adding to alloc_lines.  */
+	  if (PTRDIFF_MAX / 3 <= alloc_lines
+	      || PTRDIFF_MAX / sizeof *cureqs <= 2 * alloc_lines - linbuf_base
+	      || PTRDIFF_MAX / sizeof *linbuf <= alloc_lines - linbuf_base)
+	    xalloc_die ();
 	  alloc_lines = 2 * alloc_lines - linbuf_base;
 	  cureqs = xrealloc (cureqs, alloc_lines * sizeof *cureqs);
 	  linbuf += linbuf_base;
@@ -454,6 +471,10 @@ find_and_hash_each_line (struct file_data *current)
       if (line == alloc_lines)
 	{
 	  /* Double (alloc_lines - linbuf_base) by adding to alloc_lines.  */
+	  if (PTRDIFF_MAX / 3 <= alloc_lines
+	      || PTRDIFF_MAX / sizeof *cureqs <= 2 * alloc_lines - linbuf_base
+	      || PTRDIFF_MAX / sizeof *linbuf <= alloc_lines - linbuf_base)
+	    xalloc_die ();
 	  alloc_lines = 2 * alloc_lines - linbuf_base;
 	  linbuf += linbuf_base;
 	  linbuf = xrealloc (linbuf,
@@ -525,6 +546,18 @@ prepare_text (struct file_data *current)
   current->buffered = buffered;
 }
 
+/* We have found N lines in a buffer of size S; guess the
+   proportionate number of lines that will be found in a buffer of
+   size T.  However, do not guess a number of lines so large that the
+   resulting line table might cause overflow in size calculations.  */
+static lin
+guess_lines (lin n, size_t s, size_t t)
+{
+  size_t guessed_bytes_per_line = n < 10 ? 32 : s / (n - 1);
+  lin guessed_lines = MAX (1, t / guessed_bytes_per_line);
+  return MIN (guessed_lines, PTRDIFF_MAX / (2 * sizeof (char *) + 1) - 5) + 5;
+}
+
 /* Given a vector of two file_data objects, find the identical
    prefixes and suffixes of each object.  */
 
@@ -536,9 +569,10 @@ find_identical_ends (struct file_data filevec[])
   char const *end0, *beg0;
   char const **linbuf0, **linbuf1;
   lin i, lines;
-  size_t n0, n1, tem;
+  size_t n0, n1;
   lin alloc_lines0, alloc_lines1;
   lin buffered_prefix, prefix_count, prefix_mask;
+  lin middle_guess, suffix_guess;
 
   slurp (&filevec[0]);
   prepare_text (&filevec[0]);
@@ -655,7 +689,8 @@ find_identical_ends (struct file_data filevec[])
   /* Calculate number of lines of prefix to save.
 
      prefix_count == 0 means save the whole prefix;
-     we need this with for options like -D that output the whole file.
+     we need this for options like -D that output the whole file,
+     or for enormous contexts (to avoid worrying about arithmetic overflow).
      We also need it for options like -F that output some preceding line;
      at least we will need to find the last few lines,
      but since we don't know how many, it's easiest to find them all.
@@ -665,37 +700,43 @@ find_identical_ends (struct file_data filevec[])
      Handle 1 more line than the context says (because we count 1 too many),
      rounded up to the next power of 2 to speed index computation.  */
 
-  if (no_diff_means_no_output && ! function_regexp.fastmap)
+  if (no_diff_means_no_output && ! function_regexp.fastmap
+      && context < LIN_MAX / 4 && context < n0)
     {
-      for (prefix_count = 1;  prefix_count < context + 1;  prefix_count *= 2)
+      middle_guess = guess_lines (0, 0, p0 - filevec[0].prefix_end);
+      suffix_guess = guess_lines (0, 0, buffer0 + n0 - p0);
+      for (prefix_count = 1;  prefix_count <= context;  prefix_count *= 2)
 	continue;
-      alloc_lines0 = (prefix_count
-		      + GUESS_LINES (0, 0, p0 - filevec[0].prefix_end)
-		      + context);
+      alloc_lines0 = (prefix_count + middle_guess
+		      + MIN (context, suffix_guess));
     }
   else
     {
       prefix_count = 0;
-      alloc_lines0 = GUESS_LINES (0, 0, n0);
+      alloc_lines0 = guess_lines (0, 0, n0);
     }
 
   prefix_mask = prefix_count - 1;
   lines = 0;
   linbuf0 = xmalloc (alloc_lines0 * sizeof *linbuf0);
+  p0 = buffer0;
 
   /* If the prefix is needed, find the prefix lines.  */
   if (! (no_diff_means_no_output
 	 && filevec[0].prefix_end == p0
 	 && filevec[1].prefix_end == p1))
     {
-      p0 = buffer0;
       end0 = filevec[0].prefix_end;
       while (p0 != end0)
 	{
 	  lin l = lines++ & prefix_mask;
 	  if (l == alloc_lines0)
-	    linbuf0 =
-	      xrealloc (linbuf0, (alloc_lines0 *= 2) * sizeof *linbuf0);
+	    {
+	      if (PTRDIFF_MAX / (2 * sizeof *linbuf0) <= alloc_lines0)
+		xalloc_die ();
+	      alloc_lines0 *= 2;
+	      linbuf0 = xrealloc (linbuf0, alloc_lines0 * sizeof *linbuf0);
+	    }
 	  linbuf0[l] = p0;
 	  while (*p0++ != '\n')
 	    continue;
@@ -704,12 +745,13 @@ find_identical_ends (struct file_data filevec[])
   buffered_prefix = prefix_count && context < lines ? context : lines;
 
   /* Allocate line buffer 1.  */
-  tem = prefix_count ? filevec[1].suffix_begin - buffer1 : n1;
 
-  alloc_lines1
-    = (buffered_prefix
-       + GUESS_LINES (lines, filevec[1].prefix_end - buffer1, tem)
-       + context);
+  middle_guess = guess_lines (lines, p0 - buffer0, p1 - filevec[1].prefix_end);
+  suffix_guess = guess_lines (lines, p0 - buffer0, buffer1 + n1 - p1);
+  alloc_lines1 = buffered_prefix + middle_guess + MIN (context, suffix_guess);
+  if (alloc_lines1 < buffered_prefix
+      || PTRDIFF_MAX / sizeof *linbuf1 <= alloc_lines1)
+    xalloc_die ();
   linbuf1 = xmalloc (alloc_lines1 * sizeof *linbuf1);
 
   if (buffered_prefix != lines)
@@ -782,6 +824,8 @@ read_files (struct file_data filevec[], bool pretend_binary)
   find_identical_ends (filevec);
 
   equivs_alloc = filevec[0].alloc_lines + filevec[1].alloc_lines + 1;
+  if (PTRDIFF_MAX / sizeof *equivs <= equivs_alloc)
+    xalloc_die ();
   equivs = xmalloc (equivs_alloc * sizeof *equivs);
   /* Equivalence class 0 is permanently safe for lines that were not
      hashed.  Real equivalence classes start at 1.  */
@@ -793,7 +837,7 @@ read_files (struct file_data filevec[], bool pretend_binary)
   for (i = 9; (size_t) 1 << i < equivs_alloc / 3; i++)
     continue;
   nbuckets = ((size_t) 1 << i) - prime_offset[i];
-  if (SIZE_MAX / sizeof *buckets <= nbuckets)
+  if (PTRDIFF_MAX / sizeof *buckets <= nbuckets)
     xalloc_die ();
   buckets = zalloc ((nbuckets + 1) * sizeof *buckets);
   buckets++;
