@@ -25,12 +25,12 @@ dos-release: config.h all
 os2-debug : dos-debug
 os2-release: config.h
 	$(MAKE) all gnuregex.dll \
-		'CFLAGS=-Zomf -Zmtd -O2 -Wall' \
-		LDFLAGS=-s \
+		'CFLAGS=-Zomf -Zmt -O2 -Wall' \
+		'LDFLAGS=-s -Zcrtdll' \
 		o=.obj \
 		REGEX=regex.lib
 gnuregex.dll: regex$o pc/$(env)/gnuregex.def
-	$(CC) $(CFLAGS) -Zdll regex$o -o $@ pc/$(env)/gnuregex.def
+	$(CC) $(CFLAGS) $(LDFLAGS) -Zdll regex$o -o $@ pc/$(env)/gnuregex.def
 regex.lib : pc/$(env)/gnuregex.def
 	emximp -o $@ pc/$(env)/gnuregex.def
 
