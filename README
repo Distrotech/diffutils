@@ -1,9 +1,29 @@
 This directory contains the GNU diff, diff3, sdiff, and cmp utilities.
 Their features are a superset of the Unix features and they are
-significantly faster.  cmp has been moved here from the GNU textutils.
+significantly faster.
 
 See the file COPYING for copying conditions.
-See the file diff.texi (or diff.info*) for documentation.
+See the file diff.texi (or diff.info*) for documentation that can be printed
+	with TeX, or read with the `info' program or with Emacs's `M-x info'.
+	There are no man pages.
 See the file INSTALL for compilation and installation instructions.
+
+The `configure' command has special options to work around bugs
+in some buggy file systems:
+
+  configure --with-mvfs-stat-bug
+    Work around ClearCase MVFS bug id ATRia04618.
+
+  configure --with-nfs-stat-bug
+    Work around a buggy NFS servers that assign the same
+    (device number, inode number) pair to two distinct files.
+
+    This bug can occur with Linux NFS servers
+    that export all local filesystems as a single NFS filesystem,
+    if a local device number (st_dev) exceeds 255,
+    or if a local inode number (st_ino) exceeds 16777215.
+
+    This bug also can occur with Network Appliance NFS servers
+    in snapshot directories; see Netapp bug#1780.
 
 Report bugs to bug-gnu-utils@prep.ai.mit.edu
