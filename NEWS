@@ -1,4 +1,4 @@
-User-visible changes in test version 2.7.9:
+User-visible changes in test version 2.7.10:
 
 * cmp and diff now conform to POSIX 1003.1-2001 (IEEE Std 1003.1-2001)
   if the underlying system conforms to POSIX and if the _POSIX2_VERSION
@@ -10,7 +10,8 @@ User-visible changes in test version 2.7.9:
 * cmp's old -c or --print-chars option has been renamed;
   use -b or --print-bytes instead.
 * cmp now outputs "byte" rather than "char" outside the POSIX locale.
-* cmp -l's index column width now autoadjusts to fit larger (or smaller) files.
+* cmp -l's index column width now adjusts to fit larger (or smaller) files.
+* cmp -l -s and cmp -s -l are not allowed.  Use cmp -s or cmp -l instead.
 * diff uses ISO 8601 style time stamps for output times (e.g. "2001-11-23
   16:44:36.875702460 -0800") unless in the C or POSIX locale and the
   -c style is specified.
@@ -25,8 +26,13 @@ User-visible changes in test version 2.7.9:
   --no-ignore-file-name-case
 * New diff3 and sdiff option:
   --diff-program=PROGRAM
-* diff file name exclusion is now case insensitive when file name case
-  is being ignored.
+* The following diff options are still accepted, but are no longer documented.
+  They may be withdrawn in future releases.
+  -h (omit; it has no effect)
+  -H (use --speed-large-files instead)
+  -L (use --label instead)
+  -P (use --unidirectional-new-file instead)
+  --inhibit-hunk-merge (omit; it has no effect)
 * Recursive diffs now sort file names according to the LC_COLLATE locale
   category if possible, instead of using native byte comparison.
 * Diff printf specs can now use the "0" and "'" flags.
