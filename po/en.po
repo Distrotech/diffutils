@@ -1,5 +1,5 @@
-# British English messages for GNU diffutils
-# Copyright © 1998, 2001, 2002 Free Software Foundation, Inc.
+# English messages for GNU diffutils
+# Copyright © 1998, 2001, 2002, 2003 Free Software Foundation, Inc.
 # Paul Eggert <eggert@twinsun.com>, 1998
 #
 msgid ""
@@ -13,24 +13,13 @@ msgstr ""
 "Content-Type: text/plain; charset=ISO-8859-1\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-# `Thou whoreson zed!  Thou unnecessary letter!'  -- Kent in _King Lear_
-#: lib/getopt.c:770
-#, c-format
-msgid "%s: unrecognized option `--%s'\n"
-msgstr "%s: unrecognised option `--%s'\n"
-
-#: lib/getopt.c:774
-#, c-format
-msgid "%s: unrecognized option `%c%s'\n"
-msgstr "%s: unrecognised option `%c%s'\n"
-
 # POSIX requires the word "illegal" in the POSIX locale, but the error
 # is not really against the law.  This is not the POSIX locale, so fix
 # the wording.
 #: lib/getopt.c:800
 #, c-format
 msgid "%s: illegal option -- %c\n"
-msgstr "%s: unrecognised option `-%c'\n"
+msgstr "%s: unrecognized option `-%c'\n"
 
 #. TRANSLATORS: Please translate "(C)" to the C-in-a-circle symbol
 #. (U+00A9, COPYRIGHT SIGN) if possible, as this has some minor
