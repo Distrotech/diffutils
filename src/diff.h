@@ -371,6 +371,3 @@ void print_number_range (char, struct file_data *, lin, lin);
 void print_script (struct change *, struct change * (*) (struct change *), void (*) (struct change *));
 void setup_output (char const *, char const *, bool);
 void translate_range (struct file_data const *, lin, lin, long *, long *);
-
-/* version.c */
-extern char const version_string[];
