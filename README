@@ -1,29 +1,37 @@
+README for GNU DIFF
+
+	Copyright (C) 1992, 1998, 2001 Free Software Foundation, Inc.
+
+	This file is part of GNU DIFF.
+
+	GNU DIFF is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2, or (at your option)
+	any later version.
+
+	GNU DIFF is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with tar; see the file COPYING.  If not, write to
+	the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+	Boston, MA 02111-1307, USA.
+
+
 This directory contains the GNU diff, diff3, sdiff, and cmp utilities.
 Their features are a superset of the Unix features and they are
 significantly faster.
 
-See the file COPYING for copying conditions.
-See the file diff.texi (or diff.info*) for documentation that can be printed
-	with TeX, or read with the `info' program or with Emacs's `M-x info'.
-	There are no man pages.
+Please see the file COPYING for copying conditions.
+
+Please see the file doc/diff.texi (or doc/diff.info) for documentation
+that can be printed with TeX, or read with the `info' program or with
+Emacs's `M-x info'.  There are no man pages.
+
 See the file INSTALL for compilation and installation instructions.
 
-The `configure' command has special options to work around bugs
-in some buggy file systems:
+See the file ABOUT-NLS for notes about translations.
 
-  configure --with-mvfs-stat-bug
-    Work around ClearCase MVFS bug id ATRia04618.
-
-  configure --with-nfs-stat-bug
-    Work around a buggy NFS servers that assign the same
-    (device number, inode number) pair to two distinct files.
-
-    This bug can occur with Linux NFS servers
-    that export all local filesystems as a single NFS filesystem,
-    if a local device number (st_dev) exceeds 255,
-    or if a local inode number (st_ino) exceeds 16777215.
-
-    This bug also can occur with Network Appliance NFS servers
-    in snapshot directories; see Netapp bug#1780.
-
-Report bugs to bug-gnu-utils@gnu.org
+Please report bugs to <bug-gnu-utils@gnu.org>.
