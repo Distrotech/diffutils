@@ -77,3 +77,7 @@ install_sh=`echo "$install_sh" | sed 's%/dev.*/diffutil.*[-.]2.*[7-9].*[0-9]%${t
 # a directory).  The trick is to chdir to the root directory on
 # temp directory's drive.
 /^ *trap 'exit_status=\$\?; rm -rf/s%rm -rf%cd $tmp; cd /; &%
+
+# AC_CONFIG_LINKS fails if the source and destination are on
+# different file systems and symlinks don't work.
+/^    ln \$srcdir/s%||%|| cp -pf $srcdir/$ac_source $ac_dest ||%
