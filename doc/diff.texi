@@ -2819,15 +2819,15 @@ In the above table, operands that are byte counts are normally
 decimal, but may be preceded by @samp{0} for octal and @samp{0x} for
 hexadecimal.
 
-A byte count can be followed by a size letter.  A bare size letter, or
-one followd by @samp{iB}, specifies a multiple of that size using
+A byte count can be followed by a suffix to specify a multiple of that
+count; in this case an omitted integer is understood to be 1.  A bare
+size letter, or one followd by @samp{iB}, specifies a multiple using
 powers of 1024.  A size letter followed by @samp{B} specifies powers
-of 1000 instead.  For example, the options @option{-n 4M} and
-@option{-n 4MiB} are equivalent to @option{-n 4194304}, whereas the
-option @option{-n 4MB} is equivalent to @option{-n 4000000}.  This
-notation is upward compatible with the
-@uref{http://www.bipm.fr/enus/3_SI/si-prefixes.html, SI prefixes} for
-decimal multiples, and with the
+of 1000 instead.  For example, @option{-n 4M} and @option{-n 4MiB} are
+equivalent to @option{-n 4194304}, whereas @option{-n 4MB} is
+equivalent to @option{-n 4000000}.  This notation is upward compatible
+with the @uref{http://www.bipm.fr/enus/3_SI/si-prefixes.html, SI
+prefixes} for decimal multiples and with the
 @uref{http://physics.nist.gov/cuu/Units/binary.html, IEC 60027-2
 prefixes for binary multiples}.
 
@@ -2836,45 +2836,64 @@ rejected by your computer due to limitations of its arithmetic.
 
 @table @samp
 @item kB
-kilobyte: @math{10^3 = 1,000}.
-@item K
+@cindex kilobyte, definition of
+kilobyte: @math{10^3 = 1000}.
+@item k
+@itemx K
 @itemx KiB
-kibibyte: @math{2^10 = 1,024}.
+@cindex kibibyte, definition of
+kibibyte: @math{2^10 = 1024}.  @samp{K} is special: the SI prefix is
+@samp{k} and the IEC 60027-2 prefix is @samp{Ki}, but tradition and
+@sc{posix} use @samp{k} to mean @samp{KiB}.
 @item MB
+@cindex megabyte, definition of
 megabyte: @math{10^6 = 1,000,000}.
 @item M
 @itemx MiB
+@cindex mebibyte, definition of
 mebibyte: @math{2^20 = 1,048,576}.
 @item GB
+@cindex gigabyte, definition of
 gigabyte: @math{10^9 = 1,000,000,000}.
 @item G
 @itemx GiB
+@cindex gibibyte, definition of
 gibibyte: @math{2^30 = 1,073,741,824}.
 @item TB
+@cindex terabyte, definition of
 terabyte:  @math{10^12 = 1,000,000,000,000}.
 @item T
 @itemx TiB
+@cindex tebibyte, definition of
 tebibyte: @math{2^40 = 1,099,511,627,776}.
 @item PB
+@cindex petabyte, definition of
 petabyte: @math{10^15 = 1,000,000,000,000,000}.
 @item P
 @itemx PiB
+@cindex pebibyte, definition of
 pebibyte: @math{2^50 = 1,125,899,906,842,624}.
 @item EB
+@cindex exabyte, definition of
 exabyte: @math{10^18 = 1,000,000,000,000,000,000}.
 @item E
 @itemx EiB
+@cindex exbibyte, definition of
 exbibyte: @math{2^60 = 1,152,921,504,606,846,976}.
 @item ZB
+@cindex zettabyte, definition of
 zettabyte: @math{10^21 = 1,000,000,000,000,000,000,000}
 @item Z
 @itemx ZiB
 @math{2^70 = 1,180,591,620,717,411,303,424}.
+(@samp{Zi} is a GNU extension to IEC 60027-2.)
 @item YB
+@cindex yottabyte, definition of
 yottabyte: @math{10^24 = 1,000,000,000,000,000,000,000,000}.
 @item Y
 @itemx YiB
 @math{2^80 = 1,208,925,819,614,629,174,706,176}.
+(@samp{Yi} is a GNU extension to IEC 60027-2.)
 @end table
 
 @node Invoking diff
@@ -4101,11 +4120,19 @@ However, this outputs the filtered text, not the original.
 @cindex bug reports
 @cindex reporting bugs
 
-If you think you have found a bug in @sc{gnu} @command{cmp}, @command{diff},
-@command{diff3}, @command{sdiff}, or @command{patch}, please report it by
-electronic mail to @email{bug-gnu-utils@@gnu.org}.  Send as
-precise a description of the problem as you can, including sample input
-files that produce the bug, if applicable.
+If you think you have found a bug in @sc{gnu} @command{cmp},
+@command{diff}, @command{diff3}, or @command{sdiff}, please report it
+by electronic mail to the
+@uref{http://mail.gnu.org/mailman/listinfo/bug-gnu-utils,GNU utilities
+bug report mailing list} @email{bug-gnu-utils@@gnu.org}.  Please send
+bug reports for @sc{gnu} @command{patch} to
+@email{bug-patch@@gnu.org}.  Send as precise a description of the
+problem as you can, including the output of @samp{diff --version} and
+sample input files that produce the bug, if applicable.  If you have a
+nontrivial fix for the bug, please send it as well.  If you have a
+patch, please send it too.  It may simplify the maintainer's job if
+the patch is relative to a recent test release, which you can find in
+the directory @uref{ftp://alpha.gnu.org/gnu/diffutils/}.
 
 @node Copying This Manual
 @appendix Copying This Manual
