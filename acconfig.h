@@ -1,5 +1,5 @@
 /* Descriptive text for autoconf-generated C preprocessor macros for diffutils.
-   Copyright 1995, 1997 Free Software Foundation,Inc.
+   Copyright 1995, 1998 Free Software Foundation,Inc.
 
    This file is part of GNU DIFF.
 
