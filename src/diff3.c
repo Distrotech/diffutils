@@ -1,5 +1,5 @@
 /* Three way file comparison program (diff3) for Project GNU.
-   Copyright (C) 1988, 1989, 1992, 1993 Free Software Foundation, Inc.
+   Copyright 1988, 1989, 1992, 1993, 1994 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@
 #include "system.h"
 #include <stdio.h>
 #include <ctype.h>
+#include <signal.h>
 #include "getopt.h"
 
 extern char const version_string[];
@@ -228,7 +229,7 @@ main (argc, argv)
   int c, i;
   int mapping[3];
   int rev_mapping[3];
-  int incompat;
+  int incompat = 0;
   int conflicts_found;
   struct diff_block *thread0, *thread1, *last_block;
   struct diff3_block *diff3;
@@ -238,8 +239,7 @@ main (argc, argv)
   char **file;
   struct stat statb;
 
-  incompat = 0;
-
+  initialize_main (&argc, &argv);
   argv0 = argv[0];
 
   while ((c = getopt_long (argc, argv, "aeimvx3AEL:TX", longopts, 0)) != EOF)
@@ -353,6 +353,14 @@ main (argc, argv)
 	    exit (2);
 	  }
       }
+
+#if !defined(SIGCHLD) && defined(SIGCLD)
+#define SIGCHLD SIGCLD
+#endif
+#ifdef SIGCHLD
+  /* System V fork+wait does not work if SIGCHLD is ignored.  */
+  signal (SIGCHLD, SIG_DFL);
+#endif
 
   commonname = file[rev_mapping[FILEC]];
   thread1 = process_diff (file[rev_mapping[FILE1]], commonname, &last_block);
@@ -896,8 +904,6 @@ compare_line_list (list1, lengths1, list2, lengths2, nl)
 
 extern char **environ;
 
-#define	DIFF_CHUNK_SIZE	10000
-
 static struct diff_block *
 process_diff (filea, fileb, last_block)
      char const *filea, *fileb;
@@ -1096,12 +1102,20 @@ read_diff (filea, fileb, output_placement)
 {
   char *diff_result;
   size_t bytes, current_chunk_size, total;
+  int fd, wstatus;
+  struct stat pipestat;
+
+  /* 302 / 1000 is log10(2.0) rounded up.  Subtract 1 for the sign bit;
+     add 1 for integer division truncation; add 1 more for a minus sign.  */
+#define INT_STRLEN_BOUND(type) ((sizeof(type)*CHAR_BIT - 1) * 302 / 1000 + 2)
+
+#if HAVE_FORK
+
   char const *argv[7];
-  char horizon_arg[256];
+  char horizon_arg[17 + INT_STRLEN_BOUND (int)];
   char const **ap;
   int fds[2];
   pid_t pid;
-  int wstatus;
 
   ap = argv;
   *ap++ = diff_program;
@@ -1114,8 +1128,8 @@ read_diff (filea, fileb, output_placement)
   *ap++ = fileb;
   *ap = 0;
 
-  if (pipe (fds) < 0)
-    perror_with_exit ("pipe failed");
+  if (pipe (fds) != 0)
+    perror_with_exit ("pipe");
 
   pid = vfork ();
   if (pid == 0)
@@ -1138,11 +1152,52 @@ read_diff (filea, fileb, output_placement)
     perror_with_exit ("fork failed");
 
   close (fds[1]);		/* Prevent erroneous lack of EOF */
-  current_chunk_size = DIFF_CHUNK_SIZE;
+  fd = fds[0];
+
+#else /* ! HAVE_FORK */
+
+  FILE *fpipe;
+  char *command = xmalloc (sizeof (diff_program) + 30 + INT_STRLEN_BOUND (int)
+			   + 4 * (strlen (filea) + strlen (fileb)));
+  char *p;
+  char const *q;
+  sprintf (command, "%s -a --horizon-lines=%d -- '",
+	   diff_program, horizon_lines);
+  p = command + strlen (command);
+  for (q = filea;  *q;  *p++ = *q++)
+    if (*q == '\'')
+      {
+	*p++ = '\'';
+	*p++ = '\\';
+	*p++ = '\'';
+      }
+  *p++ = '\'';
+  *p++ = ' ';
+  *p++ = '\'';
+  for (q = fileb;  *q;  *p++ = *q++)
+    if (*q == '\'')
+      {
+	*p++ = '\'';
+	*p++ = '\\';
+	*p++ = '\'';
+      }
+  *p++ = '\'';
+  *p = '\0';
+  fpipe = popen (command, "r");
+  if (!fpipe)
+    perror_with_exit (command);
+  free (command);
+  fd = fileno (fpipe);
+
+#endif /* ! HAVE_FORK */
+
+  current_chunk_size = (fstat (fd, &pipestat) == 0
+			? STAT_BLOCKSIZE (pipestat) : 8 * 1024);
+
   diff_result = xmalloc (current_chunk_size);
   total = 0;
   do {
-    bytes = myread (fds[0],
+    bytes = myread (fd,
 		    diff_result + total,
 		    current_chunk_size - total);
     total += bytes;
@@ -1163,6 +1218,14 @@ read_diff (filea, fileb, output_placement)
 
   *output_placement = diff_result;
 
+#if ! HAVE_FORK
+
+  wstatus = pclose (fpipe);
+
+#else /* HAVE_FORK */
+
+  if (close (fd) != 0)
+    perror_with_exit ("pipe close");
 #if HAVE_WAITPID
   if (waitpid (pid, &wstatus, 0) < 0)
     perror_with_exit ("waitpid failed");
@@ -1175,6 +1238,8 @@ read_diff (filea, fileb, output_placement)
       break;
   }
 #endif
+
+#endif /* HAVE_FORK */
 
   if (! (WIFEXITED (wstatus) && WEXITSTATUS (wstatus) < 2))
     fatal ("subsidiary diff failed");
@@ -1191,15 +1256,15 @@ read_diff (filea, fileb, output_placement)
  * are used as call-by-reference values.
  */
 static char *
-scan_diff_line (scan_ptr, set_start, set_length, limit, firstchar)
+scan_diff_line (scan_ptr, set_start, set_length, limit, leadingchar)
      char *scan_ptr, **set_start;
      size_t *set_length;
      char *limit;
-     int firstchar;
+     int leadingchar;
 {
   char *line_ptr;
 
-  if (!(scan_ptr[0] == firstchar
+  if (!(scan_ptr[0] == leadingchar
 	&& scan_ptr[1] == ' '))
     fatal ("invalid diff format; incorrect leading line chars");
 
