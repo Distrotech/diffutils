@@ -15,7 +15,7 @@ and documents the @acronym{GNU} @command{diff}, @command{diff3},
 differences between files and the @acronym{GNU} @command{patch} command for
 using their output to update files.
 
-Copyright @copyright{} 1992, 1993, 1994, 1998, 2001, 2002 Free
+Copyright @copyright{} 1992, 1993, 1994, 1998, 2001, 2002, 2004 Free
 Software Foundation, Inc.
 
 @quotation
@@ -44,7 +44,7 @@ Software Foundation raise funds for GNU development.''
 * sdiff: (diff)Invoking sdiff.                  Merge 2 files side-by-side.
 @end direntry
 
-@dircategory GNU packages
+@dircategory Text creation and manipulation
 @direntry
 * Diff: (diff).                 Comparing and merging files.
 @end direntry
@@ -97,6 +97,7 @@ Software Foundation raise funds for GNU development.''
 * Projects::              If you've found a bug or other shortcoming.
 
 * Copying This Manual::   How to make copies of this manual.
+* Translations::          Available translations of this manual.
 * Index::                 Index.
 @end menu
 
@@ -146,7 +147,7 @@ use diffs to update files.
 @acronym{GNU} @command{diff} was written by Paul Eggert, Mike Haertel,
 David Hayes, Richard Stallman, and Len Tower.  Wayne Davison designed and
 implemented the unified output format.  The basic algorithm is described
-in ``An O(ND) Difference Algorithm and its Variations'', Eugene W. Myers,
+by Eugene W. Myers in ``An O(ND) Difference Algorithm and its Variations'',
 @cite{Algorithmica} Vol.@: 1 No.@: 2, 1986, pp.@: 251--266; and in ``A File
 Comparison Program'', Webb Miller and Eugene W. Myers,
 @cite{Software---Practice and Experience} Vol.@: 15 No.@: 11, 1985,
@@ -156,13 +157,21 @@ pp.@: 1025--1040.
 @c paper gives a rigorous treatment and the sub-algorithm for
 @c delivering scripts and should be the primary reference, but
 @c both should be mentioned.
-The algorithm was independently discovered as described in
+The algorithm was independently discovered as described by E. Ukkonen in
 ``Algorithms for Approximate String Matching'',
-E. Ukkonen, @cite{Information and Control} Vol.@: 64, 1985, pp.@: 100--118.
+@cite{Information and Control} Vol.@: 64, 1985, pp.@: 100--118.
 @c From: "Gene Myers" <gene@cs.arizona.edu>
 @c Date: Wed, 29 Sep 1993 08:27:55 MST
 @c Ukkonen should be given credit for also discovering the algorithm used
 @c in GNU diff.
+Unless the @option{--minimal} option is used, @command{diff} uses a
+heuristic by Paul Eggert that limits the cost to @math{O(N^1.5 log N)}
+at the price of producing suboptimal output for large inputs with many
+differences.  Related algorithms are surveyed by Alfred V. Aho in
+section 6.3 of ``Algorithms for Finding Patterns in Strings'',
+@cite{Handbook of Theoretical Computer Science} (Jan Van Leeuwen,
+ed.), Vol.@: A, @cite{Algorithms and Complexity}, Elsevier/MIT Press,
+1990, pp.@: 255--300.
 
 @acronym{GNU} @command{diff3} was written by Randy Smith.  @acronym{GNU}
 @command{sdiff} was written by Thomas Lord.  @acronym{GNU} @command{cmp}
@@ -434,17 +443,17 @@ newline characters, and the @command{diff} output will consist of hunks
 showing differences between long lines of whatever characters the files
 contain.
 
-You can also force @command{diff} to consider all files to be binary files,
-and report only whether they differ (but not how).  Use the
-@option{-q} or @option{--brief} option for this.
+You can also force @command{diff} to report only whether files differ
+(but not how).  Use the @option{-q} or @option{--brief} option for
+this.
 
-Differing binary files are considered to cause trouble because the
+Normally, differing binary files count as trouble because the
 resulting @command{diff} output does not capture all the differences.
 This trouble causes @command{diff} to exit with status 2.  However,
-this trouble cannot occur with the @option{--a} or @option{--text}
+this trouble cannot occur with the @option{-a} or @option{--text}
 option, or with the @option{-q} or @option{--brief} option, as these
-options both cause @command{diff} to treat binary files like text
-files.
+options both cause @command{diff} to generate a form of output that
+represents differences as requested.
 
 In operating systems that distinguish between text and binary files,
 @command{diff} normally reads and writes all data as text.  Use the
@@ -494,9 +503,9 @@ The following sections describe each format, illustrating how
 
 @menu
 * Sample diff Input:: Sample @command{diff} input files for examples.
-* Normal::            Showing differences without surrounding text.
 * Context::           Showing differences with the surrounding text.
 * Side by Side::      Showing differences in two columns.
+* Normal::            Showing differences without surrounding text.
 * Scripts::           Generating scripts for other programs.
 * If-then-else::      Merging files with if-then-else.
 @end menu
@@ -549,96 +558,6 @@ In this example, the first hunk contains just the first two lines of
 opposing the second and third lines of @file{tzu}, and the last hunk
 contains just the last three lines of @file{tzu}.
 
-@node Normal
-@section Showing Differences Without Context
-@cindex normal output format
-@cindex @samp{<} output format
-
-The ``normal'' @command{diff} output format shows each hunk of differences
-without any surrounding context.  Sometimes such output is the clearest
-way to see how lines have changed, without the clutter of nearby
-unchanged lines (although you can get similar results with the context
-or unified formats by using 0 lines of context).  However, this format
-is no longer widely used for sending out patches; for that purpose, the
-context format (@pxref{Context Format}) and the unified format
-(@pxref{Unified Format}) are superior.  Normal format is the default for
-compatibility with older versions of @command{diff} and the @acronym{POSIX}
-standard.  Use the @option{--normal} option to select this output
-format explicitly.
-
-@menu
-* Detailed Normal:: A detailed description of normal output format.
-* Example Normal::  Sample output in the normal format.
-@end menu
-
-@node Detailed Normal
-@subsection Detailed Description of Normal Format
-
-The normal output format consists of one or more hunks of differences;
-each hunk shows one area where the files differ.  Normal format hunks
-look like this:
-
-@example
-@var{change-command}
-< @var{from-file-line}
-< @var{from-file-line}@dots{}
----
-> @var{to-file-line}
-> @var{to-file-line}@dots{}
-@end example
-
-There are three types of change commands.  Each consists of a line
-number or comma-separated range of lines in the first file, a single
-character indicating the kind of change to make, and a line number or
-comma-separated range of lines in the second file.  All line numbers are
-the original line numbers in each file.  The types of change commands
-are:
-
-@table @samp
-@item @var{l}a@var{r}
-Add the lines in range @var{r} of the second file after line @var{l} of
-the first file.  For example, @samp{8a12,15} means append lines 12--15
-of file 2 after line 8 of file 1; or, if changing file 2 into file 1,
-delete lines 12--15 of file 2.
-
-@item @var{f}c@var{t}
-Replace the lines in range @var{f} of the first file with lines in range
-@var{t} of the second file.  This is like a combined add and delete, but
-more compact.  For example, @samp{5,7c8,10} means change lines 5--7 of
-file 1 to read as lines 8--10 of file 2; or, if changing file 2 into
-file 1, change lines 8--10 of file 2 to read as lines 5--7 of file 1.
-
-@item @var{r}d@var{l}
-Delete the lines in range @var{r} from the first file; line @var{l} is where
-they would have appeared in the second file had they not been deleted.
-For example, @samp{5,7d3} means delete lines 5--7 of file 1; or, if
-changing file 2 into file 1, append lines 5--7 of file 1 after line 3 of
-file 2.
-@end table
-
-@node Example Normal
-@subsection An Example of Normal Format
-
-Here is the output of the command @samp{diff lao tzu}
-(@pxref{Sample diff Input}, for the complete contents of the two files).
-Notice that it shows only the lines that are different between the two
-files.
-
-@example
-1,2d0
-< The Way that can be told of is not the eternal Way;
-< The name that can be named is not the eternal name.
-4c2,3
-< The Named is the mother of all things.
----
-> The named is the mother of all things.
-> 
-11a11,13
-> They both may be called deep and profound.
-> Deeper and more profound,
-> The door of all subtleties!
-@end example
-
 @node Context
 @section Showing Differences in Their Context
 @cindex context output format
@@ -687,70 +606,10 @@ defaults to three.  For proper operation, @command{patch} typically needs
 at least two lines of context.
 
 @menu
-* Detailed Context:: A detailed description of the context output format.
 * Example Context::  Sample output in context format.
 * Less Context::     Another sample with less context.
+* Detailed Context:: A detailed description of the context output format.
 @end menu
-
-@node Detailed Context
-@subsubsection Detailed Description of Context Format
-
-The context output format starts with a two-line header, which looks
-like this:
-
-@example
-*** @var{from-file} @var{from-file-modification-time}
---- @var{to-file} @var{to-file-modification time}
-@end example
-
-@noindent
-@vindex LC_TIME
-@cindex time stamp format, context diffs
-The time stamp normally looks like @samp{2002-02-21 23:30:39.942229878
--0800} to indicate the date, time with fractional seconds, and time
-zone in @uref{ftp://ftp.isi.edu/in-notes/rfc2822.txt, Internet RFC
-2822 format}.  However, a traditional time stamp like @samp{Thu Feb 21
-23:30:39 2002} is used if the @env{LC_TIME} locale category is either
-@samp{C} or @samp{POSIX}.
-
-You can change the header's content with the
-@option{--label=@var{label}} option; see @ref{Alternate Names}.
-
-Next come one or more hunks of differences; each hunk shows one area
-where the files differ.  Context format hunks look like this:
-
-@example
-***************
-*** @var{from-file-line-range} ****
-  @var{from-file-line}
-  @var{from-file-line}@dots{}
---- @var{to-file-line-range} ----
-  @var{to-file-line}
-  @var{to-file-line}@dots{}
-@end example
-
-The lines of context around the lines that differ start with two space
-characters.  The lines that differ between the two files start with one
-of the following indicator characters, followed by a space character:
-
-@table @samp
-@item !
-A line that is part of a group of one or more lines that changed between
-the two files.  There is a corresponding group of lines marked with
-@samp{!} in the part of this hunk for the other file.
-
-@item +
-An ``inserted'' line in the second file that corresponds to nothing in
-the first file.
-
-@item -
-A ``deleted'' line in the first file that corresponds to nothing in the
-second file.
-@end table
-
-If all of the changes in a hunk are insertions, the lines of
-@var{from-file} are omitted.  If all of the changes are deletions, the
-lines of @var{to-file} are omitted.
 
 @node Example Context
 @subsubsection An Example of Context Format
@@ -822,6 +681,72 @@ most one context line is reported here.
 + The door of all subtleties!
 @end example
 
+@node Detailed Context
+@subsubsection Detailed Description of Context Format
+
+The context output format starts with a two-line header, which looks
+like this:
+
+@example
+*** @var{from-file} @var{from-file-modification-time}
+--- @var{to-file} @var{to-file-modification time}
+@end example
+
+@noindent
+@vindex LC_TIME
+@cindex time stamp format, context diffs
+The time stamp normally looks like @samp{2002-02-21 23:30:39.942229878
+-0800} to indicate the date, time with fractional seconds, and time
+zone in @uref{ftp://ftp.isi.edu/in-notes/rfc2822.txt, Internet RFC
+2822 format}.  (The fractional seconds are omitted on hosts that do
+not support fractional time stamps.)  However, a traditional time
+stamp like @samp{Thu Feb 21 23:30:39 2002} is used if the
+@env{LC_TIME} locale category is either @samp{C} or @samp{POSIX}.
+
+You can change the header's content with the
+@option{--label=@var{label}} option; see @ref{Alternate Names}.
+
+Next come one or more hunks of differences; each hunk shows one area
+where the files differ.  Context format hunks look like this:
+
+@example
+***************
+*** @var{from-file-line-numbers} ****
+  @var{from-file-line}
+  @var{from-file-line}@dots{}
+--- @var{to-file-line-numbers} ----
+  @var{to-file-line}
+  @var{to-file-line}@dots{}
+@end example
+
+If a hunk contains two or more lines, its line numbers look like
+@samp{@var{start},@var{end}}.  Otherwise only its end line number
+appears.  An empty hunk is considered to end at the line that precedes
+the hunk.
+
+The lines of context around the lines that differ start with two space
+characters.  The lines that differ between the two files start with one
+of the following indicator characters, followed by a space character:
+
+@table @samp
+@item !
+A line that is part of a group of one or more lines that changed between
+the two files.  There is a corresponding group of lines marked with
+@samp{!} in the part of this hunk for the other file.
+
+@item +
+An ``inserted'' line in the second file that corresponds to nothing in
+the first file.
+
+@item -
+A ``deleted'' line in the first file that corresponds to nothing in the
+second file.
+@end table
+
+If all of the changes in a hunk are insertions, the lines of
+@var{from-file} are omitted.  If all of the changes are deletions, the
+lines of @var{to-file} are omitted.
+
 @node Unified Format
 @subsection Unified Format
 @cindex unified output format
@@ -840,49 +765,9 @@ format.  For proper operation, @command{patch} typically needs at
 least three lines of context.
 
 @menu
-* Detailed Unified:: A detailed description of unified format.
 * Example Unified::  Sample output in unified format.
+* Detailed Unified:: A detailed description of unified format.
 @end menu
-
-@node Detailed Unified
-@subsubsection Detailed Description of Unified Format
-
-The unified output format starts with a two-line header, which looks
-like this:
-
-@example
---- @var{from-file} @var{from-file-modification-time}
-+++ @var{to-file} @var{to-file-modification-time}
-@end example
-
-@noindent
-@cindex time stamp format, unified diffs
-The time stamp looks like @samp{2002-02-21 23:30:39.942229878 -0800}
-to indicate the date, time with fractional seconds, and time zone.
-
-You can change the header's content with the
-@option{--label=@var{label}} option; see @xref{Alternate Names}.
-
-Next come one or more hunks of differences; each hunk shows one area
-where the files differ.  Unified format hunks look like this:
-
-@example
-@@@@ @var{from-file-range} @var{to-file-range} @@@@
- @var{line-from-either-file}
- @var{line-from-either-file}@dots{}
-@end example
-
-The lines common to both files begin with a space character.  The lines
-that actually differ between the two files have one of the following
-indicator characters in the left print column:
-
-@table @samp
-@item +
-A line was added here to the first file.
-
-@item -
-A line was removed here from the first file.
-@end table
 
 @node Example Unified
 @subsubsection An Example of Unified Format
@@ -911,6 +796,57 @@ Here is the output of the command @samp{diff -u lao tzu}
 +Deeper and more profound,
 +The door of all subtleties!
 @end example
+
+@node Detailed Unified
+@subsubsection Detailed Description of Unified Format
+
+The unified output format starts with a two-line header, which looks
+like this:
+
+@example
+--- @var{from-file} @var{from-file-modification-time}
++++ @var{to-file} @var{to-file-modification-time}
+@end example
+
+@noindent
+@cindex time stamp format, unified diffs
+The time stamp looks like @samp{2002-02-21 23:30:39.942229878 -0800}
+to indicate the date, time with fractional seconds, and time zone.
+The fractional seconds are omitted on hosts that do not support
+fractional time stamps.
+
+You can change the header's content with the
+@option{--label=@var{label}} option; see @xref{Alternate Names}.
+
+Next come one or more hunks of differences; each hunk shows one area
+where the files differ.  Unified format hunks look like this:
+
+@example
+@@@@ @var{from-file-line-numbers} @var{to-file-line-numbers} @@@@
+ @var{line-from-either-file}
+ @var{line-from-either-file}@dots{}
+@end example
+
+If a hunk contains just one line, only its start line number appears.
+Otherwise its line numbers look like @samp{@var{start},@var{count}}.
+An empty hunk is considered to start at the line that follows the hunk.
+
+If a hunk and its context contain two or more lines, its
+line numbers look like @samp{@var{start},@var{count}}.  Otherwise only
+its end line number appears.  An empty hunk is considered to end at
+the line that precedes the hunk.
+
+The lines common to both files begin with a space character.  The lines
+that actually differ between the two files have one of the following
+indicator characters in the left print column:
+
+@table @samp
+@item +
+A line was added here to the first file.
+
+@item -
+A line was removed here from the first file.
+@end table
 
 @node Sections
 @subsection Showing Which Sections Differences Are in
@@ -1113,6 +1049,96 @@ But after they are produced,            But after they are produced,
                                    >    The door of all subtleties!
 @end example
 
+@node Normal
+@section Showing Differences Without Context
+@cindex normal output format
+@cindex @samp{<} output format
+
+The ``normal'' @command{diff} output format shows each hunk of differences
+without any surrounding context.  Sometimes such output is the clearest
+way to see how lines have changed, without the clutter of nearby
+unchanged lines (although you can get similar results with the context
+or unified formats by using 0 lines of context).  However, this format
+is no longer widely used for sending out patches; for that purpose, the
+context format (@pxref{Context Format}) and the unified format
+(@pxref{Unified Format}) are superior.  Normal format is the default for
+compatibility with older versions of @command{diff} and the @acronym{POSIX}
+standard.  Use the @option{--normal} option to select this output
+format explicitly.
+
+@menu
+* Example Normal::  Sample output in the normal format.
+* Detailed Normal:: A detailed description of normal output format.
+@end menu
+
+@node Example Normal
+@subsection An Example of Normal Format
+
+Here is the output of the command @samp{diff lao tzu}
+(@pxref{Sample diff Input}, for the complete contents of the two files).
+Notice that it shows only the lines that are different between the two
+files.
+
+@example
+1,2d0
+< The Way that can be told of is not the eternal Way;
+< The name that can be named is not the eternal name.
+4c2,3
+< The Named is the mother of all things.
+---
+> The named is the mother of all things.
+> 
+11a11,13
+> They both may be called deep and profound.
+> Deeper and more profound,
+> The door of all subtleties!
+@end example
+
+@node Detailed Normal
+@subsection Detailed Description of Normal Format
+
+The normal output format consists of one or more hunks of differences;
+each hunk shows one area where the files differ.  Normal format hunks
+look like this:
+
+@example
+@var{change-command}
+< @var{from-file-line}
+< @var{from-file-line}@dots{}
+---
+> @var{to-file-line}
+> @var{to-file-line}@dots{}
+@end example
+
+There are three types of change commands.  Each consists of a line
+number or comma-separated range of lines in the first file, a single
+character indicating the kind of change to make, and a line number or
+comma-separated range of lines in the second file.  All line numbers are
+the original line numbers in each file.  The types of change commands
+are:
+
+@table @samp
+@item @var{l}a@var{r}
+Add the lines in range @var{r} of the second file after line @var{l} of
+the first file.  For example, @samp{8a12,15} means append lines 12--15
+of file 2 after line 8 of file 1; or, if changing file 2 into file 1,
+delete lines 12--15 of file 2.
+
+@item @var{f}c@var{t}
+Replace the lines in range @var{f} of the first file with lines in range
+@var{t} of the second file.  This is like a combined add and delete, but
+more compact.  For example, @samp{5,7c8,10} means change lines 5--7 of
+file 1 to read as lines 8--10 of file 2; or, if changing file 2 into
+file 1, change lines 8--10 of file 2 to read as lines 5--7 of file 1.
+
+@item @var{r}d@var{l}
+Delete the lines in range @var{r} from the first file; line @var{l} is where
+they would have appeared in the second file had they not been deleted.
+For example, @samp{5,7d3} means delete lines 5--7 of file 1; or, if
+changing file 2 into file 1, append lines 5--7 of file 1 after line 3 of
+file 2.
+@end table
+
 @node Scripts
 @section Making Edit Scripts
 @cindex script output formats
@@ -1150,9 +1176,28 @@ respectively, then the command @samp{(cat d1 d2 @dots{} dN && echo w) |
 ed - old} edits @file{old} to make it a copy of @file{newN}.
 
 @menu
-* Detailed ed:: A detailed description of @command{ed} format.
 * Example ed::  A sample @command{ed} script.
+* Detailed ed:: A detailed description of @command{ed} format.
 @end menu
+
+@node Example ed
+@subsubsection Example @command{ed} Script
+
+Here is the output of @samp{diff -e lao tzu} (@pxref{Sample
+diff Input}, for the complete contents of the two files):
+
+@example
+11a
+They both may be called deep and profound.
+Deeper and more profound,
+The door of all subtleties!
+.
+4c
+The named is the mother of all things.
+
+.
+1,2d
+@end example
 
 @node Detailed ed
 @subsubsection Detailed Description of @command{ed} Format
@@ -1201,25 +1246,6 @@ lines.  Like a combined add and delete, but more compact.  For example,
 Delete the lines in range @var{r} from the first file.  For example,
 @samp{5,7d} means delete lines 5--7 of file 1.
 @end table
-
-@node Example ed
-@subsubsection Example @command{ed} Script
-
-Here is the output of @samp{diff -e lao tzu} (@pxref{Sample
-diff Input}, for the complete contents of the two files):
-
-@example
-11a
-They both may be called deep and profound.
-Deeper and more profound,
-The door of all subtleties!
-.
-4c
-The named is the mother of all things.
-
-.
-1,2d
-@end example
 
 @node Forward ed
 @subsection Forward @command{ed} Scripts
@@ -1313,8 +1339,8 @@ formats and line formats, as described in the next sections.
 @menu
 * Line Group Formats::    Formats for general if-then-else line groups.
 * Line Formats::          Formats for each line in a line group.
-* Detailed If-then-else:: A detailed description of if-then-else format.
 * Example If-then-else::  Sample if-then-else format output.
+* Detailed If-then-else:: A detailed description of if-then-else format.
 @end menu
 
 @node Line Group Formats
@@ -1487,7 +1513,7 @@ This format spec is equivalent to @var{T} if
 @var{A}'s value equals @var{B}'s; otherwise it is equivalent to @var{E}.
 
 For example, @samp{%(N=0?no:%dN) line%(N=1?:s)} is equivalent to
-@samp{no lines} if @var{N} (the number of lines in the group in the the
+@samp{no lines} if @var{N} (the number of lines in the group in the
 new file) is 0, to @samp{1 line} if @var{N} is 1, and to @samp{%dN lines}
 otherwise.
 @end table
@@ -1600,6 +1626,38 @@ diff \
    old new
 @end example
 
+@node Example If-then-else
+@subsection An Example of If-then-else Format
+
+Here is the output of @samp{diff -DTWO lao tzu} (@pxref{Sample
+diff Input}, for the complete contents of the two files):
+
+@example
+#ifndef TWO
+The Way that can be told of is not the eternal Way;
+The name that can be named is not the eternal name.
+#endif /* ! TWO */
+The Nameless is the origin of Heaven and Earth;
+#ifndef TWO
+The Named is the mother of all things.
+#else /* TWO */
+The named is the mother of all things.
+
+#endif /* TWO */
+Therefore let there always be non-being,
+  so we may see their subtlety,
+And let there always be being,
+  so we may see their outcome.
+The two are the same,
+But after they are produced,
+  they have different names.
+#ifdef TWO
+They both may be called deep and profound.
+Deeper and more profound,
+The door of all subtleties!
+#endif /* TWO */
+@end example
+
 @node Detailed If-then-else
 @subsection Detailed Description of If-then-else Format
 
@@ -1645,38 +1703,6 @@ might contain duplicate or otherwise incorrect code.
 The @command{patch} @option{-D @var{name}} option behaves like
 the @command{diff} @option{-D @var{name}} option, except it operates on
 a file and a diff to produce a merged file; @xref{patch Options}.
-
-@node Example If-then-else
-@subsection An Example of If-then-else Format
-
-Here is the output of @samp{diff -DTWO lao tzu} (@pxref{Sample
-diff Input}, for the complete contents of the two files):
-
-@example
-#ifndef TWO
-The Way that can be told of is not the eternal Way;
-The name that can be named is not the eternal name.
-#endif /* ! TWO */
-The Nameless is the origin of Heaven and Earth;
-#ifndef TWO
-The Named is the mother of all things.
-#else /* TWO */
-The named is the mother of all things.
-
-#endif /* TWO */
-Therefore let there always be non-being,
-  so we may see their subtlety,
-And let there always be being,
-  so we may see their outcome.
-The two are the same,
-But after they are produced,
-  they have different names.
-#ifdef TWO
-They both may be called deep and profound.
-Deeper and more profound,
-The door of all subtleties!
-#endif /* TWO */
-@end example
 
 @node Incomplete Lines
 @chapter Incomplete Lines
@@ -1787,7 +1813,8 @@ subdirectory whose base name is @samp{RCS} or ends with @samp{,v}.
 
 If you need to give this option many times, you can instead put the
 patterns in a file, one pattern per line, and use the @option{-X
-@var{file}} or @option{--exclude-from=@var{file}} option.
+@var{file}} or @option{--exclude-from=@var{file}} option.  Trailing
+white space and empty lines are ignored in the pattern file.
 
 If you have been comparing two directories and stopped partway through,
 later you might want to continue where you left off.  You can do this by
@@ -1946,9 +1973,9 @@ their location in the input files.
 
 @menu
 * Sample diff3 Input::    Sample @command{diff3} input for examples.
-* Detailed diff3 Normal:: A detailed description of normal output format.
-* diff3 Hunks::           The format of normal output format.
 * Example diff3 Normal::  Sample output in the normal format.
+* diff3 Hunks::           The format of normal output format.
+* Detailed diff3 Normal:: A detailed description of normal output format.
 @end menu
 
 @node Sample diff3 Input
@@ -1976,6 +2003,45 @@ But after they are produced,
   they have different names.
 
   -- The Way of Lao-Tzu, tr. Wing-tsit Chan
+@end example
+
+@node Example diff3 Normal
+@section An Example of @command{diff3} Normal Format
+
+Here is the output of the command @samp{diff3 lao tzu tao}
+(@pxref{Sample diff3 Input}, for the complete contents of the files).
+Notice that it shows only the lines that are different among the three
+files.
+
+@example
+====2
+1:1,2c
+3:1,2c
+  The Way that can be told of is not the eternal Way;
+  The name that can be named is not the eternal name.
+2:0a
+====1
+1:4c
+  The Named is the mother of all things.
+2:2,3c
+3:4,5c
+  The named is the mother of all things.
+  
+====3
+1:8c
+2:7c
+    so we may see their outcome.
+3:9c
+    so we may see their result.
+====
+1:11a
+2:11,13c
+  They both may be called deep and profound.
+  Deeper and more profound,
+  The door of all subtleties!
+3:13,14c
+  
+    -- The Way of Lao-Tzu, tr. Wing-tsit Chan
 @end example
 
 @node Detailed diff3 Normal
@@ -2059,45 +2125,6 @@ because it found a two-way hunk containing @samp{a} in the first and
 third files and @samp{g} in the second file, then the single line
 @samp{b} common to all three files, then a three-way hunk containing
 the last line of each file.
-
-@node Example diff3 Normal
-@section An Example of @command{diff3} Normal Format
-
-Here is the output of the command @samp{diff3 lao tzu tao}
-(@pxref{Sample diff3 Input}, for the complete contents of the files).
-Notice that it shows only the lines that are different among the three
-files.
-
-@example
-====2
-1:1,2c
-3:1,2c
-  The Way that can be told of is not the eternal Way;
-  The name that can be named is not the eternal name.
-2:0a
-====1
-1:4c
-  The Named is the mother of all things.
-2:2,3c
-3:4,5c
-  The named is the mother of all things.
-  
-====3
-1:8c
-2:7c
-    so we may see their outcome.
-3:9c
-    so we may see their result.
-====
-1:11a
-2:11,13c
-  They both may be called deep and profound.
-  Deeper and more profound,
-  The door of all subtleties!
-3:13,14c
-  
-    -- The Way of Lao-Tzu, tr. Wing-tsit Chan
-@end example
 
 @node diff3 Merging
 @chapter Merging From a Common Ancestor
@@ -2282,10 +2309,11 @@ options output the following:
 @end example
 
 If you are comparing files that have meaningless or uninformative names,
-you can use the @option{-L @var{label}} or @option{--label=@var{label}}
+you can use the @option{--label=@var{label}}
 option to show alternate names in the @samp{<<<<<<<}, @samp{|||||||}
 and @samp{>>>>>>>} brackets.  This option can be given up to three
-times, once for each input file.  Thus @samp{diff3 -A -L X -L Y -L Z A
+times, once for each input file.  Thus @samp{diff3 -A --label X
+--label Y --label Z A
 B C} acts like @samp{diff3 -A A B C}, except that the output looks like
 it came from files named @samp{X}, @samp{Y} and @samp{Z} rather than
 from files named @samp{A}, @samp{B} and @samp{C}.
@@ -3005,7 +3033,7 @@ in this section have any affect, because no backups are made.
 
 The names for reject files (files containing patches that
 @command{patch} could not find a place to apply) are normally the name
-of the output file with @samp{.rej} appended (or @samp{#} if if using
+of the output file with @samp{.rej} appended (or @samp{#} if using
 @samp{.rej} would make the backup file name too long).
 
 Alternatively, you can tell @command{patch} to place all of the rejected
@@ -3628,7 +3656,10 @@ argument by itself treats the remaining arguments as file names even if
 they begin with @samp{-}.
 
 An exit status of 0 means no differences were found, 1 means some
-differences were found, and 2 means trouble.
+differences were found, and 2 means trouble.  Normally, differing
+binary files count as trouble, but this can be altered by using the
+@option{-a} or @option{--text} option, or the @option{-q} or
+@option{--brief} option.
 
 @menu
 * diff Options:: Summary of options to @command{diff}.
@@ -3973,12 +4004,12 @@ script for System V compatibility.  This option must be combined with
 one of the @option{-AeExX3} options, and may not be combined with @option{-m}.
 @xref{Saving the Changed File}.
 
-@item -L @var{label}
-@itemx --label=@var{label}
+@item --label=@var{label}
 Use the label @var{label} for the brackets output by the @option{-A},
 @option{-E} and @option{-X} options.  This option may be given up to three
 times, one for each input file.  The default labels are the names of
-the input files.  Thus @samp{diff3 -L X -L Y -L Z -m A B C} acts like
+the input files.  Thus @samp{diff3 --label X --label Y --label Z -m A
+B C} acts like
 @samp{diff3 -m A B C}, except that the output looks like it came from
 files named @samp{X}, @samp{Y} and @samp{Z} rather than from files
 named @samp{A}, @samp{B} and @samp{C}.  @xref{Marking Conflicts}.
@@ -3989,6 +4020,10 @@ Apply the edit script to the first file and send the result to standard
 output.  Unlike piping the output from @command{diff3} to @command{ed}, this
 works even for binary files and incomplete lines.  @option{-A} is assumed
 if no edit script option is specified.  @xref{Bypassing ed}.
+
+@item --strip-trailing-cr
+Strip any trailing carriage return at the end of an input line.
+@xref{Binary}.
 
 @item -T
 @itemx --initial-tab
@@ -4420,7 +4455,7 @@ can also help by reporting any bugs that you find.
 If you are a programmer and would like to contribute something to the
 @acronym{GNU} project, please consider volunteering for one of these
 projects.  If you are seriously contemplating work, please write to
-@email{gnu@@gnu.org} to coordinate with other volunteers.
+@email{gvc@@gnu.org} to coordinate with other volunteers.
 
 @menu
 * Shortcomings:: Suggested projects for improvements.
@@ -4598,6 +4633,13 @@ find in the directory @uref{ftp://alpha.gnu.org/gnu/diffutils/}.
 @end menu
 
 @include fdl.texi
+
+@node Translations
+@appendix Translations of This Manual
+
+Nishio Futoshi of the GNUjdoc project has prepared a Japanese
+translation of this manual.  Its most recent version can be found at
+@uref{http://openlab.ring.gr.jp/gnujdoc/cvsweb/cvsweb.cgi/gnujdoc/}.
 
 @node Index
 @appendix Index
