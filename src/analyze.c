@@ -697,6 +697,18 @@ build_script (filevec)
   return script;
 }
 
+/* If CHANGES, briefly report that two files differed.  */
+void
+briefly_report (changes, filevec)
+     int changes;
+     const struct file_data filevec[];
+{
+  if (changes) 
+    message (no_details_flag ? "Files %s and %s differ\n"
+	     : "Binary files %s and %s differ\n",
+	     filevec[0].name, filevec[1].name);
+}
+
 /* Report the differences of two files.  DEPTH is the current directory
    depth. */
 int
@@ -714,9 +726,10 @@ diff_2_files (filevec, depth)
   /* If we have detected that either file is binary,
      compare the two files as binary.  This can happen
      only when the first chunk is read.
-     Also, -q means treat all files as binary.  */
+     Also, --brief without any --ignore-* options means
+     we can speed things up by treating the files as binary.  */
 
-  if (read_files (filevec))
+  if (read_files (filevec, no_details_flag & ~ignore_some_changes))
     {
       /* Files with different lengths must be different.  */
       if (filevec[0].stat.st_size != filevec[1].stat.st_size
@@ -774,10 +787,7 @@ diff_2_files (filevec, depth)
 	    }
 	}
 
-      if (changes) 
-	message (no_details_flag ? "Files %s and %s differ\n"
-		 : "Binary files %s and %s differ\n",
-		 filevec[0].name, filevec[1].name);
+      briefly_report (changes, filevec);
     }
   else
     {
@@ -833,50 +843,7 @@ diff_2_files (filevec, depth)
       else
 	script = build_script (filevec);
 
-      if (script || ! no_diff_means_no_output)
-	{
-	  /* Record info for starting up output,
-	     to be used if and when we have some output to print.  */
-	  setup_output (files[0].name, files[1].name, depth);
-
-	  switch (output_style)
-	    {
-	    case OUTPUT_CONTEXT:
-	      print_context_script (script, 0);
-	      break;
-
-	    case OUTPUT_UNIFIED:
-	      print_context_script (script, 1);
-	      break;
-
-	    case OUTPUT_ED:
-	      print_ed_script (script);
-	      break;
-
-	    case OUTPUT_FORWARD_ED:
-	      pr_forward_ed_script (script);
-	      break;
-
-	    case OUTPUT_RCS:
-	      print_rcs_script (script);
-	      break;
-
-	    case OUTPUT_NORMAL:
-	      print_normal_script (script);
-	      break;
-
-	    case OUTPUT_IFDEF:
-	      print_ifdef_script (script);
-	      break;
-
-	    case OUTPUT_SDIFF:
-	      print_sdiff_script (script);
-	    }
-
-	  finish_output ();
-	}
-
-      /* Set CHANGES if we had any diffs that were printed.
+      /* Set CHANGES if we had any diffs.
 	 If some changes are ignored, we must scan the script to decide.  */
       if (ignore_blank_lines_flag || ignore_regexp_list)
 	{
@@ -897,7 +864,7 @@ diff_2_files (filevec, depth)
 	      next = end->link;
 	      end->link = NULL;
 
-	      /* Determine whether this hunk was printed.  */
+	      /* Determine whether this hunk is really a difference.  */
 	      analyze_hunk (this, &first0, &last0, &first1, &last1,
 			    &deletes, &inserts);
 
@@ -910,6 +877,54 @@ diff_2_files (filevec, depth)
 	}
       else
 	changes = (script != 0);
+
+      if (no_details_flag)
+	briefly_report (changes, filevec);
+      else
+	{
+	  if (changes || ! no_diff_means_no_output)
+	    {
+	      /* Record info for starting up output,
+		 to be used if and when we have some output to print.  */
+	      setup_output (files[0].name, files[1].name, depth);
+
+	      switch (output_style)
+		{
+		case OUTPUT_CONTEXT:
+		  print_context_script (script, 0);
+		  break;
+
+		case OUTPUT_UNIFIED:
+		  print_context_script (script, 1);
+		  break;
+
+		case OUTPUT_ED:
+		  print_ed_script (script);
+		  break;
+
+		case OUTPUT_FORWARD_ED:
+		  pr_forward_ed_script (script);
+		  break;
+
+		case OUTPUT_RCS:
+		  print_rcs_script (script);
+		  break;
+
+		case OUTPUT_NORMAL:
+		  print_normal_script (script);
+		  break;
+
+		case OUTPUT_IFDEF:
+		  print_ifdef_script (script);
+		  break;
+
+		case OUTPUT_SDIFF:
+		  print_sdiff_script (script);
+		}
+
+	      finish_output ();
+	    }
+	}
 
       free (filevec[0].undiscarded);
 
