@@ -1,5 +1,5 @@
 /* xalloc.h -- malloc with out-of-memory checking
-   Copyright (C) 1990-1998, 1999, 2000 Free Software Foundation, Inc.
+   Copyright (C) 1990-1998, 1999, 2000, 2002 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -35,11 +35,6 @@
 # ifndef ATTRIBUTE_NORETURN
 #  define ATTRIBUTE_NORETURN __attribute__ ((__noreturn__))
 # endif
-
-/* Exit value when the requested amount of memory is not available.
-   It is initialized to EXIT_FAILURE, but the caller may set it to
-   some other value.  */
-extern int xalloc_exit_failure;
 
 /* If this pointer is non-zero, run the specified function upon each
    allocation failure.  It is initialized to zero. */
