@@ -51,7 +51,7 @@ AC_STRUCT_ST_RDEV
 AC_TYPE_PID_T
 AC_TYPE_SIGNAL
 
-AC_CHECK_FUNCS(diraccess dup2 \
+AC_CHECK_FUNCS(diraccess dup2 gettimeofday \
   sigaction sigprocmask strchr strerror tmpnam)
 AC_REPLACE_FUNCS(memchr mkstemp strcasecmp waitpid)
 if test $ac_cv_func_mkstemp != yes; then
@@ -73,6 +73,16 @@ jm_PREREQ_TEMPNAME
 # We don't actually use xstrtoumax, but we use nearly all the things
 # it uses.
 jm_AC_PREREQ_XSTRTOUMAX
+
+# Check for clock_gettime and its library.  Solaris puts it in -lrt or
+# -lposix4, but we don't want to link that library unless we have to.
+diff_saved_libs=$LIBS
+AC_SEARCH_LIBS(clock_gettime, [rt posix4],
+	       [LIB_CLOCK_GETTIME=$ac_cv_search_clock_gettime],
+	       [LIB_CLOCK_GETTIME=])
+AC_SUBST([LIB_CLOCK_GETTIME])
+AC_CHECK_FUNCS(clock_gettime)
+LIBS=$diff_saved_libs
 
 # fnmatch
 AC_FUNC_FNMATCH
