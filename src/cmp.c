@@ -1,5 +1,5 @@
 /* cmp -- compare two files.
-   Copyright (C) 1990, 1991, 1992, 1993 Free Software Foundation, Inc.
+   Copyright 1990, 1991, 1992, 1993, 1994 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -112,6 +112,7 @@ main (argc, argv)
   int c, i, exit_status;
   struct stat stat_buf[2];
 
+  initialize_main (&argc, &argv);
   program_name = argv[0];
 
   /* Parse command line options.  */
@@ -172,12 +173,12 @@ main (argc, argv)
 
       /* Two files with the same name are identical.
 	 But wait until we open the file once, for proper diagnostics.  */
-      if (i && strcmp (file[0], file[1]) == 0)
+      if (i && filename_cmp (file[0], file[1]) == 0)
 	exit (0);
 
       file_desc[i1] = (strcmp (file[i1], "-") == 0
 		       ? STDIN_FILENO
-		       : open (file[i1], O_RDONLY));
+		       : open (file[i1], O_RDONLY | O_BINARY, 0));
       if (file_desc[i1] < 0 || fstat (file_desc[i1], &stat_buf[i1]) != 0)
 	{
 	  if (file_desc[i1] < 0 && comparison_type == type_status)
@@ -190,8 +191,7 @@ main (argc, argv)
   /* If the files are links to the same inode and have the same file position,
      they are identical.  */
 
-  if (stat_buf[0].st_dev == stat_buf[1].st_dev
-      && stat_buf[0].st_ino == stat_buf[1].st_ino
+  if (0 < same_file (&stat_buf[0], &stat_buf[1])
       && file_position (0) == file_position (1))
     exit (0);
 
@@ -203,8 +203,7 @@ main (argc, argv)
 
       if (fstat (STDOUT_FILENO, &outstat) == 0
 	  && stat ("/dev/null", &nullstat) == 0
-	  && outstat.st_dev == nullstat.st_dev
-	  && outstat.st_ino == nullstat.st_ino)
+	  && 0 < same_file (&outstat, &nullstat))
 	comparison_type = type_status;
     }
 
