@@ -582,7 +582,8 @@ main (argc, argv)
 
   switch_string = option_list (argv + 1, optind - 1);
 
-  val = compare_files (NULL, argv[optind], NULL, argv[optind + 1], 0);
+  val = compare_files ((char *) 0, argv[optind],
+		       (char *) 0, argv[optind + 1], 0);
 
   /* Print any messages that were saved up for last.  */
   print_message_queue ();
