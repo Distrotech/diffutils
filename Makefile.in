@@ -1,5 +1,5 @@
 # Makefile for GNU DIFF
-# Copyright 1988, 1989, 1991, 1992, 1993, 1994 Free Software Foundation, Inc.
+# Copyright (C) 1988,1989,1991,1992,1993,1994 Free Software Foundation, Inc.
 #
 # This file is part of GNU DIFF.
 #
@@ -29,16 +29,18 @@ INSTALL_DATA = @INSTALL_DATA@
 MAKEINFO = makeinfo
 TEXI2DVI = texi2dvi
 
-CFLAGS = -g
-LDFLAGS =
+CPPFLAGS = @CPPFLAGS@
+DEFS = @DEFS@
+CFLAGS = @CFLAGS@
+LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
 
 # Some System V machines do not come with libPW.
 # If this is true for you, use the GNU alloca.o here.
 ALLOCA = @ALLOCA@
 
-prefix = /usr/local
-exec_prefix = $(prefix)
+prefix = @prefix@
+exec_prefix = @exec_prefix@
 
 # Prefix for each installed program, normally empty or `g'.
 binprefix =
@@ -53,18 +55,18 @@ SHELL = /bin/sh
 
 # The source files for all of the programs.
 srcs=diff.c analyze.c cmpbuf.c cmpbuf.h io.c context.c ed.c normal.c ifdef.c \
-	util.c dir.c memchr.c waitpid.c \
+	util.c dir.c memchr.c memcmp.c waitpid.c \
 	version.c diff.h regex.c regex.h side.c system.h \
 	diff3.c sdiff.c cmp.c error.c xmalloc.c getopt.c getopt1.c getopt.h \
 	fnmatch.c fnmatch.h alloca.c
 distfiles = $(srcs) README INSTALL NEWS diagmeet.note Makefile.in \
-	config.h.in configure configure.in COPYING ChangeLog \
+	config.hin configure configure.in COPYING ChangeLog \
 	diff.texi diff.info* texinfo.tex \
-	install.sh mkinstalldirs
+	install-sh mkinstalldirs
 
 all: diff diff3 sdiff cmp info
 
-COMPILE = $(CC) -c -DHAVE_CONFIG_H $(CPPFLAGS) -I. -I$(srcdir) $(CFLAGS)
+COMPILE = $(CC) -c $(CPPFLAGS) $(DEFS) -I. -I$(srcdir) $(CFLAGS)
 
 .c.o:
 	$(COMPILE) $<
@@ -125,27 +127,31 @@ realclean: distclean
 	rm -f TAGS *.info*
 
 install: all installdirs
-	for p in diff diff3 sdiff cmp; \
-	do $(INSTALL_PROGRAM) $$p $(bindir)/$(binprefix)$$p; done
-	cd $(srcdir); for f in diff.info*; \
-	do $(INSTALL_DATA) $$f $(infodir)/$$f; done
+	for p in diff diff3 sdiff cmp; do \
+		$(INSTALL_PROGRAM) $$p $(bindir)/$(binprefix)$$p; done
+	cd $(srcdir) && for f in diff.info*; do \
+		$(INSTALL_DATA) $$f $(infodir)/$$f; done
 
 installdirs:
 	$(SHELL) ${srcdir}/mkinstalldirs $(bindir) $(infodir)
 
 uninstall:
-	for p in diff diff3 sdiff cmp; \
-	do rm -f $(bindir)/$(binprefix)$$p; done
+	for p in diff diff3 sdiff cmp; do \
+		rm -f $(bindir)/$(binprefix)$$p; done
 	rm -f $(infodir)/diff.info*
 
-Makefile: Makefile.in config.status
-	$(SHELL) config.status
-config.status: configure
-	$(SHELL) $(srcdir)/configure --no-create
 configure: configure.in
-	cd $(srcdir); autoconf
-config.h.in: configure.in
-	cd $(srcdir); autoheader
+	cd $(srcdir) && autoconf
+config.hin: configure.in
+	rm -f $(srcdir)/config.hin
+	cd $(srcdir) && autoheader
+config.status: configure
+	./config.status --recheck
+config.h: config.hin config.status
+	rm -f $@
+	./config.status
+Makefile: Makefile.in config.status
+	./config.status
 
 dist: $(distfiles)
 	echo diffutils-`sed -e '/version_string/!d' -e 's/[^0-9]*\([0-9a-z.]*\).*/\1/' -e q version.c` > .fname
