@@ -1,4 +1,4 @@
-User-visible changes in test version 2.7.8:
+User-visible changes in test version 2.7.9:
 
 * cmp and diff now conform to POSIX 1003.1-2001 (IEEE Std 1003.1-2001)
   if the underlying system conforms to POSIX and if the _POSIX2_VERSION
@@ -33,9 +33,10 @@ User-visible changes in test version 2.7.8:
 * The new sdiff interactive command `ed' precedes each version with a header.
 * On 64-bit hosts, files larger than 2 GB can be compared.
 * Some internationalization support has been added, but multibyte locales
-  are still not supported yet.
+  are still not completely supported yet.
 * Some diagnostics have been reworded slightly for consistency.
   Also, `diff -D FOO' now outputs `/* ! FOO */' instead of `/* not FOO */'.
+* Manual pages are now distributed and installed.
 * There is support for DJGPP; see the 'ms' subdirectory and the files
   m4/dos.m4 and */setmode.*.
 
