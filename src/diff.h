@@ -157,13 +157,13 @@ enum line_class {
 };
 
 /* Line group formats for old, new, unchanged, and changed groups.  */
-EXTERN char const *group_format[CHANGED + 1];
+EXTERN char *group_format[CHANGED + 1];
 
 /* Line formats for old, new, and unchanged lines.  */
-EXTERN char const *line_format[UNCHANGED + 1];
+EXTERN char *line_format[UNCHANGED + 1];
 
 /* If using OUTPUT_SDIFF print extra information to help the sdiff filter. */
-EXTERN int sdiff_help_sdiff;  
+EXTERN int sdiff_help_sdiff;
 
 /* Tell OUTPUT_SDIFF to show only the left version of common lines. */
 EXTERN int sdiff_left_only;
@@ -189,7 +189,7 @@ EXTERN char *	program;
 /* The result of comparison is an "edit script": a chain of `struct change'.
    Each `struct change' represents one place where some lines are deleted
    and some are inserted.
-   
+
    LINE0 and LINE1 are the first affected lines in the two files (origin 0).
    DELETED is the number of lines deleted here from file 0.
    INSERTED is the number of lines inserted here in file 1.
