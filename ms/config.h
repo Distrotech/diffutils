@@ -32,7 +32,7 @@
 #undef _MINIX
 
 /* Define to `int' if <sys/types.h> doesn't define.  */
-#define pid_t int
+#undef pid_t
 
 /* Define if the system does not provide POSIX.1 features except
    with this defined.  */
@@ -77,6 +77,9 @@
 /* Define if you have the strerror function.  */
 #define HAVE_STRERROR 1
 
+/* Define if you have the tmpnam function.  */
+#define HAVE_TMPNAM 1
+
 /* Define if you have the <dirent.h> header file.  */
 #define HAVE_DIRENT_H 1
 
@@ -119,23 +122,17 @@
 #include <io.h>
 #include <process.h>
 
-#define DIFF_PROGRAM "diff.exe"
+#define __GNU_LIBRARY__ 1
 
-#define filename_lastdirchar filename_lastdirchar
 char *filename_lastdirchar (char const *);
+#define filename_lastdirchar (filename_lastdirchar)
 
 #define HAVE_FORK 0
 
 #define HAVE_SETMODE 1
-
-#define initialize_main initialize_main
-void initialize_main (int *, char ***);
-
-#define PVT_tmpdir ""
+int setmode (int, int);
 
 #define same_file(s,t) (-1)
-
-#define STAT_BLOCKSIZE(s) (64 * 1024)
 
 #define SYSTEM_QUOTE_ARG(q, a) ((q) = system_quote_arg (q, a))
 char *system_quote_arg (char *, char const *);
