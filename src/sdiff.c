@@ -1,6 +1,6 @@
 /* SDIFF -- interactive merge front end to diff
 
-   Copyright (C) 1992, 1993, 1994, 1995, 1996, 1998, 2001 Free
+   Copyright (C) 1992, 1993, 1994, 1995, 1996, 1998, 2001, 2002 Free
    Software Foundation, Inc.
 
    This file is part of GNU DIFF.
@@ -34,7 +34,7 @@
 static char const authorship_msgid[] = N_("Written by Thomas Lord.");
 
 static char const copyright_string[] =
-  "Copyright (C) 2001 Free Software Foundation, Inc.";
+  "Copyright (C) 2002 Free Software Foundation, Inc.";
 
 extern char const version_string[];
 
@@ -85,6 +85,9 @@ static int const sigs[] = {
        SIGINT,
        SIGPIPE
 };
+#define handler_index_of_SIGINT (NUM_SIGS - 2)
+#define handler_index_of_SIGPIPE (NUM_SIGS - 1)
+
 #if HAVE_SIGACTION
   /* Prefer `sigaction' if available, since `signal' can lose signals.  */
   static struct sigaction initial_action[NUM_SIGS];
@@ -155,6 +158,7 @@ static struct option const longopts[] =
   {0, 0, 0, 0}
 };
 
+static void try_help (char const *, char const *) __attribute__((noreturn));
 static void
 try_help (char const *reason_msgid, char const *operand)
 {
@@ -208,13 +212,13 @@ usage (void)
   char const * const *p;
 
   printf (_("Usage: %s [OPTION]... FILE1 FILE2\n"), program_name);
-  printf (_("If a FILE is `-', read standard input.\n"));
+  printf ("%s\n", _("If a FILE is `-', read standard input."));
   for (p = option_help_msgid;  *p;  p++)
     if (**p)
       printf ("  %s\n", _(*p));
     else
       putchar ('\n');
-  printf (_("Report bugs to <bug-gnu-utils@gnu.org>.\n"));
+  printf ("%s\n", _("Report bugs to <bug-gnu-utils@gnu.org>."));
 }
 
 static void
@@ -621,7 +625,7 @@ main (int argc, char *argv[])
 	       this may munge the parent.
 	       The child ignores SIGINT in case the user interrupts the editor.
 	       The child does not ignore SIGPIPE, even if the parent does.  */
-	    if (initial_handler (SIGINT) != SIG_IGN)
+	    if (initial_handler (handler_index_of_SIGINT) != SIG_IGN)
 	      signal_handler (SIGINT, SIG_IGN);
 	    signal_handler (SIGPIPE, SIG_DFL);
 # if HAVE_WORKING_VFORK
@@ -641,9 +645,9 @@ main (int argc, char *argv[])
 
 # if HAVE_WORKING_VFORK
 	/* Restore the parent's SIGINT and SIGPIPE behavior.  */
-	if (initial_handler (SIGINT) != SIG_IGN)
+	if (initial_handler (handler_index_of_SIGINT) != SIG_IGN)
 	  signal_handler (SIGINT, catchsig);
-	if (initial_handler (SIGPIPE) != SIG_IGN)
+	if (initial_handler (handler_index_of_SIGPIPE) != SIG_IGN)
 	  signal_handler (SIGPIPE, catchsig);
 	else
 	  signal_handler (SIGPIPE, SIG_IGN);
@@ -983,10 +987,10 @@ edit (struct line_filter *left, char const *lname, lin lline, lin llen,
 		if (llen)
 		  {
 		    if (llen == 1)
-		      fprintf (tmp, "--- %s %ld\n", lname, lline);
+		      fprintf (tmp, "--- %s %ld\n", lname, (long) lline);
 		    else
 		      fprintf (tmp, "--- %s %ld,%ld\n", lname,
-			       lline, lline + llen - 1);
+			       (long) lline, (long) (lline + llen - 1));
 		  }
 		/* Fall through.  */
 	      case 'b': case 'l':
@@ -1004,10 +1008,10 @@ edit (struct line_filter *left, char const *lname, lin lline, lin llen,
 		if (rlen)
 		  {
 		    if (rlen == 1)
-		      fprintf (tmp, "+++ %s %ld\n", rname, rline);
+		      fprintf (tmp, "+++ %s %ld\n", rname, (long) rline);
 		    else
 		      fprintf (tmp, "+++ %s %ld,%ld\n", rname,
-			       rline, rline + rlen - 1);
+			       (long) rline, (long) (rline + rlen - 1));
 		  }
 		/* Fall through.  */
 	      case 'b': case 'r':
