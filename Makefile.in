@@ -145,7 +145,7 @@ dist: $(distfiles)
 	for file in $(distfiles); do \
 	  if [ ! -r `cat .fname`/$$file ]; then cp -p $$file `cat .fname`; fi \
 	done
-	tar chf - `cat .fname` | gzip > `cat .fname`.tar.z
+	tar -chf - `cat .fname` | gzip >`cat .fname`.tar.gz
 	rm -rf `cat .fname` .fname
 
 # Prevent GNU make v3 from overflowing arg limit on SysV.
