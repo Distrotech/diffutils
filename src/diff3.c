@@ -158,6 +158,9 @@ static int flagging;
 /* Number of lines to keep in identical prefix and suffix.  */
 static int horizon_lines = 10;
 
+/* Use a tab to align output lines (-T).  */
+static int tab_align_flag;
+
 /* If nonzero, do not output information for overlapping diffs.  */
 static int simple_only;
 
@@ -213,6 +216,7 @@ static struct option longopts[] =
   {"show-overlap", 0, NULL, 'E'},
   {"label", 1, NULL, 'L'},
   {"merge", 0, NULL, 'm'},
+  {"initial-tab", 0, NULL, 'T'},
   {"overlap-only", 0, NULL, 'x'},
   {"easy-only", 0, NULL, '3'},
   {"version", 0, NULL, 'v'},
@@ -247,7 +251,7 @@ main (argc, argv)
 
   argv0 = argv[0];
 
-  while ((c = getopt_long (argc, argv, "aeimvx3AEXL:", longopts, (int *) 0))
+  while ((c = getopt_long (argc, argv, "aeimvx3AEL:TX", longopts, (int *) 0))
 	 != EOF)
     {
       switch (c)
@@ -282,6 +286,9 @@ main (argc, argv)
 	  /* Falls through */
 	case 'e':
 	  incompat++;
+	  break;
+	case 'T':
+	  tab_align_flag = 1;
 	  break;
 	case 'v':
 	  fprintf (stderr, "GNU diff3 version %s\n", version_string);
@@ -400,8 +407,9 @@ usage ()
   fprintf (stderr, "\
 Usage: %s [options] my-file older-file your-file\n\
 Options:\n\
-       [-exAEX3v] [-i|-m] [-L label1 [-L label2 [-L label3]]] [--text] [--ed]\n\
-       [--merge] [--show-all] [--show-overlap] [--overlap-only] [--easy-only]\n\
+       [-exAEX3aTv] [-i|-m] [-L label1 [-L label2 [-L label3]]]\n\
+       [--text] [--ed] [--merge] [--initial-tab]\n\
+       [--show-all] [--show-overlap] [--overlap-only] [--easy-only]\n\
        [--label=label1 [--label=label2 [--label=label3]]] [--version]\n\
        Only one of [exAEX3] is allowed\n", argv0);
   exit (2);
@@ -1248,6 +1256,7 @@ output_diff3 (outputfile, diff, mapping, rev_mapping)
   int length;
   int dontprint;
   static int skew_increment[3] = { 2, 3, 1 }; /* 0==>2==>1==>3 */
+  const char *line_prefix = tab_align_flag ? "\t" : "  ";
 
   for (ptr = diff; ptr; ptr = D_NEXT (ptr))
     {
@@ -1301,7 +1310,7 @@ output_diff3 (outputfile, diff, mapping, rev_mapping)
 
 	  for (line = 0; line < hight - lowt + 1; line++)
 	    {
-	      fprintf (outputfile, "  ");
+	      fprintf (outputfile, line_prefix);
 	      cp = D_RELNUM (ptr, realfile, line);
 	      length = D_RELLEN (ptr, realfile, line);
 	      fwrite (cp, sizeof (char), length, outputfile);
