@@ -19,6 +19,6 @@
 
 AUTOMAKE_OPTIONS = gnits dist-shar
 EXTRA_DIST = config/config.rpath exgettext INSTALLME
-SUBDIRS = doc intl lib m4 ms src po
+SUBDIRS = doc lib m4 ms src po
 
 ACLOCAL_AMFLAGS = -I m4
