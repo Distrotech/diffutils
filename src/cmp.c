@@ -1,4 +1,4 @@
-/* cmp -- compare two files.
+/* cmp - compare two files byte by byte
 
    Copyright (C) 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1998, 2001,
    2002 Free Software Foundation, Inc.
@@ -171,14 +171,15 @@ usage (void)
 
   printf (_("Usage: %s [OPTION]... FILE1 [FILE2 [SKIP1 [SKIP2]]]\n"),
 	  program_name);
-  printf ("%s\n\n", _("If a FILE is `-' or missing, read standard input."));
+  printf ("%s\n\n", _("Compare two files byte by byte."));
   for (p = option_help_msgid;  *p;  p++)
     printf ("  %s\n", _(*p));
-  printf ("\n%s\n%s\n\n%s\n",
+  printf ("\n%s\n%s\n\n%s\n\n%s\n",
 	  _("SKIP1 and SKIP2 are the number of bytes to skip in each file."),
 	  _("SKIP values may be followed by the following multiplicative suffixes:\n\
 kB 1000, K 1024, MB 1,000,000, M 1,048,576,\n\
 GB 1,000,000,000, G 1,073,741,824, and so on for T, P, E, Z, Y."),
+	  _("If a FILE is `-' or missing, read standard input."),
 	  _("Report bugs to <bug-gnu-utils@gnu.org>."));
 }
 
@@ -259,7 +260,7 @@ main (int argc, char **argv)
       char *arg = argv[optind++];
       ignore_initial[f] = parse_ignore_initial (&arg, 0);
     }
-      
+
   if (optind < argc)
     try_help ("extra operand `%s'", argv[optind]);
 
