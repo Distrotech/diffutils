@@ -78,7 +78,8 @@ objs=diff.o analyze.o io.o context.o \
      regex.o side.o ifdef.o version.o \
      getopt.o getopt1.o $(ALLOCA)
 distfiles = $(srcs) README INSTALL NEWS diagmeet.note Makefile.in configure \
-	configure.in COPYING ChangeLog diff.texi diff.info* texinfo.tex
+	configure.in COPYING ChangeLog diff.texi diff.info* texinfo.tex \
+	mkinstalldirs
 
 all: diff diff3 sdiff cmp diff.info
 
@@ -126,16 +127,26 @@ distclean: clean
 realclean: distclean
 	rm -f TAGS *.info*
 
-install: all
+install: all installdirs
 	for p in diff diff3 sdiff cmp; \
 	do $(INSTALL_PROGRAM) $$p $(bindir)/$(binprefix)$$p; done
 	cd $(srcdir); for f in diff.info*; \
 	do $(INSTALL_DATA) $$f $(infodir)/$$f; done
 
+installdirs:
+	$(SHELL) ${srcdir}/mkinstalldirs $(bindir) $(infodir)
+
 uninstall:
 	for p in diff diff3 sdiff cmp; \
 	do rm -f $(bindir)/$(binprefix)$$p; done
 	rm -f $(infodir)/diff.info*
+
+Makefile: Makefile.in config.status
+	$(SHELL) config.status
+config.status: configure
+	$(SHELL) $(srcdir)/configure --no-create
+configure: configure.in
+	cd $(srcdir); autoconf
 
 dist: $(distfiles)
 	echo diffutils-`sed -e '/version_string/!d' -e 's/[^0-9]*\([0-9a-z.]*\).*/\1/' -e q version.c` > .fname
