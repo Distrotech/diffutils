@@ -89,7 +89,7 @@ static void usage PARAMS((void));
 #ifndef TMPDIR_ENV
 #define TMPDIR_ENV "TMPDIR"
 #endif
-static char *private_tempnam PARAMS((char const *, char const *, int, size_t *));
+static char *private_tempnam PARAMS((void));
 static int diraccess PARAMS((char const *));
 static int exists PARAMS((char const *));
 
@@ -932,7 +932,7 @@ edit (left, lenl, right, lenr, outfile)
 	case 'q':
 	  return 0;
 	case 'e':
-	  if (! tmpname && ! (tmpname = private_tempnam (0, "sdiff", 1, 0)))
+	  if (! tmpname && ! (tmpname = private_tempnam ()))
 	    perror_fatal ("temporary file name");
 
 	  tmpmade = 1;
@@ -1099,129 +1099,75 @@ diraccess (dir)
   return stat (dir, &buf) == 0 && S_ISDIR (buf.st_mode);
 }
 
-/* Return nonzero if FILE exists.  */
+/* Return zero if we know that FILE does not exist.  */
 static int
 exists (file)
      char const *file;
 {
   struct stat buf;
-  return stat (file, &buf) == 0;
+  return stat (file, &buf) == 0 || errno != ENOENT;
 }
 
 /* These are the characters used in temporary filenames.  */
 static char const letters[] =
   "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
-/* Generate a temporary filename.
-   If DIR_SEARCH is nonzero, DIR and PFX are used as
-   described for tempnam.  If not, a temporary filename
-   in P_tmpdir with no special prefix is generated.  If LENPTR
-   is not 0, *LENPTR is set the to length (including the
-   terminating '\0') of the resultant filename, which is returned.
-   This goes through a cyclic pattern of all possible filenames
-   consisting of five decimal digits of the current pid and three
-   of the characters in `letters'.  Data for tempnam and tmpnam
-   is kept separate, but when tempnam is using P_tmpdir and no
-   prefix (i.e, it is identical to tmpnam), the same data is used.
-   Each potential filename is tested for an already-existing file of
-   the same name, and no name of an existing file will be returned.
-   When the cycle reaches its end (12345ZZZ), 0 is returned.  */
-
-
+/* Generate a temporary filename and return it (in a newly allocated buffer).
+   Use the prefix "dif" as in tempnam.
+   This goes through a cyclic pattern of all possible
+   filenames consisting of five decimal digits of the current pid and three
+   of the characters in `letters'.  Each potential filename is
+   tested for an already-existing file of the same name, and no name of an
+   existing file will be returned.  When the cycle reaches its end
+   return 0.  */
 static char *
-private_tempnam (dir, pfx, dir_search, lenptr)
-     char const *dir;
-     char const *pfx;
-     int dir_search;
-     size_t *lenptr;
+private_tempnam ()
 {
+  char const *dir = getenv (TMPDIR_ENV);
   static char const tmpdir[] = PVT_tmpdir;
-  static struct
-    {
-      char buf[3];
-      char *s;
-      size_t i;
-    } infos[2], *info;
-  static char *buf;
-  static size_t bufsize = 1;
-  static pid_t oldpid = 0;
+  size_t index;
+  char *buf;
   pid_t pid = getpid ();
-  register size_t len, plen;
+  size_t dlen;
 
-  if (dir_search)
-    {
-      register char const *d = getenv (TMPDIR_ENV);
-      if (d && !diraccess (d))
-	d = 0;
-      if (!d && dir && diraccess (dir))
-	d = dir;
-      if (!d && diraccess (tmpdir))
-	d = tmpdir;
-      if (!d)
-	{
-	  errno = ENOENT;
-	  return 0;
-	}
-      dir = d;
-    }
-  else
+  if (!dir)
     dir = tmpdir;
 
-  if (pfx && *pfx)
-    {
-      plen = strlen (pfx);
-      if (plen > 3)
-	plen = 3;
-    }
-  else
-    plen = 0;
+  dlen = strlen (dir);
 
-  if (dir != tmpdir && !strcmp (dir, tmpdir))
-    dir = tmpdir;
-  info = &infos[(plen == 0 && dir == tmpdir) ? 1 : 0];
+  /* Remove trailing slashes from the directory name.  */
+  while (dlen && dir[dlen - 1] == '/')
+    --dlen;
 
-  if (pid != oldpid)
-    {
-      oldpid = pid;
-      info->buf[0] = info->buf[1] = info->buf[2] = '0';
-      info->s = &info->buf[0];
-      info->i = 0;
-    }
+  buf = xmalloc (dlen + 1 + 3 + 5 + 1 + 3 + 1);
 
-  len = strlen (dir) + 1 + plen + 8;
-  if (bufsize <= len)
+  sprintf (buf, "%.*s/.", (int) dlen, dir);
+  if (diraccess (buf))
     {
-      do
+      for (index = 0;
+	   index < ((sizeof (letters) - 1) * (sizeof (letters) - 1)
+		    * (sizeof (letters) - 1));
+	   ++index)
 	{
-	  bufsize *= 2;
-	}
-      while (bufsize <= len);
+	  /* Construct a file name and see if it already exists.
 
-      if (buf)
-	free (buf);
-      buf = xmalloc (bufsize);
-    }
-  for (;;)
-    {
-      *info->s = letters[info->i];
-      sprintf (buf, "%s/%.*s%.5lu.%.3s", dir, (int) plen, pfx,
-	       (unsigned long) pid % 100000, info->buf);
-      if (!exists (buf))
-	break;
-      ++info->i;
-      if (info->i > sizeof (letters) - 1)
-	{
-	  info->i = 0;
-	  if (info->s == &info->buf[2])
-	    {
-	      errno = EEXIST;
-	      return 0;
-	    }
-	  ++info->s;
+	     We use a single counter in INDEX to cycle each of three
+	     character positions through each of 62 possible letters.  */
+
+	  sprintf (buf, "%.*s/dif%.5lu.%c%c%c", (int) dlen, dir,
+		   (unsigned long) pid % 100000,
+		   letters[index % (sizeof (letters) - 1)],
+		   letters[(index / (sizeof (letters) - 1))
+			   % (sizeof (letters) - 1)],
+		   letters[index / ((sizeof (letters) - 1) *
+				     (sizeof (letters) - 1))]);
+
+	  if (!exists (buf))
+	    return buf;
 	}
+      errno = EEXIST;
     }
 
-  if (lenptr)
-    *lenptr = len;
-  return buf;
+  /* Don't free buf; `free' might change errno.  We'll exit soon anyway.  */
+  return 0;
 }
