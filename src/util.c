@@ -1,5 +1,5 @@
 /* Support routines for GNU DIFF.
-   Copyright 1988, 89, 92, 93, 94, 95, 1997 Free Software Foundation, Inc.
+   Copyright 1988, 89, 92, 93, 94, 95, 1998 Free Software Foundation, Inc.
 
    This file is part of GNU DIFF.
 
@@ -19,7 +19,7 @@
    59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
 
 #include "diff.h"
-#include "quotearg.h"
+#include "quotesys.h"
 
 char const pr_program[] = PR_PROGRAM;
 
