@@ -106,7 +106,7 @@ static int equivs_alloc;
 /* Return 1 if BUF contains a non text character.
    SIZE is the number of characters in BUF.  */
 
-#define binary_file_p(buf, size) (memchr (buf, '\0', size) != 0)
+#define binary_file_p(buf, size) (size != 0 && memchr (buf, '\0', size) != 0)
 
 /* Get ready to read the current file.
    Return nonzero if SKIP_TEST is zero,
