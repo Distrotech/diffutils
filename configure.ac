@@ -19,7 +19,7 @@
 
 AC_PREREQ(2.52)
 
-AC_INIT(GNU diffutils, 2.7.9, bug-gnu-utils@gnu.org)
+AC_INIT(GNU diffutils, 2.7.10, bug-gnu-utils@gnu.org)
 AC_CONFIG_SRCDIR(src/diff.c)
 
 AC_CONFIG_AUX_DIR(config)
@@ -85,6 +85,7 @@ jm_FUNC_MALLOC
 jm_FUNC_REALLOC
 jm_PREREQ_C_STACK
 jm_PREREQ_ERROR
+jm_PREREQ_HARD_LOCALE
 jm_PREREQ_QUOTEARG
 jm_PREREQ_REGEX
 AC_DEFINE([REGEX_MALLOC], 1,
