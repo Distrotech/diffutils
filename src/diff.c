@@ -225,6 +225,7 @@ main (argc, argv)
   int c;
   int prev = -1;
   int width = DEFAULT_WIDTH;
+  int show_c_function = 0;
 
   /* Do our initializations.  */
   program = argv[0];
@@ -400,7 +401,7 @@ main (argc, argv)
 
 	case 'p':
 	  /* Make context-style output and show name of last C function.  */
-	  specify_style (OUTPUT_CONTEXT);
+	  show_c_function = 1;
 	  add_regexp (&function_regexp_list, "^[_a-zA-Z$]");
 	  break;
 
@@ -557,6 +558,9 @@ main (argc, argv)
     sdiff_half_width = max (0, min (off - GUTTER_WIDTH_MINIMUM, width - off)),
     sdiff_column2_offset = sdiff_half_width ? off : width;
   }
+
+  if (show_c_function && output_style != OUTPUT_UNIFIED)
+    specify_style (OUTPUT_CONTEXT);
 
   if (output_style != OUTPUT_CONTEXT && output_style != OUTPUT_UNIFIED)
     context = 0;
