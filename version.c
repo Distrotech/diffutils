@@ -1,5 +1,5 @@
 /* Version number of GNU diff.  */
 
-#include "config.h"
+#include <config.h>
 
-char const version_string[] = "2.6";
+char const version_string[] = "2.7";
