@@ -23,8 +23,6 @@
 #include "system.h"
 #include <stdio.h>
 
-#define TAB_WIDTH 8
-
 /* What kind of changes a hunk contains.  */
 enum changes
 {
@@ -144,6 +142,9 @@ XTERN bool brief;
    despite the characters added to the front of each line (-t).  */
 XTERN bool expand_tabs;
 
+/* Number of columns between tab stops.  */
+XTERN size_t tabsize;
+
 /* Use a tab in the output, rather than a space, before the text of an
    input line, so as to keep the proper alignment in the input line
    without changing the characters in it (-T).  */
@@ -176,8 +177,8 @@ XTERN bool left_column;
 XTERN bool suppress_common_lines;
 
 /* The half line width and column 2 offset for OUTPUT_SDIFF.  */
-XTERN unsigned int sdiff_half_width;
-XTERN unsigned int sdiff_column2_offset;
+XTERN size_t sdiff_half_width;
+XTERN size_t sdiff_column2_offset;
 
 /* String containing all the command options diff received,
    with spaces between and at the beginning but none at the end.
