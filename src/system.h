@@ -201,6 +201,9 @@
 #define EXIT_TROUBLE 2
 
 #include <limits.h>
+#ifndef SSIZE_MAX
+# define SSIZE_MAX TYPE_MAXIMUM (ssize_t)
+#endif
 
 #if HAVE_INTTYPES_H
 # include <inttypes.h>
