@@ -61,27 +61,37 @@ print_ed_hunk (struct change *hunk)
   if (changes != OLD)
     {
       lin i;
+      bool insert_mode = true;
+
       for (i = f1; i <= l1; i++)
 	{
+	  if (!insert_mode)
+	    {
+	      fprintf (outfile, "a\n");
+	      insert_mode = true;
+	    }
 	  if (files[1].linbuf[i][0] == '.' && files[1].linbuf[i][1] == '\n')
 	    {
 	      /* The file's line is just a dot, and it would exit
 		 insert mode.  Precede the dot with another dot, exit
-		 insert mode, remove the extra dot, and then resume
-		 insert mode.  */
-	      fprintf (outfile, "..\n.\ns/.//\na\n");
+		 insert mode and remove the extra dot.  */
+	      fprintf (outfile, "..\n.\ns/.//\n");
+	      insert_mode = false;
 	    }
 	  else
 	    print_1_line ("", &files[1].linbuf[i]);
 	}
 
-      fprintf (outfile, ".\n");
+      if (insert_mode)
+	fprintf (outfile, ".\n");
     }
 }
 
 /* Print change script in the style of ed commands,
    but print the changes in the order they appear in the input files,
-   which means that the commands are not truly useful with ed.  */
+   which means that the commands are not truly useful with ed.
+   Because of the issue with lines containing just a dot, the output
+   is not even parseable.  */
 
 void
 pr_forward_ed_script (struct change *script)
