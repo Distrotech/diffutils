@@ -70,7 +70,7 @@ static enum
   } comparison_type;
 
 /* Type used for fast comparison of several bytes at a time.  */
-typedef int word;
+#define word int
 
 /* If nonzero, print values of bytes quoted like cat -t does. */
 static int opt_print_chars;
