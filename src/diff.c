@@ -185,16 +185,11 @@ static char const line_format_option[][sizeof "--unchanged-line-format"] =
     "--new-line-format"
   };
 
-#define LONG_OPTION(array, origin, i) { (array)[(i) - (origin)] + 2, 1, 0, i }
-#define GROUP_FORMAT_OPTION(i) \
-  LONG_OPTION (group_format_option, UNCHANGED_GROUP_FORMAT_OPTION, i)
-#define LINE_FORMAT_OPTION(i) \
-  LONG_OPTION (line_format_option, UNCHANGED_LINE_FORMAT_OPTION, i)
-
 static struct option const longopts[] =
 {
   {"binary", 0, 0, BINARY_OPTION},
   {"brief", 0, 0, 'q'},
+  {"changed-group-format", 1, 0, CHANGED_GROUP_FORMAT_OPTION},
   {"context", 2, 0, 'C'},
   {"ed", 0, 0, 'e'},
   {"exclude", 1, 0, 'x'},
@@ -219,9 +214,11 @@ static struct option const longopts[] =
   {"line-format", 1, 0, LINE_FORMAT_OPTION},
   {"minimal", 0, 0, 'd'},
   {"new-file", 0, 0, 'N'},
+  {"new-group-format", 1, 0, NEW_GROUP_FORMAT_OPTION},
   {"new-line-format", 1, 0, NEW_LINE_FORMAT_OPTION},
   {"no-ignore-file-name-case", 0, 0, NO_IGNORE_FILE_NAME_CASE_OPTION},
   {"normal", 0, 0, NORMAL_OPTION},
+  {"old-group-format", 1, 0, OLD_GROUP_FORMAT_OPTION},
   {"old-line-format", 1, 0, OLD_LINE_FORMAT_OPTION},
   {"paginate", 0, 0, 'l'},
   {"rcs", 0, 0, 'n'},
@@ -237,18 +234,12 @@ static struct option const longopts[] =
   {"suppress-common-lines", 0, 0, SUPPRESS_COMMON_LINES_OPTION},
   {"text", 0, 0, 'a'},
   {"to-file", 1, 0, TO_FILE_OPTION},
+  {"unchanged-group-format", 1, 0, UNCHANGED_GROUP_FORMAT_OPTION},
   {"unchanged-line-format", 1, 0, UNCHANGED_LINE_FORMAT_OPTION},
   {"unidirectional-new-file", 0, 0, 'P'},
   {"unified", 2, 0, 'U'},
   {"version", 0, 0, 'v'},
   {"width", 1, 0, 'W'},
-  GROUP_FORMAT_OPTION (CHANGED_GROUP_FORMAT_OPTION),
-  GROUP_FORMAT_OPTION (NEW_GROUP_FORMAT_OPTION),
-  GROUP_FORMAT_OPTION (OLD_GROUP_FORMAT_OPTION),
-  GROUP_FORMAT_OPTION (UNCHANGED_GROUP_FORMAT_OPTION),
-  LINE_FORMAT_OPTION (NEW_LINE_FORMAT_OPTION),
-  LINE_FORMAT_OPTION (OLD_LINE_FORMAT_OPTION),
-  LINE_FORMAT_OPTION (UNCHANGED_LINE_FORMAT_OPTION),
   {0, 0, 0, 0}
 };
 
