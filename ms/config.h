@@ -131,6 +131,11 @@ char *os2_filename_lastdirchar (char const *);
 #define initialize_main(pargc, pargv) os2_initialize_main (pargc, pargv)
 void os2_initialize_main (int *, char ***);
 
+#define quote_arg(b, a) os2_quote_arg(b, a)
+char *os2_quote_arg (char *, const char *);
+
+#define is_printable(c) (c >= 128 || isprint(c))
+
 #define PVT_tmpdir ""
 
 #define same_file(s,t) (-1)
