@@ -76,14 +76,14 @@ COMPILE = $(CC) -c -DHAVE_CONFIG_H $(CPPFLAGS) -I. -I$(srcdir) $(CFLAGS)
 diff: $(objs)
 	$(CC) -o $@ $(LDFLAGS) $(objs) $(LIBS)
 
-diff3: diff3.o getopt.o getopt1.o version.o $(ALLOCA)
-	$(CC) -o $@ $(LDFLAGS) diff3.o getopt.o getopt1.o version.o $(ALLOCA) $(LIBS)
+diff3: diff3.o getopt.o getopt1.o version.o
+	$(CC) -o $@ $(LDFLAGS) diff3.o getopt.o getopt1.o version.o $(LIBS)
 
-sdiff: sdiff.o getopt.o getopt1.o version.o $(ALLOCA)
-	$(CC) -o $@ $(LDFLAGS) sdiff.o getopt.o getopt1.o version.o $(ALLOCA) $(LIBS)
+sdiff: sdiff.o getopt.o getopt1.o version.o
+	$(CC) -o $@ $(LDFLAGS) sdiff.o getopt.o getopt1.o version.o $(LIBS)
 
-cmp: cmp.o cmpbuf.o getopt.o getopt1.o error.o xmalloc.o $(ALLOCA)
-	$(CC) -o $@ $(LDFLAGS) cmp.o cmpbuf.o getopt.o getopt1.o error.o xmalloc.o $(ALLOCA) $(LIBS)
+cmp: cmp.o cmpbuf.o getopt.o getopt1.o error.o xmalloc.o
+	$(CC) -o $@ $(LDFLAGS) cmp.o cmpbuf.o getopt.o getopt1.o error.o xmalloc.o $(LIBS)
 
 diff.info: diff.texi
 	$(MAKEINFO) $(srcdir)/diff.texi
