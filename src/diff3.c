@@ -17,10 +17,10 @@
 
 /* Written by Randy Smith */
 
+#include "system.h"
 #include <stdio.h>
 #include <ctype.h>
 #include "getopt.h"
-#include "system.h"
 
 extern char const version_string[];
 
@@ -175,7 +175,7 @@ static int merge;
 
 static char *argv0;
 
-VOID *xmalloc PARAMS((size_t));
+static VOID *xmalloc PARAMS((size_t));
 static VOID *xrealloc PARAMS((VOID *, size_t));
 
 static char *read_diff PARAMS((char const *, char const *, char **));
@@ -1028,9 +1028,9 @@ process_diff_control (string, db)
 
 #define	SKIPWHITE(s)	{ while (*s == ' ' || *s == '\t') s++; }
 #define	READNUM(s, num)	\
-	{ if (!isdigit (*s)) return ERROR; holdnum = 0;	\
-	  do { holdnum = (*s++ - '0' + holdnum * 10); }	\
-	  while (isdigit (*s)); (num) = holdnum; }
+	{ unsigned char c = *s; if (!isdigit (c)) return ERROR; holdnum = 0; \
+	  do { holdnum = (c - '0' + holdnum * 10); }	\
+	  while (isdigit (c = *++s)); (num) = holdnum; }
 
   /* Read first set of digits */
   SKIPWHITE (s);
@@ -1654,11 +1654,11 @@ myread (fd, ptr, size)
   return result;
 }
 
-VOID *
+static VOID *
 xmalloc (size)
      size_t size;
 {
-  VOID *result = (VOID *) malloc (size ? size : 1);
+  VOID *result = malloc (size ? size : 1);
   if (!result)
     fatal ("virtual memory exhausted");
   return result;
@@ -1669,7 +1669,7 @@ xrealloc (ptr, size)
      VOID *ptr;
      size_t size;
 {
-  VOID *result = (VOID *) realloc (ptr, size ? size : 1);
+  VOID *result = realloc (ptr, size ? size : 1);
   if (!result)
     fatal ("virtual memory exhausted");
   return result;
