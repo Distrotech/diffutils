@@ -76,21 +76,21 @@ static int suppress_common_flag;
 
 static struct option longopts[] =
 {
-  {"ignore-blank-lines", 0, NULL, 'B'},
-  {"speed-large-files", 0, NULL, 'H'},
-  {"ignore-matching-lines", 1, NULL, 'I'},
-  {"ignore-all-space", 0, NULL, 'W'}, /* swap W and w for historical reasons */
-  {"text", 0, NULL, 'a'},
-  {"ignore-space-change", 0, NULL, 'b'},
-  {"minimal", 0, NULL, 'd'},
-  {"ignore-case", 0, NULL, 'i'},
-  {"left-column", 0, NULL, 'l'},
-  {"output", 1, NULL, 'o'},
-  {"suppress-common-lines", 0, NULL, 's'},
-  {"expand-tabs", 0, NULL, 't'},
-  {"width", 1, NULL, 'w'},
-  {"version", 0, NULL, 'v'},
-  {NULL, 0, NULL, 0}
+  {"ignore-blank-lines", 0, 0, 'B'},
+  {"speed-large-files", 0, 0, 'H'},
+  {"ignore-matching-lines", 1, 0, 'I'},
+  {"ignore-all-space", 0, 0, 'W'}, /* swap W and w for historical reasons */
+  {"text", 0, 0, 'a'},
+  {"ignore-space-change", 0, 0, 'b'},
+  {"minimal", 0, 0, 'd'},
+  {"ignore-case", 0, 0, 'i'},
+  {"left-column", 0, 0, 'l'},
+  {"output", 1, 0, 'o'},
+  {"suppress-common-lines", 0, 0, 's'},
+  {"expand-tabs", 0, 0, 't'},
+  {"width", 1, 0, 'w'},
+  {"version", 0, 0, 'v'},
+  {0, 0, 0, 0}
 };
 
 /* prints usage message and quits */
@@ -1001,25 +1001,25 @@ private_tempnam (dir, pfx, dir_search, lenptr)
   if (dir_search)
     {
       register const char *d = getenv ("TMPDIR");
-      if (d != NULL && !diraccess (d))
-	d = NULL;
-      if (d == NULL && dir != NULL && diraccess (dir))
+      if (d && !diraccess (d))
+	d = 0;
+      if (!d && dir && diraccess (dir))
 	d = dir;
-      if (d == NULL && diraccess (tmpdir))
+      if (!d && diraccess (tmpdir))
 	d = tmpdir;
-      if (d == NULL && diraccess ("/tmp"))
+      if (!d && diraccess ("/tmp"))
 	d = "/tmp";
-      if (d == NULL)
+      if (!d)
 	{
 	  errno = ENOENT;
-	  return NULL;
+	  return 0;
 	}
       dir = d;
     }
   else
     dir = tmpdir;
 
-  if (pfx != NULL && *pfx != '\0')
+  if (pfx && *pfx)
     {
       plen = strlen (pfx);
       if (plen > 5)
@@ -1055,13 +1055,13 @@ private_tempnam (dir, pfx, dir_search, lenptr)
 	  if (info->s == &info->buf[2])
 	    {
 	      errno = EEXIST;
-	      return NULL;
+	      return 0;
 	    }
 	  ++info->s;
 	}
     }
 
-  if (lenptr != NULL)
+  if (lenptr)
     *lenptr = len;
   return buf;
 }
