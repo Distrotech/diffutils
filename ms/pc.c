@@ -4,37 +4,25 @@
 #include <stdlib.h>
 #include <string.h>
 
-extern usage();
-extern char *program;
-extern const char version_string[];
-
-void os2_initialize_main(int *pargc, char ***pargv)
+void
+os2_initialize_main (int *pargc, char ***pargv)
 {
-  if (*pargc == 1)
-  {
-    program = (*pargv)[0];
-    printf ("\nGNU %s, version %s\n\n", program, version_string);
-    usage();
-    exit(0);
-  }
+  _response (pargc, pargv);
+  _wildcard (pargc, pargv);
 
-  _response(pargc, pargv);
-  _wildcard(pargc, pargv);
+  _emxload_env ("RCSLOAD");
 
-  _emxload_env("RCSLOAD");
-
-  setvbuf(stdout, NULL, _IOFBF, BUFSIZ);
+  setvbuf (stdout, NULL, _IOFBF, BUFSIZ);
 }
 
-char *os2_filename_lastdirchar(const char *filename)
+char *
+os2_filename_lastdirchar (char const *filename)
 {
-  char *p = strrchr (filename, '/');
+  char const *last = 0;
+ 
+  for (;  *filename;  filename++)
+    if (*filename == '/' || *filename == '\\' || (*filename == ':' && !last))
+      last = filename;
 
-  if (p == NULL)
-    p = strrchr (filename, '\\');
-  if (p == NULL)
-    p = strrchr (filename, ':');
-
-  return p;
+  return (char *) last;
 }
-
