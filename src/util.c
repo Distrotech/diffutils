@@ -164,7 +164,7 @@ setup_output (char const *name0, char const *name1, bool recursive)
   outfile = 0;
 }
 
-#if HAVE_FORK
+#if HAVE_WORKING_FORK || HAVE_WORKING_VFORK
 static pid_t pr_pid;
 #endif
 
@@ -194,7 +194,7 @@ begin_output (void)
 
       /* Make OUTFILE a pipe to a subsidiary `pr'.  */
       {
-#if HAVE_FORK
+#if HAVE_WORKING_FORK || HAVE_WORKING_VFORK
 	int pipes[2];
 	char const *not_found = _(": not found\n");
 
@@ -229,7 +229,7 @@ begin_output (void)
 	    if (!outfile)
 	      pfatal_with_name ("fdopen");
 	  }
-#else /* ! HAVE_FORK */
+#else
 	char *command = xmalloc (sizeof pr_program - 1 + 7
 				 + quote_system_arg ((char *) 0, name) + 1);
 	char *p;
@@ -241,7 +241,7 @@ begin_output (void)
 	if (!outfile)
 	  pfatal_with_name (command);
 	free (command);
-#endif /* ! HAVE_FORK */
+#endif
       }
     }
   else
@@ -286,14 +286,14 @@ finish_output (void)
       int wstatus;
       if (ferror (outfile))
 	fatal ("write failed");
-#if ! HAVE_FORK
+#if ! (HAVE_WORKING_FORK || HAVE_WORKING_VFORK)
       wstatus = pclose (outfile);
-#else /* HAVE_FORK */
+#else
       if (fclose (outfile) != 0)
 	pfatal_with_name (_("write failed"));
       if (waitpid (pr_pid, &wstatus, 0) < 0)
 	pfatal_with_name ("waitpid");
-#endif /* HAVE_FORK */
+#endif
       if (wstatus != 0)
 	fatal ("subsidiary program failed");
     }
