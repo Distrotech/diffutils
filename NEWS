@@ -1,3 +1,27 @@
+User-visible changes in version 2.8.6:
+
+* New diff3 option --strip-trailing-cr.
+
+* With -N and -P, inaccessible empty regular files (the kind of files
+  that 'patch' creates to indicate nonexistent backups) are now
+  treated as nonexistent when they are in the 'backup' file position.
+
+* If multiple SKIP values are given to cmp, e.g., `cmp -i 10 -i 20',
+  cmp now uses the maximal value instead of the last one.
+
+* diff now omits the ".000000000" on hosts that do not support
+  fractional time stamps.
+
+Version 2.8.5 was not publicly released.
+
+User-visible changes in version 2.8.4:
+
+* Diff now simply prints "Files A and B differ" instead of "Binary
+  files A and B differ".  The message is output if either A or B
+  appears to be a binary file, and the old wording was misleading
+  because it implied that both files are binary, which is not
+  necessarily the case.
+
 User-visible changes in version 2.8.3:
 
 * New locale: en_US.
@@ -197,8 +221,8 @@ User-visible changes in version 2.0:
 
 
 
-Copyright (C) 1993, 1994, 1998, 2001, 2002 Free Software Foundation,
-Inc.
+Copyright (C) 1993, 1994, 1998, 2001, 2002, 2004 Free Software
+Foundation, Inc.
 
 This file is part of GNU Diffutils.
 
