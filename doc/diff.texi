@@ -9,24 +9,25 @@
 
 @syncodeindex vr cp
 
-@dircategory GNU Packages
+@dircategory GNU packages
 @direntry
 Diff: (diff).                 Comparing and merging files.
 @end direntry
 
 @dircategory Individual utilities
 @direntry
-* cmp: (diff)Invoking cmp.                      Byte-by-byte diff.
-* diff3: (diff)Invoking diff3.                  Three-way diff.
-* patch: (diff)Invoking patch.                  Automatically applying diffs.
-* sdiff: (diff)Invoking sdiff.                  Interactively merge files.
+* cmp: (diff)Invoking cmp.                      Compare 2 files byte by byte.
+* diff: (diff)Invoking diff.                    Compare 2 files line by line.
+* diff3: (diff)Invoking diff3.                  Compare 3 files line by line.
+* patch: (diff)Invoking patch.                  Apply a patch to a file.
+* sdiff: (diff)Invoking sdiff.                  Merge 2 files side-by-side.
 @end direntry
 
 @ifinfo
 This file documents the @sc{gnu} @command{diff}, @command{diff3},
-@command{sdiff}, and @command{cmp} commands for showing the differences
-between files and the @sc{gnu} @command{patch} command for using
-their output to update files.
+@command{sdiff}, and @command{cmp} commands for showing the
+differences between files and the @sc{gnu} @command{patch} command for
+using their output to update files.
 
 Copyright @copyright{} 1992, 1993, 1994, 1998, 2001, 2002 Free
 Software Foundation, Inc.
@@ -44,7 +45,7 @@ Free Documentation License''.
 @titlepage
 @title Comparing and Merging Files
 @subtitle @command{diff}, @command{diff3}, @command{sdiff}, @command{cmp}, and @command{patch}
-@subtitle Edition @value{EDITION}, for @code{diffutils} @value{VERSION} and @code{patch} 2.2
+@subtitle Edition @value{EDITION}, for @code{diffutils} @value{VERSION} and @code{patch} 2.5.4
 @subtitle @value{UPDATED}
 @author by David MacKenzie, Paul Eggert, and Richard Stallman
 
@@ -68,40 +69,42 @@ Free Documentation License''.
 
 This file documents the @sc{gnu} @command{diff}, @command{diff3},
 @command{sdiff}, and @command{cmp} commands for showing the
-differences between files and the @command{patch} command for
+differences between files and the @sc{gnu} @command{patch} command for
 using their output to update files.
 
 This is Edition @value{EDITION}, dated @value{UPDATED},
-for @code{diffutils} @value{VERSION} and @code{patch} 2.2.
+for @code{diffutils} @value{VERSION} and @code{patch} 2.5.4.
 @end ifnottex
 
 @menu
 * Overview::              Preliminary information.
-
 * Comparison::            What file comparison means.
-* Output Formats::        Formats for difference reports.
+
+* Output Formats::        Formats for two-way difference reports.
+* Incomplete Lines::      Lines that lack trailing newlines.
 * Comparing Directories:: Comparing files and directories.
 * Adjusting Output::      Making @command{diff} output prettier.
 * diff Performance::      Making @command{diff} smarter or faster.
+
 * Comparing Three Files:: Formats for three-way difference reports.
+* diff3 Merging::         Merging from a common ancestor.
 
-* diff3 Merging::       Merging from a common ancestor.
-* Interactive Merging:: Interactive merging with @command{sdiff}.
-* Merging with patch::  Using @command{patch} to change old files into new ones.
-* Making Patches::      Tips for making patch distributions.
+* Interactive Merging::   Interactive merging with @command{sdiff}.
 
-* Invoking cmp::        How to run @command{cmp} and a summary of its options.
-* Invoking diff::       How to run @command{diff} and a summary of its options.
-* Invoking diff3::      How to run @command{diff3} and a summary of its options.
-* Invoking patch::      How to run @command{patch} and a summary of its options.
-* Invoking sdiff::      How to run @command{sdiff} and a summary of its options.
+* Merging with patch::    Using @command{patch} to change old files into new ones.
+* Making Patches::        Tips for making and using patch distributions.
 
-* Incomplete Lines::      Lines that lack trailing newlines.
-* Projects::              If you think you've found a bug or other shortcoming.
+* Invoking cmp::          Compare two files byte by byte.
+* Invoking diff::         Compare two files line by line.
+* Invoking diff3::        Compare three files line by line.
+* Invoking patch::        Apply a diff file to an original.
+* Invoking sdiff::        Side-by-side merge of file differences.
+
 * Standards conformance:: Conformance to the @sc{posix} standard.
+* Projects::              If you think you've found a bug or other shortcoming.
 
-* Copying This Manual:: How to make copies of this manual.
-* Concept Index::       Index of concepts.
+* Copying This Manual::   How to make copies of this manual.
+* Concept Index::         Index of concepts.
 @end menu
 
 @node Overview
@@ -344,8 +347,8 @@ is considered identical to a file containing
 @section Suppressing Case Differences
 @cindex case difference suppression
 
-@sc{gnu} @command{diff} can treat lowercase letters as equivalent to their
-uppercase counterparts, so that, for example, it considers @samp{Funky
+@sc{gnu} @command{diff} can treat lower case letters as equivalent to their
+upper case counterparts, so that, for example, it considers @samp{Funky
 Stuff}, @samp{funky STUFF}, and @samp{fUNKy stuFf} to all be the same.
 To request this, use the @option{-i} or @option{--ignore-case} option.
 
@@ -700,9 +703,11 @@ like this:
 
 @noindent
 @vindex LC_TIME
+@cindex time stamp format, context diffs
 The time stamp normally looks like @samp{2002-02-21 23:30:39.942229878
 -0800} to indicate the date, time with fractional seconds, and time
-zone.  However, a traditional time stamp like @samp{Thu Feb 21
+zone in @uref{ftp://ftp.isi.edu/in-notes/rfc2822.txt, Internet RFC
+2822 format}.  However, a traditional time stamp like @samp{Thu Feb 21
 23:30:39 2002} is used if the @env{LC_TIME} locale category is either
 @samp{C} or @samp{POSIX}.
 
@@ -849,6 +854,7 @@ like this:
 @end example
 
 @noindent
+@cindex time stamp format, unified diffs
 The time stamp looks like @samp{2002-02-21 23:30:39.942229878 -0800}
 to indicate the date, time with fractional seconds, and time zone.
 
@@ -940,7 +946,7 @@ some common languages:
 C, C++, Prolog
 @item ^(
 Lisp
-@item ^@@\(chapter\|appendix\|unnumbered\|chapheading\)
+@item ^@@node
 Texinfo
 @end table
 
@@ -1570,8 +1576,8 @@ format is just after a tab stop (e.g.@: by preceding @samp{%l} or
 
 Taken together, the line and line group formats let you specify many
 different formats.  For example, the following command uses a format
-similar to @command{diff}'s normal format.  You can tailor this command
-to get fine control over @command{diff}'s output.
+similar to normal @command{diff} format.  You can tailor this command
+to get fine control over @command{diff} output.
 
 @example
 diff \
@@ -1632,7 +1638,7 @@ the resulting code anyway to make sure that it really does what you
 want it to; depending on how the input files were produced, the output
 might contain duplicate or otherwise incorrect code.
 
-The @command{patch} @option{-D @var{name}} option behaves just like
+The @command{patch} @option{-D @var{name}} option behaves like
 the @command{diff} @option{-D @var{name}} option, except it operates on
 a file and a diff to produce a merged file; @xref{patch Options}.
 
@@ -1666,6 +1672,62 @@ They both may be called deep and profound.
 Deeper and more profound,
 The door of all subtleties!
 #endif /* TWO */
+@end example
+
+@node Incomplete Lines
+@chapter Incomplete Lines
+@cindex incomplete lines
+@cindex full lines
+@cindex newline treatment by @command{diff}
+
+When an input file ends in a non-newline character, its last line is
+called an @dfn{incomplete line} because its last character is not a
+newline.  All other lines are called @dfn{full lines} and end in a
+newline character.  Incomplete lines do not match full lines unless
+differences in white space are ignored (@pxref{White Space}).
+
+An incomplete line is normally distinguished on output from a full line
+by a following line that starts with @samp{\}.  However, the @sc{rcs} format
+(@pxref{RCS}) outputs the incomplete line as-is, without any trailing
+newline or following line.  The side by side format normally represents
+incomplete lines as-is, but in some cases uses a @samp{\} or @samp{/}
+gutter marker; @xref{Side by Side}.  The if-then-else line format
+preserves a line's incompleteness with @samp{%L}, and discards the
+newline with @samp{%l}; @xref{Line Formats}.  Finally, with the
+@command{ed} and forward @command{ed} output formats (@pxref{Output Formats})
+@command{diff} cannot represent an incomplete line, so it pretends there
+was a newline and reports an error.
+
+For example, suppose @file{F} and @file{G} are one-byte files that
+contain just @samp{f} and @samp{g}, respectively.  Then @samp{diff F G}
+outputs
+
+@example
+1c1
+< f
+\ No newline at end of file
+---
+> g
+\ No newline at end of file
+@end example
+
+@noindent
+(The exact message may differ in non-English locales.)
+@samp{diff -n F G} outputs the following without a trailing newline:
+
+@example
+d1 1
+a1 1
+g
+@end example
+
+@noindent
+@samp{diff -e F G} reports two errors and outputs the following:
+
+@example
+1c
+g
+.
 @end example
 
 @node Comparing Directories
@@ -1753,7 +1815,7 @@ These adjustments can be applied to any output format.
 
 @menu
 * Tabs::       Preserving the alignment of tab stops.
-* Pagination:: Page numbering and timestamping @command{diff} output.
+* Pagination:: Page numbering and time-stamping @command{diff} output.
 @end menu
 
 @node Tabs
@@ -2389,8 +2451,8 @@ set of files instead of distributing the entire file set; your
 correspondents can apply @command{patch} to update their copy of the files
 with your changes.  @command{patch} automatically determines the diff
 format, skips any leading or trailing headers, and uses the headers to
-determine which file to patch.  This lets your correspondents feed an
-article or message containing a difference listing directly to
+determine which file to patch.  This lets your correspondents feed a
+mail message containing a difference listing directly to
 @command{patch}.
 
 @command{patch} detects and warns about common problems like forward
@@ -2408,16 +2470,22 @@ normally replaces each file @var{f} with its new version, putting reject
 hunks (if any) into @samp{@var{f}.rej}.
 
 @xref{Invoking patch}, for detailed information on the options to
-@command{patch}.  @xref{Backups}, for more information on how
-@command{patch} makes backup files.  @xref{Rejects}, for more information
-on where @command{patch} puts reject hunks.
+@command{patch}.
 
 @menu
-* patch Input::      Selecting the type of @command{patch} input.
-* Imperfect::        Dealing with imperfect patches.
-* Empty Files::      Removing empty files after patching.
-* Multiple Patches:: Handling multiple patches in a file specially.
-* patch Messages::   Messages and questions @command{patch} can produce.
+* patch Input::            Selecting the type of @command{patch} input.
+* Revision Control::       Getting files from @sc{rcs}, @sc{sccs}, etc.
+* Imperfect::              Dealing with imperfect patches.
+* Creating and Removing::  Creating and removing files with a patch.
+* Patching Time Stamps::   Updating time stamps on patched files.
+* Multiple Patches::       Handling multiple patches in a file.
+* patch Directories::      Changing directory and stripping directories.
+* Backups::                Whether backup files are made.
+* Backup Names::           Backup file names.
+* Reject Names::           Reject file names.
+* patch Messages::         Messages and questions @command{patch} can produce.
+* patch and POSIX::        Conformance to the @sc{posix} standard.
+* patch and Tradition::    @sc{gnu} versus traditional @command{patch}.
 @end menu
 
 @node patch Input
@@ -2449,23 +2517,60 @@ normal diff.
 unified diff.
 @end table
 
+@node Revision Control
+@section Revision Control
+@cindex revision control
+@cindex version control
+@cindex @sc{rcs}
+@cindex ClearCase
+@cindex @sc{sccs}
+
+If a nonexistent input file is under a revision control system
+supported by @command{patch}, @command{patch} normally asks the user
+whether to get (or check out) the file from the revision control
+system.  Patch currently supports @sc{rcs}, ClearCase and @sc{sccs}.
+Under @sc{rcs} and @sc{sccs}, @command{patch} also asks when the input
+file is read-only and matches the default version in the revision
+control system.
+
+@vindex PATCH_GET
+The @option{-g @var{num}} or @option{--get=@var{num}} affects access
+to files under supported revision control systems.  If @var{num} is
+positive, @command{patch} gets the file without asking the user; if
+zero, @command{patch} neither asks the user nor gets the file; and if
+negative, @command{patch} asks the user before getting the file.  The
+default value of @var{num} is given by the value of the
+@env{PATCH_GET} environment variable if it is set; if not, the default
+value is zero if @command{patch} is conforming to @sc{posix}, negative
+otherwise.  @xref{patch and POSIX}.
+
+@vindex VERSION_CONTROL
+The choice of revision control system is unaffected by the
+@env{VERSION_CONTROL} environment variable (@pxref{Backup Names}).
+
 @node Imperfect
 @section Applying Imperfect Patches
 @cindex imperfect patch application
 
-@command{patch} tries to skip any leading text in the patch file, apply the
-diff, and then skip any trailing text.  Thus you can feed a news article
-or mail message directly to @command{patch}, and it should work.  If the
-entire diff is indented by a constant amount of white space, @command{patch}
-automatically ignores the indentation.
+@command{patch} tries to skip any leading text in the patch file,
+apply the diff, and then skip any trailing text.  Thus you can feed a
+mail message directly to @command{patch}, and it should work.  If the
+entire diff is indented by a constant amount of white space,
+@command{patch} automatically ignores the indentation.  If a context
+diff contains trailing carriage return on each line, @command{patch}
+automatically ignores the carriage return.  If a context diff has been
+encapsulated by prepending @w{@samp{- }} to lines beginning with @samp{-}
+as per @uref{ftp://ftp.isi.edu/in-notes/rfc934.txt, Internet RFC 934},
+@command{patch} automatically unencapsulates the input.
 
 However, certain other types of imperfect input require user
-intervention.
+intervention or testing.
 
 @menu
 * Changed White Space:: When tabs and spaces don't match exactly.
 * Reversed Patches::    Applying reversed patches correctly.
 * Inexact::             Helping @command{patch} find close matches.
+* Dry Runs::            Predicting what @command{patch} will do.
 @end menu
 
 @node Changed White Space
@@ -2542,7 +2647,7 @@ is no point to setting it to more than the number of lines of context
 in the diff, ordinarily 3.
 
 If @command{patch} cannot find a place to install a hunk of the patch, it
-writes the hunk out to a reject file (@pxref{Rejects}, for information
+writes the hunk out to a reject file (@pxref{Reject Names}, for information
 on how reject files are named).  It writes out rejected hunks in context
 format no matter what form the input patch is in.  If the input is a
 normal or @command{ed} diff, many of the contexts are simply null.  The
@@ -2569,46 +2674,322 @@ should probably look at a context diff between your original and patched
 input files to see if the changes make sense.  Compiling without errors
 is a pretty good indication that the patch worked, but not a guarantee.
 
+A patch against an empty file applies to a nonexistent file, and vice
+versa.  @xref{Creating and Removing}.
+
 @command{patch} usually produces the correct results, even when it must
 make many guesses.  However, the results are guaranteed only when
 the patch is applied to an exact copy of the file that the patch was
 generated from.
 
-@node Empty Files
-@section Removing Empty Files
+@node Dry Runs
+@subsection Predicting what @command{patch} will do
+@cindex testing @command{patch}
+@cindex dry runs for @command{patch}
+
+It may not be obvious in advance what @command{patch} will do with a
+complicated or poorly formatted patch.  If you are concerned that the
+input might cause @command{patch} to modify the wrong files, you can
+use the @option{--dry-run} option, which causes @command{patch} to
+print the results of applying patches without actually changing any
+files.  You can then inspect the diagnostics generated by the dry run
+to see whether @command{patch} will modify the files that you expect.
+If the patch does not do what you want, you can modify the patch (or
+the other options to @command{patch}) and try another dry run.  Once
+you are satisfied with the proposed patch you can apply it by invoking
+@command{patch} as before, but this time without the
+@option{--dry-run} option.
+
+@node Creating and Removing
+@section Creating and Removing Files
+@cindex creating files
 @cindex empty files, removing
 @cindex removing empty files
 
-Sometimes when comparing two directories, the first directory contains a
-file that the second directory does not.  If you give @command{diff} the
-@option{-N} or @option{--new-file} option, it outputs a diff that deletes
-the contents of this file.  By default, @command{patch} leaves an empty
-file after applying such a diff.  The @option{-E} or
-@option{--remove-empty-files} option to @command{patch} deletes output files
-that are empty after applying the diff.
+Sometimes when comparing two directories, a file may exist in one
+directory but not the other.  If you give @command{diff} the
+@option{-N} or @option{--new-file} option, or if you supply an old or
+new file that is named @file{/dev/null} or is empty and is dated the
+Epoch (1970-01-01 00:00:00 UTC), @command{diff} outputs a patch that
+adds or deletes the contents of this file.  When given such a patch,
+@command{patch} normally creates a new file or removes the old file.
+However, when conforming to @sc{posix} (@pxref{patch and POSIX}),
+@command{patch} does not remove the old file, but leaves it empty.
+The @option{-E} or @option{--remove-empty-files} option causes
+@command{patch} to remove output files that are empty after applying a
+patch, even if the patch does not appear to be one that removed the
+file.
+
+If the patch appears to create a file that already exists,
+@command{patch} asks for confirmation before applying the patch.
+
+@node Patching Time Stamps
+@section Updating Time Stamps on Patched Files
+@cindex time stamps on patched files
+
+When @command{patch} updates a file, it normally sets the file's
+last-modified time stamp to the current time of day.  If you are using
+@command{patch} to track a software distribution, this can cause
+@command{make} to incorrectly conclude that a patched file is out of
+date.  For example, if @file{syntax.c} depends on @file{syntax.y}, and
+@command{patch} updates @file{syntax.c} and then @file{syntax.y}, then
+@file{syntax.c} will normally appear to be out of date with respect to
+@file{syntax.y} even though its contents are actually up to date.
+
+The @option{-Z} or @option{--set-utc} option causes @command{patch} to
+set a patched file's modification and access times to the time stamps
+given in context diff headers.  If the context diff headers do not
+specify a time zone, they are assumed to use Coordinated Universal
+Time (@sc{utc}, often known as @sc{gmt}).
+
+The @option{-T} or @option{--set-time} option acts like @option{-Z} or
+@option{--set-utc}, except that it assumes that the context diff
+headers' time stamps use local time instead of @sc{utc}.  This option
+is not recommended, because patches using local time cannot easily be
+used by people in other time zones, and because local time stamps are
+ambiguous when local clocks move backwards during daylight-saving time
+adjustments.  If the context diff headers specify a time zone, this
+option is equivalent to @option{-Z} or @option{--set-utc}.
+
+@command{patch} normally refrains from setting a file's time stamps if
+the file's original last-modified time stamp does not match the time
+given in the diff header, of if the file's contents do not exactly
+match the patch.  However, if the @option{-f} or @option{--force}
+option is given, the file's time stamps are set regardless.
+
+Due to the limitations of the current @command{diff} format,
+@command{patch} cannot update the times of files whose contents have
+not changed.  Also, if you set file time stamps to values other than
+the current time of day, you should also remove (e.g., with @samp{make
+clean}) all files that depend on the patched files, so that later
+invocations of @command{make} do not get confused by the patched
+files' times.
 
 @node Multiple Patches
 @section Multiple Patches in a File
 @cindex multiple patches
+@cindex intuiting file names from patches
 
-If the patch file contains more than one patch, @command{patch} tries to
-apply each of them as if they came from separate patch files.  This
+If the patch file contains more than one patch, and if you do not
+specify an input file on the command line, @command{patch} tries to
+apply each patch as if they came from separate patch files.  This
 means that it determines the name of the file to patch for each patch,
 and that it examines the leading text before each patch for file names
 and prerequisite revision level (@pxref{Making Patches}, for more on
 that topic).
 
-If the leading text contains a context diff header, @command{patch}
-tests for the existence of the old and new files named in the header.
-If there is an @samp{Index:} line in the leading text,
-@command{patch} tests for the existence of the file named in that line.
-If none of the file names refer to existing files,
-but the patch appears to create a file,
-then @command{patch} tries the same file names again,
-this time testing only for the existence of the file names' directory prefix;
-@command{patch} uses the first name with the longest existing prefix.
-If no file name can be intuited from the leading text,
-you are asked for the name of the file to patch.
+@command{patch} uses the following rules to intuit a file name from
+the leading text before a patch.  First, @command{patch} takes an
+ordered list of candidate file names as follows:
+
+@itemize @bullet
+@item
+If the header is that of a context diff, @command{patch} takes the old
+and new file names in the header.  A name is ignored if it does not
+have enough slashes to satisfy the @option{-p@var{num}} or
+@option{--strip=@var{num}} option.  The name @file{/dev/null} is also
+ignored.
+
+@item
+If there is an @samp{Index:} line in the leading garbage and if either
+the old and new names are both absent or if @command{patch} is
+conforming to @sc{posix}, @command{patch} takes the name in the
+@samp{Index:} line.
+
+@item
+For the purpose of the following rules, the candidate file names are
+considered to be in the order (old, new, index), regardless of the
+order that they appear in the header.
+@end itemize
+
+@noindent
+Then @command{patch} selects a file name from the candidate list as
+follows:
+
+@itemize @bullet
+@item
+If some of the named files exist, @command{patch} selects the first
+name if conforming to @sc{posix}, and the best name otherwise.
+
+@item
+If @command{patch} is not ignoring @sc{rcs}, ClearCase, and @sc{sccs}
+(@pxref{Revision Control}), and no named files exist but an @sc{rcs},
+ClearCase, or @sc{sccs} master is found, @command{patch} selects the
+first named file with an @sc{rcs}, ClearCase, or @sc{sccs} master.
+
+@item
+If no named files exist, no @sc{rcs}, ClearCase, or @sc{sccs} master
+was found, some names are given, @command{patch} is not conforming to
+@sc{posix}, and the patch appears to create a file, @command{patch}
+selects the best name requiring the creation of the fewest
+directories.
+
+@item
+If no file name results from the above heuristics, you are asked for
+the name of the file to patch, and @command{patch} selects that name.
+@end itemize
+
+To determine the @dfn{best} of a nonempty list of file names,
+@command{patch} first takes all the names with the fewest path name
+components; of those, it then takes all the names with the shortest
+basename; of those, it then takes all the shortest names; finally, it
+takes the first remaining name.
+
+@xref{patch and POSIX}, to see whether @command{patch} is conforming
+to @sc{posix}.
+
+@node patch Directories
+@section Applying Patches in Other Directories
+@cindex directories and patch
+@cindex patching directories
+
+The @option{-d @var{directory}} or @option{--directory=@var{directory}}
+option to @command{patch} makes directory @var{directory} the current
+directory for interpreting both file names in the patch file, and file
+names given as arguments to other options (such as @option{-B} and
+@option{-o}).  For example, while in a mail reading program, you can patch
+a file in the @file{/usr/src/emacs} directory directly from a message
+containing the patch like this:
+
+@example
+| patch -d /usr/src/emacs
+@end example
+
+Sometimes the file names given in a patch contain leading directories,
+but you keep your files in a directory different from the one given in
+the patch.  In those cases, you can use the
+@option{-p@var{number}} or @option{--strip=@var{number}}
+option to set the file name strip count to @var{number}.  The strip
+count tells @command{patch} how many slashes, along with the directory
+names between them, to strip from the front of file names.  A sequence
+of one or more adjacent slashes is counted as a single slash.  By
+default, @command{patch} strips off all leading directories, leaving
+just the base file names.
+
+For example, suppose the file name in the patch file is
+@file{/gnu/src/emacs/etc/NEWS}.  Using @option{-p0} gives the
+entire file name unmodified, @option{-p1} gives
+@file{gnu/src/emacs/etc/NEWS} (no leading slash), @option{-p4} gives
+@file{etc/NEWS}, and not specifying @option{-p} at all gives @file{NEWS}.
+
+@command{patch} looks for each file (after any slashes have been stripped)
+in the current directory, or if you used the @option{-d @var{directory}}
+option, in that directory.
+
+@node Backups
+@section Backup Files
+@cindex backup file strategy
+
+Normally, @command{patch} creates a backup file if the patch does not
+exactly match the original input file, because in that case the
+original data might not be recovered if you undo the patch with
+@samp{patch -R} (@pxref{Reversed Patches}).  However, when conforming
+to @sc{posix}, @command{patch} does not create backup files by
+default.  @xref{patch and POSIX}.
+
+The @option{-b} or @option{--backup} option causes @command{patch} to
+make a backup file regardless of whether the patch matches the
+original input.  The @option{--backup-if-mismatch} option causes
+@command{patch} to create backup files for mismatches files; this is
+the default when not conforming to @sc{posix}.  The
+@option{--no-backup-if-mismatch} option causes @command{patch} to not
+create backup files, even for mismatched patches; this is the default
+when conforming to @sc{posix}.
+
+When backing up a file that does not exist, an empty, unreadable
+backup file is created as a placeholder to represent the nonexistent
+file.
+
+@node Backup Names
+@section Backup File Names
+@cindex backup file names
+
+Normally, @command{patch} renames an original input file into a backup
+file by appending to its name the extension @samp{.orig}, or @samp{~}
+if using @samp{.orig} would make the backup file name too
+long.@footnote{A coding error in @sc{gnu} @command{patch} version
+2.5.4 causes it to always use @samp{~}, but this should be fixed in
+the next release.}  The @option{-z @var{backup-suffix}} or
+@option{--suffix=@var{backup-suffix}} option causes @command{patch} to
+use @var{backup-suffix} as the backup extension instead.
+
+@vindex SIMPLE_BACKUP_SUFFIX
+Alternately, you can specify the extension for backup files with the
+@env{SIMPLE_BACKUP_SUFFIX} environment variable, which the options
+override.
+
+@command{patch} can also create numbered backup files the way @sc{gnu} Emacs
+does.  With this method, instead of having a single backup of each file,
+@command{patch} makes a new backup file name each time it patches a file.
+For example, the backups of a file named @file{sink} would be called,
+successively, @file{sink.~1~}, @file{sink.~2~}, @file{sink.~3~}, etc.
+
+@vindex PATCH_VERSION_CONTROL
+@vindex VERSION_CONTROL
+The @option{-V @var{backup-style}} or
+@option{--version-control=@var{backup-style}} option takes as an
+argument a method for creating backup file names.  You can alternately
+control the type of backups that @command{patch} makes with the
+@env{PATCH_VERSION_CONTROL} environment variable, which the
+@option{-V} option overrides.  If @env{PATCH_VERSION_CONTROL} is not
+set, the @env{VERSION_CONTROL} environment variable is used instead.
+Please note that these options and variables control backup file
+names; they do not affect the choice of revision control system
+(@pxref{Revision Control}).
+
+The values of these environment variables and the argument to the
+@option{-V} option are like the @sc{gnu} Emacs @code{version-control}
+variable (@pxref{Backup Names, , , emacs, The @sc{gnu} Emacs Manual},
+for more information on backup versions in Emacs).  They also
+recognize synonyms that are more descriptive.  The valid values are
+listed below; unique abbreviations are acceptable.
+
+@table @option
+@item t
+@itemx numbered
+Always make numbered backups.
+
+@item nil
+@itemx existing
+Make numbered backups of files that already have them, simple backups of
+the others.  This is the default.
+
+@item never
+@itemx simple
+Always make simple backups.
+@end table
+
+You can also tell @command{patch} to prepend a prefix, such as a
+directory name, to produce backup file names.  The @option{-B
+@var{prefix}} or @option{--prefix=@var{prefix}} option makes backup
+files by prepending @var{prefix} to them.  The @option{-Y
+@var{prefix}} or @option{--basename-prefix=@var{prefix}} prepends
+@var{prefix} to the last file name component of backup file names
+instead; for example, @option{-Y ~} causes the backup name for
+@file{dir/file.c} to be @file{dir/~file.c}.  If you use either of
+these prefix options, the suffix-based options are ignored.
+
+If you specify the output file with the @option{-o} option, that file is
+the one that is backed up, not the input file.
+
+Options that affect the names of backup files do not affect whether
+backups are made.  For example, if you specify the
+@option{--no-backup-if-mismatch} option, none of the options described
+in this section have any affect, because no backups are made.
+
+@node Reject Names
+@section Reject File Names
+@cindex reject file names
+
+The names for reject files (files containing patches that
+@command{patch} could not find a place to apply) are normally the name
+of the output file with @samp{.rej} appended (or @samp{#} if if using
+@samp{.rej} would make the backup file name too long).
+
+Alternatively, you can tell @command{patch} to place all of the rejected
+patches in a single file.  The @option{-r @var{reject-file}} or
+@option{--reject-file=@var{reject-file}} option uses @var{reject-file} as
+the reject file name.
 
 @node patch Messages
 @section Messages and Questions from @command{patch}
@@ -2616,11 +2997,29 @@ you are asked for the name of the file to patch.
 @cindex diagnostics from @command{patch}
 @cindex messages from @command{patch}
 
-@command{patch} can produce a variety of messages, especially if it has
-trouble decoding its input.  In a few situations where it's not sure how
-to proceed, @command{patch} normally prompts you for more information from
-the keyboard.  There are options to produce more messages, to suppress
-printing non-fatal messages, and to and stop for keyboard input.
+@command{patch} can produce a variety of messages, especially if it
+has trouble decoding its input.  In a few situations where it's not
+sure how to proceed, @command{patch} normally prompts you for more
+information from the keyboard.  There are options to produce more or
+fewer messages, to have it not ask for keyboard input, and to
+affect the way that file names are quoted in messages.
+
+@menu
+* More or Fewer Messages::    Controlling the verbosity of @command{patch}.
+* patch and Keyboard Input::  Inhibiting keyboard input.
+* patch Quoting Style::       Quoting file names in diagnostics.
+@end menu
+
+@command{patch} exits with status 0 if all hunks are applied successfully,
+1 if some hunks cannot be applied, and 2 if there is more serious trouble.
+When applying a set of patches in a loop, you should check the
+exit status, so you don't apply a later patch to a partially patched
+file.
+
+@node More or Fewer Messages
+@subsection Controlling the Verbosity of @command{patch}
+@cindex verbose messages from @command{patch}
+@cindex inhibit messages from @command{patch}
 
 You can cause @command{patch} to produce more messages by using the
 @option{--verbose} option.  For example, when you give this option,
@@ -2632,58 +3031,297 @@ You can inhibit all terminal output from @command{patch}, unless an error
 occurs, by using the @option{-s}, @option{--quiet}, or @option{--silent}
 option.
 
+@node patch and Keyboard Input
+@subsection Inhibiting Keyboard Input
+@cindex keyboard input to @command{patch}
+
 There are two ways you can prevent @command{patch} from asking you any
 questions.  The @option{-f} or @option{--force} option assumes that you know
-what you are doing.  It assumes the following:
+what you are doing.  It causes @command{patch} to do the following:
 
 @itemize @bullet
 @item
-skip patches that do not contain file names in their headers;
+Skip patches that do not contain file names in their headers.
 
 @item
-patch files even though they have the wrong version for the
+Patch files even though they have the wrong version for the
 @samp{Prereq:} line in the patch;
 
 @item
-assume that patches are not reversed even if they look like they are.
+Assume that patches are not reversed even if they look like they are.
 @end itemize
 
+@noindent
 The @option{-t} or @option{--batch} option is similar to @option{-f}, in that
 it suppresses questions, but it makes somewhat different assumptions:
 
 @itemize @bullet
 @item
-skip patches that do not contain file names in their headers
-(the same as @option{-f});
+Skip patches that do not contain file names in their headers
+(the same as @option{-f}).
 
 @item
-skip patches for which the file has the wrong version for the
+Skip patches for which the file has the wrong version for the
 @samp{Prereq:} line in the patch;
 
 @item
-assume that patches are reversed if they look like they are.
+Assume that patches are reversed if they look like they are.
 @end itemize
 
-@command{patch} exits with status 0 if all hunks are applied successfully,
-1 if some hunks cannot be applied, and 2 if there is more serious trouble.
-When applying a set of patches in a loop, you should check the
-exit status, so you don't apply a later patch to a partially patched
-file.
+@node patch Quoting Style
+@subsection @command{patch} Quoting Style
+@cindex quoting style
+
+When @command{patch} outputs a file name in a diagnostic message, it
+can format the name in any of several ways.  This can be useful to
+output file names unambiguously, even if they contain punctuation or
+special characters like newlines.  The
+@option{--quoting-style=@var{word}} option controls how names are
+output.  The @var{word} should be one of the following:
+
+@table @samp
+@item literal
+Output names as-is.
+@item shell
+Quote names for the shell if they contain shell metacharacters or would
+cause ambiguous output.
+@item shell-always
+Quote names for the shell, even if they would normally not require quoting.
+@item c
+Quote names as for a C language string.
+@item escape
+Quote as with @samp{c} except omit the surrounding double-quote
+characters.
+@c The following are not yet implemented in patch 2.5.4.
+@c @item clocale
+@c Quote as with @samp{c} except use quotation marks appropriate for the
+@c locale.
+@c @item locale
+@c @c Use @t instead of @samp to avoid duplicate quoting in some output styles.
+@c Like @samp{clocale}, but quote @t{`like this'} instead of @t{"like
+@c this"} in the default C locale.  This looks nicer on many displays.
+@end table
+
+@vindex QUOTING_STYLE
+You can specify the default value of the @option{--quoting-style}
+option with the environment variable @env{QUOTING_STYLE}.  If that
+environment variable is not set, the default value is @samp{shell},
+but this default may change in a future version of @command{patch}.
+
+@node patch and POSIX
+@section @command{patch} and the @sc{posix} Standard
+@cindex @sc{posix}
+
+@vindex POSIXLY_CORRECT
+If you specify the @option{--posix} option, or set the
+@env{POSIXLY_CORRECT} environment variable, @command{patch} conforms
+more strictly to the @sc{posix} standard, as follows:
+
+@itemize @bullet
+@item
+Take the first existing file from the list (old, new, index)
+when intuiting file names from diff headers.  @xref{Multiple Patches}.
+
+@item
+Do not remove files that are removed by a diff.
+@xref{Creating and Removing}.
+
+@item
+Do not ask whether to get files from @sc{rcs}, ClearCase, or
+@sc{sccs}.  @xref{Revision Control}.
+
+@item
+Require that all options precede the files in the command line.
+
+@item
+Do not backup files, even when there is a mismatch.  @xref{Backups}.
+
+@end itemize
+
+@node patch and Tradition
+@section @sc{gnu} @command{patch} and Traditional @command{patch}
+@cindex traditional @command{patch}
+
+The current version of @sc{gnu} @command{patch} normally follows the
+@sc{posix} standard.  @xref{patch and POSIX}, for the few exceptions
+to this general rule.
+
+Unfortunately, @sc{posix} redefined the behavior of @command{patch} in
+several important ways.  You should be aware of the following
+differences if you must interoperate with traditional @command{patch},
+or with @sc{gnu} @command{patch} version 2.1 and earlier.
+
+@itemize @bullet
+@item
+In traditional @command{patch}, the @option{-p} option's operand was
+optional, and a bare @option{-p} was equivalent to @option{-p0}.  The
+@option{-p} option now requires an operand, and @option{-p@ 0} is now
+equivalent to @option{-p0}.  For maximum compatibility, use options
+like @option{-p0} and @option{-p1}.
+
+Also, traditional @command{patch} simply counted slashes when
+stripping path prefixes; @command{patch} now counts pathname
+components.  That is, a sequence of one or more adjacent slashes now
+counts as a single slash.  For maximum portability, avoid sending
+patches containing @file{//} in file names.
+
+@item
+In traditional @command{patch}, backups were enabled by default.  This
+behavior is now enabled with the @option{-b} or @option{--backup}
+option.
+
+Conversely, in @sc{posix} @command{patch}, backups are never made,
+even when there is a mismatch.  In @sc{gnu} @command{patch}, this
+behavior is enabled with the @option{--no-backup-if-mismatch} option,
+or by conforming to @sc{posix}.
+
+The @option{-b@ @var{suffix}} option of traditional @command{patch} is
+equivalent to the @samp{-b -z@ @var{suffix}} options of @sc{gnu}
+@command{patch}.
+
+@item
+Traditional @command{patch} used a complicated (and incompletely
+documented) method to intuit the name of the file to be patched from
+the patch header.  This method did not conform to @sc{posix}, and had
+a few gotchas.  Now @command{patch} uses a different, equally
+complicated (but better documented) method that is optionally
+@sc{posix}-conforming; we hope it has fewer gotchas.  The two methods
+are compatible if the file names in the context diff header and the
+@samp{Index:} line are all identical after prefix-stripping.  Your
+patch is normally compatible if each header's file names all contain
+the same number of slashes.
+
+@item
+When traditional @command{patch} asked the user a question, it sent
+the question to standard error and looked for an answer from the first
+file in the following list that was a terminal: standard error,
+standard output, @file{/dev/tty}, and standard input.  Now
+@command{patch} sends questions to standard output and gets answers
+from @file{/dev/tty}.  Defaults for some answers have been changed so
+that @command{patch} never goes into an infinite loop when using
+default answers.
+
+@item
+Traditional @command{patch} exited with a status value that counted
+the number of bad hunks, or with status 1 if there was real trouble.
+Now @command{patch} exits with status 1 if some hunks failed, or with
+2 if there was real trouble.
+
+@item
+Limit yourself to the following options when sending instructions
+meant to be executed by anyone running @sc{gnu} @command{patch},
+traditional @command{patch}, or a @command{patch} that conforms to
+@sc{posix}.  Spaces are significant in the following list, and
+operands are required.
+
+@example
+@option{-c}
+@option{-d @var{dir}}
+@option{-D @var{define}}
+@option{-e}
+@option{-l}
+@option{-n}
+@option{-N}
+@option{-o @var{outfile}}
+@option{-p@var{num}}
+@option{-R}
+@option{-r @var{rejectfile}}
+@end example
+
+@end itemize
 
 @node Making Patches
-@chapter Tips for Making Patch Distributions
-@cindex patch making tips
-@cindex tips for patch making
+@chapter Tips for Making and Using Patches
 
-Here are some things you should keep in mind if you are going to
+Use some common sense when making and using patches.  For example,
+when sending bug fixes to a program's maintainer, send several small
+patches, one per independent subject, instead of one large,
+harder-to-digest patch that covers all the subjects.
+
+Here are some other things you should keep in mind if you are going to
 distribute patches for updating a software package.
 
+@menu
+* Tips for Patch Producers::    Advice for making patches.
+* Tips for Patch Consumers::    Advice for using patches.
+* Avoiding Common Mistakes::    Avoiding common mistakes when using @command{patch}.
+* Generating Smaller Patches::  How to generate smaller patches.
+@end menu
+
+@node Tips for Patch Producers
+@section Tips for Patch Producers
+@cindex patch producer tips
+
+To create a patch that changes an older version of a package into a
+newer version, first make a copy of the older and newer versions in
+adjacent subdirectories.  It is common to do that by unpacking
+@command{tar} archives of the two versions.
+
+To generate the patch, use the command @samp{diff -Naur @var{old}
+@var{new}} where @var{old} and @var{new} identify the old and new
+directories.  The names @var{old} and @var{new} should not contain any
+slashes.  The @option{-N} option lets the patch create and remove
+files; @option{-a} lets the patch update non-text files; @option{-u}
+generates useful time stamps and enough context; and @option{-r} lets
+the patch update subdirectories.  Here is an example command, using
+Bourne shell syntax:
+
+@example
+diff -Naur gcc-3.0.3 gcc-3.0.4
+@end example
+
 Tell your recipients how to apply the patches.  This should include
-which working directory to use, and which @command{patch} options to use.
-Normally you should specify which @option{-p@var{number}} option to use.
-The @option{-E} and @option{-N} options are also common.  Test your
-procedure by pretending to be a recipient and applying your patches to
-a copy of the original files.
+which working directory to use, and which @command{patch} options to
+use; the option @samp{-p1} is recommended.  Test your procedure by
+pretending to be a recipient and applying your patches to a copy of
+the original files.
+
+@xref{Avoiding Common Mistakes}, for how to avoid common mistakes when
+generating a patch.
+
+@node Tips for Patch Consumers
+@section Tips for Patch Consumers
+@cindex patch consumer tips
+
+A patch producer should tell recipients how to apply the patches, so
+the first rule of thumb for a patch consumer is to follow the
+instructions supplied with the patch.
+
+@sc{gnu} @command{diff} can analyze files with arbitrarily long lines
+and files that end in incomplete lines.  However, older versions of
+@command{patch} cannot patch such files.  If you are having trouble
+applying such patches, try upgrading to a recent version of @sc{gnu}
+@command{patch}.
+
+@node Avoiding Common Mistakes
+@section Avoiding Common Mistakes
+@cindex common mistakes with patches
+@cindex patch, common mistakes
+
+When producing a patch for multiple files, apply @command{diff} to
+directories whose names do not have slashes.  This reduces confusion
+when the patch consumer specifies the @option{-p@var{number}} option,
+since this option can have surprising results when the old and new
+file names have different numbers of slashes.  For example, do not
+send a patch with a header that looks like this:
+
+@example
+diff -Naur v2.0.29/prog/README prog/README
+--- v2.0.29/prog/README	2002-03-10 23:30:39.942229878 -0800
++++ prog/README	2002-03-17 20:49:32.442260588 -0800
+@end example
+
+@noindent
+because the two file names have different numbers of slashes, and
+different versions of @command{patch} interpret the file names
+differently.  To avoid confusion, send output that looks like this
+instead:
+
+@example
+diff -Naur v2.0.29/prog/README v2.0.30/prog/README
+--- v2.0.29/prog/README	2002-03-10 23:30:39.942229878 -0800
++++ v2.0.30/prog/README	2002-03-17 20:49:32.442260588 -0800
+@end example
 
 Make sure you have specified the file names correctly, either in a
 context diff header or with an @samp{Index:} line.  Take care to not send out
@@ -2691,10 +3329,10 @@ reversed patches, since these make people wonder whether they have
 already applied the patch.
 
 Avoid sending patches that compare backup file names like
-@file{README.orig}, since this might confuse @command{patch} into patching
-a backup file instead of the real file.  Instead, send patches that
-compare the same base file names in different directories,
-e.g.@: @file{old/README} and @file{new/README}.
+@file{README.orig} or @file{README~}, since this might confuse
+@command{patch} into patching a backup file instead of the real file.
+Instead, send patches that compare the same base file names in
+different directories, e.g.@: @file{old/README} and @file{new/README}.
 
 To save people from partially applying a patch before other patches that
 should have gone before it, you can make the first patch in the patch
@@ -2712,44 +3350,41 @@ white space or a newline.  If not, @command{patch} prompts you for
 confirmation before proceeding.  This makes it difficult to accidentally
 apply patches in the wrong order.
 
-To create a patch that changes an older version of a package into a
-newer version, first make a copy of the older version in a scratch
-directory.  Typically you do that by unpacking a @command{tar} or
-@command{shar} archive of the older version.
+@node Generating Smaller Patches
+@section Generating Smaller Patches
+@cindex patches, shrinking
 
-You might be able to reduce the size of the patch by renaming or
-removing some files before making the patch.  If the older version of
-the package contains any files that the newer version does not, or if
-any files have been renamed between the two versions, make a list of
-@command{rm} and @command{mv} commands for the user to execute in the old
-version directory before applying the patch.  Then run those commands
-yourself in the scratch directory.
+The simplest way to generate a patch is to use @samp{diff -Naur}
+(@pxref{Tips for Patch Producers}), but you might be able to reduce
+the size of the patch by renaming or removing some files before making
+the patch.  If the older version of the package contains any files
+that the newer version does not, or if any files have been renamed
+between the two versions, make a list of @command{rm} and @command{mv}
+commands for the user to execute in the old version directory before
+applying the patch.  Then run those commands yourself in the scratch
+directory.
 
 If there are any files that you don't need to include in the patch
 because they can easily be rebuilt from other files (for example,
-@file{TAGS} and output from @command{yacc} and @command{makeinfo}), exclude
-them from the patch by giving @command{diff} the @option{-x @var{pattern}}
-option (@pxref{Comparing Directories}).
+@file{TAGS} and output from @command{yacc} and @command{makeinfo}),
+exclude them from the patch by giving @command{diff} the @option{-x
+@var{pattern}} option (@pxref{Comparing Directories}).  If you want
+your patch to modify a derived file because your recipients lack tools
+to build it, make sure that the patch for the derived file follows any
+patches for files that it depends on, so that the recipients' time
+stamps will not confuse @command{make}.
 
-Now you can create the patch.  The de-facto standard @command{diff} format
-for patch distributions is context or unified format with two lines of
-context, produced by giving @command{diff} the @option{-C 2} or
-@option{-U 2} options.  Do not use less
-than two lines of context, because @command{patch} typically needs at
-least two lines for proper operation.  Give @command{diff} the
-@option{--unidirectional-new-file} option in case the newer version of
-the package contains any files that the older one does not.  Make sure
-to specify the scratch directory first and the newer directory second.
-
-Also, apply @command{diff} to directories whose names have the same number
-of slashes.  This reduces confusion when the user specifies the
-@option{-p@var{number}} option, since this option can have surprising
-results when the old and new file names have different numbers of
-slashes.
+Now you can create the patch using @samp{diff -Naur}.  Make sure to
+specify the scratch directory first and the newer directory second.
 
 Add to the top of the patch a note telling the user any @command{rm} and
 @command{mv} commands to run before applying the patch.  Then you can
 remove the scratch directory.
+
+You can also shrink the patch size by using fewer lines of context,
+but bear in mind that @command{patch} typically needs at least two
+lines for proper operation when patches do not exactly match the input
+files.
 
 @node Invoking cmp
 @chapter Invoking @command{cmp}
@@ -2834,7 +3469,7 @@ hexadecimal.
 
 A byte count can be followed by a suffix to specify a multiple of that
 count; in this case an omitted integer is understood to be 1.  A bare
-size letter, or one followd by @samp{iB}, specifies a multiple using
+size letter, or one followed by @samp{iB}, specifies a multiple using
 powers of 1024.  A size letter followed by @samp{B} specifies powers
 of 1000 instead.  For example, @option{-n 4M} and @option{-n 4MiB} are
 equivalent to @option{-n 4194304}, whereas @option{-n 4MB} is
@@ -3136,7 +3771,7 @@ Use heuristics to speed handling of large files that have numerous
 scattered small changes.  @xref{diff Performance}.
 
 @item --strip-trailing-cr
-Strip any trailing carriage-return at the end of an input line.
+Strip any trailing carriage return at the end of an input line.
 @xref{Binary}.
 
 @item --suppress-common-lines
@@ -3347,183 +3982,65 @@ patch <@var{patchfile}
 The full format for invoking @command{patch} is:
 
 @example
-patch @var{options}@dots{} @r{[}@var{origfile} @r{[}@var{patchfile}@r{]}@r{]} @r{[}+ @var{options}@dots{} @r{[}@var{origfile}@r{]}@r{]}@dots{}
+patch @var{options}@dots{} @r{[}@var{origfile} @r{[}@var{patchfile}@r{]}@r{]}
 @end example
 
+You can also specify where to read the patch from with the @option{-i
+@var{patchfile}} or @option{--input=@var{patchfile}} option.
 If you do not specify @var{patchfile}, or if @var{patchfile} is
 @file{-}, @command{patch} reads the patch (that is, the @command{diff} output)
 from the standard input.
 
-You can specify one or more of the original files as @var{orig} arguments;
-each one and options for interpreting it is separated from the others with a
-@samp{+}.  @xref{Multiple Patches}, for more information.
-
 If you do not specify an input file on the command line, @command{patch}
-tries to figure out from the @dfn{leading text} (any text in the patch
-that comes before the @command{diff} output) which file to edit.  In the
-header of a context or unified diff, @command{patch} looks in lines
-beginning with @samp{***}, @samp{---}, or @samp{+++}; among those, it
-chooses the shortest name of an existing file.  Otherwise, if there is
-an @samp{Index:} line in the leading text, @command{patch} tries to use the
-file name from that line.  If @command{patch} cannot figure out the name of
-an existing file from the leading text, it prompts you for the name of
-the file to patch.
-
-If the input file does not exist or is read-only but a suitable @sc{rcs} or
-@sc{sccs} file exists, and if version control is set to @samp{existing}
-@command{patch} attempts to check out or get the file before proceeding.
+tries to intuit from the @dfn{leading text} (any text in the patch
+that comes before the @command{diff} output) which file to edit.
+@xref{Multiple Patches}.
 
 By default, @command{patch} replaces the original input file with the
-patched version, after renaming the original file into a backup file
-(@pxref{Backups}, for a description of how @command{patch} names backup
-files).  You can also specify where to put the output with the @option{-o
-@var{output-file}} or @option{--output=@var{output-file}} option.
+patched version, possibly after renaming the original file into a
+backup file (@pxref{Backup Names}, for a description of how
+@command{patch} names backup files).  You can also specify where to
+put the output with the @option{-o @var{file}} or
+@option{--output=@var{file}} option; however, do not use this option
+if @var{file} is one of the input files.
 
 @menu
-* patch Directories:: Changing directory and stripping directories.
-* Backups::           Backup file names.
-* Rejects::           Reject file names.
 * patch Options::     Summary table of options to @command{patch}.
 @end menu
-
-@node patch Directories
-@section Applying Patches in Other Directories
-@cindex directories and patch
-@cindex patching directories
-
-The @option{-d @var{directory}} or @option{--directory=@var{directory}}
-option to @command{patch} makes directory @var{directory} the current
-directory for interpreting both file names in the patch file, and file
-names given as arguments to other options (such as @option{-B} and
-@option{-o}).  For example, while in a news reading program, you can patch
-a file in the @file{/usr/src/emacs} directory directly from the article
-containing the patch like this:
-
-@example
-| patch -d /usr/src/emacs
-@end example
-
-Sometimes the file names given in a patch contain leading directories,
-but you keep your files in a directory different from the one given in
-the patch.  In those cases, you can use the
-@option{-p@var{number}} or @option{--strip=@var{number}}
-option to set the file name strip count to @var{number}.  The strip
-count tells @command{patch} how many slashes, along with the directory
-names between them, to strip from the front of file names.  By default,
-@command{patch} strips off all leading directories, leaving just the base file
-names.
-
-@command{patch} looks for each file (after any slashes have been stripped)
-in the current directory, or if you used the @option{-d @var{directory}}
-option, in that directory.
-
-For example, suppose the file name in the patch file is
-@file{/gnu/src/emacs/etc/NEWS}.  Using @option{-p0} gives the
-entire file name unmodified, @option{-p1} gives
-@file{gnu/src/emacs/etc/NEWS} (no leading slash), @option{-p4} gives
-@file{etc/NEWS}, and not specifying @option{-p} at all gives @file{NEWS}.
-
-@node Backups
-@section Backup File Names
-@cindex backup file names
-
-Normally, @command{patch} renames an original input file into a backup file
-by appending to its name the extension @samp{.orig}, or @samp{~} on
-systems that do not support long file names.  The @option{-b
-@var{backup-suffix}} or @option{--suffix=@var{backup-suffix}} option uses
-@var{backup-suffix} as the backup extension instead.
-
-@vindex SIMPLE_BACKUP_SUFFIX
-Alternately, you can specify the extension for backup files with the
-@env{SIMPLE_BACKUP_SUFFIX} environment variable, which the options
-override.
-
-@command{patch} can also create numbered backup files the way @sc{gnu} Emacs
-does.  With this method, instead of having a single backup of each file,
-@command{patch} makes a new backup file name each time it patches a file.
-For example, the backups of a file named @file{sink} would be called,
-successively, @file{sink.~1~}, @file{sink.~2~}, @file{sink.~3~}, etc.
-
-@vindex VERSION_CONTROL
-The @option{-V @var{backup-style}} or
-@option{--version-control=@var{backup-style}} option takes as an argument
-a method for creating backup file names.  You can alternately control
-the type of backups that @command{patch} makes with the
-@env{VERSION_CONTROL} environment variable, which the @option{-V} option
-overrides.  The value of the @env{VERSION_CONTROL} environment variable
-and the argument to the @option{-V} option are like the @sc{gnu} Emacs
-@code{version-control} variable (@pxref{Backups,
-emacs, The @sc{gnu} Emacs Manual}, for more information on backup versions in
-Emacs).  They also recognize synonyms that are more descriptive.  The
-valid values are listed below; unique abbreviations are acceptable.
-
-@table @option
-@item t
-@itemx numbered
-Always make numbered backups.
-
-@item nil
-@itemx existing
-Make numbered backups of files that already have them, simple backups of
-the others.  This is the default.
-
-@item never
-@itemx simple
-Always make simple backups.
-@end table
-
-Alternately, you can tell @command{patch} to prepend a prefix, such as a
-directory name, to produce backup file names.  The @option{-B
-@var{backup-prefix}} or @option{--prefix=@var{backup-prefix}} option makes
-backup files by prepending @var{backup-prefix} to them.  If you use this
-option, @command{patch} ignores any @option{-b} option that you give.
-
-If the backup file already exists, @command{patch} creates a new backup
-file name by changing the first lowercase letter in the last component
-of the file name into uppercase.  If there are no more lowercase letters
-in the name, it removes the first character from the name.  It repeats
-this process until it comes up with a backup file name that does not
-already exist.
-
-If you specify the output file with the @option{-o} option, that file is
-the one that is backed up, not the input file.
-
-@node Rejects
-@section Reject File Names
-@cindex reject file names
-
-The names for reject files (files containing patches that @command{patch}
-could not find a place to apply) are normally the name of the output
-file with @samp{.rej} appended (or @samp{#} on systems that do not
-support long file names).
-
-Alternatively, you can tell @command{patch} to place all of the rejected
-patches in a single file.  The @option{-r @var{reject-file}} or
-@option{--reject-file=@var{reject-file}} option uses @var{reject-file} as
-the reject file name.
 
 @node patch Options
 @section Options to @command{patch}
 @cindex @command{patch} options
 @cindex options for @command{patch}
 
-Here is a summary of all of the options that @command{patch} accepts.
-Older versions of @command{patch} do not accept long-named options or the
-@option{-t}, @option{-E}, or @option{-V} options.
+Here is a summary of all of the options that @sc{gnu} @command{patch}
+accepts.  @xref{patch and Tradition}, for which of these options are
+safe to use in older versions of @command{patch}.
 
 Multiple single-letter options that do not take an argument can be
-combined into a single command line argument (with only one dash).
-Brackets ([ and ]) indicate that an option takes an optional argument.
+combined into a single command line argument with only one dash.
 
 @table @option
-@item -b @var{backup-suffix}
-Use @var{backup-suffix} as the backup extension instead of
-@samp{.orig} or @samp{~}.  @xref{Backups}.
+@item -b
+@itemx --backup
+Back up the original contents of each file, even if backups would
+normally not be made.  @xref{Backups}.
 
-@item -B @var{backup-prefix}
-@itemx --prefix=@var{backup-prefix}
-Use @var{backup-prefix} as a prefix to the backup file name.  If this
-option is specified, any @option{-b} option is ignored.  @xref{Backups}.
+@item -B @var{prefix}
+@itemx --prefix=@var{prefix}
+Prepend @var{prefix} to backup file names.  @xref{Backup Names}.
+
+@item --backup-if-mismatch
+Back up the original contents of each file if the patch does not
+exactly match the file.  This is the default behavior when not
+conforming to @sc{posix}.  @xref{Backups}.
+
+@item --binary
+Read and write all files in binary mode, except for standard output
+and @file{/dev/tty}.  This option has no effect on
+@sc{posix}-conforming systems like @sc{gnu}/Linux.  On systems where
+this option makes a difference, the patch should be generated by
+@samp{diff -a --binary}.  @xref{Binary}.
 
 @item -c
 @itemx --context
@@ -3531,13 +4048,17 @@ Interpret the patch file as a context diff.  @xref{patch Input}.
 
 @item -d @var{directory}
 @itemx --directory=@var{directory}
-Makes directory @var{directory} the current directory for interpreting
+Make directory @var{directory} the current directory for interpreting
 both file names in the patch file, and file names given as arguments to
 other options.  @xref{patch Directories}.
 
 @item -D @var{name}
 @itemx --ifdef=@var{name}
-Make merged if-then-else output using @var{format}.  @xref{If-then-else}.
+Make merged if-then-else output using @var{name}.  @xref{If-then-else}.
+
+@item --dry-run
+Print the results of applying the patches without actually changing
+any files.  @xref{Dry Runs}.
 
 @item -e
 @itemx --ed
@@ -3546,7 +4067,7 @@ Interpret the patch file as an @command{ed} script.  @xref{patch Input}.
 @item -E
 @itemx --remove-empty-files
 Remove output files that are empty after the patches have been applied.
-@xref{Empty Files}.
+@xref{Creating and Removing}.
 
 @item -f
 @itemx --force
@@ -3557,13 +4078,24 @@ ask any questions.  @xref{patch Messages}.
 @itemx --fuzz=@var{lines}
 Set the maximum fuzz factor to @var{lines}.  @xref{Inexact}.
 
+@item -g @var{num}
+@itemx --get=@var{num}
+If @var{num} is positive, get input files from a revision control
+system as necessary; if zero, do not get the files; if negative, ask
+the user whether to get the files.  @xref{Revision Control}.
+
 @item --help
 Output a summary of usage and then exit.
 
+@item -i @var{patchfile}
+@itemx --input=@var{patchfile}
+Read the patch from @var{patchfile} rather than from standard input.
+@xref{patch Options}.
+
 @item -l
 @itemx --ignore-white-space
-Let any sequence of white space in the patch file match any sequence of
-white space in the input file.  @xref{Changed White Space}.
+Let any sequence of blanks (spaces or tabs) in the patch file match
+any sequence of blanks in the input file.  @xref{Changed White Space}.
 
 @item -n
 @itemx --normal
@@ -3574,17 +4106,30 @@ Interpret the patch file as a normal diff.  @xref{patch Input}.
 Ignore patches that @command{patch} thinks are reversed or already applied.
 See also @option{-R}.  @xref{Reversed Patches}.
 
-@item -o @var{output-file}
-@itemx --output=@var{output-file}
-Use @var{output-file} as the output file name.  @xref{patch Options}.
+@item --no-backup-if-mismatch
+Do not back up the original contents of files.  This is the default
+behavior when conforming to @sc{posix}.  @xref{Backups}.
+
+@item -o @var{file}
+@itemx --output=@var{file}
+Use @var{file} as the output file name.  @xref{patch Options}.
 
 @item -p@var{number}
 @itemx --strip=@var{number}
 Set the file name strip count to @var{number}.  @xref{patch Directories}.
 
+@item --posix
+Conform to @sc{posix}, as if the @env{POSIXLY_CORRECT} environment
+variable had been set.  @xref{patch and POSIX}.
+
+@item --quoting-style=@var{word}
+Use style @var{word} to quote names in diagnostics, as if the
+@env{QUOTING_STYLE} environment variable had been set to @var{word}.
+@xref{patch Quoting Style}.
+
 @item -r @var{reject-file}
 @itemx --reject-file=@var{reject-file}
-Use @var{reject-file} as the reject file name.  @xref{Rejects}.
+Use @var{reject-file} as the reject file name.  @xref{Reject Names}.
 
 @item -R
 @itemx --reverse
@@ -3596,18 +4141,15 @@ Assume that this patch was created with the old and new files swapped.
 @itemx --silent
 Work silently unless an error occurs.  @xref{patch Messages}.
 
-@item -S
-@itemx --skip
-Ignore this patch from the patch file, but continue looking for the next
-patch in the file.  @xref{Multiple Patches}.
-
-@item --suffix=@var{backup-suffix}
-Use @var{backup-suffix} as the backup extension instead of
-@samp{.orig} or @samp{~}.  @xref{Backups}.
-
 @item -t
 @itemx --batch
 Do not ask any questions.  @xref{patch Messages}.
+
+@item -T
+@itemx --set-time
+Set the modification and access times of patched files from time
+stamps given in context diff headers, assuming that the context diff
+headers use local time.  @xref{Patching Time Stamps}.
 
 @item -u
 @itemx --unified
@@ -3619,12 +4161,31 @@ Output version information and then exit.
 
 @item -V @var{backup-style}
 @itemx --version=control=@var{backup-style}
-Select the kind of backups to make.  @xref{Backups}.
+Select the naming convention for backup file names.  @xref{Backup Names}.
+
+@item --verbose
+Print more diagnostics than usual.  @xref{patch Messages}.
 
 @item -x @var{number}
 @itemx --debug=@var{number}
 Set internal debugging flags.  Of interest only to @command{patch}
 patchers.
+
+@item -Y @var{prefix}
+@itemx --basename-prefix=@var{prefix}
+Prepend @var{prefix} to base names of backup files.  @xref{Backup Names}.
+
+@item -z @var{suffix}
+@itemx --suffix=@var{suffix}
+Use @var{suffix} as the backup extension instead of @samp{.orig} or
+@samp{~}.  @xref{Backup Names}.
+
+@item -Z
+@itemx --set-utc
+Set the modification and access times of patched files from time
+stamps given in context diff headers, assuming that the context diff
+headers use @sc{utc}.  @xref{Patching Time Stamps}.
+
 @end table
 
 @node Invoking sdiff
@@ -3651,8 +4212,8 @@ argument by itself treats the remaining arguments as file names even if
 they begin with @samp{-}.  You may not use @file{-} as an input file.
 
 @command{sdiff} without @option{-o} (or @option{--output}) produces a
-side-by-side difference.  This usage is obsolete; use @samp{diff
---side-by-side} instead.
+side-by-side difference.  This usage is obsolete; use the @option{-y}
+or @option{--side-by-side} option of @command{diff} instead.
 
 An exit status of 0 means no differences were found, 1 means some
 differences were found, and 2 means trouble.
@@ -3734,7 +4295,7 @@ Use heuristics to speed handling of large files that have numerous
 scattered small changes.  @xref{diff Performance}.
 
 @item --strip-trailing-cr
-Strip any trailing carriage-return at the end of an input line.
+Strip any trailing carriage return at the end of an input line.
 @xref{Binary}.
 
 @item -t
@@ -3759,60 +4320,42 @@ Note that for historical reasons, this option is @option{-w} in @command{diff},
 @option{-W} in @command{sdiff}.
 @end table
 
-@node Incomplete Lines
-@chapter Incomplete Lines
-@cindex incomplete lines
-@cindex full lines
-@cindex newline treatment by @command{diff}
+@node Standards conformance
+@chapter Standards conformance
+@cindex @sc{posix}
 
-When an input file ends in a non-newline character, its last line is
-called an @dfn{incomplete line} because its last character is not a
-newline.  All other lines are called @dfn{full lines} and end in a
-newline character.  Incomplete lines do not match full lines unless
-differences in white space are ignored (@pxref{White Space}).
+@vindex POSIXLY_CORRECT
+In a few cases, the @sc{gnu} utilities' default behavior is
+incompatible with the @sc{posix} standard.  To suppress these
+incompatibilities, define the @env{POSIXLY_CORRECT} environment
+variable.  Unless you are checking for @sc{posix} conformance, you
+probably do not need to define @env{POSIXLY_CORRECT}.
 
-An incomplete line is normally distinguished on output from a full line
-by a following line that starts with @samp{\}.  However, the @sc{rcs} format
-(@pxref{RCS}) outputs the incomplete line as-is, without any trailing
-newline or following line.  The side by side format normally represents
-incomplete lines as-is, but in some cases uses a @samp{\} or @samp{/}
-gutter marker; @xref{Side by Side}.  The if-then-else line format
-preserves a line's incompleteness with @samp{%L}, and discards the
-newline with @samp{%l}; @xref{Line Formats}.  Finally, with the
-@command{ed} and forward @command{ed} output formats (@pxref{Output Formats})
-@command{diff} cannot represent an incomplete line, so it pretends there
-was a newline and reports an error.
+Normally options and operands can appear in any order, and programs act
+as if all the options appear before any operands.  For example,
+@samp{diff lao tzu -C 2} acts like @samp{diff -C 2 lao tzu}, since
+@samp{2} is an option-argument of @option{-C}.  However, if the
+@env{POSIXLY_CORRECT} environment variable is set, options must appear
+before operands, unless otherwise specified for a particular command.
 
-For example, suppose @file{F} and @file{G} are one-byte files that
-contain just @samp{f} and @samp{g}, respectively.  Then @samp{diff F G}
-outputs
+Newer versions of @sc{posix} are occasionally incompatible with older
+versions.  For example, older versions of @sc{posix} allowed the
+command @samp{diff -c -10} to have the same meaning as @samp{diff -C
+10}, but @sc{posix} 1003.1-2001 @samp{diff} no longer allows
+digit-string options like @option{-10}.
 
-@example
-1c1
-< f
-\ No newline at end of file
----
-> g
-\ No newline at end of file
-@end example
-
-@noindent
-(The exact message may differ in non-English locales.)
-@samp{diff -n F G} outputs the following without a trailing newline:
-
-@example
-d1 1
-a1 1
-g
-@end example
-
-@samp{diff -e F G} reports two errors and outputs the following:
-
-@example
-1c
-g
-.
-@end example
+@vindex _POSIX2_VERSION
+The @sc{gnu} utilities normally conform to the version of @sc{posix}
+that is standard for your system.  To cause them to conform to a
+different version of @sc{posix}, define the @env{_POSIX2_VERSION}
+environment variable to a value of the form @var{yyyymm} specifying
+the year and month the standard was adopted.  Two values are currently
+supported for @env{_POSIX2_VERSION}: @samp{199209} stands for
+@sc{posix} 1003.2-1992, and @samp{200112} stands for @sc{posix}
+1003.1-2001.  For example, if you are running older software that
+assumes an older version of @sc{posix} and uses @samp{diff -c -10},
+you can work around the compatibility problems by setting
+@samp{_POSIX2_VERSION=199209} in your environment.
 
 @node Projects
 @chapter Future Projects
@@ -3845,13 +4388,37 @@ existing formats.  These shortcomings motivate the following suggested
 projects.
 
 @menu
-* Changing Structure:: Handling changes to the directory structure.
-* Special Files::      Handling symbolic links, device special files, etc.
-* Unusual File Names:: Handling file names that contain unusual characters.
-* Arbitrary Limits::   Patching non-text files.
-* Large Files::        Handling files that do not fit in memory.
-* Ignoring Changes::   Ignoring certain changes while showing others.
+* Internationalization:: Handling multibyte and varying-width characters.
+* Changing Structure::   Handling changes to the directory structure.
+* Special Files::        Handling symbolic links, device special files, etc.
+* Unusual File Names::   Handling file names that contain unusual characters.
+* Time Stamp Order::     Outputting diffs in time stamp order.
+* Ignoring Changes::     Ignoring certain changes while showing others.
 @end menu
+
+@node Internationalization
+@subsection Handling Multibyte and Varying-Width Characters
+@cindex multibyte characters
+@cindex varying-width characters
+
+@command{diff}, @command{diff3} and @command{sdiff} treat each line of
+input as a string of unibyte characters.  This can mishandle multibyte
+characters in some cases.  For example, when asked to ignore spaces,
+@command{diff} does not properly ignore a multibyte space character.
+
+Also, @command{diff} currently assumes that each byte is one column
+wide, and this assumption is incorrect in some locales, e.g., locales
+that use UTF-8 encoding.  This causes problems with the @option{-y} or
+@option{--side-by-side} option of @command{diff}.
+
+These problems need to be fixed without unduly affecting the
+performance of the utilities in unibyte environments.
+
+The IBM GNU/Linux Technology Center Internationalization Team has
+proposed some patches to support internationalized @command{diff}
+@uref{http://oss.software.ibm.com/developer/opensource/linux/patches/i18n/diffutils-2.7.2-i18n-0.1.patch.gz}.
+Unfortunately, these patches are incomplete and are to an older
+version of @command{diff}, so more work needs to be done in this area.
 
 @node Changing Structure
 @subsection Handling Changes to the Directory Structure
@@ -3864,10 +4431,12 @@ with the same name @samp{D}.  @samp{diff -r} does not output enough
 information for @command{patch} to transform the directory subtree into
 the file.
 
-There should be a way to specify that a file has been deleted without
+There should be a way to specify that a file has been removed without
 having to include its entire contents in the patch file.  There should
 also be a way to tell @command{patch} that a file was renamed, even if
 there is no way for @command{diff} to generate such information.
+There should be a way to tell @command{patch} that a file's time stamp
+has changed, even if its contents have not changed.
 
 These problems can be fixed by extending the @command{diff} output format
 to represent changes in directory structure, and extending @command{patch}
@@ -3904,33 +4473,16 @@ parse.  The problem is with format of @command{diff} output, not just with
 patches the wrong files.  The format of @command{diff} output should be
 extended to handle all possible file names.
 
-@node Arbitrary Limits
-@subsection Arbitrary Limits
-@cindex binary file patching
+@node Time Stamp Order
+@subsection Outputting Diffs in Time Stamp Order
 
-@sc{gnu} @command{diff} can analyze files with arbitrarily long lines and
-files that end in incomplete lines.  However, older versions of
-@command{patch} cannot patch such files.  If your are having trouble
-applying such patches, use a recent version of @sc{gnu} @command{patch}.
-
-@node Large Files
-@subsection Handling Files that Do Not Fit in Memory
-@cindex large files
-
-@command{diff} operates by reading both files into memory.  This method
-fails if the files are too large, and @command{diff} should have a fallback.
-
-One way to do this is to scan the files sequentially to compute hash
-codes of the lines and put the lines in equivalence classes based only
-on hash code.  Then compare the files normally.  This does produce some
-false matches.
-
-Then scan the two files sequentially again, checking each match to see
-whether it is real.  When a match is not real, mark both the
-``matching'' lines as changed.  Then build an edit script as usual.
-
-The output routines would have to be changed to scan the files
-sequentially looking for the text to print.
+Applying @command{patch} to a multiple-file diff can result in files
+whose time stamps are out of order.  @sc{gnu} @command{patch} has
+options to restore the time stamps of the updated files
+(@pxref{Patching Time Stamps}), but sometimes it is useful to generate
+a patch that works even if the recipient does not have @sc{gnu} patch,
+or does not use these options.  One way to do this would be to
+implement a @command{diff} option to output diffs in time stamp order.
 
 @node Ignoring Changes
 @subsection Ignoring Certain Changes
@@ -3965,48 +4517,12 @@ by electronic mail to the
 bug report mailing list} @email{bug-gnu-utils@@gnu.org}.  Please send
 bug reports for @sc{gnu} @command{patch} to
 @email{bug-patch@@gnu.org}.  Send as precise a description of the
-problem as you can, including the output of @samp{diff --version} and
-sample input files that produce the bug, if applicable.  If you have a
-nontrivial fix for the bug, please send it as well.  If you have a
-patch, please send it too.  It may simplify the maintainer's job if
-the patch is relative to a recent test release, which you can find in
-the directory @uref{ftp://alpha.gnu.org/gnu/diffutils/}.
-
-@node Standards conformance
-@chapter Standards conformance
-
-@vindex POSIXLY_CORRECT
-In a few cases, the @sc{gnu} utilities' default behavior is
-incompatible with the @sc{posix} standard.  To suppress these
-incompatibilities, define the @env{POSIXLY_CORRECT} environment
-variable.  Unless you are checking for @sc{posix} conformance, you
-probably do not need to define @env{POSIXLY_CORRECT}.
-
-Normally options and operands can appear in any order, and programs act
-as if all the options appear before any operands.  For example,
-@samp{diff lao tzu -C 2} acts like @samp{diff -C 2 lao tzu}, since
-@samp{2} is an option-argument of @option{-C}.  However, if the
-@env{POSIXLY_CORRECT} environment variable is set, options must appear
-before operands, unless otherwise specified for a particular command.
-
-Newer versions of @sc{posix} are occasionally incompatible with older
-versions.  For example, older versions of @sc{posix} allowed the
-command @samp{diff -c -10} to have the same meaning as @samp{diff -C
-10}, but @sc{posix} 1003.1-2001 @samp{diff} no longer allows
-digit-string options like @option{-10}.
-
-@vindex _POSIX2_VERSION
-The @sc{gnu} utilities normally conform to the version of @sc{posix}
-that is standard for your system.  To cause them to conform to a
-different version of @sc{posix}, define the @env{_POSIX2_VERSION}
-environment variable to a value of the form @var{yyyymm} specifying
-the year and month the standard was adopted.  Two values are currently
-supported for @env{_POSIX2_VERSION}: @samp{199209} stands for
-@sc{posix} 1003.2-1992, and @samp{200112} stands for @sc{posix}
-1003.1-2001.  For example, if you are running older software that
-assumes an older version of @sc{posix} and uses @samp{diff -c -10},
-you can work around the compatibility problems by setting
-@samp{_POSIX2_VERSION=199209} in your environment.
+problem as you can, including the output of the @option{--version}
+option and sample input files that produce the bug, if applicable.  If
+you have a nontrivial fix for the bug, please send it as well.  If you
+have a patch, please send it too.  It may simplify the maintainer's
+job if the patch is relative to a recent test release, which you can
+find in the directory @uref{ftp://alpha.gnu.org/gnu/diffutils/}.
 
 @node Copying This Manual
 @appendix Copying This Manual
