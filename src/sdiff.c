@@ -1,7 +1,7 @@
 /* sdiff - side-by-side merge of file differences
 
-   Copyright (C) 1992, 1993, 1994, 1995, 1996, 1998, 2001, 2002 Free
-   Software Foundation, Inc.
+   Copyright (C) 1992, 1993, 1994, 1995, 1996, 1998, 2001, 2002, 2004
+   Free Software Foundation, Inc.
 
    This file is part of GNU DIFF.
 
@@ -23,18 +23,19 @@
 #include "system.h"
 #include "paths.h"
 
+#include <stdio.h>
+#include <unlocked-io.h>
+
 #include <c-stack.h>
 #include <dirname.h>
 #include <error.h>
+#include <exit.h>
 #include <exitfail.h>
 #include <file-type.h>
 #include <getopt.h>
 #include <quotesys.h>
-#include <stdio.h>
 #include <version-etc.h>
 #include <xalloc.h>
-
-static char const authorship_msgid[] = N_("Written by Thomas Lord.");
 
 /* Size of chunks read from files which must be parsed into lines.  */
 #define SDIFF_BUFSIZE ((size_t) 65536)
@@ -218,8 +219,9 @@ usage (void)
       printf ("  %s\n", _(*p));
     else
       putchar ('\n');
-  printf ("\n%s\n\n%s\n",
+  printf ("\n%s\n%s\n\n%s\n",
 	  _("If a FILE is `-', read standard input."),
+	  _("Exit status is 0 if inputs are the same, 1 if different, 2 if trouble."),
 	  _("Report bugs to <bug-gnu-utils@gnu.org>."));
 }
 
@@ -263,15 +265,24 @@ perror_fatal (char const *msg)
 }
 
 static void
-ck_editor_status (int errnum, int status)
+check_child_status (int werrno, int wstatus, int max_ok_status,
+		    char const *subsidiary_program)
 {
-  if (errnum | status)
+  int status = (! werrno && WIFEXITED (wstatus)
+		? WEXITSTATUS (wstatus)
+		: INT_MAX);
+
+  if (max_ok_status < status)
     {
-      error (0, errnum,
-	     _(! errnum && WIFEXITED (status) && WEXITSTATUS (status) == 127
+      error (0, werrno,
+	     _(status == 126
+	       ? "subsidiary program `%s' could not be invoked"
+	       : status == 127
 	       ? "subsidiary program `%s' not found"
-	       : "subsidiary program `%s' failed"),
-	     editor_program);
+	       : status == INT_MAX
+	       ? "subsidiary program `%s' failed"
+	       : "subsidiary program `%s' failed (exit status %d)"),
+	     subsidiary_program, status);
       exiterr ();
     }
 }
@@ -446,7 +457,7 @@ main (int argc, char *argv[])
   setlocale (LC_ALL, "");
   bindtextdomain (PACKAGE, LOCALEDIR);
   textdomain (PACKAGE);
-  c_stack_action (argv, cleanup);
+  c_stack_action (cleanup);
 
   prog = getenv ("EDITOR");
   if (prog)
@@ -455,7 +466,7 @@ main (int argc, char *argv[])
   diffarg (DEFAULT_DIFF_PROGRAM);
 
   /* parse command line args */
-  while ((opt = getopt_long (argc, argv, "abBdHiI:lo:stvw:W", longopts, 0))
+  while ((opt = getopt_long (argc, argv, "abBdEHiI:lo:stvw:W", longopts, 0))
 	 != -1)
     {
       switch (opt)
@@ -502,7 +513,7 @@ main (int argc, char *argv[])
 	  break;
 
 	case 's':
-	  suppress_common_lines = 1;
+	  suppress_common_lines = true;
 	  break;
 
 	case 't':
@@ -510,7 +521,8 @@ main (int argc, char *argv[])
 	  break;
 
 	case 'v':
-	  version_etc ("sdiff", authorship_msgid);
+	  version_etc (stdout, "sdiff", PACKAGE_NAME, PACKAGE_VERSION,
+		       "Thomas Lord", (char *) 0);
 	  check_stdout ();
 	  return EXIT_SUCCESS;
 
@@ -658,7 +670,7 @@ main (int argc, char *argv[])
 	      }
 
 	    execvp (diffargv[0], (char **) diffargv);
-	    _exit (127);
+	    _exit (errno == ENOENT ? 127 : 126);
 	  }
 
 # if HAVE_WORKING_VFORK
@@ -718,7 +730,7 @@ main (int argc, char *argv[])
 	if (! interact_ok)
 	  exiterr ();
 
-	ck_editor_status (werrno, wstatus);
+	check_child_status (werrno, wstatus, EXIT_FAILURE, diffargv[0]);
 	untrapsig (0);
 	checksigs ();
 	exit (WEXITSTATUS (wstatus));
@@ -800,7 +812,7 @@ trapsigs (void)
   signal (SIGCHLD, SIG_DFL);
 #endif
 
-  sigs_trapped = 1;
+  sigs_trapped = true;
 }
 
 /* Untrap signal S, or all trapped signals if S is zero.  */
@@ -863,7 +875,7 @@ skip_white (void)
   for (;;)
     {
       c = getchar ();
-      if (! ISSPACE (c) || c == '\n')
+      if (! isspace (c) || c == '\n')
 	break;
       checksigs ();
     }
@@ -892,7 +904,7 @@ edit (struct line_filter *left, char const *lname, lin lline, lin llen,
   for (;;)
     {
       int cmd0, cmd1;
-      bool gotcmd = 0;
+      bool gotcmd = false;
 
       cmd1 = 0; /* Pacify `gcc -W'.  */
 
@@ -912,7 +924,7 @@ edit (struct line_filter *left, char const *lname, lin lline, lin llen,
 		  flush_line ();
 		  continue;
 		}
-	      gotcmd = 1;
+	      gotcmd = true;
 	      break;
 
 	    case 'e':
@@ -926,10 +938,10 @@ edit (struct line_filter *left, char const *lname, lin lline, lin llen,
 		      flush_line ();
 		      continue;
 		    }
-		  gotcmd = 1;
+		  gotcmd = true;
 		  break;
 		case '\n':
-		  gotcmd = 1;
+		  gotcmd = true;
 		  break;
 		default:
 		  give_help ();
@@ -941,7 +953,7 @@ edit (struct line_filter *left, char const *lname, lin lline, lin llen,
 	    case EOF:
 	      if (feof (stdin))
 		{
-		  gotcmd = 1;
+		  gotcmd = true;
 		  cmd0 = 'q';
 		  break;
 		}
@@ -960,19 +972,19 @@ edit (struct line_filter *left, char const *lname, lin lline, lin llen,
 	case 'l':
 	  lf_copy (left, llen, outfile);
 	  lf_skip (right, rlen);
-	  return 1;
+	  return true;
 	case 'r':
 	  lf_copy (right, rlen, outfile);
 	  lf_skip (left, llen);
-	  return 1;
+	  return true;
 	case 's':
-	  suppress_common_lines = 1;
+	  suppress_common_lines = true;
 	  break;
 	case 'v':
-	  suppress_common_lines = 0;
+	  suppress_common_lines = false;
 	  break;
 	case 'q':
-	  return 0;
+	  return false;
 	case 'e':
 	  {
 	    int fd;
@@ -995,10 +1007,11 @@ edit (struct line_filter *left, char const *lname, lin lline, lin llen,
 		if (llen)
 		  {
 		    if (llen == 1)
-		      fprintf (tmp, "--- %s %ld\n", lname, (long) lline);
+		      fprintf (tmp, "--- %s %ld\n", lname, (long int) lline);
 		    else
 		      fprintf (tmp, "--- %s %ld,%ld\n", lname,
-			       (long) lline, (long) (lline + llen - 1));
+			       (long int) lline,
+			       (long int) (lline + llen - 1));
 		  }
 		/* Fall through.  */
 	      case 'b': case 'l':
@@ -1016,10 +1029,11 @@ edit (struct line_filter *left, char const *lname, lin lline, lin llen,
 		if (rlen)
 		  {
 		    if (rlen == 1)
-		      fprintf (tmp, "+++ %s %ld\n", rname, (long) rline);
+		      fprintf (tmp, "+++ %s %ld\n", rname, (long int) rline);
 		    else
 		      fprintf (tmp, "+++ %s %ld,%ld\n", rname,
-			       (long) rline, (long) (rline + rlen - 1));
+			       (long int) rline,
+			       (long int) (rline + rlen - 1));
 		  }
 		/* Fall through.  */
 	      case 'b': case 'r':
@@ -1036,7 +1050,7 @@ edit (struct line_filter *left, char const *lname, lin lline, lin llen,
 	    {
 	      int wstatus;
 	      int werrno = 0;
-	      ignore_SIGINT = 1;
+	      ignore_SIGINT = true;
 	      checksigs ();
 
 	      {
@@ -1064,7 +1078,7 @@ edit (struct line_filter *left, char const *lname, lin lline, lin llen,
 		    argv[i] = 0;
 
 		    execvp (editor_program, (char **) argv);
-		    _exit (127);
+		    _exit (errno == ENOENT ? 127 : 126);
 		  }
 
 		if (pid < 0)
@@ -1078,8 +1092,9 @@ edit (struct line_filter *left, char const *lname, lin lline, lin llen,
 #endif
 	      }
 
-	      ignore_SIGINT = 0;
-	      ck_editor_status (werrno, wstatus);
+	      ignore_SIGINT = false;
+	      check_child_status (werrno, wstatus, EXIT_SUCCESS,
+				  editor_program);
 	    }
 
 	    {
@@ -1093,7 +1108,7 @@ edit (struct line_filter *left, char const *lname, lin lline, lin llen,
 		}
 	      ck_fclose (tmp);
 	    }
-	    return 1;
+	    return true;
 	  }
 	default:
 	  give_help ();
@@ -1155,7 +1170,7 @@ interact (struct line_filter *diff,
 	      if (! edit (left, lname, lline, llen,
 			  right, rname, rline, rlen,
 			  outfile))
-		return 0;
+		return false;
 	      break;
 
 	    default:
@@ -1168,7 +1183,7 @@ interact (struct line_filter *diff,
     }
 }
 
-/* Return nonzero if DIR is an existing directory.  */
+/* Return true if DIR is an existing directory.  */
 static bool
 diraccess (char const *dir)
 {
