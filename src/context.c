@@ -19,8 +19,8 @@ the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 
 #include "diff.h"
 
+static char const *find_function PARAMS((char const * const *, int));
 static struct change *find_hunk PARAMS((struct change *));
-static void find_function PARAMS((struct file_data const *, int, char const **, size_t *));
 static void mark_ignorable PARAMS((struct change *));
 static void pr_context_hunk PARAMS((struct change *));
 static void pr_unidiff_hunk PARAMS((struct change *));
@@ -80,7 +80,7 @@ print_context_script (script, unidiff_flag)
      struct change *script;
      int unidiff_flag;
 {
-  if (ignore_blank_lines_flag || ignore_regexp_list)
+  if (ignore_blank_lines_flag || ignore_regexp.fastmap)
     mark_ignorable (script);
   else
     {
@@ -90,7 +90,7 @@ print_context_script (script, unidiff_flag)
     }
 
   find_function_last_search = - files[0].prefix_lines;
-  find_function_last_match = find_function_last_search - 1;
+  find_function_last_match = INT_MAX;
 
   if (unidiff_flag)
     print_script (script, find_hunk, pr_unidiff_hunk);
@@ -136,7 +136,6 @@ pr_context_hunk (hunk)
   struct change *next;
   char const *prefix;
   char const *function;
-  size_t function_length;
   FILE *out;
 
   /* Determine range of line numbers involved in each file.  */
@@ -156,8 +155,8 @@ pr_context_hunk (hunk)
 
   /* If desired, find the preceding function definition line in file 0.  */
   function = 0;
-  if (function_regexp_list)
-    find_function (&files[0], first0, &function, &function_length);
+  if (function_regexp.fastmap)
+    function = find_function (files[0].linbuf, first0);
 
   begin_output ();
   out = outfile;
@@ -168,8 +167,10 @@ pr_context_hunk (hunk)
 
   if (function)
     {
-      fprintf (out, " ");
-      fwrite (function, 1, min (function_length - 1, 40), out);
+      putc (' ', out);
+      for (i = 0;  i < 40 && function[i] != '\n';  i++)
+	continue;
+      fwrite (function, 1, i, out);
     }
 
   fprintf (out, "\n*** ");
@@ -269,7 +270,6 @@ pr_unidiff_hunk (hunk)
   int first0, last0, first1, last1, show_from, show_to, i, j, k;
   struct change *next;
   char const *function;
-  size_t function_length;
   FILE *out;
 
   /* Determine range of line numbers involved in each file.  */
@@ -289,8 +289,8 @@ pr_unidiff_hunk (hunk)
 
   /* If desired, find the preceding function definition line in file 0.  */
   function = 0;
-  if (function_regexp_list)
-    find_function (&files[0], first0, &function, &function_length);
+  if (function_regexp.fastmap)
+    function = find_function (files[0].linbuf, first0);
 
   begin_output ();
   out = outfile;
@@ -307,7 +307,9 @@ pr_unidiff_hunk (hunk)
   if (function)
     {
       putc (' ', out);
-      fwrite (function, 1, min (function_length - 1, 40), out);
+      for (i = 0;  i < 40 && function[i] != '\n';  i++)
+	continue;
+      fwrite (function, 1, i, out);
     }
   putc ('\n', out);
 
@@ -422,47 +424,35 @@ mark_ignorable (script)
     }
 }
 
-/* Find the last function-header line in FILE prior to line number LINENUM.
+/* Find the last function-header line in LINBUF prior to line number LINENUM.
    This is a line containing a match for the regexp in `function_regexp'.
-   Store the address of the line text into LINEP and the length of the
-   line into LENP.
-   Do not store anything if no function-header is found.  */
+   Return the address of the text, or 0 if no function-header is found.  */
 
-static void
-find_function (file, linenum, linep, lenp)
-     struct file_data const *file;
+static char const *
+find_function (linbuf, linenum)
+     char const * const *linbuf;
      int linenum;
-     char const **linep;
-     size_t *lenp;
 {
   int i = linenum;
   int last = find_function_last_search;
   find_function_last_search = i;
 
-  while (--i >= last)
+  while (last <= --i)
     {
       /* See if this line is what we want.  */
-      struct regexp_list *r;
-      char const *line = file->linbuf[i];
-      size_t len = file->linbuf[i + 1] - line;
+      char const *line = linbuf[i];
+      int len = linbuf[i + 1] - line - 1;
 
-      for (r = function_regexp_list; r; r = r->next)
-	if (0 <= re_search (&r->buf, line, len, 0, len, 0))
-	  {
-	    *linep = line;
-	    *lenp = len;
-	    find_function_last_match = i;
-	    return;
-	  }
+      if (0 <= re_search (&function_regexp, line, len, 0, len, 0))
+	{
+	  find_function_last_match = i;
+	  return line;
+	}
     }
   /* If we search back to where we started searching the previous time,
      find the line we found last time.  */
-  if (find_function_last_match >= - file->prefix_lines)
-    {
-      i = find_function_last_match;
-      *linep = file->linbuf[i];
-      *lenp = file->linbuf[i + 1] - *linep;
-      return;
-    }
-  return;
+  if (find_function_last_match != INT_MAX)
+    return linbuf[find_function_last_match];
+
+  return 0;
 }
