@@ -210,16 +210,16 @@ static char diff_program[] = DIFF_PROGRAM;
 
 static struct option longopts[] =
 {
-  {"text", 0, NULL, 'a'},
-  {"show-all", 0, NULL, 'A'},
-  {"ed", 0, NULL, 'e'},
-  {"show-overlap", 0, NULL, 'E'},
-  {"label", 1, NULL, 'L'},
-  {"merge", 0, NULL, 'm'},
-  {"initial-tab", 0, NULL, 'T'},
-  {"overlap-only", 0, NULL, 'x'},
-  {"easy-only", 0, NULL, '3'},
-  {"version", 0, NULL, 'v'},
+  {"text", 0, 0, 'a'},
+  {"show-all", 0, 0, 'A'},
+  {"ed", 0, 0, 'e'},
+  {"show-overlap", 0, 0, 'E'},
+  {"label", 1, 0, 'L'},
+  {"merge", 0, 0, 'm'},
+  {"initial-tab", 0, 0, 'T'},
+  {"overlap-only", 0, 0, 'x'},
+  {"easy-only", 0, 0, '3'},
+  {"version", 0, 0, 'v'},
   {0, 0, 0, 0}
 };
 
