@@ -53,6 +53,7 @@ dir_sort (dir, dirdata)
   dirdata->files = 0;
   dirdata->data = 0;
   nfiles = 0;
+  data = 0;
 
   if (dir->desc != -1)
     {
