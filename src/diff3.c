@@ -1,7 +1,7 @@
 /* diff3 - compare three files line by line
 
    Copyright (C) 1988, 1989, 1992, 1993, 1994, 1995, 1996, 1998, 2001,
-   2002 Free Software Foundation, Inc.
+   2002, 2004 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -21,7 +21,8 @@
 #include "system.h"
 #include "paths.h"
 
-static char const authorship_msgid[] = N_("Written by Randy Smith.");
+#include <stdio.h>
+#include <unlocked-io.h>
 
 #include <c-stack.h>
 #include <cmpbuf.h>
@@ -31,7 +32,6 @@ static char const authorship_msgid[] = N_("Written by Randy Smith.");
 #include <getopt.h>
 #include <inttostr.h>
 #include <quotesys.h>
-#include <stdio.h>
 #include <version-etc.h>
 #include <xalloc.h>
 
@@ -130,6 +130,9 @@ struct diff3_block {
 /* If nonzero, treat all files as text files, never as binary.  */
 static bool text;
 
+/* Remove trailing carriage returns from input.  */
+static bool strip_trailing_cr;
+
 /* If nonzero, write out an ed script instead of the standard diff3 format.  */
 static bool edscript;
 
@@ -184,23 +187,25 @@ static char const *diff_program = DEFAULT_DIFF_PROGRAM;
 enum
 {
   DIFF_PROGRAM_OPTION = CHAR_MAX + 1,
-  HELP_OPTION
+  HELP_OPTION,
+  STRIP_TRAILING_CR_OPTION
 };
 
 static struct option const longopts[] =
 {
-  {"text", 0, 0, 'a'},
-  {"show-all", 0, 0, 'A'},
-  {"ed", 0, 0, 'e'},
   {"diff-program", 1, 0, DIFF_PROGRAM_OPTION},
-  {"show-overlap", 0, 0, 'E'},
+  {"easy-only", 0, 0, '3'},
+  {"ed", 0, 0, 'e'},
+  {"help", 0, 0, HELP_OPTION},
+  {"initial-tab", 0, 0, 'T'},
   {"label", 1, 0, 'L'},
   {"merge", 0, 0, 'm'},
-  {"initial-tab", 0, 0, 'T'},
   {"overlap-only", 0, 0, 'x'},
-  {"easy-only", 0, 0, '3'},
+  {"show-all", 0, 0, 'A'},
+  {"show-overlap", 0, 0, 'E'},
+  {"strip-trailing-cr", 0, 0, STRIP_TRAILING_CR_OPTION},
+  {"text", 0, 0, 'a'},
   {"version", 0, 0, 'v'},
-  {"help", 0, 0, HELP_OPTION},
   {0, 0, 0, 0}
 };
 
@@ -227,48 +232,52 @@ main (int argc, char **argv)
   setlocale (LC_ALL, "");
   bindtextdomain (PACKAGE, LOCALEDIR);
   textdomain (PACKAGE);
-  c_stack_action (argv, 0);
+  c_stack_action (0);
 
   while ((c = getopt_long (argc, argv, "aeimvx3AEL:TX", longopts, 0)) != -1)
     {
       switch (c)
 	{
 	case 'a':
-	  text = 1;
+	  text = true;
 	  break;
 	case 'A':
-	  show_2nd = 1;
-	  flagging = 1;
+	  show_2nd = true;
+	  flagging = true;
 	  incompat++;
 	  break;
 	case 'x':
-	  overlap_only = 1;
+	  overlap_only = true;
 	  incompat++;
 	  break;
 	case '3':
-	  simple_only = 1;
+	  simple_only = true;
 	  incompat++;
 	  break;
 	case 'i':
-	  finalwrite = 1;
+	  finalwrite = true;
 	  break;
 	case 'm':
-	  merge = 1;
+	  merge = true;
 	  break;
 	case 'X':
-	  overlap_only = 1;
+	  overlap_only = true;
 	  /* Fall through.  */
 	case 'E':
-	  flagging = 1;
+	  flagging = true;
 	  /* Fall through.  */
 	case 'e':
 	  incompat++;
 	  break;
 	case 'T':
-	  initial_tab = 1;
+	  initial_tab = true;
+	  break;
+	case STRIP_TRAILING_CR_OPTION:
+	  strip_trailing_cr = true;
 	  break;
 	case 'v':
-	  version_etc ("diff3", authorship_msgid);
+	  version_etc (stdout, "diff3", PACKAGE_NAME, PACKAGE_VERSION,
+		       "Randy Smith", (char *) 0);
 	  check_stdout ();
 	  return EXIT_SUCCESS;
 	case DIFF_PROGRAM_OPTION:
@@ -386,7 +395,7 @@ main (int argc, char **argv)
   else
     {
       output_diff3 (stdout, diff3, mapping, rev_mapping);
-      conflicts_found = 0;
+      conflicts_found = false;
     }
 
   check_stdout ();
@@ -425,6 +434,7 @@ static char const * const option_help_msgid[] = {
   N_("-L LABEL  --label=LABEL  Use LABEL instead of file name."),
   N_("-i  Append `w' and `q' commands to ed scripts."),
   N_("-a  --text  Treat all files as text."),
+  N_("--strip-trailing-cr  Strip trailing carriage return on input."),
   N_("-T  --initial-tab  Make tabs line up by prepending a tab."),
   N_("--diff-program=PROGRAM  Use PROGRAM to compare files."),
   "",
@@ -446,8 +456,9 @@ usage (void)
       printf ("  %s\n", _(*p));
     else
       putchar ('\n');
-  printf ("\n%s\n\n%s\n",
+  printf ("\n%s\n%s\n\n%s\n",
 	  _("If a FILE is `-', read standard input."),
+	  _("Exit status is 0 if successful, 1 if conflicts, 2 if trouble."),
 	  _("Report bugs to <bug-gnu-utils@gnu.org>."));
 }
 
@@ -787,8 +798,8 @@ using_to_diff3_block (struct diff_block *using[2],
 
 /* Copy pointers from a list of strings to a different list of
    strings.  If a spot in the second list is already filled, make sure
-   that it is filled with the same string; if not, return 0, the copy
-   incomplete.  Upon successful completion of the copy, return 1.  */
+   that it is filled with the same string; if not, return false, the copy
+   incomplete.  Upon successful completion of the copy, return true.  */
 
 static bool
 copy_stringlist (char * const fromptrs[], size_t const fromlengths[],
@@ -805,7 +816,7 @@ copy_stringlist (char * const fromptrs[], size_t const fromlengths[],
       if (*t)
 	{
 	  if (*fl != *tl || memcmp (*f, *t, *fl) != 0)
-	    return 0;
+	    return false;
 	}
       else
 	{
@@ -816,7 +827,7 @@ copy_stringlist (char * const fromptrs[], size_t const fromlengths[],
       t++; f++; tl++; fl++;
     }
 
-  return 1;
+  return true;
 }
 
 /* Create a diff3_block, with ranges as specified in the arguments.
@@ -899,8 +910,8 @@ compare_line_list (char * const list1[], size_t const lengths1[],
   while (nl--)
     if (!*l1 || !*l2 || *lgths1 != *lgths2++
 	|| memcmp (*l1++, *l2++, *lgths1++) != 0)
-      return 0;
-  return 1;
+      return false;
+  return true;
 }
 
 /* Input and parse two way diffs.  */
@@ -1127,13 +1138,13 @@ read_diff (char const *filea,
 {
   char *diff_result;
   size_t current_chunk_size, total;
-  int fd, wstatus;
+  int fd, wstatus, status;
   int werrno = 0;
   struct stat pipestat;
 
 #if HAVE_WORKING_FORK || HAVE_WORKING_VFORK
 
-  char const *argv[8];
+  char const *argv[9];
   char const **ap;
   int fds[2];
   pid_t pid;
@@ -1142,6 +1153,8 @@ read_diff (char const *filea,
   *ap++ = diff_program;
   if (text)
     *ap++ = "-a";
+  if (strip_trailing_cr)
+    *ap++ = "--strip-trailing-cr";
   *ap++ = "--horizon-lines=100";
   *ap++ = "--";
   *ap++ = filea;
@@ -1166,7 +1179,7 @@ read_diff (char const *filea,
 	 hosts with a nonstandard prototype for execvp.  */
       execvp (diff_program, (char **) argv);
 
-      _exit (127);
+      _exit (errno == ENOENT ? 127 : 126);
     }
 
   if (pid == -1)
@@ -1178,15 +1191,27 @@ read_diff (char const *filea,
 #else
 
   FILE *fpipe;
-  char const args[] = " -a --horizon-lines=100 -- ";
+  char const args[] = " --horizon-lines=100 -- ";
   char *command = xmalloc (quote_system_arg (0, diff_program)
+			   + sizeof "-a"
+			   + sizeof "--strip-trailing-cr"
 			   + sizeof args - 1
 			   + quote_system_arg (0, filea) + 1
 			   + quote_system_arg (0, fileb) + 1);
   char *p = command;
   p += quote_system_arg (p, diff_program);
-  strcpy (p, args + (text ? 0 : 3));
-  p += strlen (p);
+  if (text)
+    {
+      strcpy (p, " -a");
+      p += 3;
+    }
+  if (strip_trailing_cr)
+    {
+      strcpy (p, " --strip-trailing-cr");
+      p += 20;
+    }
+  strcpy (p, args);
+  p += sizeof args - 1;
   p += quote_system_arg (p, filea);
   *p++ = ' ';
   p += quote_system_arg (p, fileb);
@@ -1243,12 +1268,18 @@ read_diff (char const *filea,
 
 #endif
 
-  if (werrno || ! (WIFEXITED (wstatus) && WEXITSTATUS (wstatus) < 2))
+  status = ! werrno && WIFEXITED (wstatus) ? WEXITSTATUS (wstatus) : INT_MAX;
+
+  if (EXIT_TROUBLE <= status)
     error (EXIT_TROUBLE, werrno,
-	   _(! werrno && WIFEXITED (wstatus) && WEXITSTATUS (wstatus) == 127
+	   _(status == 126
+	     ? "subsidiary program `%s' could not be invoked"
+	     : status == 127
 	     ? "subsidiary program `%s' not found"
-	     : "subsidiary program `%s' failed"),
-	   diff_program);
+	     : status == INT_MAX
+	     ? "subsidiary program `%s' failed"
+	     : "subsidiary program `%s' failed (exit status %d)"),
+	   diff_program, status);
 
   return diff_result + total;
 }
@@ -1351,8 +1382,8 @@ output_diff3 (FILE *outputfile, struct diff3_block *diff,
 	  int realfile = mapping[i];
 	  lin lowt = D_LOWLINE (ptr, realfile);
 	  lin hight = D_HIGHLINE (ptr, realfile);
-	  long llowt = lowt;
-	  long lhight = hight;
+	  long int llowt = lowt;
+	  long int lhight = hight;
 
 	  fprintf (outputfile, "%d:", i + 1);
 	  switch (lowt - hight)
@@ -1397,7 +1428,7 @@ static bool
 dotlines (FILE *outputfile, struct diff3_block *b, int filenum)
 {
   lin i;
-  bool leading_dot = 0;
+  bool leading_dot = false;
 
   for (i = 0;
        i < D_NUMLINES (b, filenum);
@@ -1406,7 +1437,7 @@ dotlines (FILE *outputfile, struct diff3_block *b, int filenum)
       char *line = D_RELNUM (b, filenum, i);
       if (line[0] == '.')
 	{
-	  leading_dot = 1;
+	  leading_dot = true;
 	  fprintf (outputfile, ".");
 	}
       fwrite (line, sizeof (char),
@@ -1416,13 +1447,13 @@ dotlines (FILE *outputfile, struct diff3_block *b, int filenum)
   return leading_dot;
 }
 
-/* Output to OUTPUTFILE a '.' line.  If LEADING_DOT is nonzero, also
+/* Output to OUTPUTFILE a '.' line.  If LEADING_DOT is true, also
    output a command that removes initial '.'s starting with line START
-   and continuing for NUM lines.  (START is long, not lin, for
+   and continuing for NUM lines.  (START is long int, not lin, for
    convenience with printf %ld formats.)  */
 
 static void
-undotlines (FILE *outputfile, bool leading_dot, long start, lin num)
+undotlines (FILE *outputfile, bool leading_dot, long int start, lin num)
 {
   fprintf (outputfile, ".\n");
   if (leading_dot)
@@ -1459,7 +1490,8 @@ output_diff3_edscript (FILE *outputfile, struct diff3_block *diff,
 		       char const *file0, char const *file1, char const *file2)
 {
   bool leading_dot;
-  bool conflicts_found = 0, conflict;
+  bool conflicts_found = false;
+  bool conflict;
   struct diff3_block *b;
 
   for (b = reverse_diff3_blocklist (diff); b; b = b->next)
@@ -1470,14 +1502,14 @@ output_diff3_edscript (FILE *outputfile, struct diff3_block *diff,
 	   ? DIFF_ALL
 	   : DIFF_1ST + rev_mapping[b->correspond - DIFF_1ST]);
 
-      long low0, high0;
+      long int low0, high0;
 
       /* If we aren't supposed to do this output block, skip it.  */
       switch (type)
 	{
 	default: continue;
-	case DIFF_2ND: if (!show_2nd) continue; conflict = 1; break;
-	case DIFF_3RD: if (overlap_only) continue; conflict = 0; break;
+	case DIFF_2ND: if (!show_2nd) continue; conflict = true; break;
+	case DIFF_3RD: if (overlap_only) continue; conflict = false; break;
 	case DIFF_ALL: if (simple_only) continue; conflict = flagging; break;
 	}
 
@@ -1486,13 +1518,13 @@ output_diff3_edscript (FILE *outputfile, struct diff3_block *diff,
 
       if (conflict)
 	{
-	  conflicts_found = 1;
+	  conflicts_found = true;
 
 
 	  /* Mark end of conflict.  */
 
 	  fprintf (outputfile, "%lda\n", high0);
-	  leading_dot = 0;
+	  leading_dot = false;
 	  if (type == DIFF_ALL)
 	    {
 	      if (show_2nd)
@@ -1515,7 +1547,7 @@ output_diff3_edscript (FILE *outputfile, struct diff3_block *diff,
 
 	  fprintf (outputfile, "%lda\n<<<<<<< %s\n", low0 - 1,
 		   type == DIFF_ALL ? file0 : file1);
-	  leading_dot = 0;
+	  leading_dot = false;
 	  if (type == DIFF_2ND)
 	    {
 	      /* Prepend lines from FILE1.  */
@@ -1575,7 +1607,8 @@ output_diff3_merge (FILE *infile, FILE *outputfile, struct diff3_block *diff,
 {
   int c;
   lin i;
-  bool conflicts_found = 0, conflict;
+  bool conflicts_found = false;
+  bool conflict;
   struct diff3_block *b;
   lin linesread = 0;
 
@@ -1592,8 +1625,8 @@ output_diff3_merge (FILE *infile, FILE *outputfile, struct diff3_block *diff,
       switch (type)
 	{
 	default: continue;
-	case DIFF_2ND: if (!show_2nd) continue; conflict = 1; break;
-	case DIFF_3RD: if (overlap_only) continue; conflict = 0; break;
+	case DIFF_2ND: if (!show_2nd) continue; conflict = true; break;
+	case DIFF_3RD: if (overlap_only) continue; conflict = false; break;
 	case DIFF_ALL: if (simple_only) continue; conflict = flagging;
 	  format_2nd = "||||||| %s\n";
 	  break;
@@ -1619,7 +1652,7 @@ output_diff3_merge (FILE *infile, FILE *outputfile, struct diff3_block *diff,
 
       if (conflict)
 	{
-	  conflicts_found = 1;
+	  conflicts_found = true;
 
 	  if (type == DIFF_ALL)
 	    {
