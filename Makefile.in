@@ -59,7 +59,7 @@ SHELL = /bin/sh
 
 # The source files for all of the programs.
 srcs=diff.c analyze.c cmpbuf.c cmpbuf.h io.c context.c ed.c normal.c ifdef.c \
-	util.c dir.c memchr.c waitpid.c \
+	quote.c util.c dir.c memchr.c waitpid.c \
 	version.c diff.h regex.c regex.h side.c system.h \
 	diff3.c sdiff.c cmp.c error.c xmalloc.c getopt.c getopt1.c getopt.h \
 	fnmatch.c fnmatch.h alloca.c
@@ -81,15 +81,15 @@ common_o = error.o getopt.o getopt1.o version.o xmalloc.o
 
 diff_o = diff.o analyze.o cmpbuf.o dir.o io.o util.o \
 	context.o ed.o ifdef.o normal.o side.o \
-	fnmatch.o regex.o $(common_o) $(ALLOCA) $(LIBOBJS)
+	fnmatch.o regex.o quote.o $(common_o) $(ALLOCA) $(LIBOBJS)
 diff: $(diff_o)
 	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $(diff_o) $(LIBS)
 
-diff3_o = diff3.o $(common_o) $(LIBOBJS)
+diff3_o = diff3.o quote.o $(common_o) $(LIBOBJS)
 diff3: $(diff3_o)
 	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $(diff3_o) $(LIBS)
 
-sdiff_o = sdiff.o $(common_o) $(LIBOBJS)
+sdiff_o = sdiff.o quote.o $(common_o) $(LIBOBJS)
 sdiff: $(sdiff_o)
 	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $(sdiff_o) $(LIBS)
 
