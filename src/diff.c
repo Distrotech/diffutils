@@ -1,4 +1,4 @@
-/* GNU DIFF main routine.
+/* diff - compare files line by line
 
    Copyright (C) 1988, 1989, 1992, 1993, 1994, 1996, 1998, 2001, 2002
    Free Software Foundation, Inc.
@@ -827,9 +827,7 @@ check_stdout (void)
 }
 
 static char const * const option_help_msgid[] = {
-  N_("FILES are `FILE1 FILE2' or `DIR1 DIR2' or `DIR FILE...' or `FILE... DIR';"),
-  N_("if --from-file or --to-file is given, there are no restrictions on FILES."),
-  N_("If a FILE is `-', read standard input."),
+  N_("Compare files line by line."),
   "",
   N_("-i  --ignore-case  Ignore case differences in file contents."),
   N_("--ignore-file-name-case  Ignore case when comparing file names."),
@@ -904,6 +902,10 @@ static char const * const option_help_msgid[] = {
   "",
   N_("-v  --version  Output version info."),
   N_("--help  Output this help."),
+  "",
+  N_("FILES are `FILE1 FILE2' or `DIR1 DIR2' or `DIR FILE...' or `FILE... DIR'."),
+  N_("If --from-file or --to-file is given, there are no restrictions on FILES."),
+  N_("If a FILE is `-', read standard input."),
   "",
   N_("Report bugs to <bug-gnu-utils@gnu.org>."),
   0
