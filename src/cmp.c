@@ -120,7 +120,7 @@ try_help (char const *reason_msgid, char const *operand)
   abort ();
 }
 
-static char const valid_suffixes[] = "kKMGTPEZY";
+static char const valid_suffixes[] = "kKMGTPEZY0";
 
 /* Parse an operand *ARGPTR of --ignore-initial, updating *ARGPTR to
    point after the operand.  If DELIMITER is nonzero, the operand may
@@ -143,9 +143,9 @@ static void
 check_stdout (void)
 {
   if (ferror (stdout))
-    error (2, 0, _("write failed"));
+    error (2, 0, "%s", _("write failed"));
   else if (fclose (stdout) != 0)
-    error (2, errno, _("standard output"));
+    error (2, errno, "%s", _("standard output"));
 }
 
 static char const * const option_help_msgid[] = {
@@ -234,6 +234,7 @@ main (int argc, char **argv)
 	printf ("cmp %s\n%s\n\n%s\n\n%s\n",
 		version_string, copyright_string,
 		_(free_software_msgid), _(authorship_msgid));
+	check_stdout ();
 	exit (0);
 
       case HELP_OPTION:
