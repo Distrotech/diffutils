@@ -94,7 +94,7 @@ option_list (optionvec, count)
 }
 
 /* Convert STR to a positive integer, storing the result in *OUT.
-   If STR is not a valid integer, return -1 (otherwise 0). */
+   If STR is not a valid integer, return -1 (otherwise 0).  */
 static int
 ck_atoi (str, out)
      char const *str;
@@ -130,10 +130,11 @@ add_exclude (pattern)
      char const *pattern;
 {
   if (exclude_alloc <= exclude_count)
-    exclude = (char const **)
-	      (exclude_alloc == 0
-	       ? xmalloc ((exclude_alloc = 64) * sizeof (*exclude))
-	       : xrealloc (exclude, (exclude_alloc *= 2) * sizeof (*exclude)));
+    {
+      exclude_alloc = exclude_alloc ? 2 * exclude_alloc : 64;
+      exclude = (char const **) xrealloc (exclude,
+					  exclude_alloc * sizeof (*exclude));
+    }
 
   exclude[exclude_count++] = pattern;
 }
@@ -238,6 +239,7 @@ main (argc, argv)
   /* Do our initializations.  */
   initialize_main (&argc, &argv);
   program_name = argv[0];
+  xmalloc_exit_failure = 2;
   output_style = OUTPUT_NORMAL;
   context = -1;
 
@@ -280,7 +282,6 @@ main (argc, argv)
 	  /* Ignore changes in amount of white space.  */
 	  ignore_space_change_flag = 1;
 	  ignore_some_changes = 1;
-	  ignore_some_line_changes = 1;
 	  break;
 
 	case 'B':
@@ -320,7 +321,7 @@ main (argc, argv)
 	    static char const C_ifdef_group_formats[] =
 	      "#ifndef %s\n%%<#endif /* not %s */\n%c#ifdef %s\n%%>#endif /* %s */\n%c%%=%c#ifndef %s\n%%<#else /* %s */\n%%>#endif /* %s */\n";
 	    char *b = xmalloc (sizeof (C_ifdef_group_formats)
-			       + 7 * strlen(optarg) - 14 /* 7*"%s" */
+			       + 7 * strlen (optarg) - 14 /* 7*"%s" */
 			       - 8 /* 5*"%%" + 3*"%c" */);
 	    sprintf (b, C_ifdef_group_formats,
 		     optarg, optarg, 0,
@@ -332,7 +333,7 @@ main (argc, argv)
 		b += strlen (b) + 1;
 	      }
 	    if (err)
-	      error ("conflicting #ifdef formats", 0, 0);
+	      error (0, 0, "conflicting #ifdef formats");
 	  }
 	  break;
 
@@ -371,7 +372,6 @@ main (argc, argv)
 	  /* Ignore changes in case.  */
 	  ignore_case_flag = 1;
 	  ignore_some_changes = 1;
-	  ignore_some_line_changes = 1;
 	  break;
 
 	case 'I':
@@ -384,7 +384,7 @@ main (argc, argv)
 	case 'l':
 	  /* Pass the output through `pr' to paginate it.  */
 	  paginate_flag = 1;
-#if !defined(SIGCHLD) && defined(SIGCLD)
+#if !defined (SIGCHLD) && defined (SIGCLD)
 #define SIGCHLD SIGCLD
 #endif
 #ifdef SIGCHLD
@@ -476,7 +476,6 @@ main (argc, argv)
 	  /* Ignore horizontal white space when comparing lines.  */
 	  ignore_all_space_flag = 1;
 	  ignore_some_changes = 1;
-	  ignore_some_line_changes = 1;
 	  break;
 
 	case 'x':
@@ -489,7 +488,7 @@ main (argc, argv)
 	  break;
 
 	case 'y':
-	  /* Use side-by-side (sdiff-style) columnar output. */
+	  /* Use side-by-side (sdiff-style) columnar output.  */
 	  specify_style (OUTPUT_SDIFF);
 	  break;
 
@@ -508,7 +507,7 @@ main (argc, argv)
 	  break;
 
 	case 131:
-	  /* sdiff-style columns output. */
+	  /* sdiff-style columns output.  */
 	  specify_style (OUTPUT_SDIFF);
 	  sdiff_help_sdiff = 1;
 	  break;
@@ -518,7 +517,7 @@ main (argc, argv)
 	case 134:
 	  specify_style (OUTPUT_IFDEF);
 	  if (specify_format (&line_format[c - 132], optarg) != 0)
-	    error ("conflicting line format", 0, 0);
+	    error (0, 0, "conflicting line format");
 	  break;
 
 	case 135:
@@ -528,7 +527,7 @@ main (argc, argv)
 	    for (i = 0; i < sizeof (line_format) / sizeof (*line_format); i++)
 	      err |= specify_format (&line_format[i], optarg);
 	    if (err)
-	      error ("conflicting line format", 0, 0);
+	      error (0, 0, "conflicting line format");
 	  }
 	  break;
 
@@ -538,7 +537,7 @@ main (argc, argv)
 	case 139:
 	  specify_style (OUTPUT_IFDEF);
 	  if (specify_format (&group_format[c - 136], optarg) != 0)
-	    error ("conflicting group format", 0, 0);
+	    error (0, 0, "conflicting group format");
 	  break;
 
 	case 140:
@@ -648,16 +647,21 @@ add_regexp (reglist, pattern)
   struct regexp_list *r;
   char const *m;
 
-  r = (struct regexp_list *) xmalloc (sizeof (*r));
+  r = (struct regexp_list *) xmalloc (sizeof (*r) + (1 << CHAR_BIT));
   bzero (r, sizeof (*r));
-  r->buf.fastmap = xmalloc (256);
+  r->buf.fastmap = (char *) (r + 1);
   m = re_compile_pattern (pattern, strlen (pattern), &r->buf);
   if (m != 0)
-    error ("%s: %s", pattern, m);
-
-  /* Add to the start of the list, since it's easier than the end.  */
-  r->next = *reglist;
-  *reglist = r;
+    {
+      error (0, 0, "%s: %s", pattern, m);
+      free (r);
+    }
+  else
+    {
+      /* Add to the start of the list, since it's easier than the end.  */
+      r->next = *reglist;
+      *reglist = r;
+    }
 }
 
 static void
@@ -665,9 +669,8 @@ try_help (reason)
      char const *reason;
 {
   if (reason)
-    error ("%s", reason, 0);
-  error ("Try `%s --help' for more information.", program_name, 0);
-  exit (2);
+    error (0, 0, "%s", reason);
+  error (2, 0, "Try `%s --help' for more information.", program_name);
 }
 
 static void
@@ -769,7 +772,7 @@ specify_style (style)
 {
   if (output_style != OUTPUT_NORMAL
       && output_style != style)
-    error ("conflicting specifications of output style", 0, 0);
+    error (0, 0, "conflicting specifications of output style");
   output_style = style;
 }
 
@@ -862,8 +865,8 @@ compare_files (dir0, name0, dir1, name1, depth)
 
   bzero (inf, sizeof (inf));
 
-  /* Mark any nonexistent file with -1 in the desc field.  */
-  /* Mark unopened files (e.g. directories) with -2. */
+  /* Mark any nonexistent file with -1 in the desc field.
+     Mark unopened files (e.g. directories) with -2.  */
 
   inf[0].desc = name0 == 0 ? -1 : -2;
   inf[1].desc = name1 == 0 ? -1 : -2;
