@@ -1,5 +1,5 @@
 /* System dependent declarations.
-   Copyright (C) 1988, 1989, 1992, 1993 Free Software Foundation, Inc.
+   Copyright 1988, 1989, 1992, 1993, 1994 Free Software Foundation, Inc.
 
 This file is part of GNU DIFF.
 
@@ -64,16 +64,6 @@ the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 #define S_ISSOCK(mode) (((mode) & S_IFMT) == S_IFSOCK)
 #endif
 
-#ifndef S_IXOTH
-#define S_IXOTH 1
-#endif
-#ifndef S_IXGRP
-#define S_IXGRP (S_IXOTH << 3)
-#endif
-#ifndef S_IXUSR
-#define S_IXUSR (S_IXGRP << 3)
-#endif
-
 #if HAVE_UNISTD_H
 #include <unistd.h>
 #endif
@@ -104,7 +94,9 @@ the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 #if HAVE_FCNTL_H
 #include <fcntl.h>
 #else
+#if HAVE_SYS_FILE_H
 #include <sys/file.h>
+#endif
 #endif
 
 #if !HAVE_DUP2
@@ -134,10 +126,12 @@ the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 #define WIFEXITED(stat_val) (((stat_val) & 255) == 0)
 #endif
 
+#ifndef STAT_BLOCKSIZE
 #if HAVE_ST_BLKSIZE
 #define STAT_BLOCKSIZE(s) (s).st_blksize
 #else
 #define STAT_BLOCKSIZE(s) (8 * 1024)
+#endif
 #endif
 
 #if DIRENT
@@ -211,5 +205,43 @@ char *memchr ();
 extern int errno;
 #endif
 
+#ifdef min
+#undef min
+#endif
+#ifdef max
+#undef max
+#endif
 #define min(a,b) ((a) <= (b) ? (a) : (b))
 #define max(a,b) ((a) >= (b) ? (a) : (b))
+
+/* This section contains Posix-compliant defaults for macros
+   that are meant to be overridden by hand in config.h as needed.  */
+
+#ifndef filename_cmp
+#define filename_cmp(a, b) strcmp (a, b)
+#endif
+
+#ifndef filename_lastdirchar
+#define filename_lastdirchar(filename) strrchr (filename, '/')
+#endif
+
+#ifndef HAVE_FORK
+#define HAVE_FORK 1
+#endif
+
+#ifndef HAVE_SETMODE
+#define HAVE_SETMODE 0
+#endif
+
+#ifndef initialize_main
+#define initialize_main(argcp, argvp)
+#endif
+
+#ifndef O_BINARY
+#define O_BINARY 0
+#endif
+
+/* Do struct stat *S, *T describe the same file?  Answer -1 if unknown.  */
+#ifndef same_file
+#define same_file(s,t) ((s)->st_ino==(t)->st_ino && (s)->st_dev==(t)->st_dev)
+#endif
