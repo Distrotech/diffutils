@@ -108,6 +108,15 @@ void *alloca (size_t);
 #if !defined S_ISSOCK && defined S_IFSOCK
 # define S_ISSOCK(mode) (((mode) & S_IFMT) == S_IFSOCK)
 #endif
+#ifndef S_IXUSR
+# define S_IXUSR 0100
+#endif
+#ifndef S_IXGRP
+# define S_IXGRP 0010
+#endif
+#ifndef S_IXOTH
+# define S_IXOTH 0001
+#endif
 
 #if HAVE_UNISTD_H
 # include <unistd.h>
@@ -242,13 +251,7 @@ void *memchr ();
 # define setlocale(category, locale)
 #endif
 
-#if HAVE_LIBINTL_H
-# include <libintl.h>
-#else
-# define gettext(msgid) (msgid)
-# define bindtextdomain(domain, dir)
-# define textdomain(domain)
-#endif
+#include <libgettext.h>
 
 #define _(msgid) gettext (msgid)
 #define N_(msgid) (msgid)
@@ -279,9 +282,9 @@ void *memchr ();
    - It's guaranteed to evaluate its argument exactly once.
    - It's typically faster.
    POSIX 1003.2-1992 section 2.5.2.1 page 50 lines 1556-1558 says that
-   only '0' through '9' are digits.  Prefer ISDIGIT to isdigit unless
-   it's important to use the locale's definition of `digit' even when the
-   host does not conform to POSIX.  */
+   only '0' through '9' are digits.  POSIX 1003.1-2001 is unchanged here.
+   Prefer ISDIGIT to isdigit unless it's important to use the locale's
+   definition of `digit' even when the host does not conform to POSIX.  */
 #define ISDIGIT(c) ((unsigned) (c) - '0' <= 9)
 
 #include <errno.h>
@@ -328,14 +331,6 @@ verify (lin_is_printable_as_long, sizeof (lin) <= sizeof (long));
 
 #ifndef file_name_cmp
 # define file_name_cmp strcmp
-#endif
-
-#ifndef file_name_lastdirchar
-# define file_name_lastdirchar(name) strrchr (name, '/')
-#endif
-
-#ifndef HAVE_SETMODE
-# define HAVE_SETMODE 0
 #endif
 
 #ifndef initialize_main
@@ -399,19 +394,4 @@ verify (lin_is_printable_as_long, sizeof (lin) <= sizeof (long));
     && (s)->st_size == (t)->st_size \
     && (s)->st_mtime == (t)->st_mtime \
     && (s)->st_ctime == (t)->st_ctime)
-#endif
-
-
-/* Set the binary mode of FD to MODE, returning its previous mode.
-   MODE is 1 for binary and 0 for text.  If setting the mode might
-   cause problems, ignore the request and return the current mode.
-   Always return 1 on POSIX platforms, which do not distinguish
-   between text and binary.  */
-#ifndef set_binary_mode
-# if HAVE_SETMODE
-#  define set_binary_mode(fd, mode) \
-     (! isatty (fd) && setmode (fd, ((mode) ? O_BINARY : 0)))
-# else
-#  define set_binary_mode(fd, mode) 1
-# endif
 #endif
