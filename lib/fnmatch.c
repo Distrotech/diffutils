@@ -63,9 +63,11 @@ char *alloca ();
 # include <stdlib.h>
 #endif
 
+#define WIDE_CHAR_SUPPORT (HAVE_WCTYPE_H && HAVE_WCHAR_H && HAVE_BTOWC)
+
 /* For platform which support the ISO C amendement 1 functionality we
    support user defined character classes.  */
-#if defined _LIBC || (defined HAVE_WCTYPE_H && defined HAVE_WCHAR_H)
+#if defined _LIBC || WIDE_CHAR_SUPPORT
 /* Solaris 2.5 has a bug: <wchar.h> must be included before <wctype.h>.  */
 # include <wchar.h>
 # include <wctype.h>
@@ -133,7 +135,7 @@ extern int fnmatch (const char *pattern, const char *string, int flags);
 
 # define STREQ(s1, s2) ((strcmp (s1, s2) == 0))
 
-# if defined _LIBC || (defined HAVE_WCTYPE_H && defined HAVE_WCHAR_H)
+# if defined _LIBC || WIDE_CHAR_SUPPORT
 /* The GNU C library provides support for user-defined character classes
    and the functions from ISO C amendement 1.  */
 #  ifdef CHARCLASS_NAME_MAX
