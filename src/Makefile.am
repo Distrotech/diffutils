@@ -21,10 +21,9 @@ bin_PROGRAMS = cmp diff diff3 sdiff
 
 noinst_HEADERS = diff.h system.h
 
-datadir = $(prefix)/share
 localedir = $(datadir)/locale
 
-INCLUDES = -I.. -I$(srcdir) -I../lib -I$(top_srcdir)/lib
+AM_CPPFLAGS = -I../lib -I$(top_srcdir)/lib
 DEFS = -DLOCALEDIR=\"$(localedir)\" @DEFS@
 
 LDADD = ../lib/libdiffutils.a @LIBINTL@
