@@ -145,8 +145,8 @@ perror_fatal (msg)
 
 
 /* malloc freely or DIE! */
-static char *
-ck_malloc (size)
+char *
+xmalloc (size)
      size_t size;
 {
   char *r = malloc (size);
@@ -262,7 +262,7 @@ expand_name (name, isdir, other_name)
 	*p = rindex (other_name, '/'),
 	*base = p ? p+1 : other_name;
       size_t namelen = strlen (name), baselen = strlen (base);
-      char *r = ck_malloc (namelen + baselen + 2);
+      char *r = xmalloc (namelen + baselen + 2);
       bcopy (name, r, namelen);
       r[namelen] = '/';
       bcopy (base, r + namelen + 1, baselen + 1);
@@ -285,7 +285,7 @@ lf_init (lf, infile)
      FILE *infile;
 {
   lf->infile = infile;
-  lf->bufpos = lf->buffer = lf->buflim = ck_malloc (SDIFF_BUFSIZE + 1);
+  lf->bufpos = lf->buffer = lf->buflim = xmalloc (SDIFF_BUFSIZE + 1);
   lf->buflim[0] = '\n';
 }
 
@@ -578,7 +578,7 @@ diffarg (a)
     {
       if (! diffargsmax)
 	{
-	  diffargv = (char **) ck_malloc (sizeof (char));
+	  diffargv = (char **) xmalloc (sizeof (char));
 	  diffargsmax = 8;
 	}
       diffargsmax *= 2;
