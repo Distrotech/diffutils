@@ -193,11 +193,13 @@ static struct diff3_block *make_3way_diff PARAMS((struct diff_block *, struct di
 static struct diff3_block *reverse_diff3_blocklist PARAMS((struct diff3_block *));
 static struct diff3_block *using_to_diff3_block PARAMS((struct diff_block *[2], struct diff_block *[2], int, int, struct diff3_block const *));
 static struct diff_block *process_diff PARAMS((char const *, char const *, struct diff_block **));
+static void check_stdout PARAMS((void));
 static void fatal PARAMS((char const *));
 static void output_diff3 PARAMS((FILE *, struct diff3_block *, int const[3], int const[3]));
 static void perror_with_exit PARAMS((char const *));
+static void try_help PARAMS((char const *));
 static void undotlines PARAMS((FILE *, int, int, int));
-static void usage PARAMS((int));
+static void usage PARAMS((void));
 
 static char const diff_program[] = DIFF_PROGRAM;
 
@@ -281,10 +283,12 @@ main (argc, argv)
 	  tab_align_flag = 1;
 	  break;
 	case 'v':
-	  printf ("GNU diff3 version %s\n", version_string);
+	  printf ("diff3 - GNU diffutils version %s\n", version_string);
 	  exit (0);
 	case 129:
-	  usage (0);
+	  usage ();
+	  check_stdout ();
+	  exit (0);
 	case 'L':
 	  /* Handle up to three -L options.  */
 	  if (tag_count < 3)
@@ -294,7 +298,7 @@ main (argc, argv)
 	    }
 	  /* Falls through */
 	default:
-	  usage (2);
+	  try_help (0);
 	}
     }
 
@@ -304,9 +308,11 @@ main (argc, argv)
 
   if (incompat > 1  /* Ensure at most one of -AeExX3.  */
       || finalwrite & merge /* -i -m would rewrite input file.  */
-      || (tag_count && ! flagging) /* -L requires one of -AEX.  */
-      || argc - optind != 3)
-    usage (2);
+      || (tag_count && ! flagging)) /* -L requires one of -AEX.  */
+    try_help ("incompatible options");
+
+  if (argc - optind != 3)
+    try_help (argc - optind < 3 ? "missing operand" : "extra operand");
 
   file = &argv[optind];
 
@@ -392,29 +398,53 @@ main (argc, argv)
       conflicts_found = 0;
     }
 
-  if (ferror (stdout) || fclose (stdout) != 0)
-    fatal ("write error");
+  check_stdout ();
   exit (conflicts_found);
   return conflicts_found;
 }
 
+static void
+try_help (reason)
+     char const *reason;
+{
+  if (reason)
+    fprintf (stderr, "%s: %s\n", argv0, reason);
+  fprintf (stderr, "%s: Try `%s --help' for more information.\n", argv0, argv0);
+  exit (2);
+}
+
+static void
+check_stdout ()
+{
+  if (ferror (stdout) || fclose (stdout) != 0)
+    fatal ("write error");
+}
+
 /*
- * Explain, patiently and kindly, how to use this program.  Then exit.
+ * Explain, patiently and kindly, how to use this program.
  */
 static void
-usage (status)
-     int status;
+usage ()
 {
-  fflush (stderr);
-  printf ("\
-Usage: %s [options] my-file older-file your-file\n\
-Options:\n\
-	[-exAEX3aTv] [-i|-m] [-L label1 [-L label2 [-L label3]]]\n\
-	[--easy-only] [--ed] [--help] [--initial-tab]\n\
-	[--label=label1 [--label=label2 [--label=label3]]] [--merge]\n\
-	[--overlap-only] [--show-all] [--show-overlap] [--text] [--version]\n\
-	Only one of [exAEX3] is allowed\n", argv0);
-  exit (status);
+  printf ("Usage: %s [OPTION]... MYFILE OLDFILE YOURFILE\n\n", argv0);
+
+  printf ("%s", "\
+  -e  --ed  Output unmerged changes from OLDFILE to YOURFILE into MYFILE.\n\
+  -E  --show-overlap  Output unmerged changes, bracketing conflicts.\n\
+  -A  --show-all  Output all changes, bracketing conflicts.\n\
+  -x  --overlap-only  Output overlapping changes.\n\
+  -X  Output overlapping changes, bracketing them.\n\
+  -3  --easy-only  Output unmerged nonoverlapping changes.\n\n");
+  printf ("%s", "\
+  -m  --merge  Output merged file instead of ed script (default -A).\n\
+  -L LABEL  --label=LABEL  Use LABEL instead of file name.\n\
+  -i  Append `w' and `q' commands to ed scripts.\n\
+  -a  --text  Treat all files as text.\n\
+  -T  --initial-tab  Make tabs line up by prepending a tab.\n\n");
+  printf ("%s", "\
+  -v  --version  Output version info.\n\
+  --help  Output this help.\n\n");
+  printf ("If a FILE is `-', read standard input.\n");
 }
 
 /*
@@ -1226,18 +1256,8 @@ read_diff (filea, fileb, output_placement)
 
   if (close (fd) != 0)
     perror_with_exit ("pipe close");
-#if HAVE_WAITPID
   if (waitpid (pid, &wstatus, 0) < 0)
     perror_with_exit ("waitpid failed");
-#else
-  for (;;) {
-    pid_t w = wait (&wstatus);
-    if (w < 0)
-      perror_with_exit ("wait failed");
-    if (w == pid)
-      break;
-  }
-#endif
 
 #endif /* HAVE_FORK */
 
