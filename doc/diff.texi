@@ -23,7 +23,7 @@ Diff: (diff).                 Comparing and merging files.
 @ifinfo
 This file documents the @sc{gnu} @command{diff}, @command{diff3},
 @command{sdiff}, and @command{cmp} commands for showing the differences
-between text files and the @sc{gnu} @command{patch} command for using
+between files and the @sc{gnu} @command{patch} command for using
 their output to update files.
 
 Copyright @copyright{} 1992, 1993, 1994, 1998, 2001 Free Software
@@ -66,7 +66,7 @@ Free Documentation License''.
 
 This file documents the @sc{gnu} @command{diff}, @command{diff3},
 @command{sdiff}, and @command{cmp} commands for showing the
-differences between text files and the @command{patch} command for
+differences between files and the @command{patch} command for
 using their output to update files.
 
 This is Edition @value{EDITION}, dated @value{UPDATED},
@@ -201,7 +201,7 @@ different.  @command{cmp} reports the differences between two files
 byte by byte, instead of line by line.  As a result, it is often
 more useful than @command{diff} for comparing binary files.  For text
 files, @command{cmp} is useful mainly when you want to know only whether
-two files are identical.
+two files are identical, or whether one file is a prefix of the other.
 
 To illustrate the effect that considering changes byte by byte
 can have compared with considering them line by line, think of what
@@ -1716,7 +1716,16 @@ reports many differences because it compares file names in a
 case sensitive way.  With the @option{--ignore-file-name-case} option,
 @command{diff} ignores case differences in file names, so that for example
 the contents of the file @file{Tao} in one directory are compared to
-the contents of the file @file{TAO} in the other.
+the contents of the file @file{TAO} in the other.  The
+@option{--no-ignore-file-name-case} option cancels the effect of the
+@option{--ignore-file-name-case} option, reverting to the default
+behavior.
+
+If an @option{-x @var{pattern}}, @option{--exclude=@var{pattern}},
+@option{-X @var{file}}, or @option{--exclude-from=@var{file}} option
+is specified while the @option{--ignore-file-name-case} option is in
+effect, case is ignored when excluding file names matching the
+specified patterns.
 
 @node Adjusting Output
 @chapter Making @command{diff} Output Prettier
@@ -2849,7 +2858,7 @@ tebibyte: @math{2^40 = 1,099,511,627,776}.
 @item PB
 petabyte: @math{10^15 = 1,000,000,000,000,000}.
 @item P
-@item PiB
+@itemx PiB
 pebibyte: @math{2^50 = 1,125,899,906,842,624}.
 @item EB
 exabyte: @math{10^18 = 1,000,000,000,000,000,000}.
@@ -2881,7 +2890,7 @@ diff @var{options}@dots{} @var{files}@dots{}
 
 In the simplest case, two file names @var{from-file} and
 @var{to-file} are given, and @command{diff} compares the contents of
-@var{from-file} and @var{to-file}..  A file name of @file{-} stands for
+@var{from-file} and @var{to-file}.  A file name of @file{-} stands for
 text read from the standard input.  As a special case, @samp{diff - -}
 compares a copy of standard input to itself.
 
@@ -2931,7 +2940,7 @@ option takes an optional argument.
 
 The @env{DIFF_OPTIONS} environment variable specifies default options to
 be placed in front of any explicit options.  For example, if
-@env{DIFF_OPTIONS} is @samp{-a -p}, @command{grep} behaves as if the
+@env{DIFF_OPTIONS} is @samp{-a -p}, @command{diff} behaves as if the
 two options @option{-a} and @option{-p} had been specified before any
 explicit options.  Option specifications are separated by whitespace.  A
 backslash escapes the next character, so it can be used to specify an
