@@ -34,6 +34,15 @@ the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 #define GUTTER_WIDTH_MINIMUM 3
 #endif
 
+struct regexp_list
+{
+  char *regexps;	/* chars representing disjunction of the regexps */
+  size_t len;		/* chars used in `regexps' */
+  size_t size;		/* size malloc'ed for `regexps'; 0 if not malloc'ed */
+  int multiple_regexps;	/* Does `regexps' represent a disjunction?  */
+  struct re_pattern_buffer *buf;
+};
+
 static char const *filetype PARAMS((struct stat const *));
 static char *option_list PARAMS((char **, int));
 static int add_exclude_file PARAMS((char const *));
@@ -41,7 +50,8 @@ static int ck_atoi PARAMS((char const *, int *));
 static int compare_files PARAMS((char const *, char const *, char const *, char const *, int));
 static int specify_format PARAMS((char **, char *));
 static void add_exclude PARAMS((char const *));
-static void add_regexp PARAMS((struct regexp_list **, char const *));
+static void add_regexp PARAMS((struct regexp_list *, char const *));
+static void summarize_regexp_list PARAMS((struct regexp_list *));
 static void specify_style PARAMS((enum output_style));
 static void try_help PARAMS((char const *));
 static void check_stdout PARAMS((void));
@@ -55,6 +65,10 @@ static int recursive;
 /* For debugging: don't do discard_confusing_lines.  */
 
 int no_discards;
+
+/* For -F and -I: lists of regular expressions.  */
+struct regexp_list function_regexp_list;
+struct regexp_list ignore_regexp_list;
 
 #if HAVE_SETMODE
 /* I/O mode: nonzero only if using binary input/output.  */
@@ -75,21 +89,22 @@ option_list (optionvec, count)
      int count;
 {
   int i;
-  size_t length = 0;
+  size_t size = 1;
   char *result;
+  char *p;
 
   for (i = 0; i < count; i++)
-    length += strlen (optionvec[i]) + 1;
+    size += 1 + system_quote_arg ((char *) 0, optionvec[i]);
 
-  result = xmalloc (length + 1);
-  result[0] = 0;
+  p = result = xmalloc (size);
 
   for (i = 0; i < count; i++)
     {
-      strcat (result, " ");
-      strcat (result, optionvec[i]);
+      *p++ = ' ';
+      p += system_quote_arg (p, optionvec[i]);
     }
 
+  *p = 0;
   return result;
 }
 
@@ -242,6 +257,8 @@ main (argc, argv)
   xmalloc_exit_failure = 2;
   output_style = OUTPUT_NORMAL;
   context = -1;
+  function_regexp_list.buf = &function_regexp;
+  ignore_regexp_list.buf = &ignore_regexp;
 
   /* Decode the options.  */
 
@@ -300,8 +317,7 @@ main (argc, argv)
 	      if (ck_atoi (optarg, &context))
 		fatal ("invalid context length argument");
 	    }
-
-	  /* Falls through.  */
+	  /* Fall through.  */
 	case 'c':
 	  /* Make context-style output.  */
 	  specify_style (c == 'U' ? OUTPUT_UNIFIED : OUTPUT_CONTEXT);
@@ -595,6 +611,9 @@ main (argc, argv)
     /* Default amount of context for -c.  */
     context = 3;
 
+  summarize_regexp_list (&function_regexp_list);
+  summarize_regexp_list (&ignore_regexp_list);
+
   if (output_style == OUTPUT_IFDEF)
     {
       /* Format arrays are char *, not char const *,
@@ -637,30 +656,66 @@ main (argc, argv)
   return val;
 }
 
-/* Add the compiled form of regexp PATTERN to REGLIST.  */
+/* Append to REGLIST the regexp PATTERN.  */
 
 static void
 add_regexp (reglist, pattern)
-     struct regexp_list **reglist;
+     struct regexp_list *reglist;
      char const *pattern;
 {
-  struct regexp_list *r;
-  char const *m;
+  size_t patlen = strlen (pattern);
+  char const *m = re_compile_pattern (pattern, patlen, reglist->buf);
 
-  r = (struct regexp_list *) xmalloc (sizeof (*r) + (1 << CHAR_BIT));
-  bzero (r, sizeof (*r));
-  r->buf.fastmap = (char *) (r + 1);
-  m = re_compile_pattern (pattern, strlen (pattern), &r->buf);
   if (m != 0)
-    {
-      error (0, 0, "%s: %s", pattern, m);
-      free (r);
-    }
+    error (0, 0, "%s: %s", pattern, m);
   else
     {
-      /* Add to the start of the list, since it's easier than the end.  */
-      r->next = *reglist;
-      *reglist = r;
+      char *regexps = reglist->regexps;
+      size_t len = reglist->len;
+      int multiple_regexps = reglist->multiple_regexps = regexps != 0;
+      size_t newlen = reglist->len = len + 2 * multiple_regexps + patlen;
+      size_t size = reglist->size;
+
+      if (size <= newlen)
+	{
+	  if (!size)
+	    size = 1;
+
+	  do size *= 2;
+	  while (size <= newlen);
+
+	  reglist->size = size;
+	  reglist->regexps = regexps = xrealloc (regexps, size);
+	}
+      if (multiple_regexps)
+	{
+	  regexps[len++] = '\\';
+	  regexps[len++] = '|';
+	}
+      memcpy (regexps + len, pattern, patlen + 1);
+    }
+}
+
+/* Ensure that REGLIST represents the disjunction of its regexps.
+   This is done here, rather than earlier, to avoid O(N^2) behavior.  */
+
+static void
+summarize_regexp_list (reglist)
+     struct regexp_list *reglist;
+{
+  if (reglist->regexps)
+    {
+      /* At least one regexp was specified.  Allocate a fastmap for it.  */
+      reglist->buf->fastmap = xmalloc (1 << CHAR_BIT);
+      if (reglist->multiple_regexps)
+	{
+	  /* Compile the disjunction of the regexps.
+	     (If just one regexp was specified, it is already compiled.)  */
+	  char const *m = re_compile_pattern (reglist->regexps, reglist->len,
+					      reglist->buf);
+	  if (m != 0)
+	    error (2, 0, "%s: %s", reglist->regexps, m);
+	}
     }
 }
 
