@@ -79,8 +79,9 @@ static void lf_init PARAMS((struct line_filter *, FILE *));
 static void lf_skip PARAMS((struct line_filter *, int));
 static void perror_fatal PARAMS((char const *));
 static void trapsigs PARAMS((void));
+static void try_help PARAMS((char const *));
 static void untrapsig PARAMS((int));
-static void usage PARAMS((int));
+static void usage PARAMS((void));
 
 /* this lossage until the gnu libc conquers the universe */
 #ifndef PVT_tmpdir
@@ -118,20 +119,42 @@ static struct option const longopts[] =
   {0, 0, 0, 0}
 };
 
-/* prints usage message and quits */
 static void
-usage (status)
-     int status;
+try_help (reason)
+     char const *reason;
 {
-  printf ("Usage: %s [options] from-file to-file\n", prog);
-  printf ("Options:\n\
-	[-abBdHilstv] [-I regexp] [-o outfile] [-w columns]\n\
-	[--expand-tabs] [--help] [--ignore-all-space] [--ignore-blank-lines]\n\
-	[--ignore-case] [--ignore-matching-lines=regexp]\n\
-	[--ignore-space-change] [--left-column] [--minimal]\n\
-	[--output=outfile] [--speed-large-files] [--suppress-common-lines]\n\
-	[--text] [--version] [--width=columns]\n");
-  exit (status);
+  if (reason)
+    fprintf (stderr, "%s: %s\n", prog, reason);
+  fprintf (stderr, "%s: Try `%s --help' for more information.\n", prog, prog);
+  exit (2);
+}
+
+static void
+usage ()
+{
+  printf ("Usage: %s [OPTIONS]... FILE1 FILE2\n\n", prog);
+  printf ("%s", "\
+  -o FILE  --output=FILE  Operate interactively, sending output to FILE.\n\n");
+  printf ("%s", "\
+  -i  --ignore-case  Consider upper- and lower-case to be the same.\n\
+  -W  --ignore-all-space  Ignore all white space.\n\
+  -b  --ignore-space-change  Ignore changes in the amount of white space.\n\
+  -B  --ignore-blank-lines  Ignore changes whose lines are all blank.\n\
+  -I RE  --ignore-matching-lines=RE  Ignore changes whose lines all match RE.\n\
+  -a  --text  Treat all files as text.\n\n");
+  printf ("%s", "\
+  -w NUM  --width=NUM  Output at most NUM (default 130) characters per line.\n\
+  -l  --left-column  Output only the left column of common lines.\n\
+  -s  --suppress-common-lines  Do not output common lines.\n\n");
+  printf ("\
+  -t  --expand-tabs  Expand tabs to spaces in output.\n\n");
+  printf ("%s", "\
+  -d  --minimal  Try hard to find a smaller set of changes.\n\
+  -H  --speed-large-files  Assume large files and many scattered small changes.\n\n");
+ printf ("%s", "\
+  -v  --version  Output version info.\n\
+  --help  Output this help.\n\n\
+If FILE1 or FILE2 is `-', read standard input.\n");
 }
 
 static void
@@ -233,51 +256,6 @@ ck_fflush (f)
   if (fflush (f) != 0)
     perror_fatal ("output error");
 }
-
-#if !HAVE_MEMCHR
-char *
-memchr (s, c, n)
-     char const *s;
-     int c;
-     size_t n;
-{
-  unsigned char const *p = (unsigned char const *) s, *lim = p + n;
-  for (;  p < lim;  p++)
-    if (*p == c)
-      return (char *) p;
-  return 0;
-}
-#endif
-
-#if HAVE_FORK && ! HAVE_WAITPID
-/* Emulate waitpid well enough for sdiff, which has at most two children.  */
-static pid_t
-waitpid (pid, stat_loc, options)
-     pid_t pid;
-     int *stat_loc;
-     int options;
-{
-  static int ostatus;
-  static pid_t opid;
-  int npid, status;
-
-  if (pid == opid)
-    {
-      opid = 0;
-      status = ostatus;
-    }
-  else
-    while ((npid = wait (&status)) != pid)
-      {
-	if (npid < 0)
-	  return npid;
-	opid = npid;
-	ostatus = status;
-      }
-  *stat_loc = status;
-  return pid;
-}
-#endif
 
 static char const *
 expand_name (name, isdir, other_name)
@@ -492,7 +470,7 @@ main (argc, argv)
 	  break;
 
 	case 'v':
-	  printf ("GNU sdiff version %s\n", version_string);
+	  printf ("sdiff - GNU diffutils version %s\n", version_string);
 	  exit (0);
 
 	case 'w':
@@ -505,15 +483,18 @@ main (argc, argv)
 	  break;
 
 	case 129:
-	  usage (0);
+	  usage ();
+	  if (ferror (stdout) || fclose (stdout) != 0)
+	    fatal ("write error");
+	  exit (0);
 
 	default:
-	  usage (2);
+	  try_help (0);
 	}
     }
 
   if (argc - optind != 2)
-    usage (2);
+    try_help (argc - optind < 2 ? "missing operand" : "extra operand");
 
   if (! out_file)
     {
