@@ -1,12 +1,30 @@
-# Configure template for GNU diffutils.
-# Copyright (C) 1994, 1995, 1998, 2001 Free Software Foundation, Inc.
-# Process this file with autoconf to produce a configure script.
+# Configure template for GNU Diffutils.
 
-AC_INIT(src/diff.c)
-AM_CONFIG_HEADER([config.h:config.hin])
+# Copyright (C) 1994, 1995, 1998, 2001, 2002 Free Software Foundation, Inc.
+
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2, or (at your option)
+# any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+# 02111-1307, USA.
+
 AC_PREREQ(2.52)
-AM_INIT_AUTOMAKE(diffutils, 2.7.6)
-ALL_LINGUAS="da de en_GB eo es fr gl he id pl ru sv tr"
+
+AC_INIT(GNU diff, 2.7.7, bug-gnu-utils@gnu.org)
+AC_CONFIG_SRCDIR(src/diff.c)
+
+AC_CONFIG_AUX_DIR(config)
+AM_CONFIG_HEADER([config.h:config.hin])
+AM_INIT_AUTOMAKE(diffutils, 2.7.7)
 
 AC_PROG_AWK
 AC_PROG_CC
