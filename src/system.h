@@ -175,7 +175,7 @@ char *getenv ();
 #define CHAR_BIT 8
 #endif
 
-#if STDC_HEADERS
+#if STDC_HEADERS || HAVE_STRING_H
 # include <string.h>
 # ifndef bzero
 #  define bzero(s, n) memset (s, 0, n)
@@ -191,6 +191,28 @@ char *strchr (), *strrchr ();
 #  define memcpy(d, s, n) bcopy (s, d, n)
 void *memchr ();
 # endif
+#endif
+
+#include <ctype.h>
+/* CTYPE_DOMAIN (C) is nonzero if the unsigned char C can safely be given
+   as an argument to <ctype.h> macros like `isspace'.  */
+#if STDC_HEADERS
+#define CTYPE_DOMAIN(c) 1
+#else
+#define CTYPE_DOMAIN(c) ((unsigned) (c) <= 0177)
+#endif
+#ifndef ISPRINT
+#define ISPRINT(c) (CTYPE_DOMAIN (c) && isprint (c))
+#endif
+#ifndef ISSPACE
+#define ISSPACE(c) (CTYPE_DOMAIN (c) && isspace (c))
+#endif
+#ifndef ISUPPER
+#define ISUPPER(c) (CTYPE_DOMAIN (c) && isupper (c))
+#endif
+
+#ifndef ISDIGIT
+#define ISDIGIT(c) ((unsigned) (c) - '0' <= 9)
 #endif
 
 #include <errno.h>
@@ -230,11 +252,25 @@ extern int errno;
 #define initialize_main(argcp, argvp)
 #endif
 
-#ifndef O_BINARY
-#define O_BINARY 0
-#endif
-
 /* Do struct stat *S, *T describe the same file?  Answer -1 if unknown.  */
 #ifndef same_file
 #define same_file(s,t) ((s)->st_ino==(t)->st_ino && (s)->st_dev==(t)->st_dev)
+#endif
+
+/* Place into Q a quoted version of A suitable for `popen' or `system',
+   incrementing Q and junking A.
+   Do not increment Q by more than 4 * strlen (A) + 2.  */
+#ifndef SYSTEM_QUOTE_ARG
+#define SYSTEM_QUOTE_ARG(q, a) \
+  { \
+    *(q)++ = '\''; \
+    for (;  *(a);  *(q)++ = *(a)++) \
+      if (*(a) == '\'') \
+	{ \
+	  *(q)++ = '\''; \
+	  *(q)++ = '\\'; \
+	  *(q)++ = '\''; \
+	} \
+    *(q)++ = '\''; \
+  }
 #endif
