@@ -17,6 +17,8 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
 # 02111-1307, USA.
 
+# Written by Paul Eggert.
+
 AC_DEFUN([AC_SYS_XSI_STACK_OVERFLOW_HEURISTIC],
   [# for STACK_DIRECTION
    AC_REQUIRE([AC_FUNC_ALLOCA])
@@ -120,12 +122,14 @@ AC_DEFUN([AC_SYS_XSI_STACK_OVERFLOW_HEURISTIC],
 
 
 AC_DEFUN([jm_PREREQ_C_STACK],
-  [AC_REQUIRE([jm_AC_TYPE_UINTMAX_T])
-   AC_REQUIRE([AC_SYS_XSI_STACK_OVERFLOW_HEURISTIC])
+  [AC_REQUIRE([AC_SYS_XSI_STACK_OVERFLOW_HEURISTIC])
 
    # for STACK_DIRECTION
    AC_REQUIRE([AC_FUNC_ALLOCA])
 
-   AC_CHECK_HEADERS(unistd.h)
+   AC_CHECK_DECLS([getcontext], , , [#include <ucontext.h>])
+   AC_CHECK_DECLS([sigaltstack], , , [#include <signal.h>])
 
-   AC_CHECK_TYPES([siginfo_t, stack_t], , , [#include <signal.h>])])
+   AC_CHECK_HEADERS(sys/resource.h ucontext.h unistd.h)
+
+   AC_CHECK_TYPES([stack_t], , , [#include <signal.h>])])
