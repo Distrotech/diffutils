@@ -1,4 +1,4 @@
-User-visible changes in test version 2.7.7:
+User-visible changes in test version 2.7.8:
 
 * cmp now supports trailing operands SKIP1 and SKIP2, like BSD cmp.
 * cmp -i or --ignore-initial now accepts SKIP1:SKIP2 option value.
@@ -7,9 +7,14 @@ User-visible changes in test version 2.7.7:
   use -b or --print-bytes instead.
 * cmp now outputs "byte" rather than "char" outside the POSIX locale.
 * cmp -l's index column width now autoadjusts to fit larger (or smaller) files.
+* diff -NUM, where NUM is a number, is no longer supported on systems
+  conforming to POSIX 1003.1-2001, which prohibits most digit-string options.
+  Instead, use -C NUM or -U NUM.
 * diff uses ISO 8601 style time stamps for output times (e.g. "2001-11-23
-  16:44:36.875702460 -0800") unless in the C or POSIX locale.
+  16:44:36.875702460 -0800") unless in the C or POSIX locale and the
+  -c style is specified.
 * diff's -I and -F options use the regexp syntax of grep, not of Emacs.
+* diff now accepts multiple context arguments, and uses their maximum value.
 * New diff and sdiff options:
   -E  --ignore-tab-expansion
   --strip-trailing-cr
@@ -22,21 +27,16 @@ User-visible changes in test version 2.7.7:
 * diff file name exclusion is now case insensitive when file name case
   is being ignored.
 * Recursive diffs now sort file names according to the LC_COLLATE locale
-  category, instead of using native byte comparison.
+  category if possible, instead of using native byte comparison.
 * Diff printf specs can now use the "0" and "'" flags.
-* Later, conflicting diff options now silently override earlier ones.
-  For example, `diff -c -u' is now equivalent to `diff -u'.
-* The summary output of diff now notes whether regular files are executable.
 * The new sdiff interactive command `ed' precedes each version with a header.
 * On 64-bit hosts, files larger than 2 GB can be compared.
-* Some internationalization support has been added.
-  Some diagnostics have been reworded slightly for consistency.
+* Some internationalization support has been added, but multibyte locales
+  are still not supported yet.
+* Some diagnostics have been reworded slightly for consistency.
   Also, `diff -D FOO' now outputs `/* ! FOO */' instead of `/* not FOO */'.
-* There is limited support for some Microsoft operating systems; see
-  the 'ms' subdirectory and the files m4/dos.m4 and */setmode.*.
-  We don't build or test these configurations ourselves, and there are
-  several evolving development environments, so it's likely that this
-  won't work for you without some hacking.
+* There is support for DJGPP; see the 'ms' subdirectory and the files
+  m4/dos.m4 and */setmode.*.
 
 
 User-visible changes in version 2.7:
