@@ -306,7 +306,7 @@ EXTERN FILE *outfile;
 
 /* Declare various functions.  */
 
-#ifdef __STDC__
+#if __STDC__
 #define VOID void
 #else
 #define VOID char
@@ -314,9 +314,6 @@ EXTERN FILE *outfile;
 VOID *xmalloc ();
 VOID *xrealloc ();
 char *concat ();
-void free ();
-char *rindex ();
-char *index ();
 
 struct change *find_change ();
 

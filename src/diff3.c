@@ -1640,7 +1640,7 @@ myread (fd, ptr, size)
 
 VOID *
 xmalloc (size)
-     int size;
+     unsigned size;
 {
   VOID *result = (VOID *) malloc (size ? size : 1);
   if (!result)
@@ -1651,7 +1651,7 @@ xmalloc (size)
 VOID *
 xrealloc (ptr, size)
      VOID *ptr;
-     int size;
+     unsigned size;
 {
   VOID *result = (VOID *) realloc (ptr, size ? size : 1);
   if (!result)
