@@ -1,6 +1,6 @@
 /* Set a file descriptor's mode to binary or to text.
 
-   Copyright (C) 2001 Free Software Foundation, Inc.
+   Copyright (C) 2001, 2004 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -42,6 +42,11 @@ typedef enum {false = 0, true = 1} bool;
 #include "setmode.h"
 #undef set_binary_mode
 
+#ifndef __attribute__
+# if __GNUC__ < 3 || __STRICT_ANSI__
+#  define __attribute__(x)
+# endif
+#endif
 
 /* Set the binary mode of FD to MODE, returning its previous mode.
    MODE is 1 for binary and 0 for text.  If setting the mode might
@@ -49,14 +54,14 @@ typedef enum {false = 0, true = 1} bool;
    1 on POSIX platforms, which do not distinguish between text and
    binary.  */
 
+#if HAVE_SETMODE_DOS
 bool
 set_binary_mode (int fd, bool mode)
 {
-#if HAVE_SETMODE_DOS
   if (isatty (fd))
     return mode;
   return setmode (fd, mode ? O_BINARY : O_TEXT) != O_TEXT;
-#else
-  return 1;
-#endif
 }
+#else
+static char dummy;
+#endif
