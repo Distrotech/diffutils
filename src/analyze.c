@@ -1,5 +1,5 @@
 /* Analyze file differences for GNU DIFF.
-   Copyright (C) 1988-1992 Free Software Foundation, Inc.
+   Copyright (C) 1988, 1989, 1992 Free Software Foundation, Inc.
 
 This file is part of GNU DIFF.
 

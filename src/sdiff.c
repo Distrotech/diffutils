@@ -1,5 +1,5 @@
 /* SDIFF -- interactive merge front end to diff
-   Copyright (C) 1988, 1989 Free Software Foundation, Inc.
+   Copyright (C) 1992 Free Software Foundation, Inc.
 
 This file is part of GNU DIFF.
 
