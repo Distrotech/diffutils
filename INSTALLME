@@ -39,205 +39,67 @@ compiler, please install GCC first.
 
 If you make changes to the source code, you may need recent test
 versions of GNU build tools to regenerate the intermediate files.  The
-following test versions were used to generate the intermediate files
-in this distribution:
+following versions were used to generate the intermediate files in
+this distribution:
 
-* GNU Autoconf test version 2.52h
-  <ftp://alpha.gnu.org/gnu/autoconf/autoconf-2.52h.tar.gz>
+* GNU Autoconf 2.53 <ftp://ftp.gnu.org/gnu/autoconf/autoconf-2.53.tar.gz>
 
-* GNU Automake 1.5 <ftp://ftp.gnu.org/gnu/automake/automake-1.5.tar.gz>,
+* GNU Automake 1.6 <ftp://ftp.gnu.org/gnu/automake/automake-1.6.tar.gz>
+
+* GNU help2man 1.25 <ftp://ftp.gnu.org/gnu/help2man/help2man-1.25.tar.gz>,
   patched as follows:
 
-2002-02-26  Paul Eggert  <eggert@twinsun.com>
+2002-03-10  Paul Eggert  <eggert@twinsun.com>
 
-	* lib/depcomp: Don't use "tail +3"; it's not portable to
-	POSIX 1003.1-2001 hosts.
-
-2001-10-01  Paul Eggert  <eggert@twinsun.com>
-
-	* lib/am/subdirs.am:
-	($(RECURSIVE_TARGETS), maintainer-clean-recursive):
-	$(MAKEFLAGS) -> $$MAKEFLAGS, so that we don't run into problems if
-	MAKEFLAGS contains '$(...)'.
-
-2001-09-24  Paul Eggert  <eggert@twinsun.com>
-
-	* m4/header.m4 (_AM_Config_Header_Index): Remove.
-	(AM_CONFIG_HEADER): Don't use it.  It wasn't working, and was
-	causing needless rebuilds.
-
-2001-09-14  Paul Eggert  <eggert@twinsun.com>
-
-	* lib/am/distdir.am (REMOVE_DISTDIR):
-	New macro.  Do not change permission of non-directories.
-	(distdir, dist, dist-bzip2, dist-tarZ, dist-shar, dist-zip, dist-all,
-	 distcheck): Use it.
+	* help2man.PL: When you see a line like this:
+	  -I RE  --ignore-matching-lines=RE  Ignore changes matching RE.
+	take the "-I RE  --ignore-matching-lines=RE" to be the option,
+	and the rest to be a description.  This is the style used by
+	diffutils.
 
 ===================================================================
-RCS file: lib/am/distdir.am,v
-retrieving revision 1.5
-retrieving revision 1.5.0.1
-diff -pu -r1.5 -r1.5.0.1
---- lib/am/distdir.am	2001/07/14 20:12:52	1.5
-+++ lib/am/distdir.am	2001/09/15 05:12:18	1.5.0.1
-@@ -29,6 +29,11 @@ else !%?TOPDIR_P%
- ?DISTDIR?distdir = $(top_distdir)/$(PACKAGE)-$(VERSION)
- endif !%?TOPDIR_P%
+RCS file: help2man.PL,v
+retrieving revision 1.25
+retrieving revision 1.25.0.1
+diff -pu -r1.25 -r1.25.0.1
+--- help2man.PL	2001/12/03 08:06:09	1.25
++++ help2man.PL	2002/03/11 05:39:37	1.25.0.1
+@@ -467,7 +467,7 @@ while (length)
+     my $content = '';
  
-+REMOVE_DISTDIR = \
-+  { test ! -d $(distdir) \
-+    || { find $(distdir) -type d ! -perm -200 -exec chmod u+w {} ';' \
-+         && rm -fr $(distdir); }; }
-+
- distdir: $(DISTFILES)
- ##
- ## For Gnits users, this is pretty handy.  Look at 15 lines
-@@ -47,7 +52,7 @@ endif %?TOPDIR_P%
- ## Only for the top dir.
- ##
- if %?TOPDIR_P%
--	-chmod -R a+w $(distdir) >/dev/null 2>&1; rm -rf $(distdir)
-+	$(REMOVE_DISTDIR)
- 	mkdir $(distdir)
- endif %?TOPDIR_P%
- ##
-@@ -168,13 +173,13 @@ GZIP_ENV = --best
- .PHONY: dist
- dist: distdir
- 	$(AMTAR) chof - $(distdir) | GZIP=$(GZIP_ENV) gzip -c >$(distdir).tar.gz
--	-chmod -R a+w $(distdir) >/dev/null 2>&1; rm -rf $(distdir)
-+	$(REMOVE_DISTDIR)
- 
- if  %?BZIP2%
- .PHONY: dist-bzip2
- dist-bzip2: distdir
- 	$(AMTAR) chof - $(distdir) | bzip2 -9 -c >$(distdir).tar.bz2
--	-chmod -R a+w $(distdir) >/dev/null 2>&1; rm -rf $(distdir)
-+	$(REMOVE_DISTDIR)
- endif  %?BZIP2%
- 
- 
-@@ -182,7 +187,7 @@ if  %?COMPRESS%
- .PHONY: dist-tarZ
- dist-tarZ: distdir
- 	$(AMTAR) chof - $(distdir) | compress -c >$(distdir).tar.Z
--	-chmod -R a+w $(distdir) >/dev/null 2>&1; rm -rf $(distdir)
-+	$(REMOVE_DISTDIR)
- endif  %?COMPRESS%
- 
- 
-@@ -190,7 +195,7 @@ if  %?SHAR%
- .PHONY: dist-shar
- dist-shar: distdir
- 	shar $(distdir) | GZIP=$(GZIP_ENV) gzip -c >$(distdir).shar.gz
--	-chmod -R a+w $(distdir) >/dev/null 2>&1; rm -rf $(distdir)
-+	$(REMOVE_DISTDIR)
- endif  %?SHAR%
- 
- 
-@@ -199,7 +204,7 @@ if  %?ZIP%
- dist-zip: distdir
- 	-rm -f $(distdir).zip
- 	zip -rq $(distdir).zip $(distdir)
--	-chmod -R a+w $(distdir) >/dev/null 2>&1; rm -rf $(distdir)
-+	$(REMOVE_DISTDIR)
- endif  %?ZIP%
- 
- endif %?TOPDIR_P%
-@@ -223,7 +228,7 @@ dist-all: distdir
- ?SHAR?	shar $(distdir) | GZIP=$(GZIP_ENV) gzip -c >$(distdir).shar.gz
- ?ZIP?	-rm -f $(distdir).zip
- ?ZIP?	zip -rq $(distdir).zip $(distdir)
--	-chmod -R a+w $(distdir) >/dev/null 2>&1; rm -rf $(distdir)
-+	$(REMOVE_DISTDIR)
- 
- endif %?TOPDIR_P%
- 
-@@ -239,8 +244,7 @@ if %?TOPDIR_P%
- # tarfile.
- .PHONY: distcheck
- distcheck: dist
--## Make sure we can remove distdir before trying to remove it.
--	-chmod -R a+w $(distdir) > /dev/null 2>&1; rm -rf $(distdir)
-+	$(REMOVE_DISTDIR)
- 	GZIP=$(GZIP_ENV) gunzip -c $(distdir).tar.gz | $(AMTAR) xf -
- ## Make the new source tree read-only.  Distributions ought to work in
- ## this case.  However, make the top-level directory writable so we
-@@ -273,7 +277,7 @@ distcheck: dist
- 	  && (test `find . -type f -print | wc -l` -eq 0 \
- 	     || (echo "Error: files left after distclean" 1>&2; \
- 	         exit 1) )
--	-chmod -R a+w $(distdir) > /dev/null 2>&1; rm -rf $(distdir)
-+	$(REMOVE_DISTDIR)
- 	@echo "$(distdir).tar.gz is ready for distribution" | \
- 	  sed 'h;s/./=/g;p;x;p;x'
- endif %?TOPDIR_P%
+     # Option with description.
+-    if (s/^( {1,10}([+-]\S.*?))(?:(  +)|\n( {20,}))(\S.*)\n//)
++    if (s/^( {1,10}([+-]\S.*?))(?:(  +(?=[^- ]))|\n( {20,}))(\S.*)\n//)
+     {
+ 	$matched .= $& if %append;
+ 	$indent = length ($4 || "$1$3");
+
+
+* GNU gettext 0.11 <ftp://ftp.gnu.org/gnu/gettext/gettext-0.11.tar.gz>,
+  patched as follows:
+
+2002-03-02  Bruno Haible  <bruno@clisp.org>
+
+	* gettext.m4 (AM_GNU_GETTEXT): Set LIBINTL and LTLIBINTL to empty if
+	no preinstalled GNU gettext was found.
+	Reported by Paul Eggert.
+
 ===================================================================
-RCS file: lib/am/subdirs.am,v
-retrieving revision 1.5
-retrieving revision 1.5.0.1
-diff -pu -r1.5 -r1.5.0.1
---- lib/am/subdirs.am	2001/04/09 14:44:04	1.5
-+++ lib/am/subdirs.am	2001/10/01 21:05:28	1.5.0.1
-@@ -32,7 +32,7 @@ check-recursive installcheck-recursive
- # (2) otherwise, pass the desired values on the `make' command line.
+RCS file: m4/RCS/gettext.m4,v
+retrieving revision 0.11
+retrieving revision 0.11.0.1
+diff -pu -r0.11 -r0.11.0.1
+--- m4/gettext.m4	2002/01/24 12:26:27	0.11
++++ m4/gettext.m4	2002/03/04 12:34:23	0.11.0.1
+@@ -169,6 +169,11 @@ return (int) gettext ("")]ifelse([$2], [
+            || { test "$gt_cv_func_gnugettext_libintl" = "yes" \
+                 && test "$PACKAGE" != gettext; }; then
+           gt_use_preinstalled_gnugettext=yes
++        else
++          dnl Reset the values set by searching libintl.
++          LIBINTL=
++          LTLIBINTL=
++          INCINTL=
+         fi
  
- $(RECURSIVE_TARGETS):
--	@set fnord $(MAKEFLAGS); amf=$$2; \
-+	@set fnord $$MAKEFLAGS; amf=$$2; \
- 	dot_seen=no; \
- 	target=`echo $@ | sed s/-recursive//`; \
- 	list='$(SUBDIRS)'; for subdir in $$list; do \
-@@ -69,7 +69,7 @@ maintainer-clean-recursive
- ## bombs.
- mostlyclean-recursive clean-recursive distclean-recursive \
- maintainer-clean-recursive:
--	@set fnord $(MAKEFLAGS); amf=$$2; \
-+	@set fnord $$MAKEFLAGS; amf=$$2; \
- 	dot_seen=no; \
- ## For distclean and maintainer-clean we make sure to use the full
- ## list of subdirectories.  We do this so that `configure; make
-===================================================================
-RCS file: lib/depcomp,v
-retrieving revision 1.5
-retrieving revision 1.5.0.1
-diff -pu -r1.5 -r1.5.0.1
---- lib/depcomp	2001/07/21 18:45:47	1.5
-+++ lib/depcomp	2002/02/27 06:25:07	1.5.0.1
-@@ -314,7 +314,7 @@ makedepend)
-   if test "$stat" != 0; then exit $stat; fi
-   rm -f "$depfile"
-   cat < "$tmpdepfile" > "$depfile"
--  tail +3 "$tmpdepfile" | tr ' ' '
-+  sed '1,2d' "$tmpdepfile" | tr ' ' '
- ' | \
- ## Some versions of the HPUX 10.20 sed can't process this invocation
- ## correctly.  Breaking it into two sed invocations is a workaround.
-===================================================================
-RCS file: m4/header.m4,v
-retrieving revision 1.5
-retrieving revision 1.5.0.1
-diff -pu -r1.5 -r1.5.0.1
---- m4/header.m4	2001/07/21 05:27:26	1.5
-+++ m4/header.m4	2001/09/24 18:29:30	1.5.0.1
-@@ -11,18 +11,16 @@ AC_PREREQ([2.12])
- 
- AC_DEFUN([AM_CONFIG_HEADER],
- [ifdef([AC_FOREACH],dnl
--	 [dnl init our file count if it isn't already
--	 m4_ifndef([_AM_Config_Header_Index], m4_define([_AM_Config_Header_Index], [0]))
-+	 [
- 	 dnl prepare to store our destination file list for use in config.status
- 	 AC_FOREACH([_AM_File], [$1],
- 		    [m4_pushdef([_AM_Dest], m4_patsubst(_AM_File, [:.*]))
--		    m4_define([_AM_Config_Header_Index], m4_incr(_AM_Config_Header_Index))
- 		    dnl and add it to the list of files AC keeps track of, along
- 		    dnl with our hook
- 		    AC_CONFIG_HEADERS(_AM_File,
- dnl COMMANDS, [, INIT-CMDS]
- [# update the timestamp
--echo timestamp >"AS_ESCAPE(_AM_DIRNAME(]_AM_Dest[))/stamp-h]_AM_Config_Header_Index["
-+echo timestamp >"AS_ESCAPE(_AM_DIRNAME(]_AM_Dest[))/stamp-h"
- ][$2]m4_ifval([$3], [, [$3]]))dnl AC_CONFIG_HEADERS
- 		    m4_popdef([_AM_Dest])])],dnl
- [AC_CONFIG_HEADER([$1])
+     ifelse(gt_included_intl, yes, [
