@@ -1,5 +1,5 @@
 # Makefile for GNU DIFF
-# Copyright 1988, 89, 91, 92, 93, 94, 95, 1997 Free Software Foundation, Inc.
+# Copyright 1988, 89, 91, 92, 93, 94, 95, 1998 Free Software Foundation, Inc.
 #
 # This file is part of GNU DIFF.
 #
@@ -21,7 +21,7 @@
 #### Start of system configuration section.  ####
 
 PACKAGE = diffutils
-VERSION = 2.7.1
+VERSION = 2.7.2
 
 srcdir = @srcdir@
 VPATH = @srcdir@
@@ -65,7 +65,7 @@ SHELL = /bin/sh
 srcs = \
 	analyze.c cmp.c cmpbuf.c cmpbuf.h context.c \
 	diff.c diff.h diff3.c dir.c ed.c freesoft.c ifdef.c io.c \
-	memchr.c normal.c quotearg.c quotearg.h sdiff.c side.c system.h \
+	memchr.c normal.c quotesys.c quotesys.h sdiff.c side.c system.h \
 	util.c waitpid.c \
 	alloca.c error.c fnmatch.c fnmatch.h \
 	getopt.c getopt.h getopt1.c regex.c regex.h xmalloc.c
@@ -74,7 +74,8 @@ distfiles = $(srcs) README INSTALL NEWS diagmeet.note Makefile.in \
 	COPYING ChangeLog \
 	diff.texi diff.info texinfo.tex \
 	install-sh mkinstalldirs getmsgids version.c version.texi \
-	message/en_UK.po message/fr.po message/msgid.po message/template.po \
+	message/en_UK.po message/msgid.po message/template.po \
+	message/de.po message/es.po message/fr.po message/pl.po message/sv.po \
 	pc/COPYING pc/INSTALL pc/config.h pc/makefile pc/makefile.sed pc/pc.c \
 	pc/djgpp/config.h pc/djgpp/makefile.sed \
 	pc/emx/config.h pc/emx/diff.def pc/emx/gnuregex.def pc/emx/makefile.sed
@@ -103,15 +104,15 @@ common_o = error.o freesoft.o getopt.o getopt1.o version.o xmalloc.o
 
 diff_o = diff.o analyze.o cmpbuf.o dir.o io.o util.o \
 	context.o ed.o ifdef.o normal.o side.o \
-	fnmatch.o regex.o quotearg.o $(common_o) $(ALLOCA) $(LIBOBJS)
+	fnmatch.o regex.o quotesys.o $(common_o) $(ALLOCA) $(LIBOBJS)
 diff: $(diff_o)
 	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $(diff_o) $(LIBS)
 
-diff3_o = diff3.o quotearg.o $(common_o) $(LIBOBJS)
+diff3_o = diff3.o quotesys.o $(common_o) $(LIBOBJS)
 diff3: $(diff3_o)
 	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $(diff3_o) $(LIBS)
 
-sdiff_o = sdiff.o quotearg.o $(common_o) $(LIBOBJS)
+sdiff_o = sdiff.o quotesys.o $(common_o) $(LIBOBJS)
 sdiff: $(sdiff_o)
 	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $(sdiff_o) $(LIBS)
 
@@ -133,7 +134,7 @@ context.o diff.o regex.o: regex.h
 cmp.o diff.o diff3.o sdiff.o getopt.o getopt1.o: getopt.h
 diff.o fnmatch.o: fnmatch.h
 analyze.o cmpbuf.o cmp.o: cmpbuf.h
-diff.o diff3.o quotearg.o sdiff.o util.o: quotearg.h
+diff.o diff3.o quotesys.o sdiff.o util.o: quotesys.h
 
 cmp.o: cmp.c
 	$(COMPILE) -DNULL_DEVICE=\"$(NULL_DEVICE)\" $(srcdir)/cmp.c
