@@ -220,6 +220,8 @@ extern int errno;
 #endif
 #define min(a,b) ((a) <= (b) ? (a) : (b))
 #define max(a,b) ((a) >= (b) ? (a) : (b))
+
+size_t system_quote_arg PARAMS((char *, char const *));
 
 /* This section contains Posix-compliant defaults for macros
    that are meant to be overridden by hand in config.h as needed.  */
@@ -247,22 +249,4 @@ extern int errno;
 /* Do struct stat *S, *T describe the same file?  Answer -1 if unknown.  */
 #ifndef same_file
 #define same_file(s,t) ((s)->st_ino==(t)->st_ino && (s)->st_dev==(t)->st_dev)
-#endif
-
-/* Place into Q a quoted version of A suitable for `popen' or `system',
-   incrementing Q and junking A.
-   Do not increment Q by more than 4 * strlen (A) + 2.  */
-#ifndef SYSTEM_QUOTE_ARG
-#define SYSTEM_QUOTE_ARG(q, a) \
-  { \
-    *(q)++ = '\''; \
-    for (;  *(a);  *(q)++ = *(a)++) \
-      if (*(a) == '\'') \
-	{ \
-	  *(q)++ = '\''; \
-	  *(q)++ = '\\'; \
-	  *(q)++ = '\''; \
-	} \
-    *(q)++ = '\''; \
-  }
 #endif
