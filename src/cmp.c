@@ -27,6 +27,7 @@
 #include <getopt.h>
 #include <inttostr.h>
 #include <xalloc.h>
+#include <xstrtol.h>
 
 static char const authorship_msgid[] =
   N_("Written by Torbjorn Granlund and David MacKenzie.");
@@ -58,7 +59,10 @@ static word *buffer[2];
 static size_t buf_size;
 
 /* Initial prefix to ignore for each file.  */
-static off_t ignore_initial;
+static off_t ignore_initial[2];
+
+/* Number of bytes to compare.  */
+static uintmax_t bytes = -1;
 
 /* Output format:
    type_first_diff
@@ -75,16 +79,23 @@ static enum
 /* If nonzero, print values of bytes quoted like cat -t does. */
 static bool opt_print_bytes;
 
+/* Values for long options that do not have single-letter equivalents.  */
+enum
+{
+  HELP_OPTION = CHAR_MAX + 1
+};
+
 static struct option const long_options[] =
 {
   {"print-bytes", 0, 0, 'b'},
   {"print-chars", 0, 0, 'c'}, /* obsolescent as of diffutils 2.7.3 */
   {"ignore-initial", 1, 0, 'i'},
   {"verbose", 0, 0, 'l'},
+  {"bytes", 1, 0, 'n'},
   {"silent", 0, 0, 's'},
   {"quiet", 0, 0, 's'},
   {"version", 0, 0, 'v'},
-  {"help", 0, 0, CHAR_MAX + 1},
+  {"help", 0, 0, HELP_OPTION},
   {0, 0, 0, 0}
 };
 
@@ -98,6 +109,25 @@ try_help (char const *reason_msgid, char const *operand)
   abort ();
 }
 
+static char const valid_suffixes[] = "kMGTPEZY";
+
+/* Parse an operand *ARGPTR of --ignore-initial, updating *ARGPTR to
+   point after the operand.  If DELIMITER is nonzero, the operand may
+   be followed by DELIMITER; otherwise it must be null-terminated.  */
+static off_t
+parse_ignore_initial (char **argptr, char delimiter)
+{
+  uintmax_t val;
+  off_t o;
+  char const *arg = *argptr;
+  strtol_error e = xstrtoumax (arg, argptr, 0, &val, valid_suffixes);
+  if (! (e == LONGINT_OK
+	 || (e == LONGINT_INVALID_SUFFIX_CHAR && **argptr == delimiter))
+      || (o = val) < 0 || o != val || val == (uintmax_t) -1)
+    try_help ("invalid --ignore-initial value `%s'", arg);
+  return o;
+}
+
 static void
 check_stdout (void)
 {
@@ -109,8 +139,11 @@ check_stdout (void)
 
 static char const * const option_help_msgid[] = {
   N_("-b  --print-bytes  Output differing bytes as characters."),
-  N_("-i N  --ignore-initial=N  Ignore differences in the first N bytes of input."),
+  N_("-i SKIP  --ignore-initial=SKIP  Skip the first SKIP bytes of input."),
+  N_("-i SKIP1:SKIP2  --ignore-initial=SKIP1:SKIP2"),
+  N_("  Skip the first SKIP1 bytes of FILE1 and the first SKIP2 bytes of FILE2."),
   N_("-l  --verbose  Output indices and codes of all differing bytes."),
+  N_("-n LIMIT  --bytes=LIMIT  Compare at most LIMIT bytes."),
   N_("-s  --quiet  --silent  Output nothing; yield exit status only."),
   N_("-v  --version  Output version info."),
   N_("--help  Output this help."),
@@ -122,8 +155,10 @@ usage (void)
 {
   char const * const *p;
 
-  printf (_("Usage: %s [OPTION]... FILE1 [FILE2]\n"), program_name);
+  printf (_("Usage: %s [OPTION]... FILE1 [FILE2 [SKIP1 [SKIP2]]]\n"),
+	  program_name);
   printf (_("If a FILE is `-' or missing, read standard input.\n"));
+  printf (_("SKIP1 and SKIP2 are the number of bytes to skip in each file.\n"));
   for (p = option_help_msgid;  *p;  p++)
     printf ("  %s\n", _(*p));
   printf (_("Report bugs to <bug-gnu-utils@gnu.org>.\n"));
@@ -145,7 +180,7 @@ main (int argc, char **argv)
 
   /* Parse command line options.  */
 
-  while ((c = getopt_long (argc, argv, "bci:lsv", long_options, 0))
+  while ((c = getopt_long (argc, argv, "bci:ln:sv", long_options, 0))
 	 != -1)
     switch (c)
       {
@@ -155,18 +190,24 @@ main (int argc, char **argv)
 	break;
 
       case 'i':
-	{
-	  char *numend;
-	  uintmax_t val;
-	  errno = 0;
-	  ignore_initial = val = strtoumax (optarg, &numend, 10);;
-	  if (ignore_initial < 0 || ignore_initial != val || errno || *numend)
-	    try_help ("invalid --ignore-initial value `%s'", optarg);
-	}
+	ignore_initial[0] = parse_ignore_initial (&optarg, ':');
+	ignore_initial[1] = (*optarg++ == ':'
+			     ? parse_ignore_initial (&optarg, 0)
+			     : ignore_initial[0]);
 	break;
 
       case 'l':
 	comparison_type = type_all_diffs;
+	break;
+
+      case 'n':
+	{
+	  uintmax_t n;
+	  if (xstrtoumax (optarg, 0, 0, &n, valid_suffixes) != LONGINT_OK)
+	    try_help ("invalid --bytes value `%s'", optarg);
+	  if (n < bytes)
+	    bytes = n;
+	}
 	break;
 
       case 's':
@@ -179,7 +220,7 @@ main (int argc, char **argv)
 		_(free_software_msgid), _(authorship_msgid));
 	exit (0);
 
-      case CHAR_MAX + 1:
+      case HELP_OPTION:
 	usage ();
 	check_stdout ();
 	exit (0);
@@ -194,6 +235,12 @@ main (int argc, char **argv)
   file[0] = argv[optind++];
   file[1] = optind < argc ? argv[optind++] : "-";
 
+  for (f = 0; f < 2 && optind < argc; f++)
+    {
+      char *arg = argv[optind++];
+      ignore_initial[f] = parse_ignore_initial (&arg, 0);
+    }
+      
   if (optind < argc)
     try_help ("extra operand `%s'", argv[optind]);
 
@@ -218,9 +265,8 @@ main (int argc, char **argv)
 	  else
 	    error (2, errno, "%s", file[f1]);
 	}
-#if HAVE_SETMODE
-      setmode (file_desc[f1], O_BINARY);
-#endif
+
+      set_binary_mode (file_desc[f1], 1);
     }
 
   /* If the files are links to the same inode and have the same file position,
@@ -288,8 +334,8 @@ static int
 cmp (void)
 {
   off_t line_number = 1;	/* Line number (1...) of first difference. */
-  off_t char_number = ignore_initial + 1;
-				/* Index (1...) in files of 1st difference. */
+  off_t char_number = 1;	/* Index (1...) in files of 1st difference. */
+  uintmax_t remaining = bytes;	/* Remaining number of bytes to compare.  */
   size_t read0, read1;		/* Number of bytes read from each file. */
   size_t first_diff;		/* Offset (0...) in buffers of 1st diff. */
   size_t smaller;		/* The lesser of `read0' and `read1'. */
@@ -300,12 +346,12 @@ cmp (void)
   int ret = 0;
   int f;
 
-  if (ignore_initial)
-    for (f = 0; f < 2; f++)
-      if (file_position (f) == -1)
+  for (f = 0; f < 2; f++)
+    {
+      off_t ig = ignore_initial[f];
+      if (ig && file_position (f) == -1)
 	{
 	  /* lseek failed; read and discard the ignored initial prefix.  */
-	  off_t ig = ignore_initial;
 	  do
 	    {
 	      ssize_t r = read (file_desc[f], buf0, MIN (ig, buf_size));
@@ -317,13 +363,23 @@ cmp (void)
 	    }
 	  while (ig);
 	}
+    }
 
   do
     {
-      read0 = block_read (file_desc[0], buf0, buf_size);
+      size_t bytes_to_read = buf_size;
+
+      if (remaining != (uintmax_t) -1)
+	{
+	  if (remaining < bytes_to_read)
+	    bytes_to_read = remaining;
+	  remaining -= bytes_to_read;
+	}
+
+      read0 = block_read (file_desc[0], buf0, bytes_to_read);
       if (read0 == (size_t) -1)
 	error (2, errno, "%s", file[0]);
-      read1 = block_read (file_desc[1], buf1, buf_size);
+      read1 = block_read (file_desc[1], buf1, bytes_to_read);
       if (read1 == (size_t) -1)
 	error (2, errno, "%s", file[1]);
 
@@ -416,6 +472,7 @@ cmp (void)
 	}
     }
   while (read0 == buf_size);
+
   return ret;
 }
 
@@ -530,7 +587,7 @@ sprintc (char *buf, int width, unsigned char c)
   *buf = 0;
 }
 
-/* Position file F to `ignore_initial' bytes from its initial position,
+/* Position file F to ignore_initial[F] bytes from its initial position,
    and yield its new position.  Don't try more than once.  */
 
 static off_t
@@ -542,7 +599,7 @@ file_position (int f)
   if (! positioned[f])
     {
       positioned[f] = 1;
-      position[f] = lseek (file_desc[f], ignore_initial, SEEK_CUR);
+      position[f] = lseek (file_desc[f], ignore_initial[f], SEEK_CUR);
     }
   return position[f];
 }
