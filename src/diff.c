@@ -1,7 +1,7 @@
 /* GNU DIFF main routine.
 
-   Copyright (C) 1988, 1989, 1992, 1993, 1994, 1996, 1998, 2001 Free
-   Software Foundation, Inc.
+   Copyright (C) 1988, 1989, 1992, 1993, 1994, 1996, 1998, 2001, 2002
+   Free Software Foundation, Inc.
 
    This file is part of GNU DIFF.
 
@@ -41,7 +41,7 @@ static char const authorship_msgid[] =
 Richard Stallman, and Len Tower.");
 
 static char const copyright_string[] =
-  "Copyright (C) 2001 Free Software Foundation, Inc.";
+  "Copyright (C) 2002 Free Software Foundation, Inc.";
 
 #ifndef GUTTER_WIDTH_MINIMUM
 # define GUTTER_WIDTH_MINIMUM 3

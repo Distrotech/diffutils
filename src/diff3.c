@@ -1,7 +1,7 @@
 /* Three way file comparison program (diff3) for Project GNU.
 
-   Copyright (C) 1988, 1989, 1992, 1993, 1994, 1995, 1996, 1998, 2001
-   Free Software Foundation, Inc.
+   Copyright (C) 1988, 1989, 1992, 1993, 1994, 1995, 1996, 1998, 2001,
+   2002 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -21,7 +21,7 @@
 #include "system.h"
 
 static char const copyright_string[] =
-  "Copyright (C) 2001 Free Software Foundation, Inc.";
+  "Copyright (C) 2002 Free Software Foundation, Inc.";
 
 static char const authorship_msgid[] = N_("Written by Randy Smith.");
 
@@ -249,7 +249,6 @@ main (int argc, char **argv)
   char *tag_strings[3];
   char *commonname;
   char **file;
-  char const *diff;
   struct stat statb;
 
   xalloc_exit_failure = 2;
@@ -473,13 +472,13 @@ usage (void)
 
   printf (_("Usage: %s [OPTION]... MYFILE OLDFILE YOURFILE\n"),
 	  program_name);
-  printf (_("If a FILE is `-', read standard input.\n"));
+  printf ("%s\n", _("If a FILE is `-', read standard input."));
   for (p = option_help_msgid;  *p;  p++)
     if (**p)
       printf ("  %s\n", _(*p));
     else
       putchar ('\n');
-  printf (_("Report bugs to <bug-gnu-utils@gnu.org>.\n"));
+  printf ("%s\n", _("Report bugs to <bug-gnu-utils@gnu.org>."));
 }
 
 /*
