@@ -4,9 +4,9 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: GNU diffutils 2.8.2\n"
-"POT-Creation-Date: 2002-06-10 23:52-0700\n"
-"PO-Revision-Date: 2002-06-11 04:14-0700\n"
+"Project-Id-Version: GNU diffutils 2.8.3\n"
+"POT-Creation-Date: 2002-06-16 23:44-0700\n"
+"PO-Revision-Date: 2002-06-17 00:01-0700\n"
 "Last-Translator: Paul Eggert <eggert@twinsun.com>\n"
 "Language-Team: English <en@translate.freefriends.org>\n"
 "MIME-Version: 1.0\n"
@@ -32,6 +32,17 @@ msgstr "%s: unrecognised option `%c%s'\n"
 msgid "%s: illegal option -- %c\n"
 msgstr "%s: unrecognised option `-%c'\n"
 
-#: src/cmp.c:245 src/diff.c:477 src/diff3.c:277 src/sdiff.c:519
+#. TRANSLATORS: Please translate "(C)" to the C-in-a-circle symbol
+#. (U+00A9, COPYRIGHT SIGN) if possible, as this has some minor
+#. technical advantages in international copyright law.  If the
+#. copyright symbol is not available, please leave it as "(C)".
+#: lib/version-etc.c:50
 msgid "(C)"
 msgstr "©"
+
+#. TRANSLATORS: Please translate the second "o" in "Torbjorn Granlund"
+#. to an o-with-umlaut (U+00F6, LATIN SMALL LETTER O WITH DIAERESIS)
+#. if possible.
+#: src/cmp.c:47
+msgid "Written by Torbjorn Granlund and David MacKenzie."
+msgstr "Written by Torbjörn Granlund and David MacKenzie."
