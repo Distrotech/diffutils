@@ -1,5 +1,5 @@
 /* Analyze file differences for GNU DIFF.
-   Copyright (C) 1988, 1989, 1992 Free Software Foundation, Inc.
+   Copyright (C) 1988, 1989, 1992, 1993 Free Software Foundation, Inc.
 
 This file is part of GNU DIFF.
 
@@ -22,17 +22,7 @@ the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
    Algorithmica Vol. 1 No. 2, 1986, p 251.  */
 
 #include "diff.h"
-
-int read_files ();
-void finish_output ();
-void print_context_script ();
-void print_ed_script ();
-void print_ifdef_script ();
-void print_sdiff_script ();
-void print_normal_script ();
-void print_rcs_script ();
-void pr_forward_ed_script ();
-void setup_output ();
+#include "cmpbuf.h"
 
 extern int no_discards;
 
@@ -45,6 +35,15 @@ static int *bdiag;		/* Vector, indexed by diagonal, containing
 				   the X coordinate of the point furthest
 				   along the given diagonal in the backward
 				   search of the edit matrix. */
+
+static int diag PARAMS((int, int, int, int, int *));
+static struct change *add_change PARAMS((int, int, int, int, struct change *));
+static struct change *build_reverse_script PARAMS((struct file_data const[]));
+static struct change *build_script PARAMS((struct file_data const[]));
+static void briefly_report PARAMS((int, struct file_data const[]));
+static void compareseq PARAMS((int, int, int, int));
+static void discard_confusing_lines PARAMS((struct file_data[]));
+static void shift_boundaries PARAMS((struct file_data[]));
 
 /* Find the midpoint of the shortest edit script for a specified
    portion of the two files.
@@ -79,10 +78,10 @@ diag (xoff, xlim, yoff, ylim, cost)
   int *const bd = bdiag;	/* Additional help for the compiler. */
   int *const xv = xvec;		/* Still more help for the compiler. */
   int *const yv = yvec;		/* And more and more . . . */
-  const int dmin = xoff - ylim;	/* Minimum valid diagonal. */
-  const int dmax = xlim - yoff;	/* Maximum valid diagonal. */
-  const int fmid = xoff - yoff;	/* Center diagonal of top-down search. */
-  const int bmid = xlim - ylim;	/* Center diagonal of bottom-up search. */
+  int const dmin = xoff - ylim;	/* Minimum valid diagonal. */
+  int const dmax = xlim - yoff;	/* Maximum valid diagonal. */
+  int const fmid = xoff - yoff;	/* Center diagonal of top-down search. */
+  int const bmid = xlim - ylim;	/* Center diagonal of bottom-up search. */
   int fmin = fmid, fmax = fmid;	/* Limits of top-down search. */
   int bmin = bmid, bmax = bmid;	/* Limits of bottom-up search. */
   int c;			/* Cost. */
@@ -161,6 +160,7 @@ diag (xoff, xlim, yoff, ylim, cost)
 	  int bestpos;
 
 	  best = 0;
+	  bestpos = 0; /* Pacify `gcc -Wall'.  */
 	  for (d = fmax; d >= fmin; d -= 2)
 	    {
 	      int dd = d - fmid;
@@ -341,10 +341,12 @@ discard_confusing_lines (filevec)
 
   /* Set up tables of which lines are going to be discarded.  */
 
-  discarded[0] = (char *) xmalloc (filevec[0].buffered_lines
-				   + filevec[1].buffered_lines);
+  discarded[0] = xmalloc (sizeof (char)
+			  * (filevec[0].buffered_lines
+			     + filevec[1].buffered_lines));
   discarded[1] = discarded[0] + filevec[0].buffered_lines;
-  bzero (discarded[0], filevec[0].buffered_lines + filevec[1].buffered_lines);
+  bzero (discarded[0], sizeof (char) * (filevec[0].buffered_lines
+					+ filevec[1].buffered_lines));
 
   /* Mark to be discarded each line that matches no line of the other file.
      If a line matches many lines, mark it as provisionally discardable.  */
@@ -629,7 +631,7 @@ add_change (line0, line1, deleted, inserted, old)
 
 static struct change *
 build_reverse_script (filevec)
-     struct file_data filevec[];
+     struct file_data const filevec[];
 {
   struct change *script = 0;
   char *changed0 = filevec[0].changed_flag;
@@ -667,7 +669,7 @@ build_reverse_script (filevec)
 
 static struct change *
 build_script (filevec)
-     struct file_data filevec[];
+     struct file_data const filevec[];
 {
   struct change *script = 0;
   char *changed0 = filevec[0].changed_flag;
@@ -698,10 +700,10 @@ build_script (filevec)
 }
 
 /* If CHANGES, briefly report that two files differed.  */
-void
+static void
 briefly_report (changes, filevec)
      int changes;
-     const struct file_data filevec[];
+     struct file_data const filevec[];
 {
   if (changes) 
     message (no_details_flag ? "Files %s and %s differ\n"
@@ -745,8 +747,8 @@ diff_2_files (filevec, depth)
 	/* Scan both files, a buffer at a time, looking for a difference.  */
 	{
 	  /* Allocate same-sized buffers for both files.  */
-	  int buffer_size = max (STAT_BLOCKSIZE (filevec[0].stat),
-				 STAT_BLOCKSIZE (filevec[1].stat));
+	  size_t buffer_size = buffer_lcm (STAT_BLOCKSIZE (filevec[0].stat),
+					   STAT_BLOCKSIZE (filevec[1].stat));
 	  for (i = 0; i < 2; i++)
 	    filevec[i].buffer = xrealloc (filevec[i].buffer, buffer_size);
 
@@ -796,11 +798,9 @@ diff_2_files (filevec, depth)
 	 is an insertion or deletion.
 	 Allocate an extra element, always zero, at each end of each vector.  */
 
-      filevec[0].changed_flag = (char *) xmalloc (filevec[0].buffered_lines
-						  + filevec[1].buffered_lines
-						  + 4);
-      bzero (filevec[0].changed_flag, filevec[0].buffered_lines
-				      + filevec[1].buffered_lines + 4);
+      size_t s = filevec[0].buffered_lines + filevec[1].buffered_lines + 4;
+      filevec[0].changed_flag = xmalloc (s);
+      bzero (filevec[0].changed_flag, s);
       filevec[0].changed_flag++;
       filevec[1].changed_flag = filevec[0].changed_flag
 				+ filevec[0].buffered_lines + 2;
