@@ -30,6 +30,7 @@ void error (int, int, char const *, ...);
 void error ();
 #endif
 VOID *xmalloc PARAMS((size_t));
+extern int xmalloc_exit_failure;
 
 static int cmp PARAMS((void));
 static off_t file_position PARAMS((int));
@@ -133,6 +134,7 @@ main (argc, argv)
 
   initialize_main (&argc, &argv);
   program_name = argv[0];
+  xmalloc_exit_failure = 2;
 
   /* Parse command line options.  */
 
