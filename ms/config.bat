@@ -45,7 +45,9 @@ Rem All other arguments are stored into ARGS.
 :arg_loop
 set SPECIAL_ARG_SEEN=0
 if not "%SPECIAL_ARG_SEEN%" == "0" goto small_env
-if not "%1" == "NLS" if not "%1" == "nls" goto CacheOpt
+if "%1" == "NLS" goto nls_on
+if not "%1" == "nls" goto CacheOpt
+:nls_on
 if "%1" == "nls" set NLS=enabled
 if "%1" == "NLS" set NLS=enabled
 if not "%NLS%" == "enabled" goto small_env
@@ -55,7 +57,10 @@ shift
 :CacheOpt
 set SPECIAL_ARG_SEEN=0
 if not "%SPECIAL_ARG_SEEN%" == "0" goto small_env
-if not "%1" == "no-cache" if not "%1" == "no-CACHE" if not "%1" == "NO-CACHE" goto dependency_opt
+if "%1" == "no-cache" goto cache_off
+if "%1" == "no-CACHE" goto cache_off
+if not "%1" == "NO-CACHE" goto dependency_opt
+:cache_off
 if "%1" == "no-cache" set CACHE=disabled
 if "%1" == "no-CACHE" set CACHE=disabled
 if "%1" == "NO-CACHE" set CACHE=disabled
@@ -66,7 +71,9 @@ shift
 :dependency_opt
 set SPECIAL_ARG_SEEN=0
 if not "%SPECIAL_ARG_SEEN%" == "0" goto small_env
-if not "%1" == "dep" if not "%1" == "DEP" goto src_dir_opt
+if "%1" == "dep" goto dep_off
+if not "%1" == "DEP" goto src_dir_opt
+:dep_off
 if "%1" == "dep" set DEPENDENCY_TRACKING=enabled
 if "%1" == "DEP" set DEPENDENCY_TRACKING=enabled
 if not "%DEPENDENCY_TRACKING%" == "enabled" goto small_env
@@ -94,7 +101,7 @@ set SPECIAL_ARG_SEEN=
 
 Rem Create a response file for the configure script.
 echo --srcdir=%XSRC% > arguments
-if "%CACHE%" == "enabled"              echo --cache-file=%XSRC%/ms/config.cache >> arguments
+if "%CACHE%" == "enabled"                echo --config-cache >> arguments
 if "%DEPENDENCY_TRACKING%" == "enabled"  echo --enable-dependency-tracking >> arguments
 if "%DEPENDENCY_TRACKING%" == "disabled" echo --disable-dependency-tracking >> arguments
 if not "%ARGS%" == ""                    echo %ARGS% >> arguments
