@@ -39,7 +39,7 @@ static char *option_list PARAMS((char **, int));
 static int add_exclude_file PARAMS((char const *));
 static int ck_atoi PARAMS((char const *, int *));
 static int compare_files PARAMS((char const *, char const *, char const *, char const *, int));
-static int specify_format PARAMS((char const **, char const *));
+static int specify_format PARAMS((char **, char *));
 static void add_exclude PARAMS((char const *));
 static void add_regexp PARAMS((struct regexp_list **, char const *));
 static void specify_style PARAMS((enum output_style));
@@ -86,7 +86,7 @@ option_list (optionvec, count)
   return result;
 }
 
-/* Convert STR to a positive integer, storing the result in *OUT. 
+/* Convert STR to a positive integer, storing the result in *OUT.
    If STR is not a valid integer, return -1 (otherwise 0). */
 static int
 ck_atoi (str, out)
@@ -207,11 +207,12 @@ static struct option const longopts[] =
   {"old-line-format", 1, 0, 132},
   {"new-line-format", 1, 0, 133},
   {"unchanged-line-format", 1, 0, 134},
-  {"old-group-format", 1, 0, 135},
-  {"new-group-format", 1, 0, 136},
-  {"unchanged-group-format", 1, 0, 137},
-  {"changed-group-format", 1, 0, 138},
-  {"horizon-lines", 1, 0, 139},
+  {"line-format", 1, 0, 135},
+  {"old-group-format", 1, 0, 136},
+  {"new-group-format", 1, 0, 137},
+  {"unchanged-group-format", 1, 0, 138},
+  {"changed-group-format", 1, 0, 139},
+  {"horizon-lines", 1, 0, 140},
   {0, 0, 0, 0}
 };
 
@@ -384,7 +385,7 @@ main (argc, argv)
 	  else
 	    fatal ("too many file label options");
 	  break;
-	  
+
 	case 'n':
 	  /* Output RCS-style diffs, like `-f' except that each command
 	     specifies the number of lines affected.  */
@@ -415,7 +416,7 @@ main (argc, argv)
 	  break;
 
 	case 'r':
-	  /* When comparing directories, 
+	  /* When comparing directories,
 	     recursively compare any subdirectories found.  */
 	  recursive = 1;
 	  break;
@@ -479,15 +480,15 @@ main (argc, argv)
 	  if (ck_atoi (optarg, &width) || width <= 0)
 	    fatal ("column width must be a positive integer");
 	  break;
-	  
+
 	case 129:
 	  sdiff_left_only = 1;
 	  break;
-	  
+
 	case 130:
 	  sdiff_skip_common_lines = 1;
 	  break;
-	  
+
 	case 131:
 	  /* sdiff-style columns output. */
 	  specify_style (OUTPUT_SDIFF);
@@ -498,28 +499,31 @@ main (argc, argv)
 	case 133:
 	case 134:
 	  specify_style (OUTPUT_IFDEF);
-	  {
-	    char const **form = &line_format[c - 132];
-	    if (*form && strcmp (*form, optarg) != 0)
-	      error ("conflicting line format", 0, 0);
-	    *form = optarg;
-	  }
+	  if (specify_format (&line_format[c - 132], optarg) != 0)
+	    error ("conflicting line format", 0, 0);
 	  break;
 
 	case 135:
-	case 136:
-	case 137:
-	case 138:
 	  specify_style (OUTPUT_IFDEF);
 	  {
-	    char const **form = &group_format[c - 135];
-	    if (*form && strcmp (*form, optarg) != 0)
-	      error ("conflicting group format", 0, 0);
-	    *form = optarg;
+	    int i, err = 0;
+	    for (i = 0; i < sizeof (line_format) / sizeof (*line_format); i++)
+	      err |= specify_format (&line_format[i], optarg);
+	    if (err)
+	      error ("conflicting line format", 0, 0);
 	  }
 	  break;
 
+	case 136:
+	case 137:
+	case 138:
 	case 139:
+	  specify_style (OUTPUT_IFDEF);
+	  if (specify_format (&group_format[c - 136], optarg) != 0)
+	    error ("conflicting group format", 0, 0);
+	  break;
+
+	case 140:
 	  if (ck_atoi (optarg, &horizon_lines) || horizon_lines < 0)
 	    fatal ("horizon must be a nonnegative integer");
 	  break;
@@ -556,7 +560,7 @@ main (argc, argv)
   else if (context == -1)
     /* Default amount of context for -c.  */
     context = 3;
- 
+
   if (output_style == OUTPUT_IFDEF)
     {
       int i;
@@ -646,12 +650,12 @@ usage ()
 	[--unidirectional-new-file] [--unified[=lines]] [--version]\n\
 	[--width=columns]\n");
   exit (2);
-} 
+}
 
 static int
 specify_format (var, value)
-     char const **var;
-     char const *value;
+     char **var;
+     char *value;
 {
   int err = *var ? strcmp (*var, value) : 0;
   *var = value;
@@ -825,7 +829,7 @@ compare_files (dir0, name0, dir1, name1, depth)
       int dir_arg = 1 - fnm_arg;
       char const *fnm = inf[fnm_arg].name;
       char const *dir = inf[dir_arg].name;
-      char const *p = rindex (fnm, '/');
+      char const *p = strrchr (fnm, '/');
       char const *filename = inf[dir_arg].name
 	= dir_file_pathname (dir, p ? p + 1 : fnm);
 
@@ -946,7 +950,7 @@ compare_files (dir0, name0, dir1, name1, depth)
 	    perror_with_name (inf[1].name);
 	    failed = 1;
 	  }
-    
+
       /* Compare the files, if no error was found.  */
 
       val = failed ? 2 : diff_2_files (inf, depth);
