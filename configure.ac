@@ -19,12 +19,12 @@
 
 AC_PREREQ(2.52)
 
-AC_INIT(GNU diff, 2.7.7, bug-gnu-utils@gnu.org)
+AC_INIT(GNU diff, 2.7.8, bug-gnu-utils@gnu.org)
 AC_CONFIG_SRCDIR(src/diff.c)
 
 AC_CONFIG_AUX_DIR(config)
 AM_CONFIG_HEADER([config.h:config.hin])
-AM_INIT_AUTOMAKE(diffutils, 2.7.7)
+AM_INIT_AUTOMAKE(diffutils, 2.7.8)
 
 AC_PROG_AWK
 AC_PROG_CC
@@ -34,11 +34,7 @@ AC_PROG_CPP
 AC_PROG_INSTALL
 AC_PROG_RANLIB
 
-AH_VERBATIM([_GNU_SOURCE],
-  [/* Enable GNU extensions on systems that have them.  */
-#ifndef _GNU_SOURCE
-# define _GNU_SOURCE
-#endif])
+AC__GNU_SOURCE
 AC_DEFINE([__EXTENSIONS__], 1, [Enable Solaris extensions.])
 AC_SYS_LARGEFILE
 
@@ -63,7 +59,7 @@ AC_CHECK_MEMBERS([struct stat.st_rdev])
 AC_CHECK_TYPE(ptrdiff_t, int)
 AC_CHECK_TYPE(ssize_t, int)
 jm_AC_TYPE_UINTMAX_T
-AM_GNU_GETTEXT
+AM_GNU_GETTEXT([external])
 XGETTEXT="AWK='$AWK' \$(SHELL) \$(top_srcdir)/exgettext $XGETTEXT"
 AC_HEADER_DIRENT
 AC_HEADER_STAT
@@ -76,9 +72,8 @@ AC_CHECK_FUNCS(diraccess dup2 gettimeofday \
   sigaction sigprocmask strchr strerror tmpnam)
 AC_REPLACE_FUNCS(memchr mkstemp strcasecmp waitpid)
 if test $ac_cv_func_mkstemp != yes; then
-  LIBOBJS="$LIBOBJS tempname.$ac_objext"
+  AC_LIBOBJ(tempname)
 fi
-AC_FUNC_ALLOCA
 AC_FUNC_CLOSEDIR_VOID
 AC_FUNC_FORK
 AC_FUNC_VPRINTF
@@ -87,6 +82,7 @@ jm_FUNC_GNU_STRFTIME
 # No need for AC_FUNC_MEMCMP, since memcmp is used only to test for equality.
 jm_FUNC_MALLOC
 jm_FUNC_REALLOC
+jm_PREREQ_C_STACK
 jm_PREREQ_ERROR
 jm_PREREQ_QUOTEARG
 jm_PREREQ_REGEX
@@ -127,7 +123,7 @@ fi
 jm_AC_DOS
 AC_FUNC_SETMODE_DOS
 
-AC_CONFIG_FILES([Makefile doc/Makefile intl/Makefile \
+AC_CONFIG_FILES([Makefile doc/Makefile \
 		 lib/Makefile lib/posix/Makefile \
 		 m4/Makefile ms/Makefile po/Makefile.in src/Makefile])
 AC_CONFIG_COMMANDS([default], [date > stamp-h])
