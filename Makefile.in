@@ -60,7 +60,7 @@ srcs=diff.c analyze.c cmpbuf.c cmpbuf.h io.c context.c ed.c normal.c ifdef.c \
 distfiles = $(srcs) README INSTALL NEWS diagmeet.note Makefile.in \
 	config.h.in configure configure.in COPYING ChangeLog \
 	diff.texi diff.info* texinfo.tex \
-	mkinstalldirs
+	install.sh mkinstalldirs
 
 all: diff diff3 sdiff cmp info
 
