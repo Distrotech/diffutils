@@ -155,6 +155,9 @@ static int edscript;
    file 1 with a special flagging mechanism.  */
 static int flagging;
 
+/* Number of lines to keep in identical prefix and suffix.  */
+static int horizon_lines = 10;
+
 /* If nonzero, do not output information for overlapping diffs.  */
 static int simple_only;
 
@@ -231,7 +234,7 @@ main (argc, argv)
   int rev_mapping[3];
   int incompat;
   int conflicts_found;
-  struct diff_block *thread0, *thread1;
+  struct diff_block *thread0, *thread1, *last_block;
   struct diff3_block *diff3;
   int tag_count = 0;
   char *tag_strings[3];
@@ -353,8 +356,14 @@ main (argc, argv)
 
 
   commonname = file[rev_mapping[FILEC]];
-  thread0 = process_diff (file[rev_mapping[FILE0]], commonname);
-  thread1 = process_diff (file[rev_mapping[FILE1]], commonname);
+  thread1 = process_diff (file[rev_mapping[FILE1]], commonname, &last_block);
+  if (thread1)
+    for (i = 0; i < 2; i++)
+      {
+	horizon_lines = max (horizon_lines, D_NUMLINES (thread1, i));
+	horizon_lines = max (horizon_lines, D_NUMLINES (last_block, i));
+      }
+  thread0 = process_diff (file[rev_mapping[FILE0]], commonname, &last_block);
   diff3 = make_3way_diff (thread0, thread1);
   if (edscript)
     conflicts_found
@@ -897,8 +906,9 @@ extern char **environ;
 #define	DIFF_CHUNK_SIZE	10000
 
 static struct diff_block *
-process_diff (filea, fileb)
+process_diff (filea, fileb, last_block)
      char *filea, *fileb;
+     struct diff_block **last_block;
 {
   char *diff_contents;
   char *diff_limit;
@@ -990,6 +1000,7 @@ process_diff (filea, fileb)
     }
 
   *block_list_end = 0;
+  *last_block = bptr;
   return block_list;
 }
 
@@ -1089,7 +1100,8 @@ read_diff (filea, fileb, output_placement)
      char *filea, *fileb;
      char **output_placement;
 {
-  char *argv[6];
+  char *argv[7];
+  char horizon_arg[256];
   char **ap;
   int fds[2];
   char *diff_result;
@@ -1103,6 +1115,8 @@ read_diff (filea, fileb, output_placement)
   *ap++ = diff_program;
   if (always_text)
     *ap++ = "-a";
+  sprintf (horizon_arg, "--horizon-lines=%d", horizon_lines);
+  *ap++ = horizon_arg;
   *ap++ = "--";
   *ap++ = filea;
   *ap++ = fileb;

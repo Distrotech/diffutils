@@ -79,6 +79,9 @@ EXTERN int      context;
    Don't interpret codes over 0177 as implying a "binary file".  */
 EXTERN int	always_text_flag;
 
+/* Number of lines to keep in identical prefix and suffix.  */
+EXTERN int      horizon_lines;
+
 /* Ignore changes in horizontal whitespace (-b).  */
 EXTERN int      ignore_space_change_flag;
 

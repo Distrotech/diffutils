@@ -479,8 +479,10 @@ find_identical_ends (filevec)
 
   /* Now P0 and P1 point at the first nonmatching characters.  */
 
-  /* Skip back to last line-beginning in the prefix.  */
-  while (p0 != buffer0 && p0[-1] != '\n')
+  /* Skip back to last line-beginning in the prefix,
+     and then discard up to HORIZON_LINES lines from the prefix.  */
+  i = horizon_lines;
+  while (p0 != buffer0 && (p0[-1] != '\n' || i--))
     --p0, --p1;
 
   /* Record the prefix.  */
@@ -514,12 +516,13 @@ find_identical_ends (filevec)
 	  }
 
       /* Are we at a line-beginning in both files?  If not, add the rest of
-	 this line to the main body.  Also, add one more line, even though it
-	 is the same in both files, because shift_boundaries may need it.  */
-      i = !((buffer0 == p0 || p0[-1] == '\n')
-	    &&
-	    (buffer1 == p1 || p1[-1] == '\n'));
-      while (0 <= i-- && p0 != end0)
+	 this line to the main body.  Discard up to HORIZON_LINES lines from
+	 the identical suffix.  Also, discard one extra line,
+	 because shift_boundaries may need it.  */
+      i = horizon_lines + !((buffer0 == p0 || p0[-1] == '\n')
+			    &&
+			    (buffer1 == p1 || p1[-1] == '\n'));
+      while (i-- && p0 != end0)
 	while (*p0++ != '\n')
 	  ;
 
