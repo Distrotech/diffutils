@@ -22,22 +22,10 @@
 #endif
 
 #include <stdio.h>
-#include "unlocked-io.h"
 #include "version-etc.h"
 
-#if ENABLE_NLS
-# include <libintl.h>
-# define _(Text) gettext (Text)
-#else
-# define _(Text) Text
-#endif
-
-/* Default copyright goes to the FSF. */
-
-char* version_etc_copyright =
-  /* Do *not* mark this string for translation.  */
-  "Copyright (C) 2002 Free Software Foundation, Inc.";
-
+#include <gettext.h>
+#define _(text) gettext (text)
 
 /* Display the --version information the standard way.
 
@@ -50,22 +38,34 @@ char* version_etc_copyright =
 
    COMMAND_NAME (PACKAGE) VERSION.  */
 void
-version_etc (FILE *stream,
-	     const char *command_name, const char *package,
-	     const char *version, const char *authors)
+version_etc (char const *command_name, char const *authorship_msgid)
 {
+  char const *package = PACKAGE_NAME;
+  char const *version = PACKAGE_VERSION;
+
+  /* TRANSLATORS: Please translate "(C)" to the C-in-a-circle symbol
+     (U+00A9, COPYRIGHT SIGN) if possible, as this has some minor
+     technical advantages in international copyright law.  If the
+     copyright symbol is not available, please leave it as "(C)".  */
+  char const *copyright_sign = _("(C)");
+
   if (command_name)
-    fprintf (stream, "%s (%s) %s\n", command_name, package, version);
+    printf ("%s (%s)", command_name, package);
   else
-    fprintf (stream, "%s %s\n", package, version);
-  fprintf (stream, _("Written by %s.\n"), authors);
-  putc ('\n', stream);
+    printf ("%s", package);
 
-  fputs (version_etc_copyright, stream);
-  putc ('\n', stream);
+  /* Do not translate the English word "Copyright", since it has
+     special status in international copyright law.  Also, do not
+     translate the name of the copyright holder, as common practice
+     seems to be to leave names untranslated.  */
+  printf (" %s\nCopyright %s 2002 Free Software Foundation, Inc.\n\n%s\n",
+	  version, copyright_sign,
+	   _("\
+This program comes with NO WARRANTY, to the extent permitted by law.\n\
+You may redistribute copies of this program\n\
+under the terms of the GNU General Public License.\n\
+For more information about these matters, see the files named COPYING."));
 
-  fputs (_("\
-This is free software; see the source for copying conditions.  There is NO\n\
-warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n"),
-	 stream);
+  if (authorship_msgid)
+    printf ("\n%s\n", _(authorship_msgid));
 }
