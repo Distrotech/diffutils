@@ -27,7 +27,8 @@ SUBDIRS = posix
 
 noinst_HEADERS = \
   cmpbuf.h error.h exclude.h fnmatch.hin freesoft.h getopt.h \
-  hard-locale.h inttostr.h prepargs.h quotesys.h regex.hin xalloc.h
+  hard-locale.h inttostr.h prepargs.h quotesys.h \
+  regex.hin unlocked-io.h xalloc.h
 
 libdiffutils_a_SOURCES = \
   cmpbuf.c error.c exclude.c freesoft.c getopt.c getopt1.c \
