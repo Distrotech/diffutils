@@ -22,6 +22,8 @@
 
 #include "diff.h"
 
+#include <xalloc.h>
+
 struct group
 {
   struct file_data const *file;
