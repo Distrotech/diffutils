@@ -22,16 +22,14 @@ noinst_LIBRARIES = libdiffutils.a
 noinst_HEADERS = cmpbuf.h prepargs.h quotesys.h
 
 libdiffutils_a_SOURCES = $(lib_SOURCES)
-lib_SOURCES = \
-  cmpbuf.c \
-  prepargs.c quotesys.c
+lib_SOURCES = cmpbuf.c prepargs.c quotesys.c
 
 libdiffutils_a_LIBADD = @ALLOCA@ @LIBOBJS@
 libdiffutils_a_DEPENDENCIES = $(libdiffutils_a_LIBADD)
 
 BUILT_SOURCES =
 DISTCLEANFILES =
-EXTRA_DIST = waitpid.c
+EXTRA_DIST = setmode.h waitpid.c
 MOSTLYCLEANFILES =
 
 include gnulib.mk
