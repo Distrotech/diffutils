@@ -1,5 +1,5 @@
 # Makefile for GNU DIFF
-# Copyright (C) 1988,1989,1991,1992,1993,1994 Free Software Foundation, Inc.
+# Copyright 1988, 89, 91, 92, 93, 94, 95, 1997 Free Software Foundation, Inc.
 #
 # This file is part of GNU DIFF.
 #
@@ -14,8 +14,9 @@
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with GNU DIFF; see the file COPYING.  If not, write to
-# the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
+# along with this program; see the file COPYING.
+# If not, write to the Free Software Foundation,
+# 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
 #### Start of system configuration section.  ####
 
@@ -32,12 +33,12 @@ INSTALL_DATA = @INSTALL_DATA@
 MAKEINFO = makeinfo
 TEXI2DVI = texi2dvi
 
+CFLAGS = @CFLAGS@
 CPPFLAGS = @CPPFLAGS@
 DEFS = @DEFS@
-CFLAGS = @CFLAGS@
 LDFLAGS = @LDFLAGS@
-LIBS = @LIBS@
 LIBOBJS = @LIBOBJS@
+LIBS = @LIBS@
 
 # Some System V machines do not come with libPW.
 # If this is true for you, use the GNU alloca.o here.
@@ -51,39 +52,41 @@ bindir = $(exec_prefix)/bin
 
 infodir = $(prefix)/info
 
+DEFAULT_DIFF_PROGRAM = $(bindir)/`echo diff | $(edit_program_name)`
 DEFAULT_EDITOR_PROGRAM = ed
-DIFF_PROGRAM = $(bindir)/`echo diff | $(edit_program_name)`
 NULL_DEVICE = /dev/null
-PR_PROGRAM = /bin/pr
+PR_PROGRAM = @PR_PROGRAM@
 
 #### End of system configuration section.  ####
 
 SHELL = /bin/sh
 
 # The source files for all of the programs.
-diffutils_srcs = \
+srcs = \
 	analyze.c cmp.c cmpbuf.c cmpbuf.h context.c \
-	diff.c diff.h diff3.c dir.c ed.c ifdef.c io.c \
-	memchr.c normal.c quote.c sdiff.c side.c system.h \
-	util.c waitpid.c
-srcs = $(diffutils_srcs) \
+	diff.c diff.h diff3.c dir.c ed.c freesoft.c ifdef.c io.c \
+	memchr.c normal.c quotearg.c quotearg.h sdiff.c side.c system.h \
+	util.c waitpid.c \
 	alloca.c error.c fnmatch.c fnmatch.h \
 	getopt.c getopt.h getopt1.c regex.c regex.h xmalloc.c
 distfiles = $(srcs) README INSTALL NEWS diagmeet.note Makefile.in \
-	stamp-h.in config.hin configure configure.in COPYING ChangeLog \
+	stamp-h.in config.hin configure configure.in acconfig.h \
+	COPYING ChangeLog \
 	diff.texi diff.info texinfo.tex \
-	install-sh mkinstalldirs getmsgids messages.po version.c version.texi \
+	install-sh mkinstalldirs getmsgids version.c version.texi \
+	message/en_UK.po message/fr.po message/msgid.po message/template.po \
 	pc/COPYING pc/INSTALL pc/config.h pc/makefile pc/makefile.sed pc/pc.c \
 	pc/djgpp/config.h pc/djgpp/makefile.sed \
 	pc/emx/config.h pc/emx/diff.def pc/emx/gnuregex.def pc/emx/makefile.sed
 
 PROGRAMS = cmp diff diff3 sdiff
 
-all: $(PROGRAMS) info
+all: $(distfiles) $(PROGRAMS)
 
 version.c:
 	(echo '#include <config.h>' && \
-	 echo 'char const version_string[] = "GNU $(PACKAGE) $(VERSION)";') >$@
+	 echo 'char const version_string[] = "(GNU $(PACKAGE)) $(VERSION)";') \
+		>$@
 
 version.texi: diff.texi
 	(echo '@set VERSION $(VERSION)' && \
@@ -96,19 +99,19 @@ COMPILE = $(CC) -c $(CPPFLAGS) $(DEFS) -I. -I$(srcdir) $(CFLAGS)
 .c.o:
 	$(COMPILE) $<
 
-common_o = error.o getopt.o getopt1.o version.o xmalloc.o
+common_o = error.o freesoft.o getopt.o getopt1.o version.o xmalloc.o
 
 diff_o = diff.o analyze.o cmpbuf.o dir.o io.o util.o \
 	context.o ed.o ifdef.o normal.o side.o \
-	fnmatch.o regex.o quote.o $(common_o) $(ALLOCA) $(LIBOBJS)
+	fnmatch.o regex.o quotearg.o $(common_o) $(ALLOCA) $(LIBOBJS)
 diff: $(diff_o)
 	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $(diff_o) $(LIBS)
 
-diff3_o = diff3.o quote.o $(common_o) $(LIBOBJS)
+diff3_o = diff3.o quotearg.o $(common_o) $(LIBOBJS)
 diff3: $(diff3_o)
 	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $(diff3_o) $(LIBS)
 
-sdiff_o = sdiff.o quote.o $(common_o) $(LIBOBJS)
+sdiff_o = sdiff.o quotearg.o $(common_o) $(LIBOBJS)
 sdiff: $(sdiff_o)
 	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $(sdiff_o) $(LIBS)
 
@@ -121,7 +124,7 @@ diff.info: diff.texi version.texi
 	$(MAKEINFO) --no-split $(srcdir)/diff.texi --output=$@
 
 dvi: diff.dvi
-diff.dvi: diff.texi
+diff.dvi: diff.texi version.texi
 	$(TEXI2DVI) $(srcdir)/diff.texi
 
 $(diff_o): diff.h system.h
@@ -130,16 +133,21 @@ context.o diff.o regex.o: regex.h
 cmp.o diff.o diff3.o sdiff.o getopt.o getopt1.o: getopt.h
 diff.o fnmatch.o: fnmatch.h
 analyze.o cmpbuf.o cmp.o: cmpbuf.h
+diff.o diff3.o quotearg.o sdiff.o util.o: quotearg.h
 
 cmp.o: cmp.c
 	$(COMPILE) -DNULL_DEVICE=\"$(NULL_DEVICE)\" $(srcdir)/cmp.c
 
 diff3.o: diff3.c
-	$(COMPILE) -DDIFF_PROGRAM=\"$(DIFF_PROGRAM)\" $(srcdir)/diff3.c
+	$(COMPILE) \
+		-DDEFAULT_DIFF_PROGRAM=\"$(DEFAULT_DIFF_PROGRAM)\" \
+		$(srcdir)/diff3.c
 
 sdiff.o: sdiff.c
-	$(COMPILE) -DDEFAULT_EDITOR_PROGRAM=\"$(DEFAULT_EDITOR_PROGRAM)\" \
-		-DDIFF_PROGRAM=\"$(DIFF_PROGRAM)\" $(srcdir)/sdiff.c
+	$(COMPILE) \
+		-DDEFAULT_DIFF_PROGRAM=\"$(DEFAULT_DIFF_PROGRAM)\" \
+		-DDEFAULT_EDITOR_PROGRAM=\"$(DEFAULT_EDITOR_PROGRAM)\" \
+		$(srcdir)/sdiff.c
 
 util.o: util.c
 	$(COMPILE) -DPR_PROGRAM=\"$(PR_PROGRAM)\" $(srcdir)/util.c
@@ -147,8 +155,11 @@ util.o: util.c
 TAGS: $(srcs)
 	etags $(srcs)
 
-messages.po: getmsgids $(diffutils_srcs)
-	./getmsgids $(diffutils_srcs) >$@
+message/msgid.po: getmsgids $(srcs)
+	./getmsgids $(srcs) >$@
+
+message/template.po: message/msgid.po
+	sed 'p; s/^msgid  "/msgstr "TRANSLATED /; p; s/.*//' <$? >$@
 
 clean:
 	rm -f *.o $(PROGRAMS) core
@@ -160,25 +171,36 @@ mostlyclean: clean
 distclean: clean
 	rm -f Makefile config.cache config.h config.log config.status stamp-h
 
-realclean: distclean
-	rm -f TAGS *.info messages.po version.*
+maintainer-clean:
+	@echo "This command is intended for maintainers to use;"
+	@echo "it deletes files that may require special tools to rebuild."
+	$(MAKE) distclean
+	rm -f TAGS *.info version.*
+	cd message && rm -f msgid.po template.po
 
 install: all installdirs
 	for p in $(PROGRAMS); do \
 	  $(INSTALL_PROGRAM) $$p $(bindir)/`echo $$p | $(edit_program_name)`; \
 	done
-	{ test -f diff.info || cd $(srcdir); } && \
-	$(INSTALL_DATA) diff.info $(infodir)
+	if test -f diff.info; then d=.; else :; d=$(srcdir); fi; \
+	$(INSTALL_DATA) $$d/diff.info $(infodir)/diff.info; \
+	if $(SHELL) -c 'install-info --version' >/dev/null 2>&1; \
+	then install-info --dir-file=$(infodir) $$d/diff.info; \
+	else :; \
+	fi
+
+install-strip:
+	$(MAKE) INSTALL_PROGRAM='$(INSTALL_PROGRAM) -s' install
 
 installdirs:
-	$(SHELL) ${srcdir}/mkinstalldirs $(bindir) $(infodir)
+	$(SHELL) $(srcdir)/mkinstalldirs $(bindir) $(infodir)
 
 # We need more tests.
 check: $(PROGRAMS)
 	./cmp cmp cmp
 	./diff diff diff
-	./diff3 diff3 diff3 diff3
-	./sdiff sdiff sdiff
+	DIFF=./diff ./diff3 diff3 diff3 diff3
+	DIFF=./diff ./sdiff sdiff sdiff
 
 uninstall:
 	for p in $(PROGRAMS); do \
@@ -191,9 +213,9 @@ configure: configure.in
 
 # autoheader might not change config.hin.
 config.hin: stamp-h.in
-stamp-h.in: configure.in
+stamp-h.in: configure.in acconfig.h
 	cd $(srcdir) && autoheader
-	date > $(srcdir)/stamp-h.in
+	echo timestamp > $(srcdir)/stamp-h.in
 
 config.status: configure
 	./config.status --recheck
@@ -206,19 +228,19 @@ Makefile: Makefile.in config.status
 	./config.status
 
 D = $(PACKAGE)-$(VERSION)
-D_dirs = $D $D/pc $D/pc/djgpp $D/pc/emx
+D_dirs = $D $D/message $D/pc $D/pc/djgpp $D/pc/emx
 
 dist: $D.tar.gz
 
 $D.tar.gz: $(distfiles)
-	rm -rf $D
+	rm -fr $D
 	mkdir $(D_dirs)
 	chmod a+rwx $(D_dirs)
 	for file in $(distfiles); do \
 	  ln $$file $D/$$file 2>/dev/null || cp -p $$file $D/$$file; \
 	done
-	tar -chf - $D | gzip >$@
-	rm -rf $D
+	tar -chf - $D | gzip -9 >$@
+	rm -fr $D
 
 # Prevent GNU make v3 from overflowing arg limit on SysV.
 .NOEXPORT:
