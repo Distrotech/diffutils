@@ -1,7 +1,7 @@
 /* Shared definitions for GNU DIFF
 
-   Copyright (C) 1988, 1989, 1991, 1992, 1993, 1994, 1995, 1998, 2001
-   Free Software Foundation, Inc.
+   Copyright (C) 1988, 1989, 1991, 1992, 1993, 1994, 1995, 1998, 2001,
+   2002 Free Software Foundation, Inc.
 
    This file is part of GNU DIFF.
 
@@ -140,18 +140,20 @@ XTERN struct re_pattern_buffer ignore_regexp;
 /* Say only whether files differ, not how (-q).  */
 XTERN bool brief;
 
-/* Output the differences with exactly 8 columns added to each line
-   so that any tabs in the text line up properly (-T).  */
-XTERN bool initial_tab;
-
 /* Expand tabs in the output so the text lines up properly
    despite the characters added to the front of each line (-t).  */
 XTERN bool expand_tabs;
+
+/* Use a tab in the output, rather than a space, before the text of an
+   input line, so as to keep the proper alignment in the input line
+   without changing the characters in it (-T).  */
+XTERN bool initial_tab;
 
 /* Remove trailing carriage returns from input.  */
 XTERN bool strip_trailing_cr;
 
 /* In directory comparison, specify file to start with (-S).
+   This is used for resuming an aborted comparison.
    All file names less than this name are ignored.  */
 XTERN char const *starting_file;
 
@@ -174,21 +176,23 @@ XTERN bool left_column;
 XTERN bool suppress_common_lines;
 
 /* The half line width and column 2 offset for OUTPUT_SDIFF.  */
-XTERN unsigned sdiff_half_width;
-XTERN unsigned sdiff_column2_offset;
+XTERN unsigned int sdiff_half_width;
+XTERN unsigned int sdiff_column2_offset;
 
 /* String containing all the command options diff received,
    with spaces between and at the beginning but none at the end.
    If there were no options given, this string is empty.  */
 XTERN char *switch_string;
 
-/* Use heuristics for better speed with large files.  */
+/* Use heuristics for better speed with large files with a small
+   density of changes.  */
 XTERN bool speed_large_files;
 
 /* Patterns that match file names to be excluded.  */
 XTERN struct exclude *excluded;
 
-/* Don't do discard_confusing_lines.  */
+/* Don't discard lines.  This makes things slower (sometimes much
+   slower) but will find a guaranteed minimal set of changes.  */
 XTERN bool minimal;
 
 /* Name of program the user invoked (for error messages).  */

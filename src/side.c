@@ -1,6 +1,6 @@
 /* sdiff-format output routines for GNU DIFF.
 
-   Copyright (C) 1991, 1992, 1993, 1998, 2001 Free Software
+   Copyright (C) 1991, 1992, 1993, 1998, 2001, 2002 Free Software
    Foundation, Inc.
 
    This file is part of GNU DIFF.
@@ -43,11 +43,11 @@ print_sdiff_script (struct change *script)
 
 /* Tab from column FROM to column TO, where FROM <= TO.  Yield TO.  */
 
-static unsigned
-tab_from_to (unsigned from, unsigned to)
+static unsigned int
+tab_from_to (unsigned int from, unsigned int to)
 {
   FILE *out = outfile;
-  unsigned tab;
+  unsigned int tab;
 
   if (!expand_tabs)
     for (tab = from + TAB_WIDTH - from % TAB_WIDTH;  tab <= to;  tab += TAB_WIDTH)
@@ -65,14 +65,15 @@ tab_from_to (unsigned from, unsigned to)
  * observing tabs, and trim a trailing newline.  Returns the last column
  * written (not the number of chars).
  */
-static unsigned
-print_half_line (char const *const *line, unsigned indent, unsigned out_bound)
+static unsigned int
+print_half_line (char const *const *line, unsigned int indent,
+		 unsigned int out_bound)
 {
   FILE *out = outfile;
-  register unsigned in_position = 0, out_position = 0;
-  register char const
-	*text_pointer = line[0],
-	*text_limit = line[1];
+  register unsigned int in_position = 0;
+  register unsigned int out_position = 0;
+  register char const *text_pointer = line[0];
+  register char const *text_limit = line[1];
 
   while (text_pointer < text_limit)
     {
@@ -82,10 +83,10 @@ print_half_line (char const *const *line, unsigned indent, unsigned out_bound)
 	{
 	case '\t':
 	  {
-	    unsigned spaces = TAB_WIDTH - in_position % TAB_WIDTH;
+	    unsigned int spaces = TAB_WIDTH - in_position % TAB_WIDTH;
 	    if (in_position == out_position)
 	      {
-		unsigned tabstop = out_position + spaces;
+		unsigned int tabstop = out_position + spaces;
 		if (expand_tabs)
 		  {
 		    if (out_bound < tabstop)
@@ -165,8 +166,8 @@ print_1sdiff_line (char const *const *left, char sep,
 		   char const *const *right)
 {
   FILE *out = outfile;
-  unsigned hw = sdiff_half_width, c2o = sdiff_column2_offset;
-  unsigned col = 0;
+  unsigned int hw = sdiff_half_width, c2o = sdiff_column2_offset;
+  unsigned int col = 0;
   bool put_newline = 0;
 
   if (left)
