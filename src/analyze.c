@@ -805,14 +805,9 @@ briefly_report (int changes, struct file_data const filevec[])
     {
       char const *label0 = file_label[0] ? file_label[0] : filevec[0].name;
       char const *label1 = file_label[1] ? file_label[1] : filevec[1].name;
-
-      if (brief)
-	message ("Files %s and %s differ\n", label0, label1);
-      else
-	{
-	  message ("Binary files %s and %s differ\n", label0, label1);
-	  changes = 2;
-	}
+      message ("Files %s and %s differ\n", label0, label1);
+      if (! brief)
+	changes = 2;
     }
 
   return changes;
