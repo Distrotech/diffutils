@@ -1,19 +1,40 @@
 \input texinfo @c -*-texinfo-*-
-@c %**start of header
+@comment $Id$
+@comment %**start of header
 @setfilename diff.info
-@settitle Comparing and Merging Files
-@setchapternewpage odd
-@c %**end of header
-
 @include version.texi
-
+@settitle Comparing and Merging Files
 @syncodeindex vr cp
+@setchapternewpage odd
+@comment %**end of header
+@copying
+This manual is for GNU Diffutils
+(version @value{VERSION}, @value{UPDATED}),
+and documents the @sc{gnu} @command{diff}, @command{diff3},
+@command{sdiff}, and @command{cmp} commands for showing the
+differences between files and the @sc{gnu} @command{patch} command for
+using their output to update files.
 
-@dircategory GNU packages
-@direntry
-Diff: (diff).                 Comparing and merging files.
-@end direntry
+Copyright @copyright{} 1992, 1993, 1994, 1998, 2001, 2002 Free
+Software Foundation, Inc.
 
+@quotation
+Permission is granted to copy, distribute and/or modify this document
+under the terms of the GNU Free Documentation License, Version 1.1 or
+any later version published by the Free Software Foundation; with no
+Invariant Sections, with the Front-Cover texts being ``A GNU Manual,''
+and with the Back-Cover Texts as in (a) below.  A copy of the
+license is included in the section entitled ``GNU Free Documentation
+License.''
+
+(a) The FSF's Back-Cover Text is: ``You have freedom to copy and modify
+this GNU Manual, like GNU software.  Copies published by the Free
+Software Foundation raise funds for GNU development.''
+@end quotation
+@end copying
+
+@c Debian install-info (up through at least version 1.9.20) uses only the
+@c first dircategory.  Put this one first, as it is more useful in practice.
 @dircategory Individual utilities
 @direntry
 * cmp: (diff)Invoking cmp.                      Compare 2 files byte by byte.
@@ -23,57 +44,29 @@ Diff: (diff).                 Comparing and merging files.
 * sdiff: (diff)Invoking sdiff.                  Merge 2 files side-by-side.
 @end direntry
 
-@ifinfo
-This file documents the @sc{gnu} @command{diff}, @command{diff3},
-@command{sdiff}, and @command{cmp} commands for showing the
-differences between files and the @sc{gnu} @command{patch} command for
-using their output to update files.
-
-Copyright @copyright{} 1992, 1993, 1994, 1998, 2001, 2002 Free
-Software Foundation, Inc.
-
-Permission is granted to copy, distribute and/or modify this document
-under the terms of the GNU Free Documentation License, Version 1.1
-or any later version published by the Free Software Foundation;
-with no Invariant Sections, with no
-Front-Cover Texts, and with no Back-Cover Texts.
-A copy of the license is included in the section entitled ``GNU
-Free Documentation License''.
-
-@end ifinfo
+@dircategory GNU packages
+@direntry
+* Diff: (diff).                 Comparing and merging files.
+@end direntry
 
 @titlepage
 @title Comparing and Merging Files
-@subtitle @command{diff}, @command{diff3}, @command{sdiff}, @command{cmp}, and @command{patch}
-@subtitle Edition @value{EDITION}, for @code{diffutils} @value{VERSION} and @code{patch} 2.5.4
+@subtitle for Diffutils @value{VERSION} and @code{patch} 2.5.4
 @subtitle @value{UPDATED}
-@author by David MacKenzie, Paul Eggert, and Richard Stallman
-
+@author David MacKenzie, Paul Eggert, and Richard Stallman
 @page
 @vskip 0pt plus 1filll
-Copyright @copyright{} 1992, 1993, 1994, 1998, 2001, 2002 Free
-Software Foundation, Inc.
-
-Permission is granted to copy, distribute and/or modify this document
-under the terms of the GNU Free Documentation License, Version 1.1
-or any later version published by the Free Software Foundation;
-with no Invariant Sections, with no
-Front-Cover Texts, and with no Back-Cover Texts.
-A copy of the license is included in the section entitled ``GNU
-Free Documentation License''.
+@insertcopying
 @end titlepage
+
+@shortcontents
+@contents
 
 @ifnottex
 @node Top
 @top Comparing and Merging Files
 
-This file documents the @sc{gnu} @command{diff}, @command{diff3},
-@command{sdiff}, and @command{cmp} commands for showing the
-differences between files and the @sc{gnu} @command{patch} command for
-using their output to update files.
-
-This is Edition @value{EDITION}, dated @value{UPDATED},
-for @code{diffutils} @value{VERSION} and @code{patch} 2.5.4.
+@insertcopying
 @end ifnottex
 
 @menu
@@ -101,10 +94,10 @@ for @code{diffutils} @value{VERSION} and @code{patch} 2.5.4.
 * Invoking sdiff::        Side-by-side merge of file differences.
 
 * Standards conformance:: Conformance to the @sc{posix} standard.
-* Projects::              If you think you've found a bug or other shortcoming.
+* Projects::              If you've found a bug or other shortcoming.
 
 * Copying This Manual::   How to make copies of this manual.
-* Concept Index::         Index of concepts.
+* Index::                 Index.
 @end menu
 
 @node Overview
@@ -305,8 +298,8 @@ Here lyeth muche rychnesse in lytell space. -- John Heywood   $
 @end example
 
 The @option{-w} and @option{--ignore-all-space} options are stronger still.
-They ignore difference even if one file has white space where
-the other file has none.  @dfn{White space} characters include
+They ignore difference even if one line has white space where
+the other line has none.  @dfn{White space} characters include
 tab, newline, vertical tab, form feed, carriage return, and space;
 some locales may define additional characters to be white space.
 With these options, @command{diff} considers the
@@ -1868,9 +1861,21 @@ header might look like for @samp{diff -lc lao tzu}:
 
 @sc{gnu} @command{diff} runs quite efficiently; however, in some circumstances
 you can cause it to run faster or produce a more compact set of changes.
-There are two ways that you can affect the performance of @sc{gnu}
-@command{diff} by changing the way it compares files.
 
+One way to improve @command{diff} performance is to use hard or
+symbolic links to files instead of copies.  This improves performance
+because @command{diff} normally does not need to read two hard or
+symbolic links to the same file, since their contents must be
+identical.  For example, suppose you copy a large directory hierarchy,
+make a few changes to the copy, and then often use @samp{diff -r} to
+compare the original to the copy.  If the original files are
+read-only, you can greatly improve performance by creating the copy
+using hard or symbolic links (e.g., with @sc{gnu} @samp{cp -lR} or
+@samp{cp -sR}).  Before editing a file in the copy for the first time,
+you should break the link and replace it with a regular copy.
+
+You can also affect the performance of @sc{gnu} @command{diff} by
+giving it options that change the way it compares files.
 Performance has more than one dimension.  These options improve one
 aspect of performance at the cost of another, or they improve
 performance in some cases while hurting it in others.
@@ -4394,6 +4399,7 @@ projects.
 * Unusual File Names::   Handling file names that contain unusual characters.
 * Time Stamp Order::     Outputting diffs in time stamp order.
 * Ignoring Changes::     Ignoring certain changes while showing others.
+* Speedups::             Improving performance.
 @end menu
 
 @node Internationalization
@@ -4505,6 +4511,15 @@ sed 's/foo/bar/g' file1 | diff - file2
 
 However, this outputs the filtered text, not the original.
 
+@node Speedups
+@subsection Improving Performance
+
+When comparing two large directory structures, one of which was
+originally copied from the other with time stamps preserved (e.g.,
+with @samp{cp -pR}), it would greatly improve performance if an option
+told @command{diff} to assume that two files with the same size and
+time stamps have the same content.  @xref{diff Performance}.
+
 @node Bugs
 @section Reporting Bugs
 @cindex bug reports
@@ -4528,16 +4543,14 @@ find in the directory @uref{ftp://alpha.gnu.org/gnu/diffutils/}.
 @appendix Copying This Manual
 
 @menu
-* GNU Free Documentation License:: License for copying this manual
+* GNU Free Documentation License::  License for copying this manual.
 @end menu
 
 @include fdl.texi
 
-@node Concept Index
-@appendix Concept Index
+@node Index
+@appendix Index
 
 @printindex cp
 
-@shortcontents
-@contents
 @bye
