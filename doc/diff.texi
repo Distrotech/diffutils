@@ -10,7 +10,7 @@ This file documents the the GNU @code{diff}, @code{diff3}, @code{sdiff},
 and @code{cmp} commands for showing the differences between text files
 and the @code{patch} command for using their output to update files.
 
-Copyright 1992, 1993, 1994 Free Software Foundation, Inc.
+Copyright (C) 1992, 1993, 1994 Free Software Foundation, Inc.
 
 Permission is granted to make and distribute verbatim copies of
 this manual provided the copyright notice and this permission notice
@@ -292,7 +292,7 @@ Here lyeth muche rychnesse in lytell space. -- John Heywood   $
 The @samp{-w} and @samp{--ignore-all-space} options are stronger than
 @samp{-b}.  They ignore difference even if one file has white space where
 the other file has none.  @dfn{White space} characters include
-tab, vertical tab, form feed, carriage return, and space;
+tab, newline, vertical tab, form feed, carriage return, and space;
 some locales may define additional characters to be white space.
 With these options, @code{diff} considers the
 following two lines to be equivalent, where @samp{$} denotes the line
@@ -3713,7 +3713,7 @@ When an input file ends in a non-newline character, its last line is
 called an @dfn{incomplete line} because its last character is not a
 newline.  All other lines are called @dfn{full lines} and end in a
 newline character.  Incomplete lines do not match full lines unless
-differences in blank lines are ignored (@pxref{Blank Lines}).
+differences in white space are ignored (@pxref{White Space}).
 
 An incomplete line is normally distinguished on output from a full line
 by a following line that starts with @samp{\}.  However, the RCS format
