@@ -138,14 +138,13 @@ uninstall:
 	rm -f $(infodir)/diff.info*
 
 dist: $(distfiles)
-	echo diff-`sed -e '/version_string/!d' -e 's/[^0-9]*\([0-9a-z.]*\).*/\1/' -e q version.c` > .fname
+	echo diffutils-`sed -e '/version_string/!d' -e 's/[^0-9]*\([0-9a-z.]*\).*/\1/' -e q version.c` > .fname
 	rm -rf `cat .fname`
 	mkdir `cat .fname`
 	-ln $(distfiles) `cat .fname`
 	for file in $(distfiles); do \
 	  if [ ! -r `cat .fname`/$$file ]; then cp -p $$file `cat .fname`; fi \
 	done
-	tar chZf `cat .fname`.tar.Z `cat .fname`
 	tar chf - `cat .fname` | gzip > `cat .fname`.tar.z
 	rm -rf `cat .fname` .fname
 
