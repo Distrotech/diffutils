@@ -36,13 +36,13 @@ enum output_style {
   OUTPUT_NORMAL,
   /* Output the differences with lines of context before and after (-c).  */
   OUTPUT_CONTEXT,
-  /* Output the differences in a unified context diff format (-u). */
+  /* Output the differences in a unified context diff format (-u).  */
   OUTPUT_UNIFIED,
   /* Output the differences as commands suitable for `ed' (-e).  */
   OUTPUT_ED,
   /* Output the diff as a forward ed script (-f).  */
   OUTPUT_FORWARD_ED,
-  /* Like -f, but output a count of changed lines in each "command" (-n). */
+  /* Like -f, but output a count of changed lines in each "command" (-n).  */
   OUTPUT_RCS,
   /* Output merged #ifdef'd file (-D).  */
   OUTPUT_IFDEF,
@@ -78,10 +78,6 @@ EXTERN int      ignore_all_space_flag;
 
 /* Ignore changes that affect only blank lines (-B).  */
 EXTERN int      ignore_blank_lines_flag;
-
-/* 1 if lines may match even if their contents do not match exactly.
-   This depends on various options.  */
-EXTERN int      ignore_some_line_changes;
 
 /* 1 if files may match even if their contents are not byte-for-byte identical.
    This depends on various options.  */
@@ -154,13 +150,13 @@ EXTERN char *group_format[CHANGED + 1];
 /* Line formats for old, new, and unchanged lines.  */
 EXTERN char *line_format[UNCHANGED + 1];
 
-/* If using OUTPUT_SDIFF print extra information to help the sdiff filter. */
+/* If using OUTPUT_SDIFF print extra information to help the sdiff filter.  */
 EXTERN int sdiff_help_sdiff;
 
-/* Tell OUTPUT_SDIFF to show only the left version of common lines. */
+/* Tell OUTPUT_SDIFF to show only the left version of common lines.  */
 EXTERN int sdiff_left_only;
 
-/* Tell OUTPUT_SDIFF to not show common lines. */
+/* Tell OUTPUT_SDIFF to not show common lines.  */
 EXTERN int sdiff_skip_common_lines;
 
 /* The half line width and column 2 offset for OUTPUT_SDIFF.  */
@@ -206,14 +202,14 @@ struct change
 struct file_data {
     int             desc;	/* File descriptor  */
     char const      *name;	/* File name  */
-    struct stat     stat;	/* File status from fstat()  */
+    struct stat     stat;	/* File status */
     int             dir_p;	/* nonzero if file is a directory  */
 
     /* Buffer in which text of file is read.  */
     char *	    buffer;
     /* Allocated size of buffer.  */
     size_t	    bufsize;
-    /* Number of valid characters now in the buffer. */
+    /* Number of valid characters now in the buffer.  */
     size_t	    buffered_chars;
 
     /* Array of pointers to lines in the file.  */
@@ -225,19 +221,19 @@ struct file_data {
        linebuf[linbuf_base ... alloc_lines - 1] are allocated.  */
     int linbuf_base, buffered_lines, valid_lines, alloc_lines;
 
-    /* Pointer to end of prefix of this file to ignore when hashing. */
+    /* Pointer to end of prefix of this file to ignore when hashing.  */
     char const *prefix_end;
 
     /* Count of lines in the prefix.
        There are this many lines in the file before linbuf[0].  */
     int prefix_lines;
 
-    /* Pointer to start of suffix of this file to ignore when hashing. */
+    /* Pointer to start of suffix of this file to ignore when hashing.  */
     char const *suffix_begin;
 
     /* Vector, indexed by line number, containing an equivalence code for
        each line.  It is this vector that is actually compared with that
-       of another file to generate differences. */
+       of another file to generate differences.  */
     int		   *equivs;
 
     /* Vector, like the previous one except that
@@ -248,7 +244,7 @@ struct file_data {
        to real ones (counting those lines).  Both are origin-0.  */
     int		   *realindexes;
 
-    /* Total number of nondiscarded lines. */
+    /* Total number of nondiscarded lines.  */
     int		    nondiscarded_lines;
 
     /* Vector, indexed by real origin-0 line number,
@@ -256,11 +252,11 @@ struct file_data {
        The results of comparison are stored here.  */
     char	   *changed_flag;
 
-    /* 1 if file ends in a line with no final newline. */
+    /* 1 if file ends in a line with no final newline.  */
     int		    missing_newline;
 
     /* 1 more than the maximum equivalence value used for this or its
-       sibling file. */
+       sibling file.  */
     int equiv_max;
 };
 
@@ -291,6 +287,9 @@ int diff_dirs PARAMS((struct file_data const[], int (*) PARAMS((char const *, ch
 void print_ed_script PARAMS((struct change *));
 void pr_forward_ed_script PARAMS((struct change *));
 
+/* error.c */
+void error PARAMS((int, int, char const *, ...));
+
 /* ifdef.c */
 void print_ifdef_script PARAMS((struct change *));
 
@@ -309,8 +308,6 @@ void print_rcs_script PARAMS((struct change *));
 void print_sdiff_script PARAMS((struct change *));
 
 /* util.c */
-VOID *xmalloc PARAMS((size_t));
-VOID *xrealloc PARAMS((VOID *, size_t));
 char *concat PARAMS((char const *, char const *, char const *));
 char *dir_file_pathname PARAMS((char const *, char const *));
 int change_letter PARAMS((int, int));
@@ -321,7 +318,6 @@ struct change *find_reverse_change PARAMS((struct change *));
 void analyze_hunk PARAMS((struct change *, int *, int *, int *, int *, int *, int *));
 void begin_output PARAMS((void));
 void debug_script PARAMS((struct change *));
-void error PARAMS((char const *, char const *, char const *));
 void fatal PARAMS((char const *));
 void finish_output PARAMS((void));
 void message PARAMS((char const *, char const *, char const *));
@@ -335,6 +331,11 @@ void print_number_range PARAMS((int, struct file_data *, int, int));
 void print_script PARAMS((struct change *, struct change * (*) PARAMS((struct change *)), void (*) PARAMS((struct change *))));
 void setup_output PARAMS((char const *, char const *, int));
 void translate_range PARAMS((struct file_data const *, int, int, int *, int *));
+
+/* xmalloc.c */
+VOID *xmalloc PARAMS((size_t));
+VOID *xrealloc PARAMS((VOID *, size_t));
+extern int xmalloc_exit_failure;
 
 /* version.c */
 extern char const version_string[];
