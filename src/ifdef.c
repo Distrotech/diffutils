@@ -1,5 +1,5 @@
 /* #ifdef-format output routines for GNU DIFF.
-   Copyright (C) 1989, 91, 92 Free Software Foundation, Inc.
+   Copyright (C) 1989, 91, 92, 93 Free Software Foundation, Inc.
 
 This file is part of GNU DIFF.
 
@@ -21,10 +21,9 @@ and this notice must be preserved on all copies.  */
 
 #include "diff.h"
 
-static void format_ifdef ();
-static void print_ifdef_hunk ();
-static void print_ifdef_lines ();
-struct change *find_change ();
+static void format_ifdef PARAMS((char const *, int, int, int, int));
+static void print_ifdef_hunk PARAMS((struct change *));
+static void print_ifdef_lines PARAMS((char const *, struct file_data const *, int, int));
 
 static int next_line;
 
@@ -53,7 +52,7 @@ print_ifdef_hunk (hunk)
      struct change *hunk;
 {
   int first0, last0, first1, last1, deletes, inserts;
-  const char *format;
+  char const *format;
 
   /* Determine range of line numbers involved in each file.  */
   analyze_hunk (hunk, &first0, &last0, &first1, &last1, &deletes, &inserts);
@@ -82,12 +81,12 @@ print_ifdef_hunk (hunk)
 
 static void
 format_ifdef (format, beg0, end0, beg1, end1)
-     const char *format;
+     char const *format;
      int beg0, end0, beg1, end1;
 {
   register FILE *out = outfile;
   register char c;
-  register const char *f = format;
+  register char const *f = format;
 
   while ((c = *f++) != 0)
     {
@@ -130,11 +129,11 @@ format_ifdef (format, beg0, end0, beg1, end1)
    and continuing up to UPTO.  */
 static void
 print_ifdef_lines (format, current, from, upto)
-     const char *format;
-     const struct file_data *current;
+     char const *format;
+     struct file_data const *current;
      int from, upto;
 {
-  const char * const *linbuf = current->linbuf;
+  char const * const *linbuf = current->linbuf;
 
   /* If possible, use a single fwrite; it's faster.  */
   if (!tab_expand_flag && strcmp (format, "%l\n") == 0)
@@ -148,7 +147,7 @@ print_ifdef_lines (format, current, from, upto)
       {
 	register FILE *out = outfile;
 	register char c;
-	register const char *f = format;
+	register char const *f = format;
 
 	while ((c = *f++) != 0)
 	  {
