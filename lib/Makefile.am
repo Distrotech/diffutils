@@ -22,7 +22,7 @@ AUTOMAKE_OPTIONS = gnits
 noinst_LIBRARIES = libdiffutils.a
 
 EXTRA_DIST = alloca.c fnmatch.c inttostr.c malloc.c memchr.c mkstemp.c \
-  realloc.c regex.c strcasecmp.c tempname.c waitpid.c
+  realloc.c regex.c strcasecmp.c strtoimax.c strtol.c tempname.c waitpid.c
 SUBDIRS = posix
 
 noinst_HEADERS = \
