@@ -1,5 +1,7 @@
 /* Normal-format output routines for GNU DIFF.
-   Copyright 1988, 1989, 1993, 1995, 1998 Free Software Foundation, Inc.
+
+   Copyright (C) 1988, 1989, 1993, 1995, 1998, 2001 Free Software
+   Foundation, Inc.
 
    This file is part of GNU DIFF.
 
@@ -15,20 +17,18 @@
 
    You should have received a copy of the GNU General Public License
    along with this program; see the file COPYING.
-   If not, write to the Free Software Foundation, 
+   If not, write to the Free Software Foundation,
    59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
-
 
 #include "diff.h"
 
-static void print_normal_hunk PARAMS((struct change *));
+static void print_normal_hunk (struct change *);
 
 /* Print the edit-script SCRIPT as a normal diff.
    INF points to an array of descriptions of the two files.  */
 
 void
-print_normal_script (script)
-     struct change *script;
+print_normal_script (struct change *script)
 {
   print_script (script, find_change, print_normal_hunk);
 }
@@ -38,35 +38,34 @@ print_normal_script (script)
    describing changes in consecutive lines.  */
 
 static void
-print_normal_hunk (hunk)
-     struct change *hunk;
+print_normal_hunk (struct change *hunk)
 {
-  int first0, last0, first1, last1, deletes, inserts;
-  register int i;
+  lin first0, last0, first1, last1;
+  register lin i;
 
   /* Determine range of line numbers involved in each file.  */
-  analyze_hunk (hunk, &first0, &last0, &first1, &last1, &deletes, &inserts);
-  if (!deletes && !inserts)
+  enum changes changes = analyze_hunk (hunk, &first0, &last0, &first1, &last1);
+  if (!changes)
     return;
 
   begin_output ();
 
   /* Print out the line number header for this hunk */
   print_number_range (',', &files[0], first0, last0);
-  fprintf (outfile, "%c", change_letter (inserts, deletes));
+  fprintf (outfile, "%c", change_letter[changes]);
   print_number_range (',', &files[1], first1, last1);
   fprintf (outfile, "\n");
 
   /* Print the lines that the first file has.  */
-  if (deletes)
+  if (changes & OLD)
     for (i = first0; i <= last0; i++)
       print_1_line ("<", &files[0].linbuf[i]);
 
-  if (inserts && deletes)
+  if (changes == CHANGED)
     fprintf (outfile, "---\n");
 
   /* Print the lines that the second file has.  */
-  if (inserts)
+  if (changes & NEW)
     for (i = first1; i <= last1; i++)
       print_1_line (">", &files[1].linbuf[i]);
 }
