@@ -1,7 +1,7 @@
 /* #ifdef-format output routines for GNU DIFF.
 
-   Copyright (C) 1989, 1991, 1992, 1993, 1994, 2001 Free Software
-   Foundation, Inc.
+   Copyright (C) 1989, 1991, 1992, 1993, 1994, 2001, 2002 Free
+   Software Foundation, Inc.
 
    This file is part of GNU DIFF.
 
@@ -116,7 +116,7 @@ format_group (register FILE *out, char const *format, char endchar,
 
   while ((c = *f) != endchar && c != 0)
     {
-      f++;
+      char const *f1 = ++f;
       if (c == '%')
 	switch ((c = *f++))
 	  {
@@ -182,13 +182,12 @@ format_group (register FILE *out, char const *format, char endchar,
 
 	  default:
 	    f = do_printf_spec (out, f - 2, 0, 0, groups);
-	    if (!f)
-	      goto bad_format;
-	    continue;
-
+	    if (f)
+	      continue;
+	    /* Fall through. */
 	  bad_format:
 	    c = '%';
-	    f--;
+	    f = f1;
 	    break;
 	  }
 
@@ -240,7 +239,7 @@ print_ifdef_lines (register FILE *out, char const *format,
   /* If possible, use a single fwrite; it's faster.  */
   if (!expand_tabs && format[0] == '%')
     {
-      if (format[1] == 'l' && format[2] == '\n' && !format[3])
+      if (format[1] == 'l' && format[2] == '\n' && !format[3] && from < upto)
 	{
 	  fwrite (linbuf[from], sizeof (char),
 		  linbuf[upto] + (linbuf[upto][-1] != '\n') -  linbuf[from],
@@ -262,6 +261,7 @@ print_ifdef_lines (register FILE *out, char const *format,
 
       while ((c = *f++) != 0)
 	{
+	  char const *f1 = f;
 	  if (c == '%')
 	    switch ((c = *f++))
 	      {
@@ -281,13 +281,10 @@ print_ifdef_lines (register FILE *out, char const *format,
 
 	      default:
 		f = do_printf_spec (out, f - 2, file, from, 0);
-		if (!f)
-		  goto bad_format;
-		continue;
-
-	      bad_format:
+		if (f)
+		  continue;
 		c = '%';
-		f--;
+		f = f1;
 		break;
 	      }
 
@@ -359,7 +356,7 @@ do_printf_spec (FILE *out, char const *spec,
 #if HAVE_C_VARARRAYS
 	    char format[spec_prefix_len + 3];
 #else
-	    char *format = alloca (spec_prefix_len + 3);
+	    char *format = xmalloc (spec_prefix_len + 3);
 #endif
 	    char *p = format + spec_prefix_len;
 	    memcpy (format, spec, spec_prefix_len);
@@ -367,6 +364,9 @@ do_printf_spec (FILE *out, char const *spec,
 	    *p++ = c;
 	    *p = '\0';
 	    fprintf (out, format, long_value);
+#if ! HAVE_C_VARARRAYS
+	    free (format);
+#endif
 	  }
       }
       break;
@@ -400,7 +400,7 @@ scan_char_literal (char const *lit, char *valptr)
 	value = 0;
 	while ((c = *p++) != '\'')
 	  {
-	    unsigned digit = c - '0';
+	    unsigned int digit = c - '0';
 	    if (8 <= digit)
 	      return 0;
 	    value = 8 * value + digit;
