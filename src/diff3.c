@@ -274,10 +274,10 @@ main (argc, argv)
 	  break;
 	case 'X':
 	  overlap_only = 1;
-	  /* Falls through */
+	  /* Fall through.  */
 	case 'E':
 	  flagging = 1;
-	  /* Falls through */
+	  /* Fall through.  */
 	case 'e':
 	  incompat++;
 	  break;
@@ -1185,15 +1185,17 @@ read_diff (filea, fileb, output_placement)
 #else /* ! HAVE_FORK */
 
   FILE *fpipe;
-  char *command = xmalloc (sizeof (diff_program) + 30 + INT_STRLEN_BOUND (int)
-			   + 4 * (strlen (filea) + strlen (fileb)));
+  char *command = xmalloc (sizeof (diff_program) - 1 + 20
+			   + INT_STRLEN_BOUND (int) + 4
+			   + system_quote_arg ((char *) 0, filea) + 1
+			   + system_quote_arg ((char *) 0, fileb) + 1);
   char *p;
   sprintf (command, "%s -a --horizon-lines=%d -- ",
 	   diff_program, horizon_lines);
   p = command + strlen (command);
-  SYSTEM_QUOTE_ARG (p, filea);
+  p += system_quote_arg (p, filea);
   *p++ = ' ';
-  SYSTEM_QUOTE_ARG (p, fileb);
+  p += system_quote_arg (p, fileb);
   *p = '\0';
   fpipe = popen (command, "r");
   if (!fpipe)
