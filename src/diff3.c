@@ -206,11 +206,19 @@ static void usage (void);
 
 static char const *diff_program = DEFAULT_DIFF_PROGRAM;
 
+/* Values for long options that do not have single-letter equivalents.  */
+enum
+{
+  DIFF_PROGRAM_OPTION = CHAR_MAX + 1,
+  HELP_OPTION
+};
+
 static struct option const longopts[] =
 {
   {"text", 0, 0, 'a'},
   {"show-all", 0, 0, 'A'},
   {"ed", 0, 0, 'e'},
+  {"diff-program", 1, 0, DIFF_PROGRAM_OPTION},
   {"show-overlap", 0, 0, 'E'},
   {"label", 1, 0, 'L'},
   {"merge", 0, 0, 'm'},
@@ -218,7 +226,7 @@ static struct option const longopts[] =
   {"overlap-only", 0, 0, 'x'},
   {"easy-only", 0, 0, '3'},
   {"version", 0, 0, 'v'},
-  {"help", 0, 0, CHAR_MAX + 1},
+  {"help", 0, 0, HELP_OPTION},
   {0, 0, 0, 0}
 };
 
@@ -250,8 +258,6 @@ main (int argc, char **argv)
   setlocale (LC_ALL, "");
   bindtextdomain (PACKAGE, LOCALEDIR);
   textdomain (PACKAGE);
-  if ((diff = getenv ("DIFF_PROGRAM")))
-    diff_program = diff;
 
   while ((c = getopt_long (argc, argv, "aeimvx3AEL:TX", longopts, 0)) != -1)
     {
@@ -295,8 +301,12 @@ main (int argc, char **argv)
 	  printf ("diff3 %s\n%s\n\n%s\n\n%s\n",
 		  version_string, copyright_string,
 		  _(free_software_msgid), _(authorship_msgid));
+	  check_stdout ();
 	  exit (0);
-	case CHAR_MAX + 1:
+	case DIFF_PROGRAM_OPTION:
+	  diff_program = optarg;
+	  break;
+	case HELP_OPTION:
 	  usage ();
 	  check_stdout ();
 	  exit (0);
@@ -428,8 +438,10 @@ try_help (char const *reason_msgid, char const *operand)
 static void
 check_stdout (void)
 {
-  if (ferror (stdout) || fclose (stdout) != 0)
+  if (ferror (stdout))
     fatal ("write failed");
+  else if (fclose (stdout) != 0)
+    perror_with_exit (_("standard output"));
 }
 
 static char const * const option_help_msgid[] = {
@@ -446,6 +458,7 @@ static char const * const option_help_msgid[] = {
   N_("-i  Append `w' and `q' commands to ed scripts."),
   N_("-a  --text  Treat all files as text."),
   N_("-T  --initial-tab  Make tabs line up by prepending a tab."),
+  N_("--diff-program=PROGRAM  Use PROGRAM to compare files."),
   "",
   N_("-v  --version  Output version info."),
   N_("--help  Output this help."),
@@ -1130,13 +1143,13 @@ read_diff (char const *filea,
   char *diff_result;
   size_t bytes, current_chunk_size, total;
   int fd, wstatus;
+  int werrno = 0;
   struct stat pipestat;
 
 #if HAVE_WORKING_FORK || HAVE_WORKING_VFORK
 
   char const *argv[8];
   char const **ap;
-  char const *not_found = _(": not found\n");
   int fds[2];
   pid_t pid;
 
@@ -1168,11 +1181,7 @@ read_diff (char const *filea,
 	 hosts with a nonstandard prototype for execvp.  */
       execvp (diff_program, (char **) argv);
 
-      /* Avoid stdio, because the parent process's buffers are inherited.
-         Similarly, avoid gettext since it may modify the parent buffers.  */
-      write (STDERR_FILENO, diff_program, strlen (diff_program));
-      write (STDERR_FILENO, not_found, strlen (not_found));
-      _exit (2);
+      _exit (127);
     }
 
   if (pid == -1)
@@ -1197,6 +1206,7 @@ read_diff (char const *filea,
   *p++ = ' ';
   p += quote_system_arg (p, fileb);
   *p = 0;
+  errno = 0;
   fpipe = popen (command, "r");
   if (!fpipe)
     perror_with_exit (command);
@@ -1231,6 +1241,8 @@ read_diff (char const *filea,
 #if ! (HAVE_WORKING_FORK || HAVE_WORKING_VFORK)
 
   wstatus = pclose (fpipe);
+  if (wstatus == -1)
+    werrno = errno;
 
 #else
 
@@ -1241,8 +1253,10 @@ read_diff (char const *filea,
 
 #endif
 
-  if (! (WIFEXITED (wstatus) && WEXITSTATUS (wstatus) < 2))
-    fatal ("subsidiary program failed");
+  if (! werrno && WIFEXITED (wstatus) && WEXITSTATUS (wstatus) == 127)
+    error (2, 0, _("subsidiary program `%s' not found"), diff_program);
+  if (werrno || ! (WIFEXITED (wstatus) && WEXITSTATUS (wstatus) < 2))
+    error (2, werrno, _("subsidiary program `%s' failed"), diff_program);
 
   return diff_result + total;
 }
