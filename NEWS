@@ -1,4 +1,10 @@
-User-visible changes in test version 2.7.3:
+User-visible changes in test version 2.7.4:
+
+* cmp now supports trailing operands SKIP1 and SKIP2, a la BSD cmp.
+* cmp -i or --ignore-initial now accepts SKIP1:SKIP2 option value.
+* New cmp option: -n or --bytes.
+
+Other user-visible changes since version 2.7:
 
 * cmp's old -c or --print-chars option has been renamed;
   use -b or --print-bytes instead.
@@ -19,20 +25,15 @@ User-visible changes in test version 2.7.3:
   DIFF_PROGRAM tells diff3 and sdiff which `diff' program to use.
 * The new sdiff interactive command `ed' precedes each version with a header.
 * On 64-bit hosts, files larger than 2 GB can be compared.
-
-Other user-visible changes since version 2.7:
-
 * Some internationalization support has been added.
   Some diagnostics have been reworded slightly for consistency.
   Also, `diff -D FOO' now outputs `/* ! FOO */' instead of `/* not FOO */'.
-
 * diffutils can now run on some PC configurations.
-  See the `pc' subdirectory.  This is still under construction.
+  This is still under construction.
   We don't plan to support all PC configurations, just the easy ones.
-  Also, we don't build or test this directory ourselves,
+  Also, we don't build or test the PC configurations ourselves,
   and the PC world has several evolving development environments,
-  so it's likely that this directory won't work for you without some hacking.
-  If you run into a problem here, please send a bug report with a tested fix.
+  so it's likely that this won't work for you without some hacking.
 
 
 User-visible changes in version 2.7:
