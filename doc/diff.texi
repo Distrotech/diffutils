@@ -2957,14 +2957,6 @@ equivalent to @option{-a -c}.  Long named options can be abbreviated to
 any unique prefix of their name.  Brackets ([ and ]) indicate that an
 option takes an optional argument.
 
-The @env{DIFF_OPTIONS} environment variable specifies default options to
-be placed in front of any explicit options.  For example, if
-@env{DIFF_OPTIONS} is @samp{-a -p}, @command{diff} behaves as if the
-two options @option{-a} and @option{-p} had been specified before any
-explicit options.  Option specifications are separated by whitespace.  A
-backslash escapes the next character, so it can be used to specify an
-option containing whitespace or a backslash.
-
 @table @option
 @item -@var{lines}
 Show @var{lines} (an integer) lines of context.  This option does not
@@ -3305,11 +3297,6 @@ The files to compare are @var{mine}, @var{older}, and @var{yours}.
 At most one of these three file names may be @file{-},
 which tells @command{diff3} to read the standard input for that file.
 
-Normally @command{diff3} invokes @command{diff} to do its work.  You can
-tell @command{diff3} to use some other compatible comparison program
-by setting the @env{DIFF_PROGRAM} environment variable to the name of
-the other program.
-
 An exit status of 0 means @command{diff3} was successful, 1 means some
 conflicts were found, and 2 means trouble.
 
@@ -3335,6 +3322,10 @@ do not appear to be text.  @xref{Binary}.
 Incorporate all changes from @var{older} to @var{yours} into @var{mine},
 surrounding all conflicts with bracket lines.
 @xref{Marking Conflicts}.
+
+@item --diff-program=@var{program}
+Use the compatible comparison program @var{program} to compare files
+instead of @command{diff}.
 
 @item -e
 Generate an @command{ed} script that incorporates all the changes from
@@ -3787,11 +3778,6 @@ they begin with @samp{-}.  You may not use @file{-} as an input file.
 side-by-side difference.  This usage is obsolete; use @samp{diff
 --side-by-side} instead.
 
-Normally @command{sdiff} invokes @command{diff} to do its work.  You can
-tell @command{sdiff} to use some other compatible comparison program
-by setting the @env{DIFF_PROGRAM} environment variable to the name of
-the other program.
-
 An exit status of 0 means no differences were found, 1 means some
 differences were found, and 2 means trouble.
 
@@ -3827,6 +3813,10 @@ Lines}.
 Change the algorithm to perhaps find a smaller set of changes.  This
 makes @command{sdiff} slower (sometimes much slower).  @xref{diff
 Performance}.
+
+@item --diff-program=@var{program}
+Use the compatible comparison program @var{program} to compare files
+instead of @command{diff}.
 
 @item -E
 Ignore changes due to tab expansion.
