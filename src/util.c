@@ -558,7 +558,7 @@ translate_range (file, a, b, aptr, bptr)
 
 void
 print_number_range (sepchar, file, a, b)
-     char sepchar;
+     int sepchar;
      struct file_data *file;
      int a, b;
 {
