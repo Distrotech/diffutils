@@ -62,9 +62,9 @@ static off_t ignore_initial;
 
 /* Output format:
    type_first_diff
-     to print the offset and line number of the first differing bytes
+     to print the index and line number of the first differing bytes
    type_all_diffs
-     to print the (decimal) offsets and (octal) values of all differing bytes
+     to print the (decimal) indices and (octal) values of all differing bytes
    type_status
      to only return an exit status indicating whether the files differ */
 static enum
@@ -110,7 +110,7 @@ check_stdout (void)
 static char const * const option_help_msgid[] = {
   N_("-b  --print-bytes  Output differing bytes as characters."),
   N_("-i N  --ignore-initial=N  Ignore differences in the first N bytes of input."),
-  N_("-l  --verbose  Output offsets and codes of all differing bytes."),
+  N_("-l  --verbose  Output indices and codes of all differing bytes."),
   N_("-s  --quiet  --silent  Output nothing; yield exit status only."),
   N_("-v  --version  Output version info."),
   N_("--help  Output this help."),
@@ -289,7 +289,7 @@ cmp (void)
 {
   off_t line_number = 1;	/* Line number (1...) of first difference. */
   off_t char_number = ignore_initial + 1;
-				/* Offset (1...) in files of 1st difference. */
+				/* Index (1...) in files of 1st difference. */
   size_t read0, read1;		/* Number of bytes read from each file. */
   size_t first_diff;		/* Offset (0...) in buffers of 1st diff. */
   size_t smaller;		/* The lesser of `read0' and `read1'. */
