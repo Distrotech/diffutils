@@ -138,7 +138,7 @@
    and using `stricmp' is required for proper behavior with HPFS.
    OS/2 does not strictly forbid case sensitive file systems like NFS,
    but it's too painful to get this right, unfortunately.  */
-#define filename_cmp(a, b) stricmp (a, b)
+#define filename_cmp stricmp
 
 char *filename_lastdirchar (char const *);
 #define filename_lastdirchar (filename_lastdirchar)
