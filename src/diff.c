@@ -1,5 +1,5 @@
 /* GNU DIFF main routine.
-   Copyright (C) 1988-1992 Free Software Foundation, Inc.
+   Copyright (C) 1988, 1989, 1992 Free Software Foundation, Inc.
 
 This file is part of GNU DIFF.
 
@@ -18,11 +18,12 @@ along with GNU DIFF; see the file COPYING.  If not, write to
 the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 
 /* GNU DIFF was written by Mike Haertel, David Hayes,
-   Richard Stallman and Len Tower.  */
+   Richard Stallman, Len Tower, and Paul Eggert.  */
 
 #define GDIFF_MAIN
 #include "diff.h"
 #include "getopt.h"
+#include "fnmatch.h"
 
 #ifndef DEFAULT_WIDTH
 #define DEFAULT_WIDTH 130
@@ -32,18 +33,19 @@ the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 #define GUTTER_WIDTH_MINIMUM 3
 #endif
 
-int compare_files ();
 int diff_dirs ();
 int diff_2_files ();
-int wildmat ();
-void add_regexp();
-void specify_style ();
-void usage ();
+
+static int compare_files ();
+static int specify_format ();
+static void add_regexp();
+static void specify_style ();
+static void usage ();
 
 /* Nonzero for -r: if comparing two directories,
    compare their common subdirectories recursively.  */
 
-int recursive;
+static int recursive;
 
 /* For debugging: don't do discard_confusing_lines.  */
 
@@ -108,7 +110,7 @@ excluded_filename (f)
 {
   int i;
   for (i = 0;  i < exclude_count;  i++)
-    if (wildmat (f, exclude[i]))
+    if (fnmatch (exclude[i], f, 0) == 0)
       return 1;
   return 0;
 }
@@ -138,7 +140,7 @@ add_exclude_file (name)
   if (f.desc < 0 || fstat (f.desc, &f.stat) != 0)
     return -1;
 
-  (void) sip (&f);
+  sip (&f, 1);
   slurp (&f);
 
   for (p = f.buffer, lim = p + f.buffered_chars;  p < lim;  p = q)
@@ -159,7 +161,7 @@ add_exclude_file (name)
 static struct option longopts[] =
 {
   {"ignore-blank-lines", 0, 0, 'B'},
-  {"context", 2, 0, 129},
+  {"context", 2, 0, 'C'},
   {"ifdef", 1, 0, 'D'},
   {"show-function-line", 1, 0, 'F'},
   {"speed-large-files", 0, 0, 'H'},
@@ -193,10 +195,17 @@ static struct option longopts[] =
   {"exclude", 1, 0, 'x'},
   {"exclude-from", 1, 0, 'X'},
   {"side-by-side", 0, 0, 'y'},
-  {"unified", 2, 0, 130},
-  {"left-column", 0, 0, 131},
-  {"suppress-common-lines", 0, 0, 132},
-  {"sdiff-merge-assist", 0, 0, 133},
+  {"unified", 2, 0, 'U'},
+  {"left-column", 0, 0, 129},
+  {"suppress-common-lines", 0, 0, 130},
+  {"sdiff-merge-assist", 0, 0, 131},
+  {"old-line-format", 1, 0, 132},
+  {"new-line-format", 1, 0, 133},
+  {"unchanged-line-format", 1, 0, 134},
+  {"old-group-format", 1, 0, 135},
+  {"new-group-format", 1, 0, 136},
+  {"unchanged-group-format", 1, 0, 137},
+  {"changed-group-format", 1, 0, 138},
   {0, 0, 0, 0}
 };
 
@@ -233,7 +242,6 @@ main (argc, argv)
   tab_expand_flag = FALSE;
   recursive = FALSE;
   paginate_flag = FALSE;
-  ifdef_string = NULL;
   heuristic = FALSE;
   dir_start_file = NULL;
   msg_chain = NULL;
@@ -243,7 +251,7 @@ main (argc, argv)
   /* Decode the options.  */
 
   while ((c = getopt_long (argc, argv,
-			   "0123456789abBcC:dD:efF:hHiI:lL:nNpPqrsS:tTuvwW:x:X:y",
+			   "0123456789abBcC:dD:efF:hHiI:lL:nNpPqrsS:tTuU:vwW:x:X:y",
 			   longopts, (int *)0)) != EOF)
     {
       switch (c)
@@ -286,9 +294,8 @@ main (argc, argv)
 	  ignore_blank_lines_flag = 1;
 	  break;
 
-	case 'C':
-	case 129:		/* +context[=lines] */
-	case 130:		/* +unified[=lines] */
+	case 'C':		/* +context[=lines] */
+	case 'U':		/* +unified[=lines] */
 	  if (optarg)
 	    {
 	      if (context >= 0)
@@ -301,7 +308,7 @@ main (argc, argv)
 	  /* Falls through.  */
 	case 'c':
 	  /* Make context-style output.  */
-	  specify_style (c == 130 ? OUTPUT_UNIFIED : OUTPUT_CONTEXT);
+	  specify_style (c == 'U' ? OUTPUT_UNIFIED : OUTPUT_CONTEXT);
 	  break;
 
 	case 'd':
@@ -313,7 +320,25 @@ main (argc, argv)
 	case 'D':
 	  /* Make merged #ifdef output.  */
 	  specify_style (OUTPUT_IFDEF);
-	  ifdef_string = optarg;
+	  {
+	    int i, err = 0;
+	    static const char C_ifdef_group_formats[] =
+	      "#ifndef %s\n%%<#endif /* not %s */\n%c#ifdef %s\n%%>#endif /* %s */\n%c%%=%c#ifndef %s\n%%<#else /* %s */\n%%>#endif /* %s */\n";
+	    char *b = xmalloc (sizeof (C_ifdef_group_formats)
+			       + 7 * strlen(optarg) - 14 /* 7*"%s" */
+			       - 8 /* 5*"%%" + 3*"%c" */);
+	    sprintf (b, C_ifdef_group_formats,
+		     optarg, optarg, 0,
+		     optarg, optarg, 0, 0,
+		     optarg, optarg, optarg);
+	    for (i = 0; i < 4; i++)
+	      {
+		err |= specify_format (&group_format[i], b);
+		b += strlen (b) + 1;
+	      }
+	    if (err)
+	      error ("conflicting #ifdef formats", 0, 0);
+	  }
 	  break;
 
 	case 'e':
@@ -467,18 +492,43 @@ main (argc, argv)
 	    fatal ("column width must be a positive integer");
 	  break;
 	  
-	case 131:
+	case 129:
 	  sdiff_left_only = 1;
 	  break;
 	  
-	case 132:
+	case 130:
 	  sdiff_skip_common_lines = 1;
 	  break;
 	  
-	case 133:
+	case 131:
 	  /* sdiff-style columns output. */
 	  specify_style (OUTPUT_SDIFF);
 	  sdiff_help_sdiff = 1;
+	  break;
+
+	case 132:
+	case 133:
+	case 134:
+	  specify_style (OUTPUT_IFDEF);
+	  {
+	    const char **form = &line_format[c - 132];
+	    if (*form && strcmp (*form, optarg) != 0)
+	      error ("conflicting line format", 0, 0);
+	    *form = optarg;
+	  }
+	  break;
+
+	case 135:
+	case 136:
+	case 137:
+	case 138:
+	  specify_style (OUTPUT_IFDEF);
+	  {
+	    const char **form = &group_format[c - 135];
+	    if (*form && strcmp (*form, optarg) != 0)
+	      error ("conflicting group format", 0, 0);
+	    *form = optarg;
+	  }
 	  break;
 
 	default:
@@ -513,15 +563,36 @@ main (argc, argv)
   else if (context == -1)
     /* Default amount of context for -c.  */
     context = 3;
+ 
+  if (output_style == OUTPUT_IFDEF)
+    {
+      int i;
+      for (i = 0; i < sizeof (line_format) / sizeof (*line_format); i++)
+	if (!line_format[i])
+	  line_format[i] = "%l\n";
+      if (!group_format[OLD])
+	group_format[OLD]
+	  = group_format[UNCHANGED] ? group_format[UNCHANGED] : "%<";
+      if (!group_format[NEW])
+	group_format[NEW]
+	  = group_format[UNCHANGED] ? group_format[UNCHANGED] : "%>";
+      if (!group_format[UNCHANGED])
+	group_format[UNCHANGED] = "%=";
+      if (!group_format[CHANGED])
+	group_format[CHANGED] = concat (group_format[OLD],
+					group_format[NEW], "");
+    }
 
   no_diff_means_no_output =
-    output_style != OUTPUT_IFDEF
-      && (output_style != OUTPUT_SDIFF
-	  || (sdiff_skip_common_lines && ! sdiff_help_sdiff));
+    (output_style == OUTPUT_IFDEF ?
+      (!*group_format[UNCHANGED]
+       || (strcmp (group_format[UNCHANGED], "%=") == 0
+	   && !*line_format[UNCHANGED]))
+     : output_style == OUTPUT_SDIFF ? sdiff_skip_common_lines : 1);
 
   switch_string = option_list (argv + 1, optind - 1);
 
-  val = compare_files (0, argv[optind], 0, argv[optind + 1], 0);
+  val = compare_files (NULL, argv[optind], NULL, argv[optind + 1], 0);
 
   /* Print any messages that were saved up for last.  */
   print_message_queue ();
@@ -534,7 +605,7 @@ main (argc, argv)
 
 /* Add the compiled form of regexp PATTERN to REGLIST.  */
 
-void
+static void
 add_regexp (reglist, pattern)
      struct regexp_list **reglist;
      char *pattern;
@@ -554,28 +625,44 @@ add_regexp (reglist, pattern)
   *reglist = r;
 }
 
-void
+static void
 usage ()
 {
   fprintf (stderr, "Usage: %s [options] from-file to-file\n", program);
   fprintf (stderr, "Options:\n\
-       [-abBcdefhHilnNpPqrstTuvwy] [-C lines] [-D symbol] [-F regexp]\n\
-       [-I regexp] [-L from-label [-L to-label]] [-S starting-file]\n\
-       [-W columns] [--ignore-blank-lines] [--context[=lines]]\n\
-       [--ifdef=symbol] [--show-function-line=regexp] [--speed-large-files]\n\
-       [--label=from-label [--label=to-label]] [--new-file]\n\
-       [--ignore-matching-lines=regexp] [--unidirectional-new-file]\n");
+       [-abBcdefhHilnNpPqrstTuvwy] [-C lines] [-D name] [-F regexp]\n\
+       [-I regexp] [-L from-label [-L to-label]] [-S starting-file] [-U lines]\n\
+       [-W columns] [-x pattern] [-X pattern-file] [--exclude=pattern]\n\
+       [--exclude-from=pattern-file] [--ignore-blank-lines] [--context[=lines]]\n\
+       [--ifdef=name] [--show-function-line=regexp] [--speed-large-files]\n\
+       [--label=from-label [--label=to-label]] [--new-file]\n");
   fprintf (stderr, "\
+       [--ignore-matching-lines=regexp] [--unidirectional-new-file]\n\
        [--starting-file=starting-file] [--initial-tab] [--width=columns]\n\
        [--text] [--ignore-space-change] [--minimal] [--ed] [--forward-ed]\n\
        [--ignore-case] [--paginate] [--rcs] [--show-c-function] [--brief]\n\
-       [--recursive] [--report-identical-files] [--expand-tabs] [--version]\n\
+       [--recursive] [--report-identical-files] [--expand-tabs] [--version]\n");
+  fprintf (stderr, "\
        [--ignore-all-space] [--side-by-side] [--unified[=lines]]\n\
-       [--left-column] [--suppress-common-lines] [--sdiff-merge-assist]\n");
+       [--left-column] [--suppress-common-lines] [--sdiff-merge-assist]\n\
+       [--old-line-format=format] [--new-line-format=format]\n\
+       [--unchanged-line-format=format]\n\
+       [--old-group-format=format] [--new-group-format=format]\n\
+       [--unchanged-group-format=format] [--changed-group-format=format]\n");
   exit (2);
 } 
 
-void
+static int
+specify_format (var, value)
+     const char **var;
+     const char *value;
+{
+  int err = *var ? strcmp (*var, value) : 0;
+  *var = value;
+  return err;
+}
+
+static void
 specify_style (style)
      enum output_style style;
 {
@@ -593,7 +680,7 @@ specify_style (style)
    Value is 0 if files are the same, 1 if different,
    2 if there is a problem opening them.  */
 
-int
+static int
 compare_files (dir0, name0, dir1, name1, depth)
      char *dir0, *dir1;
      char *name0, *name1;
@@ -730,8 +817,7 @@ compare_files (dir0, name0, dir1, name1, depth)
 	}
       else
 	{
-	  val = diff_dirs (inf[0].name, inf[1].name, 
-			   compare_files, depth, 0, 0);
+	  val = diff_dirs (inf, compare_files, depth);
 	}
 
     }
@@ -745,8 +831,7 @@ compare_files (dir0, name0, dir1, name1, depth)
 	  if (recursive
 	      && (entire_new_file_flag
 		  || (unidirectional_new_file_flag && inf[0].desc == -1)))
-	    val = diff_dirs (inf[0].name, inf[1].name, compare_files, depth,
-			     inf[0].desc == -1, inf[1].desc == -1);
+	    val = diff_dirs (inf, compare_files, depth);
 	  else
 	    {
 	      char *dir = (inf[0].desc == -1) ? dir1 : dir0;
