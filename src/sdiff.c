@@ -1,7 +1,7 @@
 /* SDIFF -- interactive merge front end to diff */
 
 static char const copyright_string[] =
-  "Copyright 1992, 93, 94, 95, 96, 1997 Free Software Foundation, Inc.";
+  "Copyright 1992, 93, 94, 95, 96, 1998 Free Software Foundation, Inc.";
 
 /* This file is part of GNU DIFF.
 
@@ -27,7 +27,7 @@ static char const authorship_msgid[] =
 #include <stdio.h>
 #include <signal.h>
 #include "getopt.h"
-#include "quotearg.h"
+#include "quotesys.h"
 
 /* Size of chunks read from files which must be parsed into lines.  */
 #define SDIFF_BUFSIZE ((size_t) 65536)
@@ -229,7 +229,7 @@ usage ()
       printf ("  %s\n", _(*p));
     else
       putchar ('\n');
-  printf (_("Report bugs to <bug-gnu-utils@prep.ai.mit.edu>.\n"));
+  printf (_("Report bugs to <bug-gnu-utils@gnu.org>.\n"));
 }
 
 static void
