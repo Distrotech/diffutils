@@ -21,6 +21,7 @@ AH_VERBATIM([_GNU_SOURCE],
 #ifndef _GNU_SOURCE
 # define _GNU_SOURCE
 #endif])
+AC_DEFINE([__EXTENSIONS__], 1, [Enable Solaris extensions.])
 AC_SYS_LARGEFILE
 
 AC_C_CONST
