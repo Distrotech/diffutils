@@ -1130,7 +1130,7 @@ interact (struct line_filter *diff,
 	  if (llen < 0 || llen != val || errno || *numend != ',')
 	    fatal (diff_help);
 	  rlen = val = strtoumax (numend + 1, &numend, 10);
-	  if (rlen < 0 || rlen != val || errno || *numend != '\n')
+	  if (rlen < 0 || rlen != val || errno || *numend)
 	    fatal (diff_help);
 
 	  lenmax = MAX (llen, rlen);
