@@ -19,6 +19,10 @@ the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 
 #include "diff.h"
 
+#ifndef PR_PROGRAM
+#define PR_PROGRAM "/bin/pr"
+#endif
+
 /* Queue up one-line messages to be printed at the end,
    when -l is specified.  Each message is recorded with a `struct msg'.  */
 
@@ -172,11 +176,10 @@ begin_output ()
   /* Construct the header of this piece of diff.  */
   name = xmalloc (strlen (current_name0) + strlen (current_name1)
 		  + strlen (switch_string) + 7);
-  /* Posix.2 section 4.17.6.1.1 specifies this format.  But there are some
-     bugs in the first printing (IEEE Std 1003.2-1992 p 251 l 3304):
-     it says that we must print only the last component of the pathnames,
-     and it requires two spaces after "diff" if there are no options.
-     These requirements are silly and do not match historical practice.  */
+  /* Posix.2 section 4.17.6.1.1 specifies this format.  But there is a
+     bug in the first printing (IEEE Std 1003.2-1992 p 251 l 3304):
+     it says that we must print only the last component of the pathnames.
+     This requirement is silly and does not match historical practice.  */
   sprintf (name, "diff%s %s %s", switch_string, current_name0, current_name1);
 
   if (paginate_flag)
@@ -205,8 +208,8 @@ begin_output ()
 	      close (pipes[0]);
 	    }
 
-	  execl (PR_FILE_NAME, PR_FILE_NAME, "-f", "-h", name, 0);
-	  pfatal_with_name (PR_FILE_NAME);
+	  execl (PR_PROGRAM, PR_PROGRAM, "-f", "-h", name, 0);
+	  pfatal_with_name (PR_PROGRAM);
 	}
       else
 	{
@@ -216,18 +219,12 @@ begin_output ()
 	    pfatal_with_name ("fdopen");
 	}
 #else /* ! HAVE_FORK */
-      char *command = xmalloc (4 * strlen (name) + strlen (PR_FILE_NAME) + 10);
-      char *p, *q;
-      sprintf (command, "%s -f -h '", PR_FILE_NAME);
+      char *command = xmalloc (4 * strlen (name) + strlen (PR_PROGRAM) + 10);
+      char *p;
+      char const *a = name;
+      sprintf (command, "%s -f -h ", PR_PROGRAM);
       p = command + strlen (command);
-      for (q = name;  *q;  *p++ = *q++)
-	if (*q == '\'')
-	  {
-	    *p++ = '\'';
-	    *p++ = '\\';
-	    *p++ = '\'';
-	  }
-      *p++ = '\'';
+      SYSTEM_QUOTE_ARG (p, a);
       *p = 0;
       outfile = popen (command, "w");
       if (!outfile)
@@ -318,20 +315,20 @@ line_cmp (s1, s2)
 	  if (ignore_all_space_flag)
 	    {
 	      /* For -w, just skip past any white space.  */
-	      while (isspace (c1) && c1 != '\n') c1 = *t1++;
-	      while (isspace (c2) && c2 != '\n') c2 = *t2++;
+	      while (ISSPACE (c1) && c1 != '\n') c1 = *t1++;
+	      while (ISSPACE (c2) && c2 != '\n') c2 = *t2++;
 	    }
 	  else if (ignore_space_change_flag)
 	    {
 	      /* For -b, advance past any sequence of white space in line 1
 		 and consider it just one Space, or nothing at all
 		 if it is at the end of the line.  */
-	      if (isspace (c1))
+	      if (ISSPACE (c1))
 		{
 		  while (c1 != '\n')
 		    {
 		      c1 = *t1++;
-		      if (! isspace (c1))
+		      if (! ISSPACE (c1))
 			{
 			  --t1;
 			  c1 = ' ';
@@ -341,12 +338,12 @@ line_cmp (s1, s2)
 		}
 
 	      /* Likewise for line 2.  */
-	      if (isspace (c2))
+	      if (ISSPACE (c2))
 		{
 		  while (c2 != '\n')
 		    {
 		      c2 = *t2++;
-		      if (! isspace (c2))
+		      if (! ISSPACE (c2))
 			{
 			  --t2;
 			  c2 = ' ';
@@ -362,14 +359,14 @@ line_cmp (s1, s2)
 		     character in both sides and try again.  */
 		  if (c2 == ' ' && c1 != '\n'
 		      && (unsigned char const *) s1 + 1 < t1
-		      && isspace(t1[-2]))
+		      && ISSPACE(t1[-2]))
 		    {
 		      --t1;
 		      continue;
 		    }
 		  if (c1 == ' ' && c2 != '\n'
 		      && (unsigned char const *) s2 + 1 < t2
-		      && isspace(t2[-2]))
+		      && ISSPACE(t2[-2]))
 		    {
 		      --t2;
 		      continue;
@@ -381,9 +378,9 @@ line_cmp (s1, s2)
 
 	  if (ignore_case_flag)
 	    {
-	      if (isupper (c1))
+	      if (ISUPPER (c1))
 		c1 = tolower (c1);
-	      if (isupper (c2))
+	      if (ISUPPER (c2))
 		c2 = tolower (c2);
 	    }
 
@@ -532,7 +529,7 @@ output_1_line (text, limit, flag_format, line_flag)
 	    break;
 
 	  default:
-	    if (isprint (c))
+	    if (ISPRINT (c))
 	      column++;
 	    putc (c, out);
 	    break;
