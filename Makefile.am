@@ -1,6 +1,6 @@
 # Main Automakefile for GNU diffutils.
 
-# Copyright (C) 2001 Free Software Foundation, Inc.
+# Copyright (C) 2001, 2002 Free Software Foundation, Inc.
 
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -18,8 +18,7 @@
 ## 02111-1307, USA.
 
 AUTOMAKE_OPTIONS = gnits dist-shar
-EXTRA_DIST = exgettext
+EXTRA_DIST = config/config.rpath exgettext INSTALLME
 SUBDIRS = doc intl lib m4 ms src po
-DISTCLEANFILES = intl/libintl.h
 
 ACLOCAL_AMFLAGS = -I m4
