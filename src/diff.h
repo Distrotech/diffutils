@@ -95,6 +95,10 @@ EXTERN int      ignore_blank_lines_flag;
    This depends on various options.  */
 EXTERN int      length_varies;
 
+/* 1 if files may match even if their contents are not byte-for-byte identical.
+   This depends on various options.  */
+EXTERN int      ignore_some_changes;
+
 /* Ignore differences in case of letters (-i).  */
 EXTERN int      ignore_case_flag;
 
