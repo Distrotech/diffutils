@@ -1,3 +1,4 @@
+# @configure_input@
 # Makefile for GNU DIFF
 # Copyright (C) 1988,1989,1991,1992,1993,1994 Free Software Foundation, Inc.
 #
@@ -55,7 +56,7 @@ SHELL = /bin/sh
 
 # The source files for all of the programs.
 srcs=diff.c analyze.c cmpbuf.c cmpbuf.h io.c context.c ed.c normal.c ifdef.c \
-	util.c dir.c memchr.c memcmp.c waitpid.c \
+	util.c dir.c memchr.c waitpid.c \
 	version.c diff.h regex.c regex.h side.c system.h \
 	diff3.c sdiff.c cmp.c error.c xmalloc.c getopt.c getopt1.c getopt.h \
 	fnmatch.c fnmatch.h alloca.c
@@ -149,9 +150,9 @@ config.status: configure
 	./config.status --recheck
 config.h: config.hin config.status
 	rm -f $@
-	./config.status
+	CONFIG_FILES= ./config.status
 Makefile: Makefile.in config.status
-	./config.status
+	CONFIG_HEADERS= ./config.status
 
 dist: $(distfiles)
 	echo diffutils-`sed -e '/version_string/!d' -e 's/[^0-9]*\([0-9a-z.]*\).*/\1/' -e q version.c` > .fname
