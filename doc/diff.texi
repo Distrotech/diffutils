@@ -910,13 +910,14 @@ means that you can use @samp{-p} and @samp{-F} together, if you wish.
 
 To show in which functions differences occur for C and similar
 languages, you can use the @samp{-p} or @samp{--show-c-function} option.
-This option automatically selects the context output format
+This option automatically defaults to the context output format
 (@pxref{Context Format}), with the default number of lines of context.
-You can override that number with @samp{-C @var{lines}} later in the
+You can override that number with @samp{-C @var{lines}} elsewhere in the
 command line.  You can override both the format and the number with
-@samp{-U @var{lines}} later in the command line.
+@samp{-U @var{lines}} elsewhere in the command line.
 
 The @samp{-p} and @samp{--show-c-function} options are equivalent to
+@samp{-F'^[_a-zA-Z$]'} if the unified format is specified, otherwise
 @samp{-c -F'^[_a-zA-Z$]'} (@pxref{Specified Headings}).  GNU @code{diff}
 provides them for the sake of convenience.
 
