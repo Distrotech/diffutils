@@ -1,6 +1,6 @@
 # Additional editing of Makefiles and of config.status
 
-# Copyright (C) 2001 Free Software Foundation, Inc.
+# Copyright (C) 2001, 2002 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -32,9 +32,12 @@
   s,Makefile\\.in\\.in,Makefile.in-in,g;t t\
   s,Makefile\\.am\\.in,Makefile.am-in,g;t t\
   /^install-info-am:/,/^$/ {\
-    /@list=/ s,\\\$(INFO_DEPS),& diff.i,\
-    /@for *file/ s,\\\$(INFO_DEPS),& diff.i,\
-    s,file-\\[0-9\\]\\[0-9\\],& \\$\\$file[0-9] \\$\\$file[0-9][0-9],\
+    /@list=.\\\$(INFO_DEPS)\[^ \]/s,DEPS),& diff.i,\
+    s,\\(file-\\[0-9\\]\\[0-9\\]\\)\\(\[^ \]\\),\\1 \\$\\$file[0-9] \\$\\$file[0-9][0-9]\\2,\
+  }\
+  /^uninstall-info-am:/,/^$/ {\
+    /@list=.\\\$(INFO_DEPS)\[^ \]/s,DEPS),& diff.i,\
+    s,\\(file-\\[0-9\\]\\[0-9\\]\\)\\(\[^ \]\\),\\1 \\$\\$file[0-9] \\$\\$file[0-9][0-9]\\2,\
   }
 
 # Makefile.in.in is renamed to Makefile.in-in.
