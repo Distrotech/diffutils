@@ -1,6 +1,7 @@
 # Configure template for GNU Diffutils.
 
-# Copyright (C) 1994, 1995, 1998, 2001, 2002 Free Software Foundation, Inc.
+# Copyright (C) 1994, 1995, 1998, 2001, 2002, 2004 Free Software
+# Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -19,28 +20,23 @@
 
 AC_PREREQ(2.53)
 
-AC_INIT(GNU diffutils, 2.8.4, bug-gnu-utils@gnu.org)
-AC_CONFIG_SRCDIR(src/diff.c)
+AC_INIT([GNU diffutils], [2.8.6], [bug-gnu-utils@gnu.org])
+AC_CONFIG_SRCDIR([src/diff.c])
+AC_CONFIG_AUX_DIR([config])
+AC_CONFIG_MACRO_DIR([m4])
 
-AC_CONFIG_AUX_DIR(config)
-AM_CONFIG_HEADER([config.h:config.hin])
 AM_INIT_AUTOMAKE([gnits])
+AC_CONFIG_HEADER([config.h:config.hin])
 
-AC_GNU_SOURCE
+gl_USE_SYSTEM_EXTENSIONS
 AC_PROG_AWK
 AC_PROG_CC
-AC_ISC_POSIX
 AM_PROG_CC_STDC
-AC_PROG_CPP
 AM_MISSING_PROG(HELP2MAN, help2man)
-AC_PROG_INSTALL
 AC_PROG_RANLIB
 
-AC_DEFINE([__EXTENSIONS__], 1, [Enable Solaris extensions.])
 AC_SYS_LARGEFILE
 
-AC_C_CONST
-AC_C_INLINE
 AC_C_VARARRAYS
 
 AC_DEFINE(DEFAULT_EDITOR_PROGRAM, "ed",
@@ -49,47 +45,26 @@ AC_DEFINE(DEFAULT_EDITOR_PROGRAM, "ed",
 AC_PATH_PROG(PR_PROGRAM, pr, "")
 AC_DEFINE_UNQUOTED(PR_PROGRAM, "$PR_PROGRAM", [Name of "pr" program.])
 
-AC_HEADER_STDBOOL
-AC_HEADER_STDC
-AC_CHECK_HEADERS(fcntl.h libintl.h limits.h locale.h \
-  stdlib.h string.h sys/file.h time.h unistd.h)
+AC_CHECK_HEADERS(fcntl.h locale.h sys/file.h unistd.h)
 AC_CHECK_MEMBERS([struct stat.st_blksize])
 AC_CHECK_MEMBERS([struct stat.st_rdev])
-AC_CHECK_TYPE(ptrdiff_t, int)
-AC_CHECK_TYPE(ssize_t, int)
 jm_AC_TYPE_INTMAX_T
 jm_AC_TYPE_UINTMAX_T
-AM_GNU_GETTEXT([external])
-XGETTEXT="AWK='$AWK' \$(SHELL) \$(top_srcdir)/exgettext $XGETTEXT"
 AC_HEADER_DIRENT
-AC_HEADER_STAT
 AC_HEADER_SYS_WAIT
 AC_STRUCT_ST_MTIM_NSEC
 AC_TYPE_PID_T
 
-AC_CHECK_FUNCS(diraccess dup2 gettimeofday \
-  sigaction sigprocmask strchr strerror tmpnam)
-AC_REPLACE_FUNCS(memchr mkstemp strcasecmp waitpid)
-if test $ac_cv_func_mkstemp != yes; then
-  AC_LIBOBJ(tempname)
-fi
+AC_CHECK_FUNCS(dup2 gettimeofday sigaction sigprocmask strcasecoll stricoll)
+AC_REPLACE_FUNCS(waitpid)
 AC_FUNC_CLOSEDIR_VOID
 AC_FUNC_FORK
-AC_FUNC_VPRINTF
-jm_FUNC_GLIBC_UNLOCKED_IO
-jm_FUNC_GNU_STRFTIME
-# No need for AC_FUNC_MEMCMP, since memcmp is used only to test for equality.
-jm_FUNC_MALLOC
-jm_FUNC_REALLOC
-jm_PREREQ_C_STACK
-jm_PREREQ_ERROR
-jm_PREREQ_HARD_LOCALE
-jm_PREREQ_QUOTEARG
-jm_PREREQ_REGEX
 AC_DEFINE([REGEX_MALLOC], 1,
   [Define to 1 to avoid alloca in the regular-expression implementation.])
-jm_PREREQ_TEMPNAME
-jm_AC_PREREQ_XSTRTOUMAX
+
+
+GNULIB_AUTOCONF_SNIPPET
+
 
 # Check for clock_gettime and its library.  Solaris puts it in -lrt or
 # -lposix4, but we don't want to link that library unless we have to.
@@ -105,22 +80,10 @@ AC_SUBST([LIB_CLOCK_GETTIME])
 AC_CHECK_FUNCS(clock_gettime)
 LIBS=$diff_saved_libs
 
-# fnmatch
-AC_FUNC_FNMATCH_GNU
-
-# regex
-jm_INCLUDED_REGEX([lib/regex.c])
-if test "$jm_with_regex" = yes; then
-  AC_CONFIG_LINKS(lib/regex.h:lib/regex_.h)
-else
-  rm -f lib/regex.h
-fi
-
-jm_AC_DOS
 AC_FUNC_SETMODE_DOS
 
 AC_CONFIG_FILES([Makefile doc/Makefile \
-		 lib/Makefile lib/posix/Makefile man/Makefile \
+		 lib/Makefile man/Makefile \
 		 m4/Makefile ms/Makefile po/Makefile.in src/Makefile])
 AC_CONFIG_COMMANDS([default], [date > stamp-h])
 AC_OUTPUT
