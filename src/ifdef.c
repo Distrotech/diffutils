@@ -22,6 +22,7 @@ and this notice must be preserved on all copies.  */
 #include "diff.h"
 
 static void print_ifdef_hunk ();
+static void print_ifdef_lines ();
 struct change *find_change ();
 
 static int next_line;
@@ -37,11 +38,7 @@ print_ifdef_script (script)
   if (next_line < files[0].valid_lines)
     {
       begin_output ();
-      do
-	{
-	  print_1_line ("", &files[0].linbuf[next_line++]);
-	}
-      while (next_line < files[0].valid_lines);
+      print_ifdef_lines (&files[0], next_line, files[0].valid_lines);
     }
 }
 
@@ -53,42 +50,71 @@ static void
 print_ifdef_hunk (hunk)
      struct change *hunk;
 {
+  register FILE *out;
   int first0, last0, first1, last1, deletes, inserts;
-  register int i;
+  register char c;
+  const char *format;
 
   /* Determine range of line numbers involved in each file.  */
   analyze_hunk (hunk, &first0, &last0, &first1, &last1, &deletes, &inserts);
-  if (!deletes && !inserts)
+  if (inserts)
+    format = deletes ? ifnelse_format : ifdef_format;
+  else if (deletes)
+    format = ifndef_format;
+  else
     return;
 
   begin_output ();
 
   /* Print out lines up to this change.  */
-  while (next_line < first0)
-    print_1_line ("", &files[0].linbuf[next_line++]);
+  print_ifdef_lines (&files[0], next_line, first0);
 
-  /* Print out stuff deleted from first file.  */
-  if (deletes)
+  next_line = last0 + 1;
+  out = outfile;
+
+  while ((c = *format++) != 0)
     {
-      fprintf (outfile, "#ifndef %s\n", ifdef_string);
-      for (i = first0; i <= last0; i++)
-	print_1_line ("", &files[0].linbuf[i]);
-      next_line = i;
-    }
+      if (c == '%')
+	switch ((c = *format++))
+	  {
+	  case 0:
+	    return;
 
-  /* Print out stuff inserted from second file.  */
-  if (inserts)
-    {
-      if (deletes)
-	fprintf (outfile, "#else /* %s */\n", ifdef_string);
-      else
-	fprintf (outfile, "#ifdef %s\n", ifdef_string);
-      for (i = first1; i <= last1; i++)
-	print_1_line ("", &files[1].linbuf[i]);
-    }
+	  default:
+	    continue;
 
-  if (inserts)
-    fprintf (outfile, "#endif /* %s */\n", ifdef_string);
+	  case '<':
+	    /* Print out stuff deleted from first file.  */
+	    print_ifdef_lines (&files[0], first0, last0 + 1);
+	    continue;
+
+	  case '>':
+	    /* Print out stuff inserted from second file.  */
+	    print_ifdef_lines (&files[1], first1, last1 + 1);
+	    continue;
+
+	  case 'n':
+	    c = '\n';
+	    break;
+
+	  case '%':
+	    break;
+	  }
+      putc (c, out);
+  }
+}
+
+/* Print lines of CURRENT starting with FROM and continuing up to UPTO.  */
+static void
+print_ifdef_lines (current, from, upto)
+     struct file_data *current;
+     int from, upto;
+{
+  const char **linbuf = current->linbuf;
+
+  if (tab_expand_flag)
+    while (from < upto)
+      print_1_line ("", &linbuf[from++]);
   else
-    fprintf (outfile, "#endif /* not %s */\n", ifdef_string);
+    fwrite (linbuf[from], sizeof (char), linbuf[upto] - linbuf[from], outfile);
 }
