@@ -1,6 +1,7 @@
 User-visible changes since version 2.6:
 
-* New diff option: --binary
+* New diff option: --binary (useful only on non-Posix hosts)
+* -b and -w now ignore the incompleteness of lines; -B no longer does this.
 
 
 User-visible changes in version 2.6:
