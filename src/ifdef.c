@@ -142,10 +142,10 @@ format_group (out, format, endchar, groups)
 		for (i = 0; i < 2; i++)
 		  {
 		    unsigned char f0 = f[0];
-		    if (isdigit (f0))
+		    if (ISDIGIT (f0))
 		      {
 			value[i] = atoi (f);
-			while (isdigit ((unsigned char) *++f))
+			while (ISDIGIT ((unsigned char) *++f))
 			  continue;
 		      }
 		    else
@@ -241,7 +241,7 @@ groups_letter_value (g, letter)
      struct group const *g;
      int letter;
 {
-  if (isupper (letter))
+  if (ISUPPER (letter))
     {
       g++;
       letter = tolower (letter);
@@ -333,7 +333,7 @@ print_ifdef_lines (out, format, group)
 			    goto bad_format;
 			  break;
 
-		        case 'n':
+			case 'n':
 			  value = translate_line_number (file, from);
 			  break;
 
@@ -412,10 +412,10 @@ scan_printf_spec (spec)
 
   while ((c = *spec++) == '-')
     continue;
-  while (isdigit (c))
+  while (ISDIGIT (c))
     c = *spec++;
   if (c == '.')
-    while (isdigit (c = *spec++))
+    while (ISDIGIT (c = *spec++))
       continue;
   switch (c)
     {
