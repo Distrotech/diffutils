@@ -1,5 +1,7 @@
 /* Support routines for GNU DIFF.
-   Copyright 1988, 89, 92, 93, 94, 95, 1998 Free Software Foundation, Inc.
+
+   Copyright (C) 1988, 1989, 1992, 1993, 1994, 1995, 1998, 2001 Free
+   Software Foundation, Inc.
 
    This file is part of GNU DIFF.
 
@@ -15,11 +17,14 @@
 
    You should have received a copy of the GNU General Public License
    along with this program; see the file COPYING.
-   If not, write to the Free Software Foundation, 
+   If not, write to the Free Software Foundation,
    59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
 
 #include "diff.h"
-#include "quotesys.h"
+#include <error.h>
+#include <quotesys.h>
+#include <regex.h>
+#include <xalloc.h>
 
 char const pr_program[] = PR_PROGRAM;
 
@@ -41,32 +46,29 @@ static struct msg *msg_chain;
 static struct msg **msg_chain_end = &msg_chain;
 
 /* Use when a system call returns non-zero status.
-   TEXT should normally be the file name.  */
+   NAME should normally be the file name.  */
 
 void
-perror_with_name (text)
-     char const *text;
+perror_with_name (char const *name)
 {
-  error (0, errno, "%s", text);
+  error (0, errno, "%s", name);
 }
 
 /* Use when a system call returns non-zero status and that is fatal.  */
 
 void
-pfatal_with_name (text)
-     char const *text;
+pfatal_with_name (char const *name)
 {
   int e = errno;
   print_message_queue ();
-  error (2, e, "%s", text);
+  error (2, e, "%s", name);
   abort ();
 }
 
 /* Print an error message containing MSGID, then exit.  */
 
 void
-fatal (msgid)
-     char const *msgid;
+fatal (char const *msgid)
 {
   print_message_queue ();
   error (2, 0, "%s", _(msgid));
@@ -77,23 +79,22 @@ fatal (msgid)
    This is used for things like "Only in ...".  */
 
 void
-message (format_msgid, arg1, arg2)
-     char const *format_msgid, *arg1, *arg2;
+message (char const *format_msgid, char const *arg1, char const *arg2)
 {
   message5 (format_msgid, arg1, arg2, 0, 0);
 }
 
 void
-message5 (format_msgid, arg1, arg2, arg3, arg4)
-     char const *format_msgid, *arg1, *arg2, *arg3, *arg4;
+message5 (char const *format_msgid, char const *arg1, char const *arg2,
+	  char const *arg3, char const *arg4)
 {
-  if (paginate_flag)
+  if (paginate)
     {
       char *p;
       char const *arg[5];
       int i;
       size_t size[5];
-      size_t total_size = sizeof (struct msg);
+      size_t total_size = offsetof (struct msg, args);
       struct msg *new;
 
       arg[0] = format_msgid;
@@ -105,7 +106,7 @@ message5 (format_msgid, arg1, arg2, arg3, arg4)
       for (i = 0;  i < 5;  i++)
 	total_size += size[i] = strlen (arg[i]) + 1;
 
-      new = (struct msg *) xmalloc (total_size);
+      new = xmalloc (total_size);
 
       for (i = 0, p = new->args;  i < 5;  p += size[i++])
 	memcpy (p, arg[i], size[i]);
@@ -116,7 +117,7 @@ message5 (format_msgid, arg1, arg2, arg3, arg4)
     }
   else
     {
-      if (sdiff_help_sdiff)
+      if (sdiff_merge_assist)
 	putchar (' ');
       printf (_(format_msgid), arg1, arg2, arg3, arg4);
     }
@@ -125,7 +126,7 @@ message5 (format_msgid, arg1, arg2, arg3, arg4)
 /* Output all the messages that were saved up by calls to `message'.  */
 
 void
-print_message_queue ()
+print_message_queue (void)
 {
   char const *arg[5];
   int i;
@@ -152,12 +153,10 @@ print_message_queue ()
 
 static char const *current_name0;
 static char const *current_name1;
-static int currently_recursive;
+static bool currently_recursive;
 
 void
-setup_output (name0, name1, recursive)
-     char const *name0, *name1;
-     int recursive;
+setup_output (char const *name0, char const *name1, bool recursive)
 {
   current_name0 = name0;
   current_name1 = name1;
@@ -170,7 +169,7 @@ static pid_t pr_pid;
 #endif
 
 void
-begin_output ()
+begin_output (void)
 {
   char *name;
 
@@ -180,14 +179,15 @@ begin_output ()
   /* Construct the header of this piece of diff.  */
   name = xmalloc (strlen (current_name0) + strlen (current_name1)
 		  + strlen (switch_string) + 7);
-  /* Posix.2 section 4.17.6.1.1 specifies this format.  But there are some
-     bugs in the first printing (IEEE Std 1003.2-1992 p 251 l 3304):
-     it says that we must print only the last component of the pathnames,
-     and it requires two spaces after "diff" if there are no options.
-     These requirements are silly and do not match historical practice.  */
+  /* POSIX 1003.2-1992 section 4.17.6.1.1 specifies this format.  But
+     there are some bugs in the first printing (IEEE Std 1003.2-1992
+     page 251 line 3304): it says that we must print only the last
+     component of the pathnames, and it requires two spaces after
+     "diff" if there are no options.  These requirements are silly and
+     do not match historical practice.  */
   sprintf (name, "diff%s %s %s", switch_string, current_name0, current_name1);
 
-  if (paginate_flag)
+  if (paginate)
     {
       if (fflush (stdout) != 0)
 	pfatal_with_name (_("write failed"));
@@ -215,7 +215,7 @@ begin_output ()
 		close (pipes[0]);
 	      }
 
-	    execl (pr_program, pr_program, "-f", "-h", name, 0);
+	    execl (pr_program, pr_program, "-h", name, 0);
 	    /* Avoid stdio, because the parent process's buffers are inherited.
 	       Also, avoid gettext since it may modify the parent buffers.  */
 	    write (STDERR_FILENO, pr_program, strlen (pr_program));
@@ -230,11 +230,11 @@ begin_output ()
 	      pfatal_with_name ("fdopen");
 	  }
 #else /* ! HAVE_FORK */
-	char *command = xmalloc (sizeof (pr_program) - 1 + 7
+	char *command = xmalloc (sizeof pr_program - 1 + 7
 				 + quote_system_arg ((char *) 0, name) + 1);
 	char *p;
 	sprintf (command, "%s -f -h ", pr_program);
-	p = command + sizeof (pr_program) - 1 + 7;
+	p = command + sizeof pr_program - 1 + 7;
 	p += quote_system_arg (p, name);
 	*p = 0;
 	outfile = popen (command, "w");
@@ -279,7 +279,7 @@ begin_output ()
    Close OUTFILE and get rid of the `pr' subfork.  */
 
 void
-finish_output ()
+finish_output (void)
 {
   if (outfile != 0 && outfile != stdout)
     {
@@ -307,12 +307,12 @@ finish_output ()
    but an option like -i might cause us to ignore the difference.
    Return nonzero if the lines differ.  */
 
-int
-line_cmp (s1, s2)
-     char const *s1, *s2;
+bool
+lines_differ (char const *s1, char const *s2)
 {
   register unsigned char const *t1 = (unsigned char const *) s1;
   register unsigned char const *t2 = (unsigned char const *) s2;
+  size_t column = 0;
 
   while (1)
     {
@@ -322,19 +322,18 @@ line_cmp (s1, s2)
       /* Test for exact char equality first, since it's a common case.  */
       if (c1 != c2)
 	{
-	  /* Ignore horizontal white space if -b or -w is specified.  */
-
-	  if (ignore_all_space_flag)
+	  switch (ignore_white_space)
 	    {
+	    case IGNORE_ALL_SPACE:
 	      /* For -w, just skip past any white space.  */
 	      while (ISSPACE (c1) && c1 != '\n') c1 = *t1++;
 	      while (ISSPACE (c2) && c2 != '\n') c2 = *t2++;
-	    }
-	  else if (ignore_space_change_flag)
-	    {
-	      /* For -b, advance past any sequence of white space in line 1
-		 and consider it just one Space, or nothing at all
-		 if it is at the end of the line.  */
+	      break;
+
+	    case IGNORE_SPACE_CHANGE:
+	      /* For -b, advance past any sequence of white space in
+		 line 1 and consider it just one space, or nothing at
+		 all if it is at the end of the line.  */
 	      if (ISSPACE (c1))
 		{
 		  while (c1 != '\n')
@@ -384,16 +383,44 @@ line_cmp (s1, s2)
 		      continue;
 		    }
 		}
+
+	      break;
+
+	    case IGNORE_TAB_EXPANSION:
+	      if ((c1 == ' ' && c2 == '\t')
+		  || (c1 == '\t' && c2 == ' '))
+		{
+		  size_t column2 = column;
+		  for (;; c1 = *t1++)
+		    {
+		      if (c1 == ' ')
+			column++;
+		      else if (c1 == '\t')
+			column += TAB_WIDTH - column % TAB_WIDTH;
+		      else
+			break;
+		    }
+		  for (;; c2 = *t2++)
+		    {
+		      if (c2 == ' ')
+			column2++;
+		      else if (c2 == '\t')
+			column2 += TAB_WIDTH - column2 % TAB_WIDTH;
+		      else
+			break;
+		    }
+		  if (column != column2)
+		    return 1;
+		}
+	      break;
 	    }
 
 	  /* Lowercase all letters if -i is specified.  */
 
-	  if (ignore_case_flag)
+	  if (ignore_case)
 	    {
-	      if (ISUPPER (c1))
-		c1 = _tolower (c1);
-	      if (ISUPPER (c2))
-		c2 = _tolower (c2);
+	      c1 = TOLOWER (c1);
+	      c2 = TOLOWER (c2);
 	    }
 
 	  if (c1 != c2)
@@ -401,6 +428,8 @@ line_cmp (s1, s2)
 	}
       if (c1 == '\n')
 	return 0;
+
+      column += c1 == '\t' ? TAB_WIDTH - column % TAB_WIDTH : 1;
     }
 
   return 1;
@@ -410,15 +439,13 @@ line_cmp (s1, s2)
    Return the last link before the first gap.  */
 
 struct change *
-find_change (start)
-     struct change *start;
+find_change (struct change *start)
 {
   return start;
 }
 
 struct change *
-find_reverse_change (start)
-     struct change *start;
+find_reverse_change (struct change *start)
 {
   return start;
 }
@@ -435,10 +462,9 @@ find_reverse_change (start)
    link at the end) and prints it.  */
 
 void
-print_script (script, hunkfun, printfun)
-     struct change *script;
-     struct change * (*hunkfun) PARAMS((struct change *));
-     void (*printfun) PARAMS((struct change *));
+print_script (struct change *script,
+	      struct change * (*hunkfun) (struct change *),
+	      void (*printfun) (struct change *))
 {
   struct change *next = script;
 
@@ -471,11 +497,9 @@ print_script (script, hunkfun, printfun)
    the line is inserted, deleted, changed, etc.).  */
 
 void
-print_1_line (line_flag, line)
-     char const *line_flag;
-     char const * const *line;
+print_1_line (char const *line_flag, char const *const *line)
 {
-  char const *text = line[0], *limit = line[1]; /* Help the compiler.  */
+  char const *base = line[0], *limit = line[1]; /* Help the compiler.  */
   FILE *out = outfile; /* Help the compiler some more.  */
   char const *flag_format = 0;
 
@@ -485,32 +509,32 @@ print_1_line (line_flag, line)
 
   if (line_flag && *line_flag)
     {
-      flag_format = tab_align_flag ? "%s\t" : "%s ";
+      flag_format = initial_tab ? "%s\t" : "%s ";
       fprintf (out, flag_format, line_flag);
     }
 
-  output_1_line (text, limit, flag_format, line_flag);
+  output_1_line (base, limit, flag_format, line_flag);
 
   if ((!line_flag || line_flag[0]) && limit[-1] != '\n')
     fprintf (out, "\n\\ %s\n", _("No newline at end of file"));
 }
 
-/* Output a line from TEXT up to LIMIT.  Without -t, output verbatim.
+/* Output a line from BASE up to LIMIT.
    With -t, expand white space characters to spaces, and if FLAG_FORMAT
    is nonzero, output it with argument LINE_FLAG after every
    internal carriage return, so that tab stops continue to line up.  */
 
 void
-output_1_line (text, limit, flag_format, line_flag)
-     char const *text, *limit, *flag_format, *line_flag;
+output_1_line (char const *base, char const *limit, char const *flag_format,
+	       char const *line_flag)
 {
-  if (!tab_expand_flag)
-    fwrite (text, sizeof (char), limit - text, outfile);
+  if (!expand_tabs)
+    fwrite (base, limit - base, 1, outfile);
   else
     {
       register FILE *out = outfile;
       register unsigned char c;
-      register char const *t = text;
+      register char const *t = base;
       register unsigned column = 0;
 
       while (t < limit)
@@ -549,38 +573,29 @@ output_1_line (text, limit, flag_format, line_flag)
     }
 }
 
-int
-change_letter (inserts, deletes)
-     int inserts, deletes;
-{
-  if (!inserts)
-    return 'd';
-  else if (!deletes)
-    return 'a';
-  else
-    return 'c';
-}
+char const change_letter[] = { 0, 'd', 'a', 'c' };
 
 /* Translate an internal line number (an index into diff's table of lines)
    into an actual line number in the input file.
-   The internal line number is LNUM.  FILE points to the data on the file.
+   The internal line number is I.  FILE points to the data on the file.
 
    Internal line numbers count from 0 starting after the prefix.
    Actual line numbers count from 1 within the entire file.  */
 
-int
-translate_line_number (file, lnum)
-     struct file_data const *file;
-     int lnum;
+lin
+translate_line_number (struct file_data const *file, lin i)
 {
-  return lnum + file->prefix_lines + 1;
+  return i + file->prefix_lines + 1;
 }
 
+/* Translate a line number range.  This is always done for printing,
+   so for convenience translate to long rather than lin, so that the
+   caller can use printf with "%ld" without casting.  */
+
 void
-translate_range (file, a, b, aptr, bptr)
-     struct file_data const *file;
-     int a, b;
-     int *aptr, *bptr;
+translate_range (struct file_data const *file,
+		 lin a, lin b,
+		 long *aptr, long *bptr)
 {
   *aptr = translate_line_number (file, a - 1) + 1;
   *bptr = translate_line_number (file, b + 1) - 1;
@@ -593,21 +608,18 @@ translate_range (file, a, b, aptr, bptr)
    We print the translated (real) line numbers.  */
 
 void
-print_number_range (sepchar, file, a, b)
-     int sepchar;
-     struct file_data *file;
-     int a, b;
+print_number_range (char sepchar, struct file_data *file, lin a, lin b)
 {
-  int trans_a, trans_b;
+  long trans_a, trans_b;
   translate_range (file, a, b, &trans_a, &trans_b);
 
   /* Note: we can have B < A in the case of a range of no lines.
      In this case, we should print the line number before the range,
      which is B.  */
   if (trans_b > trans_a)
-    fprintf (outfile, "%d%c%d", trans_a, sepchar, trans_b);
+    fprintf (outfile, "%ld%c%ld", trans_a, sepchar, trans_b);
   else
-    fprintf (outfile, "%d", trans_b);
+    fprintf (outfile, "%ld", trans_b);
 }
 
 /* Look at a hunk of edit script and report the range of lines in each file
@@ -618,24 +630,24 @@ print_number_range (sepchar, file, a, b)
 
    If no lines from file 0 are deleted, then FIRST0 is LAST0+1.
 
-   Also set *DELETES nonzero if any lines of file 0 are deleted
-   and set *INSERTS nonzero if any lines of file 1 are inserted.
-   If only ignorable lines are inserted or deleted, both are
-   set to 0.  */
+   Return UNCHANGED if only ignorable lines are inserted or deleted,
+   OLD if lines of file 0 are deleted,
+   NEW if lines of file 1 are inserted,
+   and CHANGED if both kinds of changes are found. */
 
-void
-analyze_hunk (hunk, first0, last0, first1, last1, deletes, inserts)
-     struct change *hunk;
-     int *first0, *last0, *first1, *last1;
-     int *deletes, *inserts;
+enum changes
+analyze_hunk (struct change *hunk,
+	      lin *first0, lin *last0,
+	      lin *first1, lin *last1)
 {
   struct change *next;
-  int l0, l1, show_from, show_to;
-  int i;
-  int trivial = ignore_blank_lines_flag || ignore_regexp.fastmap;
-  int trivial_length = ignore_blank_lines_flag - 1;
+  lin l0, l1;
+  lin show_from, show_to;
+  lin i;
+  bool trivial = ignore_blank_lines || ignore_regexp.fastmap;
+  size_t trivial_length = (int) ignore_blank_lines - 1;
     /* If 0, ignore zero-length lines;
-       if -1, do not ignore any lines just because of their length.  */
+       if (size_t) -1, do not ignore lines just because of their length.  */
 
   char const * const *linbuf0 = files[0].linbuf;  /* Help the compiler.  */
   char const * const *linbuf1 = files[1].linbuf;
@@ -656,7 +668,7 @@ analyze_hunk (hunk, first0, last0, first1, last1, deletes, inserts)
       for (i = next->line0; i <= l0 && trivial; i++)
 	{
 	  char const *line = linbuf0[i];
-	  int len = linbuf0[i + 1] - line - 1;
+	  size_t len = linbuf0[i + 1] - line - 1;
 	  if (len != trivial_length
 	      && (! ignore_regexp.fastmap
 		  || re_search (&ignore_regexp, line, len, 0, len, 0) < 0))
@@ -666,7 +678,7 @@ analyze_hunk (hunk, first0, last0, first1, last1, deletes, inserts)
       for (i = next->line1; i <= l1 && trivial; i++)
 	{
 	  char const *line = linbuf1[i];
-	  int len = linbuf1[i + 1] - line - 1;
+	  size_t len = linbuf1[i + 1] - line - 1;
 	  if (len != trivial_length
 	      && (! ignore_regexp.fastmap
 		  || re_search (&ignore_regexp, line, len, 0, len, 0) < 0))
@@ -682,41 +694,55 @@ analyze_hunk (hunk, first0, last0, first1, last1, deletes, inserts)
      tell the caller to ignore this hunk.  */
 
   if (trivial)
-    show_from = show_to = 0;
+    return UNCHANGED;
 
-  *deletes = show_from;
-  *inserts = show_to;
+  return (show_from ? OLD : UNCHANGED) | (show_to ? NEW : UNCHANGED);
 }
 
 /* Concatenate three strings, returning a newly malloc'd string.  */
 
 char *
-concat (s1, s2, s3)
-     char const *s1, *s2, *s3;
+concat (char const *s1, char const *s2, char const *s3)
 {
   char *new = xmalloc (strlen (s1) + strlen (s2) + strlen (s3) + 1);
   sprintf (new, "%s%s%s", s1, s2, s3);
   return new;
 }
 
+/* Yield a new block of SIZE bytes, initialized to zero.  */
+
+void *
+zalloc (size_t size)
+{
+  void *p = xmalloc (size);
+  memset (p, 0, size);
+  return p;
+}
+
 /* Yield the newly malloc'd pathname
    of the file in DIR whose filename is FILE.  */
 
 char *
-dir_file_pathname (dir, file)
-     char const *dir, *file;
+dir_file_pathname (char const *dir, char const *file)
 {
-  char const *p = filename_lastdirchar (dir);
+  char const *p = file_name_lastdirchar (dir);
   return concat (dir, "/" + (p && !p[1]), file);
 }
 
 void
-debug_script (sp)
-     struct change *sp;
+debug_script (struct change *sp)
 {
   fflush (stdout);
+
   for (; sp; sp = sp->link)
-    fprintf (stderr, "%3d %3d delete %d insert %d\n",
-	     sp->line0, sp->line1, sp->deleted, sp->inserted);
+    {
+      long line0 = sp->line0;
+      long line1 = sp->line1;
+      long deleted = sp->deleted;
+      long inserted = sp->inserted;
+      fprintf (stderr, "%3ld %3ld delete %ld insert %ld\n",
+	       line0, line1, deleted, inserted);
+    }
+
   fflush (stderr);
 }
