@@ -1,4 +1,5 @@
-/* config.h.  Generated manually for emx and OS/2.  */
+/* config.h for emx and OS/2  */
+
 
 /* Define if using alloca.c.  */
 #undef C_ALLOCA
@@ -113,21 +114,27 @@
 /* Define if you have the <unistd.h> header file.  */
 #define HAVE_UNISTD_H 1
 
-/* emx and/or OS/2 specific defines */
+
+/* emx and/or OS/2 specific definitions */
+
+#define DIFF_PROGRAM "diff.exe"
+
+#define filename_cmp(a, b) stricmp (a, b)
+
+#define filename_lastdirchar(filename) os2_filename_lastdirchar (filename)
+char *os2_filename_lastdirchar (char const *);
 
 #define HAVE_FORK 0
+
+#define HAVE_SETMODE 1
+
+#define initialize_main(pargc, pargv) os2_initialize_main (pargc, pargv)
+void os2_initialize_main (int *, char ***);
+
 #define PVT_tmpdir ""
+
+#define same_file(s,t) (-1)
+
 #define STAT_BLOCKSIZE(s) (64 * 1024)
-#define DIFF_PROGRAM "diff.exe"
-#define QUOTE_CHAR '"'
-
-#define same_file(s,t) 0
-#define filename_cmp(a, b) stricmp(a, b)
-
-void os2_initialize_main(int *pargc, char ***pargv);
-#define initialize_main os2_initialize_main
-
-char *os2_filename_lastdirchar(const char *filename);
-#define filename_lastdirchar os2_filename_lastdirchar
 
 #include <process.h>
