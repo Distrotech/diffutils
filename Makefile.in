@@ -68,8 +68,10 @@ distfiles = $(srcs) README INSTALL NEWS diagmeet.note Makefile.in \
 
 all: diff diff3 sdiff cmp diff.info
 
+COMPILE = $(CC) -c -DHAVE_CONFIG_H $(CPPFLAGS) -I. -I$(srcdir) $(CFLAGS)
+
 .c.o:
-	$(CC) -c -DHAVE_CONFIG_H $(CPPFLAGS) -I. -I$(srcdir) $(CFLAGS) $<
+	$(COMPILE) $<
 
 diff: $(objs)
 	$(CC) -o $@ $(LDFLAGS) $(objs) $(LIBS)
@@ -94,10 +96,10 @@ diff.o fnmatch.o: fnmatch.h
 analyze.o cmpbuf.o cmp.o: cmpbuf.h
 
 diff3.o: diff3.c
-	$(CC) -c -DHAVE_CONFIG_H $(CPPFLAGS) $(CFLAGS) -DDIFF_PROGRAM=\"$(bindir)/$(binprefix)diff\" $(srcdir)/diff3.c
+	$(COMPILE) -DDIFF_PROGRAM=\"$(bindir)/$(binprefix)diff\" $(srcdir)/diff3.c
 
 sdiff.o: sdiff.c
-	$(CC) -c -DHAVE_CONFIG_H $(CPPFLAGS) $(CFLAGS) -DDIFF_PROGRAM=\"$(bindir)/$(binprefix)diff\" $(srcdir)/sdiff.c
+	$(COMPILE) -DDIFF_PROGRAM=\"$(bindir)/$(binprefix)diff\" $(srcdir)/sdiff.c
 
 TAGS: $(srcs)
 	etags $(srcs)
