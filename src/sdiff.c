@@ -21,7 +21,6 @@ the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 
 #include "system.h"
 #include <stdio.h>
-#include <ctype.h>
 #include <signal.h>
 #include "getopt.h"
 
@@ -34,14 +33,14 @@ the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 #endif
 
 /* Users' editor of nonchoice */
-#ifndef DEFAULT_EDITOR
-#define DEFAULT_EDITOR "ed"
+#ifndef DEFAULT_EDITOR_PROGRAM
+#define DEFAULT_EDITOR_PROGRAM "ed"
 #endif
 
 extern char version_string[];
 static char const *program_name;
 static char const *diffbin = DIFF_PROGRAM;
-static char const *edbin = DEFAULT_EDITOR;
+static char const *edbin = DEFAULT_EDITOR_PROGRAM;
 static char const **diffargv;
 
 static char *tmpname;
@@ -86,6 +85,9 @@ static void usage PARAMS((void));
 /* this lossage until the gnu libc conquers the universe */
 #ifndef PVT_tmpdir
 #define PVT_tmpdir "/tmp"
+#endif
+#ifndef TMPDIR_ENV
+#define TMPDIR_ENV "TMPDIR"
 #endif
 static char *private_tempnam PARAMS((char const *, char const *, int, size_t *));
 static int diraccess PARAMS((char const *));
@@ -259,14 +261,14 @@ ck_fflush (f)
 }
 
 static char const *
-expand_name (name, isdir, other_name)
+expand_name (name, is_dir, other_name)
      char *name;
-     int isdir;
+     int is_dir;
      char const *other_name;
 {
   if (strcmp (name, "-") == 0)
     fatal ("cannot interactively merge standard input");
-  if (!isdir)
+  if (!is_dir)
     return name;
   else
     {
@@ -539,7 +541,6 @@ main (argc, argv)
       {
 	size_t cmdsize = 1;
 	char *p, *command;
-	char const *q;
 	int i;
 
 	for (i = 0;  diffargv[i];  i++)
@@ -547,18 +548,11 @@ main (argc, argv)
 	command = p = xmalloc (cmdsize);
 	for (i = 0;  diffargv[i];  i++)
 	  {
+	    char const *a = diffargv[i];
+	    SYSTEM_QUOTE_ARG (p, a);
 	    *p++ = ' ';
-	    *p++ = '\'';
-	    for (q = diffargv[i];  *q;  *p++ = *q++)
-	      if (*q == '\'')
-		{
-		  *p++ = '\'';
-		  *p++ = '\\';
-		  *p++ = '\'';
-		}
-	    *p++ = '\'';
-	    *p = '\0';
 	  }
+	p[-1] = '\0';
 	diffout = popen (command, "r");
 	if (!diffout)
 	  perror_fatal (command);
@@ -822,8 +816,13 @@ static int
 skip_white ()
 {
   int c;
-  while (isspace (c = getchar ()) && c != '\n')
-    checksigs ();
+  for (;;)
+    {
+      c = getchar ();
+      if (!ISSPACE (c) || c == '\n')
+	break;
+      checksigs ();
+    }
   if (ferror (stdin))
     perror_fatal ("input error");
   return c;
@@ -1151,17 +1150,13 @@ private_tempnam (dir, pfx, dir_search, lenptr)
 
   if (dir_search)
     {
-      register char const *d = getenv ("TMPDIR");
+      register char const *d = getenv (TMPDIR_ENV);
       if (d && !diraccess (d))
-	d = 0;
-      if (!d && (d = getenv ("TMP")) && !diraccess (d))
 	d = 0;
       if (!d && dir && diraccess (dir))
 	d = dir;
       if (!d && diraccess (tmpdir))
 	d = tmpdir;
-      if (!d && diraccess ("/tmp"))
-	d = "/tmp";
       if (!d)
 	{
 	  errno = ENOENT;
