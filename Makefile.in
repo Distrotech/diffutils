@@ -17,7 +17,7 @@
 # along with GNU DIFF; see the file COPYING.  If not, write to
 # the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
 
-#### Start of system configuration section. ####
+#### Start of system configuration section.  ####
 
 srcdir = @srcdir@
 VPATH = @srcdir@
@@ -53,7 +53,7 @@ DIFF_PROGRAM = $(bindir)/`echo diff | $(edit_program_name)`
 NULL_DEVICE = /dev/null
 PR_PROGRAM = /bin/pr
 
-#### End of system configuration section. ####
+#### End of system configuration section.  ####
 
 SHELL = /bin/sh
 
@@ -77,21 +77,23 @@ COMPILE = $(CC) -c $(CPPFLAGS) $(DEFS) -I. -I$(srcdir) $(CFLAGS)
 .c.o:
 	$(COMPILE) $<
 
+common_o = error.o getopt.o getopt1.o version.o xmalloc.o
+
 diff_o = diff.o analyze.o cmpbuf.o dir.o io.o util.o \
 	context.o ed.o ifdef.o normal.o side.o \
-	fnmatch.o getopt.o getopt1.o regex.o version.o $(ALLOCA) $(LIBOBJS)
+	fnmatch.o regex.o $(common_o) $(ALLOCA) $(LIBOBJS)
 diff: $(diff_o)
 	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $(diff_o) $(LIBS)
 
-diff3_o = diff3.o getopt.o getopt1.o version.o $(LIBOBJS)
+diff3_o = diff3.o $(common_o) $(LIBOBJS)
 diff3: $(diff3_o)
 	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $(diff3_o) $(LIBS)
 
-sdiff_o = sdiff.o getopt.o getopt1.o version.o $(LIBOBJS)
+sdiff_o = sdiff.o $(common_o) $(LIBOBJS)
 sdiff: $(sdiff_o)
 	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $(sdiff_o) $(LIBS)
 
-cmp_o = cmp.o cmpbuf.o error.o getopt.o getopt1.o xmalloc.o version.o $(LIBOBJS)
+cmp_o = cmp.o cmpbuf.o $(common_o) $(LIBOBJS)
 cmp: $(cmp_o)
 	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $(cmp_o) $(LIBS)
 
@@ -152,7 +154,7 @@ installdirs:
 	$(SHELL) ${srcdir}/mkinstalldirs $(bindir) $(infodir)
 
 # We need more tests.
-check:
+check: $(PROGRAMS)
 	./cmp cmp cmp
 	./diff diff diff
 	./diff3 diff3 diff3 diff3
