@@ -1,5 +1,5 @@
 /* Utility to help print --version output in a consistent format.
-   Copyright (C) 1999 Free Software Foundation, Inc.
+   Copyright (C) 1999, 2002 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -17,22 +17,4 @@
 
 /* Written by Jim Meyering. */
 
-#ifndef VERSION_ETC_H
-# define VERSION_ETC_H 1
-
-# ifndef PARAMS
-#  if defined PROTOTYPES || (defined __STDC__ && __STDC__)
-#   define PARAMS(Args) Args
-#  else
-#   define PARAMS(Args) ()
-#  endif
-# endif
-
-extern char *version_etc_copyright;
-
-void
-version_etc PARAMS ((FILE *stream,
-		     const char *command_name, const char *package,
-		     const char *version, const char *authors));
-
-#endif /* VERSION_ETC_H */
+void version_etc (char const *command_name, char const *authors);
