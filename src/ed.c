@@ -1,5 +1,5 @@
 /* Output routines for ed-script format.
-   Copyright (C) 1988, 1989 Free Software Foundation, Inc.
+   Copyright (C) 1988, 89, 91, 92 Free Software Foundation, Inc.
 
 This file is part of GNU DIFF.
 
@@ -82,8 +82,8 @@ print_ed_hunk (hunk)
 	     so that we will output another ed-command later
 	     to change the double dot into a single dot.  */
 
-	  if (files[1].linbuf[i].text[0] == '.'
-	      && files[1].linbuf[i].text[1] == '\n')
+	  if (files[1].linbuf[i][0] == '.'
+	      && files[1].linbuf[i][1] == '\n')
 	    {
 	      fprintf (outfile, "..\n");
 	      fprintf (outfile, ".\n");
