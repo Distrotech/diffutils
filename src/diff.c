@@ -1,5 +1,5 @@
 /* GNU DIFF main routine.
-   Copyright (C) 1988, 1989, 1992, 1993 Free Software Foundation, Inc.
+   Copyright 1988, 1989, 1992, 1993, 1994 Free Software Foundation, Inc.
 
 This file is part of GNU DIFF.
 
@@ -22,6 +22,7 @@ the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 
 #define GDIFF_MAIN
 #include "diff.h"
+#include <signal.h>
 #include "getopt.h"
 #include "fnmatch.h"
 
@@ -52,6 +53,11 @@ static int recursive;
 /* For debugging: don't do discard_confusing_lines.  */
 
 int no_discards;
+
+#if HAVE_SETMODE
+/* I/O mode: nonzero only if using binary input/output.  */
+static int binary_I_O;
+#endif
 
 /* Return a string containing the command options with which diff was invoked.
    Spaces appear between what were separate ARGV-elements.
@@ -189,7 +195,6 @@ static struct option const longopts[] =
   {"print", 0, 0, 'l'},		/* An alias, no longer recommended */
   {"rcs", 0, 0, 'n'},
   {"show-c-function", 0, 0, 'p'},
-  {"binary", 0, 0, 'q'},	/* An alias, no longer recommended */
   {"brief", 0, 0, 'q'},
   {"recursive", 0, 0, 'r'},
   {"report-identical-files", 0, 0, 's'},
@@ -213,6 +218,7 @@ static struct option const longopts[] =
   {"changed-group-format", 1, 0, 139},
   {"horizon-lines", 1, 0, 140},
   {"help", 0, 0, 141},
+  {"binary", 0, 0, 142},
   {0, 0, 0, 0}
 };
 
@@ -228,6 +234,7 @@ main (argc, argv)
   int show_c_function = 0;
 
   /* Do our initializations.  */
+  initialize_main (&argc, &argv);
   program = argv[0];
   output_style = OUTPUT_NORMAL;
   context = -1;
@@ -375,6 +382,14 @@ main (argc, argv)
 	case 'l':
 	  /* Pass the output through `pr' to paginate it.  */
 	  paginate_flag = 1;
+#if !defined(SIGCHLD) && defined(SIGCLD)
+#define SIGCHLD SIGCLD
+#endif
+#ifdef SIGCHLD
+	  /* Pagination requires forking and waiting, and
+	     System V fork+wait does not work if SIGCHLD is ignored.  */
+	  signal (SIGCHLD, SIG_DFL);
+#endif
 	  break;
 
 	case 'L':
@@ -532,6 +547,15 @@ main (argc, argv)
 	case 141:
 	  usage (0);
 
+	case 142:
+	  /* Use binary I/O when reading and writing data.
+	     On Posix hosts, this has no effect.  */
+#if HAVE_SETMODE
+	  binary_I_O = 1;
+	  setmode (STDOUT_FILENO, O_BINARY);
+#endif
+	  break;
+
 	default:
 	  usage ("");
 	}
@@ -642,8 +666,9 @@ usage (reason)
 	[-I regexp] [-L from-label [-L to-label]] [-S starting-file] [-U lines]\n\
 	[-W columns] [-x pattern] [-X pattern-file]\n");
   printf ("\
-	[--brief] [--changed-group-format=format] [--context[=lines]] [--ed]\n\
-	[--exclude=pattern] [--exclude-from=pattern-file] [--expand-tabs]\n\
+	[--binary] [--brief] [--changed-group-format=format]\n\
+	[--context[=lines]] [--ed] [--exclude=pattern]\n\
+	[--exclude-from=pattern-file] [--expand-tabs]\n\
 	[--forward-ed] [--help] [--horizon-lines=lines] [--ifdef=name]\n\
 	[--ignore-all-space] [--ignore-blank-lines] [--ignore-case]\n");
   printf ("\
@@ -785,7 +810,7 @@ compare_files (dir0, name0, dir1, name1, depth)
 	{
 	  int stat_result;
 
-	  if (i && strcmp (inf[i].name, inf[0].name) == 0)
+	  if (i && filename_cmp (inf[i].name, inf[0].name) == 0)
 	    {
 	      inf[i].stat = inf[0].stat;
 	      stat_result = 0;
@@ -839,7 +864,7 @@ compare_files (dir0, name0, dir1, name1, depth)
       int dir_arg = 1 - fnm_arg;
       char const *fnm = inf[fnm_arg].name;
       char const *dir = inf[dir_arg].name;
-      char const *p = strrchr (fnm, '/');
+      char const *p = filename_lastdirchar (fnm);
       char const *filename = inf[dir_arg].name
 	= dir_file_pathname (dir, p ? p + 1 : fnm);
 
@@ -863,11 +888,8 @@ compare_files (dir0, name0, dir1, name1, depth)
       val = 2;
 
     }
-  else if ((same_files =    inf[0].stat.st_ino == inf[1].stat.st_ino
-			 && inf[0].stat.st_dev == inf[1].stat.st_dev
-			 && inf[0].stat.st_size == inf[1].stat.st_size
-			 && inf[0].desc != -1
-			 && inf[1].desc != -1)
+  else if ((same_files = inf[0].desc != -1 && inf[1].desc != -1
+			 && 0 < same_file (&inf[0].stat, &inf[1].stat))
 	   && no_diff_means_no_output)
     {
       /* The two named files are actually the same physical file.
@@ -960,6 +982,13 @@ compare_files (dir0, name0, dir1, name1, depth)
 	    perror_with_name (inf[1].name);
 	    failed = 1;
 	  }
+
+#if HAVE_SETMODE
+      if (binary_I_O)
+	for (i = 0; i <= 1; i++)
+	  if (0 <= inf[i].desc)
+	    setmode (inf[i].desc, O_BINARY);
+#endif
 
       /* Compare the files, if no error was found.  */
 
