@@ -1,11 +1,9 @@
-/* SDIFF -- interactive merge front end to diff */
+/* SDIFF -- interactive merge front end to diff
 
-#include "system.h"
+   Copyright (C) 1992, 1993, 1994, 1995, 1996, 1998, 2001 Free
+   Software Foundation, Inc.
 
-static char const copyright_string[] =
-  "Copyright 1992, 93, 94, 95, 96, 1998 Free Software Foundation, Inc.";
-
-/* This file is part of GNU DIFF.
+   This file is part of GNU DIFF.
 
    GNU DIFF is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -19,30 +17,37 @@ static char const copyright_string[] =
 
    You should have received a copy of the GNU General Public License
    along with this program; see the file COPYING.
-   If not, write to the Free Software Foundation, 
+   If not, write to the Free Software Foundation,
    59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
 
-static char const authorship_msgid[] =
-  "Written by Thomas Lord.";
-
-#include <stdio.h>
+#include "system.h"
+
+#include <error.h>
+#include <freesoft.h>
+#include <getopt.h>
+#include <quotesys.h>
 #include <signal.h>
-#include "getopt.h"
-#include "quotesys.h"
+#include <stdio.h>
+#include <xalloc.h>
+
+static char const authorship_msgid[] = N_("Written by Thomas Lord.");
+
+static char const copyright_string[] =
+  "Copyright (C) 2001 Free Software Foundation, Inc.";
+
+extern char const version_string[];
 
 /* Size of chunks read from files which must be parsed into lines.  */
 #define SDIFF_BUFSIZE ((size_t) 65536)
 
-extern char const free_software_msgid[];
-extern char const version_string[];
 char *program_name;
 
 static char const *editor_program = DEFAULT_EDITOR_PROGRAM;
 static char const **diffargv;
 static char const *not_found;
 
-static char *tmpname;
-static int volatile tmpmade;
+static char * volatile tmpname;
+static FILE *tmp;
 
 #if HAVE_FORK
 static pid_t volatile diffpid;
@@ -50,36 +55,18 @@ static pid_t volatile diffpid;
 
 struct line_filter;
 
-static FILE *ck_fopen PARAMS((char const *, char const *));
-static RETSIGTYPE catchsig PARAMS((int));
-static char const *expand_name PARAMS((char *, int, char const *));
-static int edit PARAMS((struct line_filter *, char const *, int, int, struct line_filter *, char const *, int, int, FILE*));
-static int interact PARAMS((struct line_filter *, struct line_filter *, char const *, struct line_filter *, char const *, FILE*));
-static int lf_snarf PARAMS((struct line_filter *, char *, size_t));
-static int skip_white PARAMS((void));
-static size_t ck_fread PARAMS((char *, size_t, FILE *));
-static size_t lf_refill PARAMS((struct line_filter *));
-static void checksigs PARAMS((void));
-static void ck_fclose PARAMS((FILE *));
-static void ck_fflush PARAMS((FILE *));
-static void ck_fwrite PARAMS((char const *, size_t, FILE *));
-static void cleanup PARAMS((void));
-static void diffarg PARAMS((char const *));
-static void execdiff PARAMS((void));
-static void exiterr PARAMS((void)) __attribute__((noreturn));
-static void fatal PARAMS((char const *)) __attribute__((noreturn));
-static void flush_line PARAMS((void));
-static void give_help PARAMS((void));
-static void lf_copy PARAMS((struct line_filter *, int, FILE *));
-static void lf_init PARAMS((struct line_filter *, FILE *));
-static void lf_skip PARAMS((struct line_filter *, int));
-static void perror_fatal PARAMS((char const *)) __attribute__((noreturn));
-static void trapsigs PARAMS((void));
-static void try_help PARAMS((char const *, char const *)) __attribute__((noreturn));
-static void untrapsig PARAMS((int));
-static void usage PARAMS((void));
+static RETSIGTYPE catchsig (int);
+static bool edit (struct line_filter *, char const *, lin, lin, struct line_filter *, char const *, lin, lin, FILE *);
+static bool interact (struct line_filter *, struct line_filter *, char const *, struct line_filter *, char const *, FILE *);
+static void checksigs (void);
+static void diffarg (char const *);
+static void execdiff (void);
+static void fatal (char const *) __attribute__((noreturn));
+static void perror_fatal (char const *) __attribute__((noreturn));
+static void trapsigs (void);
+static void untrapsig (int);
 
-#define NUM_SIGS (sizeof (sigs) / sizeof (*sigs))
+#define NUM_SIGS (sizeof sigs / sizeof *sigs)
 static int const sigs[] = {
 #ifdef SIGHUP
        SIGHUP,
@@ -100,91 +87,72 @@ static int const sigs[] = {
        SIGPIPE
 };
 #if HAVE_SIGACTION
-  /* Prefer `sigaction' if it is available, since `signal' can lose signals.  */
+  /* Prefer `sigaction' if available, since `signal' can lose signals.  */
   static struct sigaction initial_action[NUM_SIGS];
 # define initial_handler(i) (initial_action[i].sa_handler)
-  static void signal_handler PARAMS((int, RETSIGTYPE (*) PARAMS((int))));
+  static void signal_handler (int, RETSIGTYPE (*) (int));
 #else
   static RETSIGTYPE (*initial_action[NUM_SIGS]) ();
 # define initial_handler(i) (initial_action[i])
 # define signal_handler(sig, handler) signal (sig, handler)
 #endif
 
-#if !HAVE_SIGPROCMASK
-#define sigset_t int
-#define sigemptyset(s) (*(s) = 0)
-#ifndef sigmask
-#define sigmask(sig) (1 << ((sig) - 1))
-#endif
-#define sigaddset(s, sig) (*(s) |= sigmask (sig))
-#ifndef SIG_BLOCK
-#define SIG_BLOCK 0
-#endif
-#ifndef SIG_SETMASK
-#define SIG_SETMASK (!SIG_BLOCK)
-#endif
-#define sigprocmask(how, n, o) \
-  ((how) == SIG_BLOCK \
-   ? *(o) = sigblock (*(n)) \
-   : sigsetmask (*(n)))
+#if ! HAVE_SIGPROCMASK
+# define sigset_t int
+# define sigemptyset(s) (*(s) = 0)
+# ifndef sigmask
+#  define sigmask(sig) (1 << ((sig) - 1))
+# endif
+# define sigaddset(s, sig) (*(s) |= sigmask (sig))
+# ifndef SIG_BLOCK
+#  define SIG_BLOCK 0
+# endif
+# ifndef SIG_SETMASK
+#  define SIG_SETMASK (! SIG_BLOCK)
+# endif
+# define sigprocmask(how, n, o) \
+    ((how) == SIG_BLOCK ? *(o) = sigblock (*(n)) : sigsetmask (*(n)))
 #endif
 
-/* this lossage until the gnu libc conquers the universe */
-#if HAVE_TMPNAM
-#define private_tempnam() tmpnam ((char *) 0)
-#else
-#ifndef PVT_tmpdir
-#define PVT_tmpdir "/tmp"
-#endif
-#ifndef TMPDIR_ENV
-#define TMPDIR_ENV "TMPDIR"
-#endif
-static char *private_tempnam PARAMS((void));
-static int exists PARAMS((char const *));
-#endif
-static int diraccess PARAMS((char const *));
-
-#if __STDC__ && (HAVE_VPRINTF || HAVE_DOPRNT)
-void error (int, int, char const *, ...) __attribute__((format (printf, 3, 4)));
-#else
-void error ();
-#endif
-VOID *xmalloc PARAMS((size_t));
-VOID *xrealloc PARAMS((VOID *, size_t));
-extern int xmalloc_exit_failure;
+static bool diraccess (char const *);
+static int temporary_file (void);
 
 /* Options: */
 
-/* name of output file if -o spec'd */
-static char *out_file;
+/* Name of output file if -o specified.  */
+static char const *output;
 
-/* do not print common lines if true, set by -s option */
-static int suppress_common_flag;
+/* Do not print common lines.  */
+static bool suppress_common_lines;
+
+/* Value for the long option that does not have single-letter equivalents.  */
+enum
+{
+  HELP_OPTION = CHAR_MAX + 1
+};
 
 static struct option const longopts[] =
 {
-  {"ignore-blank-lines", 0, 0, 'B'},
-  {"speed-large-files", 0, 0, 'H'},
-  {"ignore-matching-lines", 1, 0, 'I'},
-  {"ignore-all-space", 0, 0, 'W'}, /* swap W and w for historical reasons */
-  {"text", 0, 0, 'a'},
-  {"ignore-space-change", 0, 0, 'b'},
-  {"minimal", 0, 0, 'd'},
-  {"ignore-case", 0, 0, 'i'},
-  {"left-column", 0, 0, 'l'},
-  {"output", 1, 0, 'o'},
-  {"suppress-common-lines", 0, 0, 's'},
   {"expand-tabs", 0, 0, 't'},
-  {"width", 1, 0, 'w'},
+  {"help", 0, 0, HELP_OPTION},
+  {"ignore-all-space", 0, 0, 'W'}, /* swap W and w for historical reasons */
+  {"ignore-blank-lines", 0, 0, 'B'},
+  {"ignore-case", 0, 0, 'i'},
+  {"ignore-matching-lines", 1, 0, 'I'},
+  {"ignore-space-change", 0, 0, 'b'},
+  {"left-column", 0, 0, 'l'},
+  {"minimal", 0, 0, 'd'},
+  {"output", 1, 0, 'o'},
+  {"speed-large-files", 0, 0, 'H'},
+  {"suppress-common-lines", 0, 0, 's'},
+  {"text", 0, 0, 'a'},
   {"version", 0, 0, 'v'},
-  {"help", 0, 0, CHAR_MAX + 1},
+  {"width", 1, 0, 'w'},
   {0, 0, 0, 0}
 };
 
 static void
-try_help (reason_msgid, operand)
-     char const *reason_msgid;
-     char const *operand;
+try_help (char const *reason_msgid, char const *operand)
 {
   if (reason_msgid)
     error (0, 0, _(reason_msgid), operand);
@@ -194,32 +162,32 @@ try_help (reason_msgid, operand)
 
 static char const * const option_help_msgid[] = {
   "",
-  "-o FILE  --output=FILE  Operate interactively, sending output to FILE.",
+  N_("-o FILE  --output=FILE  Operate interactively, sending output to FILE."),
   "",
-  "-i  --ignore-case  Consider upper- and lower-case to be the same.",
-  "-W  --ignore-all-space  Ignore all white space.",
-  "-b  --ignore-space-change  Ignore changes in the amount of white space.",
-  "-B  --ignore-blank-lines  Ignore changes whose lines are all blank.",
-  "-I RE  --ignore-matching-lines=RE  Ignore changes whose lines all match RE.",
-  "-a  --text  Treat all files as text.",
+  N_("-i  --ignore-case  Consider upper- and lower-case to be the same."),
+  N_("-W  --ignore-all-space  Ignore all white space."),
+  N_("-b  --ignore-space-change  Ignore changes in the amount of white space."),
+  N_("-B  --ignore-blank-lines  Ignore changes whose lines are all blank."),
+  N_("-I RE  --ignore-matching-lines=RE  Ignore changes whose lines all match RE."),
+  N_("-a  --text  Treat all files as text."),
   "",
-  "-w NUM  --width=NUM  Output at most NUM (default 130) characters per line.",
-  "-l  --left-column  Output only the left column of common lines.",
-  "-s  --suppress-common-lines  Do not output common lines.",
+  N_("-w NUM  --width=NUM  Output at most NUM (default 130) columns per line."),
+  N_("-l  --left-column  Output only the left column of common lines."),
+  N_("-s  --suppress-common-lines  Do not output common lines."),
   "",
-  "-t  --expand-tabs  Expand tabs to spaces in output.",
+  N_("-t  --expand-tabs  Expand tabs to spaces in output."),
   "",
-  "-d  --minimal  Try hard to find a smaller set of changes.",
-  "-H  --speed-large-files  Assume large files and many scattered small changes.",
+  N_("-d  --minimal  Try hard to find a smaller set of changes."),
+  N_("-H  --speed-large-files  Assume large files and many scattered small changes."),
   "",
-  "-v  --version  Output version info.",
-  "--help  Output this help.",
+  N_("-v  --version  Output version info."),
+  N_("--help  Output this help."),
   "",
   0
 };
 
 static void
-usage ()
+usage (void)
 {
   char const * const *p;
 
@@ -234,18 +202,19 @@ usage ()
 }
 
 static void
-cleanup ()
+cleanup (void)
 {
 #if HAVE_FORK
   if (0 < diffpid)
     kill (diffpid, SIGPIPE);
 #endif
-  if (tmpmade)
+  if (tmpname)
     unlink (tmpname);
 }
 
+static void exiterr (void) __attribute__((noreturn));
 static void
-exiterr ()
+exiterr (void)
 {
   cleanup ();
   untrapsig (0);
@@ -254,16 +223,14 @@ exiterr ()
 }
 
 static void
-fatal (msgid)
-     char const *msgid;
+fatal (char const *msgid)
 {
   error (0, 0, "%s", _(msgid));
   exiterr ();
 }
 
 static void
-perror_fatal (msg)
-     char const *msg;
+perror_fatal (char const *msg)
 {
   int e = errno;
   checksigs ();
@@ -272,28 +239,23 @@ perror_fatal (msg)
 }
 
 static FILE *
-ck_fopen (fname, type)
-     char const *fname, *type;
+ck_fopen (char const *fname, char const *type)
 {
   FILE *r = fopen (fname, type);
-  if (!r)
+  if (! r)
     perror_fatal (fname);
   return r;
 }
 
 static void
-ck_fclose (f)
-     FILE *f;
+ck_fclose (FILE *f)
 {
   if (fclose (f))
     perror_fatal ("fclose");
 }
 
 static size_t
-ck_fread (buf, size, f)
-     char *buf;
-     size_t size;
-     FILE *f;
+ck_fread (char *buf, size_t size, FILE *f)
 {
   size_t r = fread (buf, sizeof (char), size, f);
   if (r == 0 && ferror (f))
@@ -302,37 +264,30 @@ ck_fread (buf, size, f)
 }
 
 static void
-ck_fwrite (buf, size, f)
-     char const *buf;
-     size_t size;
-     FILE *f;
+ck_fwrite (char const *buf, size_t size, FILE *f)
 {
   if (fwrite (buf, sizeof (char), size, f) != size)
     perror_fatal (_("write failed"));
 }
 
 static void
-ck_fflush (f)
-     FILE *f;
+ck_fflush (FILE *f)
 {
   if (fflush (f) != 0)
     perror_fatal (_("write failed"));
 }
 
 static char const *
-expand_name (name, is_dir, other_name)
-     char *name;
-     int is_dir;
-     char const *other_name;
+expand_name (char *name, bool is_dir, char const *other_name)
 {
   if (strcmp (name, "-") == 0)
     fatal ("cannot interactively merge standard input");
-  if (!is_dir)
+  if (! is_dir)
     return name;
   else
     {
       /* Yield NAME/BASE, where BASE is OTHER_NAME's basename.  */
-      char const *p = filename_lastdirchar (other_name);
+      char const *p = file_name_lastdirchar (other_name);
       char const *base = p ? p+1 : other_name;
       size_t namelen = strlen (name), baselen = strlen (base);
       char *r = xmalloc (namelen + baselen + 2);
@@ -353,9 +308,7 @@ struct line_filter {
 };
 
 static void
-lf_init (lf, infile)
-     struct line_filter *lf;
-     FILE *infile;
+lf_init (struct line_filter *lf, FILE *infile)
 {
   lf->infile = infile;
   lf->bufpos = lf->buffer = lf->buflim = xmalloc (SDIFF_BUFSIZE + 1);
@@ -364,8 +317,7 @@ lf_init (lf, infile)
 
 /* Fill an exhausted line_filter buffer from its INFILE */
 static size_t
-lf_refill (lf)
-     struct line_filter *lf;
+lf_refill (struct line_filter *lf)
 {
   size_t s = ck_fread (lf->buffer, SDIFF_BUFSIZE, lf->infile);
   lf->bufpos = lf->buffer;
@@ -377,10 +329,7 @@ lf_refill (lf)
 
 /* Advance LINES on LF's infile, copying lines to OUTFILE */
 static void
-lf_copy (lf, lines, outfile)
-     struct line_filter *lf;
-     int lines;
-     FILE *outfile;
+lf_copy (struct line_filter *lf, lin lines, FILE *outfile)
 {
   char *start = lf->bufpos;
 
@@ -406,9 +355,7 @@ lf_copy (lf, lines, outfile)
 
 /* Advance LINES on LF's infile without doing output */
 static void
-lf_skip (lf, lines)
-     struct line_filter *lf;
-     int lines;
+lf_skip (struct line_filter *lf, lin lines)
 {
   while (lines)
     {
@@ -428,10 +375,7 @@ lf_skip (lf, lines)
 
 /* Snarf a line into a buffer.  Return EOF if EOF, 0 if error, 1 if OK.  */
 static int
-lf_snarf (lf, buffer, bufsize)
-     struct line_filter *lf;
-     char *buffer;
-     size_t bufsize;
+lf_snarf (struct line_filter *lf, char *buffer, size_t bufsize)
 {
   for (;;)
     {
@@ -457,23 +401,23 @@ lf_snarf (lf, buffer, bufsize)
 
 
 int
-main (argc, argv)
-     int argc;
-     char *argv[];
+main (int argc, char *argv[])
 {
   int opt;
   char const *prog;
 
   initialize_main (&argc, &argv);
-  setlocale (LC_ALL, "");
   program_name = argv[0];
-  xmalloc_exit_failure = 2;
+  setlocale (LC_ALL, "");
+  bindtextdomain (PACKAGE, LOCALEDIR);
+  textdomain (PACKAGE);
+  xalloc_exit_failure = 2;
 
   prog = getenv ("EDITOR");
   if (prog)
     editor_program = prog;
 
-  prog = getenv ("DIFF");
+  prog = getenv ("DIFF_PROGRAM");
   diffarg (prog ? prog : DEFAULT_DIFF_PROGRAM);
 
   /* parse command line args */
@@ -516,11 +460,11 @@ main (argc, argv)
 	  break;
 
 	case 'o':
-	  out_file = optarg;
+	  output = optarg;
 	  break;
 
 	case 's':
-	  suppress_common_flag = 1;
+	  suppress_common_lines = 1;
 	  break;
 
 	case 't':
@@ -542,7 +486,7 @@ main (argc, argv)
 	  diffarg ("-w");
 	  break;
 
-	case CHAR_MAX + 1:
+	case HELP_OPTION:
 	  usage ();
 	  if (ferror (stdout) || fclose (stdout) != 0)
 	    fatal ("write failed");
@@ -561,10 +505,10 @@ main (argc, argv)
 	try_help ("extra operand `%s'", argv[optind + 2]);
     }
 
-  if (! out_file)
+  if (! output)
     {
       /* easy case: diff does everything for us */
-      if (suppress_common_flag)
+      if (suppress_common_lines)
 	diffarg ("--suppress-common-lines");
       diffarg ("-y");
       diffarg ("--");
@@ -577,21 +521,21 @@ main (argc, argv)
     {
       char const *lname, *rname;
       FILE *left, *right, *out, *diffout;
-      int interact_ok;
+      bool interact_ok;
       struct line_filter lfilt;
       struct line_filter rfilt;
       struct line_filter diff_filt;
-      int leftdir = diraccess (argv[optind]);
-      int rightdir = diraccess (argv[optind + 1]);
+      bool leftdir = diraccess (argv[optind]);
+      bool rightdir = diraccess (argv[optind + 1]);
 
-      if (leftdir && rightdir)
+      if (leftdir & rightdir)
 	fatal ("both files to be compared are directories");
 
       lname = expand_name (argv[optind], leftdir, argv[optind + 1]);
       left = ck_fopen (lname, "r");
       rname = expand_name (argv[optind + 1], rightdir, argv[optind]);
       right = ck_fopen (rname, "r");
-      out = ck_fopen (out_file, "w");
+      out = ck_fopen (output, "w");
 
       diffarg ("--sdiff-merge-assist");
       diffarg ("--");
@@ -608,16 +552,16 @@ main (argc, argv)
 	int i;
 
 	for (i = 0;  diffargv[i];  i++)
-	  cmdsize += quote_system_arg ((char *) 0, diffargv[i]) + 1;
+	  cmdsize += quote_system_arg (0, diffargv[i]) + 1;
 	command = p = xmalloc (cmdsize);
 	for (i = 0;  diffargv[i];  i++)
 	  {
 	    p += quote_system_arg (p, diffargv[i]);
 	    *p++ = ' ';
 	  }
-	p[-1] = '\0';
+	p[-1] = 0;
 	diffout = popen (command, "r");
-	if (!diffout)
+	if (! diffout)
 	  perror_fatal (command);
 	free (command);
       }
@@ -644,7 +588,7 @@ main (argc, argv)
 	diffpid = vfork ();
 	if (diffpid < 0)
 	  perror_fatal ("fork");
-	if (!diffpid)
+	if (! diffpid)
 	  {
 	    /* Alter the child's SIGINT and SIGPIPE handlers;
 	       this may munge the parent.
@@ -655,7 +599,7 @@ main (argc, argv)
 	    signal_handler (SIGPIPE, SIG_DFL);
 #if HAVE_VFORK
 	    /* Stop blocking SIGINT and SIGPIPE in the child.  */
-	    sigprocmask (SIG_SETMASK, &procmask, (sigset_t *) 0);
+	    sigprocmask (SIG_SETMASK, &procmask, 0);
 #endif
 	    close (diff_fds[0]);
 	    if (diff_fds[1] != STDOUT_FILENO)
@@ -677,12 +621,12 @@ main (argc, argv)
 	  signal_handler (SIGPIPE, SIG_IGN);
 
 	/* Stop blocking SIGINT and SIGPIPE in the parent.  */
-	sigprocmask (SIG_SETMASK, &procmask, (sigset_t *) 0);
+	sigprocmask (SIG_SETMASK, &procmask, 0);
 #endif
 
 	close (diff_fds[1]);
 	diffout = fdopen (diff_fds[0], "r");
-	if (!diffout)
+	if (! diffout)
 	  perror_fatal ("fdopen");
       }
 #endif /* HAVE_FORK */
@@ -712,10 +656,10 @@ main (argc, argv)
 	diffpid = 0;
 #endif
 
-	if (tmpmade)
+	if (tmpname)
 	  {
 	    unlink (tmpname);
-	    tmpmade = 0;
+	    tmpname = 0;
 	  }
 
 	if (! interact_ok)
@@ -733,22 +677,20 @@ main (argc, argv)
 }
 
 static void
-diffarg (a)
-     char const *a;
+diffarg (char const *a)
 {
-  static unsigned diffargs, diffarglim;
+  static size_t diffargs, diffarglim;
 
   if (diffargs == diffarglim)
     {
       diffarglim = diffarglim ? 2 * diffarglim : 16;
-      diffargv = (char const **) xrealloc (diffargv,
-					   diffarglim * sizeof (char const *));
+      diffargv = xrealloc (diffargv, diffarglim * sizeof *diffargv);
     }
   diffargv[diffargs++] = a;
 }
 
 static void
-execdiff ()
+execdiff (void)
 {
   execvp (diffargv[0], (char **) diffargv);
   write (STDERR_FILENO, diffargv[0], strlen (diffargv[0]));
@@ -761,13 +703,12 @@ execdiff ()
 
 /* Signal handling */
 
-static int volatile ignore_SIGINT;
+static bool volatile ignore_SIGINT;
 static int volatile signal_received;
-static int sigs_trapped;
+static bool sigs_trapped;
 
 static RETSIGTYPE
-catchsig (s)
-     int s;
+catchsig (int s)
 {
 #if ! HAVE_SIGACTION
   signal (s, SIG_IGN);
@@ -780,23 +721,21 @@ catchsig (s)
 static struct sigaction catchaction;
 
 static void
-signal_handler (sig, handler)
-     int sig;
-     RETSIGTYPE (*handler) PARAMS((int));
+signal_handler (int sig, RETSIGTYPE (*handler) (int))
 {
   catchaction.sa_handler = handler;
-  sigaction (sig, &catchaction, (struct sigaction *) 0);
+  sigaction (sig, &catchaction, 0);
 }
 #endif
 
 static void
-trapsigs ()
+trapsigs (void)
 {
   int i;
 
 #if HAVE_SIGACTION
 #ifdef SA_INTERRUPT
-  /* Non-Posix BSD-style systems like SunOS 4.1.x need this
+  /* Non-POSIX BSD-style systems like SunOS 4.1.x need this
      so that `read' calls are interrupted properly.  */
   catchaction.sa_flags = SA_INTERRUPT;
 #endif
@@ -808,7 +747,7 @@ trapsigs ()
   for (i = 0;  i < NUM_SIGS;  i++)
     {
 #if HAVE_SIGACTION
-      sigaction (sigs[i], (struct sigaction *) 0, &initial_action[i]);
+      sigaction (sigs[i], 0, &initial_action[i]);
 #else
       initial_action[i] = signal (sigs[i], SIG_IGN);
 #endif
@@ -816,8 +755,8 @@ trapsigs ()
 	signal_handler (sigs[i], catchsig);
     }
 
-#if !defined (SIGCHLD) && defined (SIGCLD)
-#define SIGCHLD SIGCLD
+#if !defined SIGCHLD && defined SIGCLD
+# define SIGCHLD SIGCLD
 #endif
 #ifdef SIGCHLD
   /* System V fork+wait does not work if SIGCHLD is ignored.  */
@@ -829,16 +768,15 @@ trapsigs ()
 
 /* Untrap signal S, or all trapped signals if S is zero.  */
 static void
-untrapsig (s)
-     int s;
+untrapsig (int s)
 {
   int i;
 
   if (sigs_trapped)
     for (i = 0;  i < NUM_SIGS;  i++)
-      if ((!s || sigs[i] == s)  &&  initial_handler (i) != SIG_IGN)
+      if ((! s || sigs[i] == s)  &&  initial_handler (i) != SIG_IGN)
 #if HAVE_SIGACTION
-	  sigaction (sigs[i], &initial_action[i], (struct sigaction *) 0);
+	  sigaction (sigs[i], &initial_action[i], 0);
 #else
 	  signal (sigs[i], initial_action[i]);
 #endif
@@ -846,7 +784,7 @@ untrapsig (s)
 
 /* Exit if a signal has been received.  */
 static void
-checksigs ()
+checksigs (void)
 {
   int s = signal_received;
   if (s)
@@ -864,7 +802,7 @@ checksigs ()
 
 
 static void
-give_help ()
+give_help (void)
 {
   fprintf (stderr, "%s", _("\
 ed:\tEdit then use both versions, each decorated with a header.\n\
@@ -881,13 +819,13 @@ q:\tQuit.\n\
 }
 
 static int
-skip_white ()
+skip_white (void)
 {
   int c;
   for (;;)
     {
       c = getchar ();
-      if (!ISSPACE (c) || c == '\n')
+      if (! ISSPACE (c) || c == '\n')
 	break;
       checksigs ();
     }
@@ -897,35 +835,30 @@ skip_white ()
 }
 
 static void
-flush_line ()
+flush_line (void)
 {
   int c;
   while ((c = getchar ()) != '\n' && c != EOF)
-    ;
+    continue;
   if (ferror (stdin))
     perror_fatal (_("read failed"));
 }
 
 
 /* interpret an edit command */
-static int
-edit (left, lname, lline, llen, right, rname, rline, rlen, outfile)
-     struct line_filter *left;
-     char const *lname;
-     int lline, llen;
-     struct line_filter *right;
-     char const *rname;
-     int rline, rlen;
-     FILE *outfile;
+static bool
+edit (struct line_filter *left, char const *lname, lin lline, lin llen,
+      struct line_filter *right, char const *rname, lin rline, lin rlen,
+      FILE *outfile)
 {
   for (;;)
     {
       int cmd0, cmd1;
-      int gotcmd = 0;
+      bool gotcmd = 0;
 
       cmd1 = 0; /* Pacify `gcc -W'.  */
 
-      while (!gotcmd)
+      while (! gotcmd)
 	{
 	  if (putchar ('%') != '%')
 	    perror_fatal (_("write failed"));
@@ -995,21 +928,28 @@ edit (left, lname, lline, llen, right, rname, rline, rlen, outfile)
 	  lf_skip (left, llen);
 	  return 1;
 	case 's':
-	  suppress_common_flag = 1;
+	  suppress_common_lines = 1;
 	  break;
 	case 'v':
-	  suppress_common_flag = 0;
+	  suppress_common_lines = 0;
 	  break;
 	case 'q':
 	  return 0;
 	case 'e':
-	  if (! tmpname && ! (tmpname = private_tempnam ()))
-	    perror_fatal ("tmpnam");
-
-	  tmpmade = 1;
-
 	  {
-	    FILE *tmp = ck_fopen (tmpname, "w+");
+	    int fd;
+
+	    if (tmpname)
+	      tmp = fopen (tmpname, "w+");
+	    else
+	      {
+		if ((fd = temporary_file ()) < 0)
+		  perror_fatal ("mkstemp");
+		tmp = fdopen (fd, "w+");
+	      }
+
+	    if (! tmp)
+	      perror_fatal (tmpname);
 
 	    switch (cmd1)
 	      {
@@ -1017,10 +957,10 @@ edit (left, lname, lline, llen, right, rname, rline, rlen, outfile)
 		if (llen)
 		  {
 		    if (llen == 1)
-		      fprintf (tmp, "--- %s %d\n", lname, lline);
+		      fprintf (tmp, "--- %s %ld\n", lname, lline);
 		    else
-		      fprintf (tmp, "--- %s %d,%d\n", lname, lline,
-			       lline + llen - 1);
+		      fprintf (tmp, "--- %s %ld,%ld\n", lname,
+			       lline, lline + llen - 1);
 		  }
 		/* Fall through.  */
 	      case 'b': case 'l':
@@ -1038,10 +978,10 @@ edit (left, lname, lline, llen, right, rname, rline, rlen, outfile)
 		if (rlen)
 		  {
 		    if (rlen == 1)
-		      fprintf (tmp, "+++ %s %d\n", rname, rline);
+		      fprintf (tmp, "+++ %s %ld\n", rname, rline);
 		    else
-		      fprintf (tmp, "+++ %s %d,%d\n", rname, rline,
-			       rline + rlen - 1);
+		      fprintf (tmp, "+++ %s %ld,%ld\n", rname,
+			       rline, rline + rlen - 1);
 		  }
 		/* Fall through.  */
 	      case 'b': case 'r':
@@ -1059,7 +999,7 @@ edit (left, lname, lline, llen, right, rname, rline, rlen, outfile)
 	      int wstatus;
 #if ! HAVE_FORK
 	      char *command =
-		xmalloc (quote_system_arg ((char *) 0, editor_program)
+		xmalloc (quote_system_arg (0, editor_program)
 			 + 1 + strlen (tmpname) + 1);
 	      sprintf (command + quote_system_arg (command, editor_program),
 		       " %s", tmpname);
@@ -1080,7 +1020,7 @@ edit (left, lname, lline, llen, right, rname, rline, rlen, outfile)
 
 		  argv[i++] = editor_program;
 		  argv[i++] = tmpname;
-		  argv[i++] = 0;
+		  argv[i] = 0;
 
 		  execvp (editor_program, (char **) argv);
 		  write (STDERR_FILENO, editor_program,
@@ -1108,9 +1048,7 @@ edit (left, lname, lline, llen, right, rname, rline, rlen, outfile)
 	    if (fseek (tmp, 0L, SEEK_SET) != 0)
 	      perror_fatal ("fseek");
 	    {
-	      /* SDIFF_BUFSIZE is too big for a local var
-		 in some compilers, so we allocate it dynamically.  */
-	      char *buf = xmalloc (SDIFF_BUFSIZE);
+	      char buf[SDIFF_BUFSIZE];
 	      size_t size;
 
 	      while ((size = ck_fread (buf, SDIFF_BUFSIZE, tmp)) != 0)
@@ -1119,8 +1057,6 @@ edit (left, lname, lline, llen, right, rname, rline, rlen, outfile)
 		  ck_fwrite (buf, size, outfile);
 		}
 	      ck_fclose (tmp);
-
-	      free (buf);
 	    }
 	    return 1;
 	  }
@@ -1134,72 +1070,67 @@ edit (left, lname, lline, llen, right, rname, rline, rlen, outfile)
 
 
 /* Alternately reveal bursts of diff output and handle user commands.  */
-static int
-interact (diff, left, lname, right, rname, outfile)
-     struct line_filter *diff;
-     struct line_filter *left;
-     char const *lname;
-     struct line_filter *right;
-     char const *rname;
-     FILE *outfile;
+static bool
+interact (struct line_filter *diff,
+	  struct line_filter *left, char const *lname,
+	  struct line_filter *right, char const *rname,
+	  FILE *outfile)
 {
-  int lline = 1, rline = 1;
+  lin lline = 1, rline = 1;
 
   for (;;)
     {
       char diff_help[256];
-      int snarfed = lf_snarf (diff, diff_help, sizeof (diff_help));
+      int snarfed = lf_snarf (diff, diff_help, sizeof diff_help);
 
       if (snarfed <= 0)
-	return snarfed;
+	return snarfed != 0;
 
       checksigs ();
 
-      switch (diff_help[0])
+      if (diff_help[0] == ' ')
+	puts (diff_help + 1);
+      else
 	{
-	case ' ':
-	  puts (diff_help + 1);
-	  break;
-	case 'i':
-	  {
-	    int llen = atoi (diff_help + 1), rlen, lenmax;
-	    char *p = strchr (diff_help, ',');
+	  char *numend;
+	  uintmax_t val;
+	  lin llen, rlen, lenmax;
+	  errno = 0;
+	  llen = val = strtoumax (diff_help + 1, &numend, 10);
+	  if (llen < 0 || llen != val || errno || *numend != ',')
+	    fatal (diff_help);
+	  rlen = val = strtoumax (numend + 1, &numend, 10);
+	  if (rlen < 0 || rlen != val || errno || *numend != '\n')
+	    fatal (diff_help);
 
-	    if (!p)
-	      fatal (diff_help);
-	    rlen = atoi (p + 1);
-	    lenmax = max (llen, rlen);
+	  lenmax = MAX (llen, rlen);
 
-	    if (suppress_common_flag)
-	      lf_skip (diff, lenmax);
-	    else
+	  switch (diff_help[0])
+	    {
+	    case 'i':
+	      if (suppress_common_lines)
+		lf_skip (diff, lenmax);
+	      else
+		lf_copy (diff, lenmax, stdout);
+
+	      lf_copy (left, llen, outfile);
+	      lf_skip (right, rlen);
+	      break;
+
+	    case 'c':
 	      lf_copy (diff, lenmax, stdout);
+	      if (! edit (left, lname, lline, llen,
+			  right, rname, rline, rlen,
+			  outfile))
+		return 0;
+	      break;
 
-	    lf_copy (left, llen, outfile);
-	    lf_skip (right, rlen);
-	    lline += llen;
-	    rline += rlen;
-	    break;
-	  }
-	case 'c':
-	  {
-	    int llen = atoi (diff_help + 1), rlen;
-	    char *p = strchr (diff_help, ',');
-
-	    if (!p)
+	    default:
 	      fatal (diff_help);
-	    rlen = atoi (p + 1);
-	    lf_copy (diff, max (llen, rlen), stdout);
-	    if (! edit (left, lname, lline, llen, right, rname, rline, rlen,
-			outfile))
-	      return 0;
-	    lline += llen;
-	    rline += rlen;
-	    break;
-	  }
-	default:
-	  fatal (diff_help);
-	  break;
+	    }
+
+	  lline += llen;
+	  rline += rlen;
 	}
     }
 }
@@ -1208,87 +1139,42 @@ interact (diff, left, lname, right, rname, outfile)
 
 /* temporary lossage: this is torn from gnu libc */
 /* Return nonzero if DIR is an existing directory.  */
-static int
-diraccess (dir)
-     char const *dir;
+static bool
+diraccess (char const *dir)
 {
   struct stat buf;
   return stat (dir, &buf) == 0 && S_ISDIR (buf.st_mode);
 }
 
-#if ! HAVE_TMPNAM
+#ifndef PVT_tmpdir
+#define PVT_tmpdir "/tmp"
+#endif
+#ifndef TMPDIR_ENV
+#define TMPDIR_ENV "TMPDIR"
+#endif
 
-/* Return zero if we know that FILE does not exist.  */
+/* Open a temporary file and return its file descriptor.  Put into
+   tmpname the address of a newly allocated buffer that holds the
+   file's name.  Use the prefix "sdiff".  */
 static int
-exists (file)
-     char const *file;
+temporary_file (void)
 {
-  struct stat buf;
-  return stat (file, &buf) == 0 || errno != ENOENT;
+  char const *tmpdir = getenv (TMPDIR_ENV);
+  char const *dir = tmpdir ? tmpdir : PVT_tmpdir;
+  char *buf = xmalloc (strlen (dir) + 1 + 5 + 6 + 1);
+  int fd;
+  int e;
+  sigset_t procmask;
+  sigset_t blocked;
+  sprintf (buf, "%s/sdiffXXXXXX", dir);
+  sigemptyset (&blocked);
+  sigaddset (&blocked, SIGINT);
+  sigprocmask (SIG_BLOCK, &blocked, &procmask);
+  fd = mkstemp (buf);
+  e = errno;
+  if (0 <= fd)
+    tmpname = buf;
+  sigprocmask (SIG_SETMASK, &procmask, 0);
+  errno = e;
+  return fd;
 }
-
-/* These are the characters used in temporary filenames.  */
-static char const letters[] =
-  "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-
-/* Generate a temporary filename and return it (in a newly allocated buffer).
-   Use the prefix "dif" as in tempnam.
-   This goes through a cyclic pattern of all possible
-   filenames consisting of five decimal digits of the current pid and three
-   of the characters in `letters'.  Each potential filename is
-   tested for an already-existing file of the same name, and no name of an
-   existing file will be returned.  When the cycle reaches its end
-   return 0.  */
-static char *
-private_tempnam ()
-{
-  char const *dir = getenv (TMPDIR_ENV);
-  static char const tmpdir[] = PVT_tmpdir;
-  size_t index;
-  char *buf;
-  pid_t pid = getpid ();
-  size_t dlen;
-
-  if (!dir)
-    dir = tmpdir;
-
-  dlen = strlen (dir);
-
-  /* Remove trailing slashes from the directory name.  */
-  while (dlen && dir[dlen - 1] == '/')
-    --dlen;
-
-  buf = xmalloc (dlen + 1 + 3 + 5 + 1 + 3 + 1);
-
-  sprintf (buf, "%.*s/.", (int) dlen, dir);
-  if (diraccess (buf))
-    {
-      for (index = 0;
-	   index < ((sizeof (letters) - 1) * (sizeof (letters) - 1)
-		    * (sizeof (letters) - 1));
-	   ++index)
-	{
-	  /* Construct a file name and see if it already exists.
-
-	     We use a single counter in INDEX to cycle each of three
-	     character positions through each of 62 possible letters.  */
-
-	  sprintf (buf, "%.*s/dif%.5lu.%c%c%c", (int) dlen, dir,
-		   (unsigned long) pid % 100000,
-		   letters[index % (sizeof (letters) - 1)],
-		   letters[(index / (sizeof (letters) - 1))
-			   % (sizeof (letters) - 1)],
-		   letters[index / ((sizeof (letters) - 1) *
-				     (sizeof (letters) - 1))]);
-
-	  if (!exists (buf))
-	    return buf;
-	}
-      errno = EEXIST;
-    }
-
-  /* Don't free buf; `free' might change errno.  We'll exit soon anyway.  */
-  return 0;
-}
-
-#endif /* ! HAVE_TMPNAM */
