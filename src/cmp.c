@@ -1,7 +1,7 @@
 /* cmp - compare two files byte by byte
 
    Copyright (C) 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1998, 2001,
-   2002 Free Software Foundation, Inc.
+   2002, 2004 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -22,15 +22,18 @@
 #include "paths.h"
 
 #include <stdio.h>
-#include <cmpbuf.h>
+
 #include <c-stack.h>
+#include <cmpbuf.h>
 #include <error.h>
+#include <exit.h>
 #include <exitfail.h>
 #include <file-type.h>
 #include <getopt.h>
 #include <hard-locale.h>
 #include <inttostr.h>
 #include <setmode.h>
+#include <unlocked-io.h>
 #include <version-etc.h>
 #include <xalloc.h>
 #include <xstrtol.h>
@@ -40,12 +43,6 @@
 #else
 # define hard_locale_LC_MESSAGES 0
 #endif
-
-/* TRANSLATORS: Please translate the second "o" in "Torbjorn Granlund"
-   to an o-with-umlaut (U+00F6, LATIN SMALL LETTER O WITH DIAERESIS)
-   if possible.  */
-static char const authorship_msgid[] = N_("\
-Written by Torbjorn Granlund and David MacKenzie.");
 
 static int cmp (void);
 static off_t file_position (int);
@@ -121,11 +118,12 @@ try_help (char const *reason_msgid, char const *operand)
 
 static char const valid_suffixes[] = "kKMGTPEZY0";
 
-/* Parse an operand *ARGPTR of --ignore-initial, updating *ARGPTR to
-   point after the operand.  If DELIMITER is nonzero, the operand may
-   be followed by DELIMITER; otherwise it must be null-terminated.  */
-static off_t
-parse_ignore_initial (char **argptr, char delimiter)
+/* Update ignore_initial[F] according to the result of parsing an
+   *operand ARGPTR of --ignore-initial, updating *ARGPTR to point
+   *after the operand.  If DELIMITER is nonzero, the operand may be
+   *followed by DELIMITER; otherwise it must be null-terminated.  */
+static void
+specify_ignore_initial (int f, char **argptr, char delimiter)
 {
   uintmax_t val;
   off_t o;
@@ -135,14 +133,15 @@ parse_ignore_initial (char **argptr, char delimiter)
 	 || (e == LONGINT_INVALID_SUFFIX_CHAR && **argptr == delimiter))
       || (o = val) < 0 || o != val || val == UINTMAX_MAX)
     try_help ("invalid --ignore-initial value `%s'", arg);
-  return o;
+  if (ignore_initial[f] < o)
+    ignore_initial[f] = o;
 }
 
 /* Specify the output format.  */
 static void
 specify_comparison_type (enum comparison_type t)
 {
-  if (comparison_type)
+  if (comparison_type && comparison_type != t)
     try_help ("options -l and -s are incompatible", 0);
   comparison_type = t;
 }
@@ -179,12 +178,13 @@ usage (void)
   printf ("%s\n\n", _("Compare two files byte by byte."));
   for (p = option_help_msgid;  *p;  p++)
     printf ("  %s\n", _(*p));
-  printf ("\n%s\n%s\n\n%s\n\n%s\n",
+  printf ("\n%s\n%s\n\n%s\n%s\n\n%s\n",
 	  _("SKIP1 and SKIP2 are the number of bytes to skip in each file."),
 	  _("SKIP values may be followed by the following multiplicative suffixes:\n\
 kB 1000, K 1024, MB 1,000,000, M 1,048,576,\n\
 GB 1,000,000,000, G 1,073,741,824, and so on for T, P, E, Z, Y."),
 	  _("If a FILE is `-' or missing, read standard input."),
+	  _("Exit status is 0 if inputs are the same, 1 if different, 2 if trouble."),
 	  _("Report bugs to <bug-gnu-utils@gnu.org>."));
 }
 
@@ -200,7 +200,7 @@ main (int argc, char **argv)
   setlocale (LC_ALL, "");
   bindtextdomain (PACKAGE, LOCALEDIR);
   textdomain (PACKAGE);
-  c_stack_action (argv, 0);
+  c_stack_action (0);
 
   /* Parse command line options.  */
 
@@ -210,14 +210,15 @@ main (int argc, char **argv)
       {
       case 'b':
       case 'c': /* 'c' is obsolescent as of diffutils 2.7.3 */
-	opt_print_bytes = 1;
+	opt_print_bytes = true;
 	break;
 
       case 'i':
-	ignore_initial[0] = parse_ignore_initial (&optarg, ':');
-	ignore_initial[1] = (*optarg++ == ':'
-			     ? parse_ignore_initial (&optarg, 0)
-			     : ignore_initial[0]);
+	specify_ignore_initial (0, &optarg, ':');
+	if (*optarg++ == ':')
+	  specify_ignore_initial (1, &optarg, 0);
+	else if (ignore_initial[1] < ignore_initial[0])
+	  ignore_initial[1] = ignore_initial[0];
 	break;
 
       case 'l':
@@ -239,7 +240,11 @@ main (int argc, char **argv)
 	break;
 
       case 'v':
-	version_etc ("cmp", authorship_msgid);
+	/* TRANSLATORS: Please translate the second "o" in "Torbjorn
+	   Granlund" to an o-with-umlaut (U+00F6, LATIN SMALL LETTER O
+	   WITH DIAERESIS) if possible.  */
+	version_etc (stdout, "cmp", PACKAGE_NAME, PACKAGE_VERSION,
+		     _("Torbjorn Granlund"), "David MacKenzie", (char *) 0);
 	check_stdout ();
 	return EXIT_SUCCESS;
 
@@ -261,7 +266,7 @@ main (int argc, char **argv)
   for (f = 0; f < 2 && optind < argc; f++)
     {
       char *arg = argv[optind++];
-      ignore_initial[f] = parse_ignore_initial (&arg, 0);
+      specify_ignore_initial (f, &arg, 0);
     }
 
   if (optind < argc)
@@ -273,9 +278,10 @@ main (int argc, char **argv)
 	 stdin is closed and opening file[0] yields file descriptor 0.  */
       int f1 = f ^ (strcmp (file[1], "-") == 0);
 
-      /* Two files with the same name are identical.
+      /* Two files with the same name and offset are identical.
 	 But wait until we open the file once, for proper diagnostics.  */
-      if (f && file_name_cmp (file[0], file[1]) == 0)
+      if (f && ignore_initial[0] == ignore_initial[1]
+	  && file_name_cmp (file[0], file[1]) == 0)
 	return EXIT_SUCCESS;
 
       file_desc[f1] = (strcmp (file[f1], "-") == 0
@@ -289,7 +295,7 @@ main (int argc, char **argv)
 	    error (EXIT_TROUBLE, errno, "%s", file[f1]);
 	}
 
-      set_binary_mode (file_desc[f1], 1);
+      set_binary_mode (file_desc[f1], true);
     }
 
   /* If the files are links to the same inode and have the same file position,
@@ -578,7 +584,8 @@ block_compare_and_count (word const *p0, word const *p1, off_t *count)
       l ^= nnnn;
       for (i = 0; i < sizeof l; i++)
 	{
-	  cnt += ! (unsigned char) l;
+	  unsigned char uc = l;
+	  cnt += ! uc;
 	  l >>= CHAR_BIT;
 	}
     }
@@ -628,7 +635,7 @@ block_compare (word const *p0, word const *p1)
 static void
 sprintc (char *buf, unsigned char c)
 {
-  if (! ISPRINT (c))
+  if (! isprint (c))
     {
       if (c >= 128)
 	{
@@ -663,7 +670,7 @@ file_position (int f)
 
   if (! positioned[f])
     {
-      positioned[f] = 1;
+      positioned[f] = true;
       position[f] = lseek (file_desc[f], ignore_initial[f], SEEK_CUR);
     }
   return position[f];
