@@ -19,11 +19,10 @@ the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 
 #include "diff.h"
 
-/* Rotate a value n bits to the left. */
-#define UINT_BIT (sizeof (unsigned) * CHAR_BIT)
-#define ROL(v, n) ((v) << (n) | (v) >> (UINT_BIT - (n)))
+/* Rotate an unsigned value to the left.  */
+#define ROL(v, n) ((v) << (n) | (v) >> (sizeof (v) * CHAR_BIT - (n)))
 
-/* Given a hash value and a new character, return a new hash value. */
+/* Given a hash value and a new character, return a new hash value.  */
 #define HASH(h, c) ((c) + ROL (h, 7))
 
 /* Guess remaining number of lines from number N of lines so far,
@@ -41,9 +40,9 @@ the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
    Afterward, each class is represented by a number.  */
 struct equivclass
 {
-  int next;	/* Next item in this bucket. */
+  int next;	/* Next item in this bucket.  */
   unsigned hash;	/* Hash of lines in this class.  */
-  char const *line;	/* A line that fits this class. */
+  char const *line;	/* A line that fits this class.  */
   size_t length;	/* That line's length, not counting its newline.  */
 };
 
@@ -51,7 +50,7 @@ struct equivclass
    buckets[-1] is reserved for incomplete lines.  */
 static int *buckets;
 
-/* Number of buckets in the hash table array, not counting buckets[-1]. */
+/* Number of buckets in the hash table array, not counting buckets[-1].  */
 static int nbuckets;
 
 /* Array in which the equivalence classes are allocated.
@@ -140,8 +139,10 @@ slurp (current)
       /* It's a regular file; slurp in the rest all at once.  */
 
       /* Get the size out of the stat block.
-	 Allocate enough room for appended newline and sentinel.  */
-      cc = current->stat.st_size + 1 + sizeof (word);
+	 Allocate just enough room for appended newline plus word sentinel,
+	 plus word-alignment since we want the buffer word-aligned.  */
+      cc = current->stat.st_size + 2 * sizeof (word);
+      cc -= cc % sizeof (word);
       if (current->bufsize < cc)
 	{
 	  current->bufsize = cc;
@@ -177,14 +178,16 @@ slurp (current)
 	    pfatal_with_name (current->name);
 	  current->buffered_chars += cc;
 	}
-      /* Allocate just enough room for appended newline and sentinel.  */
-      current->bufsize = current->buffered_chars + 1 + sizeof (word);
+      /* Allocate just enough room for appended newline plus word sentinel,
+	 plus word-alignment since we want the buffer word-aligned.  */
+      cc = current->buffered_chars + 2 * sizeof (word);
+      current->bufsize = cc - cc % sizeof (word);
       current->buffer = xrealloc (current->buffer, current->bufsize);
     }
 }
 
 /* Split the file into lines, simultaneously computing the equivalence class for
-   each line. */
+   each line.  */
 
 static void
 find_and_hash_each_line (current)
@@ -207,7 +210,12 @@ find_and_hash_each_line (current)
   int eqs_alloc = equivs_alloc;
   char const *suffix_begin = current->suffix_begin;
   char const *bufend = current->buffer + current->buffered_chars;
-  int use_line_cmp = ignore_some_line_changes;
+  int (*diff_length_line_cmp) PARAMS((char const *, char const *))
+    = (ignore_all_space_flag | ignore_space_change_flag
+       ? line_cmp : 0);
+  int (*same_length_diff_contents_cmp) PARAMS((char const *, char const *))
+    = (ignore_all_space_flag | ignore_space_change_flag | ignore_case_flag
+       ? line_cmp : 0);
 
   while ((char const *) p < suffix_begin)
     {
@@ -217,36 +225,34 @@ find_and_hash_each_line (current)
 
       h = 0;
 
-      /* Hash this line until we find a newline. */
+      /* Hash this line until we find a newline.  */
       if (ignore_case_flag)
 	{
 	  if (ignore_all_space_flag)
 	    while ((c = *p++) != '\n')
 	      {
 		if (! ISSPACE (c))
-		  h = HASH (h, ISUPPER (c) ? tolower (c) : c);
+		  h = HASH (h, ISUPPER (c) ? _tolower (c) : c);
 	      }
 	  else if (ignore_space_change_flag)
 	    while ((c = *p++) != '\n')
 	      {
 		if (ISSPACE (c))
 		  {
-		    for (;;)
+		    do
 		      {
-			c = *p++;
-			if (!ISSPACE (c))
-			  break;
-			if (c == '\n')
+			if ((c = *p++) == '\n')
 			  goto hashing_done;
 		      }
+		    while (ISSPACE (c));
 		    h = HASH (h, ' ');
 		  }
 		/* C is now the first non-space.  */
-		h = HASH (h, ISUPPER (c) ? tolower (c) : c);
+		h = HASH (h, ISUPPER (c) ? _tolower (c) : c);
 	      }
 	  else
 	    while ((c = *p++) != '\n')
-	      h = HASH (h, ISUPPER (c) ? tolower (c) : c);
+	      h = HASH (h, ISUPPER (c) ? _tolower (c) : c);
 	}
       else
 	{
@@ -261,14 +267,12 @@ find_and_hash_each_line (current)
 	      {
 		if (ISSPACE (c))
 		  {
-		    for (;;)
+		    do
 		      {
-			c = *p++;
-			if (!ISSPACE (c))
-			  break;
-			if (c == '\n')
+			if ((c = *p++) == '\n')
 			  goto hashing_done;
 		      }
+		    while (ISSPACE (c));
 		    h = HASH (h, ' ');
 		  }
 		/* C is now the first non-space.  */
@@ -300,11 +304,11 @@ find_and_hash_each_line (current)
       for (i = *bucket;  ;  i = eqs[i].next)
 	if (!i)
 	  {
-	    /* Create a new equivalence class in this bucket. */
+	    /* Create a new equivalence class in this bucket.  */
 	    i = eqs_index++;
 	    if (i == eqs_alloc)
 	      eqs = (struct equivclass *)
-		      xrealloc (eqs, (eqs_alloc*=2) * sizeof(*eqs));
+		      xrealloc (eqs, (eqs_alloc*=2) * sizeof (*eqs));
 	    eqs[i].next = *bucket;
 	    eqs[i].hash = h;
 	    eqs[i].line = ip;
@@ -315,28 +319,35 @@ find_and_hash_each_line (current)
 	else if (eqs[i].hash == h)
 	  {
 	    char const *eqline = eqs[i].line;
-
-	    /* Reuse existing equivalence class if the lines are identical.
-	       This detects the common case of exact identity
-	       faster than complete comparison would.  */
-	    if (eqs[i].length == length && memcmp (eqline, ip, length) == 0)
-	      break;
+	    int (*compare_lines) PARAMS((char const *, char const *));
 
 	    /* Reuse existing class if line_cmp reports the lines equal.  */
-	    if (use_line_cmp && line_cmp (eqline, ip) == 0)
+	    if (eqs[i].length == length)
+	      {
+		/* Reuse existing equivalence class if the lines are identical.
+		   This detects the common case of exact identity
+		   faster than line_cmp would.  */
+		if (memcmp (eqline, ip, length) == 0)
+		  break;
+		compare_lines = same_length_diff_contents_cmp;
+	      }
+	    else
+	      compare_lines = diff_length_line_cmp;
+
+	    if (compare_lines && (*compare_lines) (eqline, ip) == 0)
 	      break;
 	  }
 
-      /* Maybe increase the size of the line table. */
+      /* Maybe increase the size of the line table.  */
       if (line == alloc_lines)
 	{
 	  /* Double (alloc_lines - linbuf_base) by adding to alloc_lines.  */
 	  alloc_lines = 2 * alloc_lines - linbuf_base;
 	  cureqs = (int *) xrealloc (cureqs, alloc_lines * sizeof (*cureqs));
-	  linbuf = (char const **) xrealloc (linbuf + linbuf_base,
-					     (alloc_lines - linbuf_base)
-					     * sizeof (*linbuf))
-		   - linbuf_base;
+	  linbuf = ((char const **) xrealloc (linbuf + linbuf_base,
+					      (alloc_lines - linbuf_base)
+					      * sizeof (*linbuf))
+		    - linbuf_base);
 	}
       linbuf[line] = ip;
       cureqs[line] = i;
@@ -354,10 +365,10 @@ find_and_hash_each_line (current)
 	{
 	  /* Double (alloc_lines - linbuf_base) by adding to alloc_lines.  */
 	  alloc_lines = 2 * alloc_lines - linbuf_base;
-	  linbuf = (char const **) xrealloc (linbuf + linbuf_base,
-					     (alloc_lines - linbuf_base)
-					     * sizeof (*linbuf))
-		   - linbuf_base;
+	  linbuf = ((char const **) xrealloc (linbuf + linbuf_base,
+					      (alloc_lines - linbuf_base)
+					      * sizeof (*linbuf))
+		    - linbuf_base);
 	}
       linbuf[line] = (char const *) p;
 
@@ -409,7 +420,7 @@ prepare_text_end (current)
 }
 
 /* Given a vector of two file_data objects, find the identical
-   prefixes and suffixes of each object. */
+   prefixes and suffixes of each object.  */
 
 static void
 find_identical_ends (filevec)
@@ -473,7 +484,7 @@ find_identical_ends (filevec)
 	;
       --p0, --p1;
 
-      /* Don't mistakenly count missing newline as part of prefix. */
+      /* Don't mistakenly count missing newline as part of prefix.  */
       if (ROBUST_OUTPUT_STYLE (output_style)
 	  && (buffer0 + n0 - filevec[0].missing_newline < p0)
 	     !=
@@ -581,8 +592,8 @@ find_identical_ends (filevec)
 	{
 	  int l = lines++ & prefix_mask;
 	  if (l == alloc_lines0)
-	    linbuf0 = (char const **) xrealloc (linbuf0, (alloc_lines0 *= 2)
-							 * sizeof(*linbuf0));
+	    linbuf0 = (char const **)
+	      xrealloc (linbuf0, (alloc_lines0 *= 2) * sizeof (*linbuf0));
 	  linbuf0[l] = p0;
 	  while (*p0++ != '\n')
 	    ;
@@ -624,7 +635,7 @@ find_identical_ends (filevec)
 
 /* Largest primes less than some power of two, for nbuckets.  Values range
    from useful to preposterous.  If one of these numbers isn't prime
-   after all, don't blame it on me, blame it on primes (6) . . . */
+   after all, don't blame it on me, blame it on primes (6).  */
 static int const primes[] =
 {
   509,
@@ -691,7 +702,7 @@ read_files (filevec, pretend_binary)
   equivs_alloc = filevec[0].alloc_lines + filevec[1].alloc_lines + 1;
   equivs = (struct equivclass *) xmalloc (equivs_alloc * sizeof (struct equivclass));
   /* Equivalence class 0 is permanently safe for lines that were not
-     hashed.  Real equivalence classes start at 1. */
+     hashed.  Real equivalence classes start at 1.  */
   equivs_index = 1;
 
   for (i = 0;  primes[i] < equivs_alloc / 3;  i++)
