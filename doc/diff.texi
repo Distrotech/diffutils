@@ -10,9 +10,9 @@
 @copying
 This manual is for GNU Diffutils
 (version @value{VERSION}, @value{UPDATED}),
-and documents the @sc{gnu} @command{diff}, @command{diff3},
+and documents the @acronym{GNU} @command{diff}, @command{diff3},
 @command{sdiff}, and @command{cmp} commands for showing the
-differences between files and the @sc{gnu} @command{patch} command for
+differences between files and the @acronym{GNU} @command{patch} command for
 using their output to update files.
 
 Copyright @copyright{} 1992, 1993, 1994, 1998, 2001, 2002 Free
@@ -93,7 +93,7 @@ Software Foundation raise funds for GNU development.''
 * Invoking patch::        Apply a diff file to an original.
 * Invoking sdiff::        Side-by-side merge of file differences.
 
-* Standards conformance:: Conformance to the @sc{posix} standard.
+* Standards conformance:: Conformance to the @acronym{POSIX} standard.
 * Projects::              If you've found a bug or other shortcoming.
 
 * Copying This Manual::   How to make copies of this manual.
@@ -120,7 +120,7 @@ You can use the @command{cmp} command to show the byte and line numbers
 where two files differ.  @command{cmp} can also show all the bytes
 that differ between the two files, side by side.  A way to compare
 two files character by character is the Emacs command @kbd{M-x
-compare-windows}.  @xref{Other Window, , Other Window, emacs, The @sc{gnu}
+compare-windows}.  @xref{Other Window, , Other Window, emacs, The @acronym{GNU}
 Emacs Manual}, for more information on that command.
 
 You can use the @command{diff3} command to show differences among three
@@ -143,7 +143,7 @@ to one file to reproduce the other.
 This manual first concentrates on making diffs, and later shows how to
 use diffs to update files.
 
-@sc{gnu} @command{diff} was written by Paul Eggert, Mike Haertel,
+@acronym{GNU} @command{diff} was written by Paul Eggert, Mike Haertel,
 David Hayes, Richard Stallman, and Len Tower.  Wayne Davison designed and
 implemented the unified output format.  The basic algorithm is described
 in ``An O(ND) Difference Algorithm and its Variations'', Eugene W. Myers,
@@ -164,12 +164,12 @@ E. Ukkonen, @cite{Information and Control} Vol.@: 64, 1985, pp.@: 100--118.
 @c Ukkonen should be given credit for also discovering the algorithm used
 @c in GNU diff.
 
-@sc{gnu} @command{diff3} was written by Randy Smith.  @sc{gnu}
-@command{sdiff} was written by Thomas Lord.  @sc{gnu} @command{cmp}
-was written by Torbjorn Granlund and David MacKenzie.
+@acronym{GNU} @command{diff3} was written by Randy Smith.  @acronym{GNU}
+@command{sdiff} was written by Thomas Lord.  @acronym{GNU} @command{cmp}
+was written by Torbj@"orn Granlund and David MacKenzie.
 
-@command{patch} was written mainly by Larry Wall and Paul Eggert;
-several @sc{gnu} enhancements were contributed by Wayne Davison and
+@acronym{GNU} @command{patch} was written mainly by Larry Wall and Paul Eggert;
+several @acronym{GNU} enhancements were contributed by Wayne Davison and
 David MacKenzie.  Parts of this manual are adapted from a manual page
 written by Larry Wall, with his permission.
 
@@ -185,14 +185,15 @@ lines that differ, and reports each group of differing lines.  It can
 report the differing lines in several formats, which have different
 purposes.
 
-@sc{gnu} @command{diff} can show whether files are different without detailing
-the differences.  It also provides ways to suppress certain kinds of
-differences that are not important to you.  Most commonly, such
-differences are changes in the amount of white space between words or
-lines.  @command{diff} also provides ways to suppress differences in
-alphabetic case or in lines that match a regular expression that you
-provide.  These options can accumulate; for example, you can ignore
-changes in both white space and alphabetic case.
+@acronym{GNU} @command{diff} can show whether files are different
+without detailing the differences.  It also provides ways to suppress
+certain kinds of differences that are not important to you.  Most
+commonly, such differences are changes in the amount of white space
+between words or lines.  @command{diff} also provides ways to suppress
+differences in alphabetic case or in lines that match a regular
+expression that you provide.  These options can accumulate; for
+example, you can ignore changes in both white space and alphabetic
+case.
 
 Another way to think of the differences between two files is as a
 sequence of pairs of bytes that can be either identical or
@@ -218,9 +219,9 @@ changes to the same file.
 @menu
 * Hunks::             Groups of differing lines.
 * White Space::       Suppressing differences in white space.
-* Blank Lines::       Suppressing differences in blank lines.
+* Blank Lines::       Suppressing differences whose lines are all blank.
+* Specified Lines::   Suppressing differences whose lines all match a pattern.
 * Case Folding::      Suppressing differences in alphabetic case.
-* Specified Folding:: Suppressing differences that match regular expressions.
 * Brief::             Summarizing which files are different.
 * Binary::            Comparing binary files or forcing text comparisons.
 @end menu
@@ -274,22 +275,21 @@ It is also possible to find @samp{a} as the common line.  @command{diff}
 does not always find an optimal matching between the files; it takes
 shortcuts to run faster.  But its output is usually close to the
 shortest possible.  You can adjust this tradeoff with the
-@option{--minimal} option (@pxref{diff Performance}).
+@option{-d} or @option{--minimal} option (@pxref{diff Performance}).
 
 @node White Space
 @section Suppressing Differences in Blank and Tab Spacing
 @cindex blank and tab difference suppression
 @cindex tab and blank difference suppression
 
-The @option{-E} and @option{--ignore-tab-expansion} options ignore the
+The @option{-E} or @option{--ignore-tab-expansion} option ignores the
 distinction between tabs and spaces on input.  A tab is considered to be
-equivalent to the number of spaces to the next tab stop.  @command{diff}
-assumes that tab stops are set every 8 print columns.
+equivalent to the number of spaces to the next tab stop (@pxref{Tabs}).
 
-The @option{-b} and @option{--ignore-space-change} options are stronger.
-They ignore white space at line end, and consider all other sequences of
-one or more white space characters to be equivalent.  With these
-options, @command{diff} considers the following two lines to be equivalent,
+The @option{-b} or @option{--ignore-space-change} option is stronger.
+It ignores white space at line end, and considers all other sequences of
+one or more white space characters within a line to be equivalent.  With this
+option, @command{diff} considers the following two lines to be equivalent,
 where @samp{$} denotes the line end:
 
 @example
@@ -297,12 +297,12 @@ Here lyeth  muche rychnesse  in lytell space.   -- John Heywood$
 Here lyeth muche rychnesse in lytell space. -- John Heywood   $
 @end example
 
-The @option{-w} and @option{--ignore-all-space} options are stronger still.
-They ignore difference even if one line has white space where
+The @option{-w} or @option{--ignore-all-space} option is stronger still.
+It ignores differences even if one line has white space where
 the other line has none.  @dfn{White space} characters include
 tab, newline, vertical tab, form feed, carriage return, and space;
 some locales may define additional characters to be white space.
-With these options, @command{diff} considers the
+With this option, @command{diff} considers the
 following two lines to be equivalent, where @samp{$} denotes the line
 end and @samp{^M} denotes a carriage return:
 
@@ -312,13 +312,11 @@ Here lyeth  muche  rychnesse in lytell space.--  John Heywood$
 @end example
 
 @node Blank Lines
-@section Suppressing Differences in Blank Lines
+@section Suppressing Differences Whose Lines Are All Blank
 @cindex blank line difference suppression
 
-The @option{-B} and @option{--ignore-blank-lines} options ignore insertions
-or deletions of blank lines.  These options affect only lines
-that are completely empty; they do not affect lines that look empty but
-contain space or tab characters.  With these options, for example, a
+The @option{-B} or @option{--ignore-blank-lines} option ignores changes
+that consist entirely of blank lines.  With this option, for example, a
 file containing
 @example
 1.  A point is that which has no part.
@@ -336,17 +334,16 @@ is considered identical to a file containing
 -- Euclid, The Elements, I
 @end example
 
-@node Case Folding
-@section Suppressing Case Differences
-@cindex case difference suppression
+Normally this option affects only lines that are completely empty, but
+if you also specify the @option{-b} or @option{--ignore-space-change}
+option, or the @option{-w} or @option{--ignore-all-space} option,
+lines are also affected if they look empty but contain white space.
+In other words, @option{-B} is equivalent to @samp{-I '^$'} by
+default, but it is equivalent to @option{-I '^[[:space:]]*$'} if
+@option{-b} or @option{-w} is also specified.
 
-@sc{gnu} @command{diff} can treat lower case letters as equivalent to their
-upper case counterparts, so that, for example, it considers @samp{Funky
-Stuff}, @samp{funky STUFF}, and @samp{fUNKy stuFf} to all be the same.
-To request this, use the @option{-i} or @option{--ignore-case} option.
-
-@node Specified Folding
-@section Suppressing Lines Matching a Regular Expression
+@node Specified Lines
+@section Suppressing Differences Whose Lines All Match a Regular Expression
 @cindex regular expression suppression
 
 To ignore insertions and deletions of lines that match a
@@ -367,6 +364,16 @@ You can specify more than one regular expression for lines to ignore by
 using more than one @option{-I} option.  @command{diff} tries to match each
 line against each regular expression.
 
+@node Case Folding
+@section Suppressing Case Differences
+@cindex case difference suppression
+
+@acronym{GNU} @command{diff} can treat lower case letters as
+equivalent to their upper case counterparts, so that, for example, it
+considers @samp{Funky Stuff}, @samp{funky STUFF}, and @samp{fUNKy
+stuFf} to all be the same.  To request this, use the @option{-i} or
+@option{--ignore-case} option.
+
 @node Brief
 @section Summarizing Which Files Differ
 @cindex summarizing which files differ
@@ -376,7 +383,7 @@ When you only want to find out whether files are different, and you
 don't care what the differences are, you can use the summary output
 format.  In this format, instead of showing the differences between the
 files, @command{diff} simply reports whether files differ.  The @option{-q}
-and @option{--brief} options select this output format.
+or @option{--brief} option selects this output format.
 
 This format is especially useful when comparing the contents of two
 directories.  It is also much faster than doing the normal line by line
@@ -386,8 +393,10 @@ it knows that there are any differences.
 You can also get a brief indication of whether two files differ by using
 @command{cmp}.  For files that are identical, @command{cmp} produces no
 output.  When the files differ, by default, @command{cmp} outputs the byte
-and line number where the first difference occurs.  You can use
-the @option{-s} option to suppress that information, so that @command{cmp}
+and line number where the first difference occurs, or reports that one
+file is a prefix of the other.  You can use
+the @option{-s}, @option{--quiet}, or @option{--silent} option to
+suppress that information, so that @command{cmp}
 produces no output and reports whether the files differ using only its
 exit status (@pxref{Invoking cmp}).
 
@@ -440,8 +449,8 @@ files.
 In operating systems that distinguish between text and binary files,
 @command{diff} normally reads and writes all data as text.  Use the
 @option{--binary} option to force @command{diff} to read and write binary
-data instead.  This option has no effect on a @sc{posix}-compliant system
-like @sc{gnu} or traditional Unix.  However, many personal computer
+data instead.  This option has no effect on a @acronym{POSIX}-compliant system
+like @acronym{GNU} or traditional Unix.  However, many personal computer
 operating systems represent the end of a line with a carriage return
 followed by a newline.  On such systems, @command{diff} normally ignores
 these carriage returns on input and generates them at the end of each
@@ -449,7 +458,7 @@ output line, but with the @option{--binary} option @command{diff} treats
 each carriage return as just another input character, and does not
 generate a carriage return at the end of each output line.  This can be
 useful when dealing with non-text files that are meant to be
-interchanged with @sc{posix}-compliant systems.
+interchanged with @acronym{POSIX}-compliant systems.
 
 The @option{--strip-trailing-cr} causes @command{diff} to treat input
 lines that end in carriage return followed by newline as if they end
@@ -459,11 +468,11 @@ This option affects how lines are read, which in turn affects how they
 are compared and output.
 
 If you want to compare two files byte by byte, you can use the
-@command{cmp} program with the @option{-l} option to show the values
-of each differing byte in the two files.  With @sc{gnu} @command{cmp},
-you can also use the @option{-b} option to show the @sc{ascii}
-representation of those bytes.  @xref{Invoking cmp}, for more
-information.
+@command{cmp} program with the @option{-l} or @option{--verbose}
+option to show the values of each differing byte in the two files.
+With @acronym{GNU} @command{cmp}, you can also use the @option{-b} or
+@option{--print-bytes} option to show the @acronym{ASCII} representation of
+those bytes.  @xref{Invoking cmp}, for more information.
 
 If @command{diff3} thinks that any of the files it is comparing is binary
 (a non-text file), it normally reports an error, because such
@@ -472,7 +481,7 @@ comparisons are usually not useful.  @command{diff3} uses the same test as
 the input files contain a few non-text bytes but otherwise are like
 text files, you can force @command{diff3} to consider all files to be text
 files and compare them line by line by using the @option{-a} or
-@option{--text} options.
+@option{--text} option.
 
 @node Output Formats
 @chapter @command{diff} Output Formats
@@ -553,7 +562,7 @@ or unified formats by using 0 lines of context).  However, this format
 is no longer widely used for sending out patches; for that purpose, the
 context format (@pxref{Context Format}) and the unified format
 (@pxref{Unified Format}) are superior.  Normal format is the default for
-compatibility with older versions of @command{diff} and the @sc{posix}
+compatibility with older versions of @command{diff} and the @acronym{POSIX}
 standard.  Use the @option{--normal} option to select this output
 format explicitly.
 
@@ -640,7 +649,7 @@ also want to see the parts of the files near the lines that differ, to
 help you understand exactly what has changed.  These nearby parts of the
 files are called the @dfn{context}.
 
-@sc{gnu} @command{diff} provides two output formats that show context
+@acronym{GNU} @command{diff} provides two output formats that show context
 around the differing lines: @dfn{context format} and @dfn{unified
 format}.  It can optionally show in which function or section of the
 file the differing lines are found.
@@ -825,8 +834,8 @@ output format, use the @option{-U @var{lines}},
 option.  The argument @var{lines} is the number of lines of context to
 show.  When it is not given, it defaults to three.
 
-At present, only @sc{gnu} @command{diff} can produce this format and
-only @sc{gnu} @command{patch} can automatically apply diffs in this
+At present, only @acronym{GNU} @command{diff} can produce this format and
+only @acronym{GNU} @command{patch} can automatically apply diffs in this
 format.  For proper operation, @command{patch} typically needs at
 least three lines of context.
 
@@ -909,11 +918,12 @@ Here is the output of the command @samp{diff -u lao tzu}
 @cindex section headings
 
 Sometimes you might want to know which part of the files each change
-falls in.  If the files are source code, this could mean which function
-was changed.  If the files are documents, it could mean which chapter or
-appendix was changed.  @sc{gnu} @command{diff} can show this by displaying the
-nearest section heading line that precedes the differing lines.  Which
-lines are ``section headings'' is determined by a regular expression.
+falls in.  If the files are source code, this could mean which
+function was changed.  If the files are documents, it could mean which
+chapter or appendix was changed.  @acronym{GNU} @command{diff} can
+show this by displaying the nearest section heading line that precedes
+the differing lines.  Which lines are ``section headings'' is
+determined by a regular expression.
 
 @menu
 * Specified Headings::  Showing headings that match regular expressions.
@@ -948,13 +958,13 @@ use it, you must select the context format (@pxref{Context Format}) or
 unified format (@pxref{Unified Format}).  In other output formats it
 has no effect.
 
-The @option{-F} and @option{--show-function-line} options find the nearest
+The @option{-F} or @option{--show-function-line} option finds the nearest
 unchanged line that precedes each hunk of differences and matches the
-given regular expression.  Then they add that line to the end of the
+given regular expression.  Then it adds that line to the end of the
 line of asterisks in the context format, or to the @samp{@@@@} line in
-unified format.  If no matching line exists, they leave the output for
-that hunk unchanged.  If that line is more than 40 characters long, they
-output only the first 40 characters.  You can specify more than one
+unified format.  If no matching line exists, this option leaves the output for
+that hunk unchanged.  If that line is more than 40 characters long, it
+outputs only the first 40 characters.  You can specify more than one
 regular expression for such lines; @command{diff} tries to match each line
 against each regular expression, starting with the last one given.  This
 means that you can use @option{-p} and @option{-F} together, if you wish.
@@ -972,10 +982,10 @@ You can override that number with @option{-C @var{lines}} elsewhere in the
 command line.  You can override both the format and the number with
 @option{-U @var{lines}} elsewhere in the command line.
 
-The @option{-p} and @option{--show-c-function} options are equivalent to
+The @option{-p} or @option{--show-c-function} option is equivalent to
 @option{-F '^[[:alpha:]$_]'} if the unified format is specified, otherwise
-@option{-c -F '^[[:alpha:]$_]'} (@pxref{Specified Headings}).  @sc{gnu}
-@command{diff} provides them for the sake of convenience.
+@option{-c -F '^[[:alpha:]$_]'} (@pxref{Specified Headings}).  @acronym{GNU}
+@command{diff} provides this option for the sake of convenience.
 
 @node Alternate Names
 @subsection Showing Alternate File Names
@@ -1113,7 +1123,7 @@ to produce @var{to-file}.
 @menu
 * ed Scripts:: Using @command{diff} to produce commands for @command{ed}.
 * Forward ed:: Making forward @command{ed} scripts.
-* RCS::        A special @command{diff} output format used by @sc{rcs}.
+* RCS::        A special @command{diff} output format used by @acronym{RCS}.
 @end menu
 
 @node ed Scripts
@@ -1160,13 +1170,14 @@ format hunks look like this:
 .
 @end example
 
-Because @command{ed} uses a single period on a line to indicate the end of
-input, @sc{gnu} @command{diff} protects lines of changes that contain a single
-period on a line by writing two periods instead, then writing a
-subsequent @command{ed} command to change the two periods into one.  The
-@command{ed} format cannot represent an incomplete line, so if the second
-file ends in a changed incomplete line, @command{diff} reports an error and
-then pretends that a newline was appended.
+Because @command{ed} uses a single period on a line to indicate the
+end of input, @acronym{GNU} @command{diff} protects lines of changes
+that contain a single period on a line by writing two periods instead,
+then writing a subsequent @command{ed} command to change the two
+periods into one.  The @command{ed} format cannot represent an
+incomplete line, so if the second file ends in a changed incomplete
+line, @command{diff} reports an error and then pretends that a newline
+was appended.
 
 There are three types of change commands.  Each consists of a line
 number or comma-separated range of lines in the first file and a single
@@ -1228,22 +1239,22 @@ compatibility with older versions of @command{diff}.  Use the @option{-f} or
 @option{--forward-ed} option to select it.
 
 @node RCS
-@subsection @sc{rcs} Scripts
-@cindex @sc{rcs} script output format
+@subsection @acronym{RCS} Scripts
+@cindex @acronym{RCS} script output format
 
-The @sc{rcs} output format is designed specifically for use by the Revision
-Control System, which is a set of free programs used for organizing
-different versions and systems of files.  Use the @option{-n} or
-@option{--rcs} option to select this output format.  It is like the
-forward @command{ed} format (@pxref{Forward ed}), but it can represent
-arbitrary changes to the contents of a file because it avoids the
-forward @command{ed} format's problems with lines consisting of a single
-period and with incomplete lines.  Instead of ending text sections with
-a line consisting of a single period, each command specifies the number
-of lines it affects; a combination of the @samp{a} and @samp{d}
-commands are used instead of @samp{c}.  Also, if the second file ends
-in a changed incomplete line, then the output also ends in an
-incomplete line.
+The @acronym{RCS} output format is designed specifically for use by
+the Revision Control System, which is a set of free programs used for
+organizing different versions and systems of files.  Use the
+@option{-n} or @option{--rcs} option to select this output format.  It
+is like the forward @command{ed} format (@pxref{Forward ed}), but it
+can represent arbitrary changes to the contents of a file because it
+avoids the forward @command{ed} format's problems with lines
+consisting of a single period and with incomplete lines.  Instead of
+ending text sections with a line consisting of a single period, each
+command specifies the number of lines it affects; a combination of the
+@samp{a} and @samp{d} commands are used instead of @samp{c}.  Also, if
+the second file ends in a changed incomplete line, then the output
+also ends in an incomplete line.
 
 Here is the output of @samp{diff -n lao tzu} (@pxref{Sample
 diff Input}, for the complete contents of the two files):
@@ -1679,17 +1690,18 @@ newline.  All other lines are called @dfn{full lines} and end in a
 newline character.  Incomplete lines do not match full lines unless
 differences in white space are ignored (@pxref{White Space}).
 
-An incomplete line is normally distinguished on output from a full line
-by a following line that starts with @samp{\}.  However, the @sc{rcs} format
-(@pxref{RCS}) outputs the incomplete line as-is, without any trailing
-newline or following line.  The side by side format normally represents
-incomplete lines as-is, but in some cases uses a @samp{\} or @samp{/}
-gutter marker; @xref{Side by Side}.  The if-then-else line format
-preserves a line's incompleteness with @samp{%L}, and discards the
-newline with @samp{%l}; @xref{Line Formats}.  Finally, with the
-@command{ed} and forward @command{ed} output formats (@pxref{Output Formats})
-@command{diff} cannot represent an incomplete line, so it pretends there
-was a newline and reports an error.
+An incomplete line is normally distinguished on output from a full
+line by a following line that starts with @samp{\}.  However, the
+@acronym{RCS} format (@pxref{RCS}) outputs the incomplete line as-is,
+without any trailing newline or following line.  The side by side
+format normally represents incomplete lines as-is, but in some cases
+uses a @samp{\} or @samp{/} gutter marker; @xref{Side by Side}.  The
+if-then-else line format preserves a line's incompleteness with
+@samp{%L}, and discards the newline with @samp{%l}; @xref{Line
+Formats}.  Finally, with the @command{ed} and forward @command{ed}
+output formats (@pxref{Output Formats}) @command{diff} cannot
+represent an incomplete line, so it pretends there was a newline and
+reports an error.
 
 For example, suppose @file{F} and @file{G} are one-byte files that
 contain just @samp{f} and @samp{g}, respectively.  Then @samp{diff F G}
@@ -1794,8 +1806,9 @@ the contents of the file @file{TAO} in the other.  The
 @option{--ignore-file-name-case} option, reverting to the default
 behavior.
 
-If an @option{-x @var{pattern}}, @option{--exclude=@var{pattern}},
-@option{-X @var{file}}, or @option{--exclude-from=@var{file}} option
+If an @option{-x @var{pattern}} or @option{--exclude=@var{pattern}}
+option, or an @option{-X @var{file}} or
+@option{--exclude-from=@var{file}} option,
 is specified while the @option{--ignore-file-name-case} option is in
 effect, case is ignored when excluding file names matching the
 specified patterns.
@@ -1816,20 +1829,21 @@ These adjustments can be applied to any output format.
 @cindex tab stop alignment
 @cindex aligning tab stops
 
-The lines of text in some of the @command{diff} output formats are preceded
-by one or two characters that indicate whether the text is inserted,
-deleted, or changed.  The addition of those characters can cause tabs to
-move to the next tab stop, throwing off the alignment of columns in the
-line.  @sc{gnu} @command{diff} provides two ways to make tab-aligned columns
-line up correctly.
+The lines of text in some of the @command{diff} output formats are
+preceded by one or two characters that indicate whether the text is
+inserted, deleted, or changed.  The addition of those characters can
+cause tabs to move to the next tab stop, throwing off the alignment of
+columns in the line.  @acronym{GNU} @command{diff} provides two ways
+to make tab-aligned columns line up correctly.
 
 The first way is to have @command{diff} convert all tabs into the correct
 number of spaces before outputting them; select this method with the
-@option{-t} or @option{--expand-tabs} option.  @command{diff} assumes that
-tab stops are set every 8 print columns.  To use this form of output with
+@option{-t} or @option{--expand-tabs} option.  To use this form of output with
 @command{patch}, you must give @command{patch} the @option{-l} or
 @option{--ignore-white-space} option (@pxref{Changed White Space}, for more
-information).
+information).  @command{diff} normally assumes that tab stops are set
+every 8 print columns, but this can be altered by the
+@option{--tabsize=@var{columns}} option.
 
 The other method for making tabs line up correctly is to add a tab
 character instead of a space after the indicator character at the
@@ -1847,7 +1861,7 @@ type indicator character.  Select this method with the @option{-T} or
 @cindex paginating @command{diff} output
 
 It can be convenient to have long output page-numbered and time-stamped.
-The @option{-l} and @option{--paginate} options do this by sending the
+The @option{-l} or @option{--paginate} option does this by sending the
 @command{diff} output through the @command{pr} program.  Here is what the page
 header might look like for @samp{diff -lc lao tzu}:
 
@@ -1859,8 +1873,9 @@ header might look like for @samp{diff -lc lao tzu}:
 @chapter @command{diff} Performance Tradeoffs
 @cindex performance of @command{diff}
 
-@sc{gnu} @command{diff} runs quite efficiently; however, in some circumstances
-you can cause it to run faster or produce a more compact set of changes.
+@acronym{GNU} @command{diff} runs quite efficiently; however, in some
+circumstances you can cause it to run faster or produce a more compact
+set of changes.
 
 One way to improve @command{diff} performance is to use hard or
 symbolic links to files instead of copies.  This improves performance
@@ -1870,24 +1885,24 @@ identical.  For example, suppose you copy a large directory hierarchy,
 make a few changes to the copy, and then often use @samp{diff -r} to
 compare the original to the copy.  If the original files are
 read-only, you can greatly improve performance by creating the copy
-using hard or symbolic links (e.g., with @sc{gnu} @samp{cp -lR} or
+using hard or symbolic links (e.g., with @acronym{GNU} @samp{cp -lR} or
 @samp{cp -sR}).  Before editing a file in the copy for the first time,
 you should break the link and replace it with a regular copy.
 
-You can also affect the performance of @sc{gnu} @command{diff} by
+You can also affect the performance of @acronym{GNU} @command{diff} by
 giving it options that change the way it compares files.
 Performance has more than one dimension.  These options improve one
 aspect of performance at the cost of another, or they improve
 performance in some cases while hurting it in others.
 
-The way that @sc{gnu} @command{diff} determines which lines have changed always
-comes up with a near-minimal set of differences.  Usually it is good
-enough for practical purposes.  If the @command{diff} output is large, you
-might want @command{diff} to use a modified algorithm that sometimes
-produces a smaller set of differences.  The @option{-d} or
-@option{--minimal} option does this; however, it can also cause
-@command{diff} to run more slowly than usual, so it is not the default
-behavior.
+The way that @acronym{GNU} @command{diff} determines which lines have
+changed always comes up with a near-minimal set of differences.
+Usually it is good enough for practical purposes.  If the
+@command{diff} output is large, you might want @command{diff} to use a
+modified algorithm that sometimes produces a smaller set of
+differences.  The @option{-d} or @option{--minimal} option does this;
+however, it can also cause @command{diff} to run more slowly than
+usual, so it is not the default behavior.
 
 When the files you are comparing are large and have small groups of
 changes scattered throughout them, you can use the
@@ -2283,7 +2298,7 @@ With the @option{-m} or @option{--merge} option, @command{diff3} outputs the
 merged file directly.  This is more efficient than using @command{ed} to
 generate it, and works even with non-text files that @command{ed} would
 reject.  If you specify @option{-m} without an @command{ed} script option,
-@option{-A} (@option{--show-all}) is assumed.
+@option{-A} is assumed.
 
 For example, the command @samp{diff3 -m lao tzu tao}
 (@pxref{Sample diff3 Input} for a copy of the input files) would output
@@ -2336,7 +2351,7 @@ if a newline had been present.
 
 Traditional Unix @command{diff3} generates an @command{ed} script without the
 trailing @samp{w} and @samp{q} commands that save the changes.
-System V @command{diff3} generates these extra commands.  @sc{gnu}
+System V @command{diff3} generates these extra commands.  @acronym{GNU}
 @command{diff3} normally behaves like traditional Unix
 @command{diff3}, but with the @option{-i} option it behaves like
 System V @command{diff3} and appends the @samp{w} and @samp{q}
@@ -2358,8 +2373,8 @@ put the merged text.  @xref{Invoking sdiff}, for more details on the
 options to @command{sdiff}.
 
 Another way to merge files interactively is to use the Emacs Lisp
-package @command{emerge}.  @xref{emerge, , emerge, emacs, The @sc{gnu} Emacs
-Manual}, for more information.
+package @command{emerge}.  @xref{emerge, , emerge, emacs, The
+@acronym{GNU} Emacs Manual}, for more information.
 
 @menu
 * sdiff Option Summary:: Summary of @command{sdiff} options.
@@ -2377,12 +2392,13 @@ The following @command{sdiff} options have the same meaning as for
 -a -b -d -i -t -v
 -B -E -I @var{regexp}
 
+--expand-tabs
 --ignore-blank-lines  --ignore-case
 --ignore-matching-lines=@var{regexp}  --ignore-space-change
 --ignore-tab-expansion
 --left-column  --minimal  --speed-large-files
---strip-trailing-cr  --suppress-common-lines  --expand-tabs
---text  --version  --width=@var{columns}
+--strip-trailing-cr  --suppress-common-lines
+--tabsize=@var{columns}  --text  --version  --width=@var{columns}
 @end example
 
 For historical reasons, @command{sdiff} has alternate names for some
@@ -2479,7 +2495,7 @@ hunks (if any) into @samp{@var{f}.rej}.
 
 @menu
 * patch Input::            Selecting the type of @command{patch} input.
-* Revision Control::       Getting files from @sc{rcs}, @sc{sccs}, etc.
+* Revision Control::       Getting files from @acronym{RCS}, @acronym{SCCS}, etc.
 * Imperfect::              Dealing with imperfect patches.
 * Creating and Removing::  Creating and removing files with a patch.
 * Patching Time Stamps::   Updating time stamps on patched files.
@@ -2489,8 +2505,8 @@ hunks (if any) into @samp{@var{f}.rej}.
 * Backup Names::           Backup file names.
 * Reject Names::           Reject file names.
 * patch Messages::         Messages and questions @command{patch} can produce.
-* patch and POSIX::        Conformance to the @sc{posix} standard.
-* patch and Tradition::    @sc{gnu} versus traditional @command{patch}.
+* patch and POSIX::        Conformance to the @acronym{POSIX} standard.
+* patch and Tradition::    @acronym{GNU} versus traditional @command{patch}.
 @end menu
 
 @node patch Input
@@ -2526,27 +2542,27 @@ unified diff.
 @section Revision Control
 @cindex revision control
 @cindex version control
-@cindex @sc{rcs}
+@cindex @acronym{RCS}
 @cindex ClearCase
-@cindex @sc{sccs}
+@cindex @acronym{SCCS}
 
 If a nonexistent input file is under a revision control system
 supported by @command{patch}, @command{patch} normally asks the user
 whether to get (or check out) the file from the revision control
-system.  Patch currently supports @sc{rcs}, ClearCase and @sc{sccs}.
-Under @sc{rcs} and @sc{sccs}, @command{patch} also asks when the input
-file is read-only and matches the default version in the revision
-control system.
+system.  Patch currently supports @acronym{RCS}, ClearCase and
+@acronym{SCCS}.  Under @acronym{RCS} and @acronym{SCCS},
+@command{patch} also asks when the input file is read-only and matches
+the default version in the revision control system.
 
 @vindex PATCH_GET
-The @option{-g @var{num}} or @option{--get=@var{num}} affects access
+The @option{-g @var{num}} or @option{--get=@var{num}} option affects access
 to files under supported revision control systems.  If @var{num} is
 positive, @command{patch} gets the file without asking the user; if
 zero, @command{patch} neither asks the user nor gets the file; and if
 negative, @command{patch} asks the user before getting the file.  The
 default value of @var{num} is given by the value of the
 @env{PATCH_GET} environment variable if it is set; if not, the default
-value is zero if @command{patch} is conforming to @sc{posix}, negative
+value is zero if @command{patch} is conforming to @acronym{POSIX}, negative
 otherwise.  @xref{patch and POSIX}.
 
 @vindex VERSION_CONTROL
@@ -2718,7 +2734,7 @@ new file that is named @file{/dev/null} or is empty and is dated the
 Epoch (1970-01-01 00:00:00 UTC), @command{diff} outputs a patch that
 adds or deletes the contents of this file.  When given such a patch,
 @command{patch} normally creates a new file or removes the old file.
-However, when conforming to @sc{posix} (@pxref{patch and POSIX}),
+However, when conforming to @acronym{POSIX} (@pxref{patch and POSIX}),
 @command{patch} does not remove the old file, but leaves it empty.
 The @option{-E} or @option{--remove-empty-files} option causes
 @command{patch} to remove output files that are empty after applying a
@@ -2745,11 +2761,11 @@ The @option{-Z} or @option{--set-utc} option causes @command{patch} to
 set a patched file's modification and access times to the time stamps
 given in context diff headers.  If the context diff headers do not
 specify a time zone, they are assumed to use Coordinated Universal
-Time (@sc{utc}, often known as @sc{gmt}).
+Time (@acronym{UTC}, often known as @acronym{GMT}).
 
 The @option{-T} or @option{--set-time} option acts like @option{-Z} or
 @option{--set-utc}, except that it assumes that the context diff
-headers' time stamps use local time instead of @sc{utc}.  This option
+headers' time stamps use local time instead of @acronym{UTC}.  This option
 is not recommended, because patches using local time cannot easily be
 used by people in other time zones, and because local time stamps are
 ambiguous when local clocks move backwards during daylight-saving time
@@ -2798,7 +2814,7 @@ ignored.
 @item
 If there is an @samp{Index:} line in the leading garbage and if either
 the old and new names are both absent or if @command{patch} is
-conforming to @sc{posix}, @command{patch} takes the name in the
+conforming to @acronym{POSIX}, @command{patch} takes the name in the
 @samp{Index:} line.
 
 @item
@@ -2814,18 +2830,18 @@ follows:
 @itemize @bullet
 @item
 If some of the named files exist, @command{patch} selects the first
-name if conforming to @sc{posix}, and the best name otherwise.
+name if conforming to @acronym{POSIX}, and the best name otherwise.
 
 @item
-If @command{patch} is not ignoring @sc{rcs}, ClearCase, and @sc{sccs}
-(@pxref{Revision Control}), and no named files exist but an @sc{rcs},
-ClearCase, or @sc{sccs} master is found, @command{patch} selects the
-first named file with an @sc{rcs}, ClearCase, or @sc{sccs} master.
+If @command{patch} is not ignoring @acronym{RCS}, ClearCase, and @acronym{SCCS}
+(@pxref{Revision Control}), and no named files exist but an @acronym{RCS},
+ClearCase, or @acronym{SCCS} master is found, @command{patch} selects the
+first named file with an @acronym{RCS}, ClearCase, or @acronym{SCCS} master.
 
 @item
-If no named files exist, no @sc{rcs}, ClearCase, or @sc{sccs} master
+If no named files exist, no @acronym{RCS}, ClearCase, or @acronym{SCCS} master
 was found, some names are given, @command{patch} is not conforming to
-@sc{posix}, and the patch appears to create a file, @command{patch}
+@acronym{POSIX}, and the patch appears to create a file, @command{patch}
 selects the best name requiring the creation of the fewest
 directories.
 
@@ -2841,7 +2857,7 @@ basename; of those, it then takes all the shortest names; finally, it
 takes the first remaining name.
 
 @xref{patch and POSIX}, to see whether @command{patch} is conforming
-to @sc{posix}.
+to @acronym{POSIX}.
 
 @node patch Directories
 @section Applying Patches in Other Directories
@@ -2889,17 +2905,17 @@ Normally, @command{patch} creates a backup file if the patch does not
 exactly match the original input file, because in that case the
 original data might not be recovered if you undo the patch with
 @samp{patch -R} (@pxref{Reversed Patches}).  However, when conforming
-to @sc{posix}, @command{patch} does not create backup files by
+to @acronym{POSIX}, @command{patch} does not create backup files by
 default.  @xref{patch and POSIX}.
 
 The @option{-b} or @option{--backup} option causes @command{patch} to
 make a backup file regardless of whether the patch matches the
 original input.  The @option{--backup-if-mismatch} option causes
 @command{patch} to create backup files for mismatches files; this is
-the default when not conforming to @sc{posix}.  The
+the default when not conforming to @acronym{POSIX}.  The
 @option{--no-backup-if-mismatch} option causes @command{patch} to not
 create backup files, even for mismatched patches; this is the default
-when conforming to @sc{posix}.
+when conforming to @acronym{POSIX}.
 
 When backing up a file that does not exist, an empty, unreadable
 backup file is created as a placeholder to represent the nonexistent
@@ -2912,7 +2928,7 @@ file.
 Normally, @command{patch} renames an original input file into a backup
 file by appending to its name the extension @samp{.orig}, or @samp{~}
 if using @samp{.orig} would make the backup file name too
-long.@footnote{A coding error in @sc{gnu} @command{patch} version
+long.@footnote{A coding error in @acronym{GNU} @command{patch} version
 2.5.4 causes it to always use @samp{~}, but this should be fixed in
 the next release.}  The @option{-z @var{backup-suffix}} or
 @option{--suffix=@var{backup-suffix}} option causes @command{patch} to
@@ -2923,11 +2939,12 @@ Alternately, you can specify the extension for backup files with the
 @env{SIMPLE_BACKUP_SUFFIX} environment variable, which the options
 override.
 
-@command{patch} can also create numbered backup files the way @sc{gnu} Emacs
-does.  With this method, instead of having a single backup of each file,
-@command{patch} makes a new backup file name each time it patches a file.
-For example, the backups of a file named @file{sink} would be called,
-successively, @file{sink.~1~}, @file{sink.~2~}, @file{sink.~3~}, etc.
+@command{patch} can also create numbered backup files the way
+@acronym{GNU} Emacs does.  With this method, instead of having a
+single backup of each file, @command{patch} makes a new backup file
+name each time it patches a file.  For example, the backups of a file
+named @file{sink} would be called, successively, @file{sink.~1~},
+@file{sink.~2~}, @file{sink.~3~}, etc.
 
 @vindex PATCH_VERSION_CONTROL
 @vindex VERSION_CONTROL
@@ -2943,8 +2960,8 @@ names; they do not affect the choice of revision control system
 (@pxref{Revision Control}).
 
 The values of these environment variables and the argument to the
-@option{-V} option are like the @sc{gnu} Emacs @code{version-control}
-variable (@pxref{Backup Names, , , emacs, The @sc{gnu} Emacs Manual},
+@option{-V} option are like the @acronym{GNU} Emacs @code{version-control}
+variable (@pxref{Backup Names, , , emacs, The @acronym{GNU} Emacs Manual},
 for more information on backup versions in Emacs).  They also
 recognize synonyms that are more descriptive.  The valid values are
 listed below; unique abbreviations are acceptable.
@@ -3114,13 +3131,13 @@ environment variable is not set, the default value is @samp{shell},
 but this default may change in a future version of @command{patch}.
 
 @node patch and POSIX
-@section @command{patch} and the @sc{posix} Standard
-@cindex @sc{posix}
+@section @command{patch} and the @acronym{POSIX} Standard
+@cindex @acronym{POSIX}
 
 @vindex POSIXLY_CORRECT
 If you specify the @option{--posix} option, or set the
 @env{POSIXLY_CORRECT} environment variable, @command{patch} conforms
-more strictly to the @sc{posix} standard, as follows:
+more strictly to the @acronym{POSIX} standard, as follows:
 
 @itemize @bullet
 @item
@@ -3132,8 +3149,8 @@ Do not remove files that are removed by a diff.
 @xref{Creating and Removing}.
 
 @item
-Do not ask whether to get files from @sc{rcs}, ClearCase, or
-@sc{sccs}.  @xref{Revision Control}.
+Do not ask whether to get files from @acronym{RCS}, ClearCase, or
+@acronym{SCCS}.  @xref{Revision Control}.
 
 @item
 Require that all options precede the files in the command line.
@@ -3144,17 +3161,17 @@ Do not backup files, even when there is a mismatch.  @xref{Backups}.
 @end itemize
 
 @node patch and Tradition
-@section @sc{gnu} @command{patch} and Traditional @command{patch}
+@section @acronym{GNU} @command{patch} and Traditional @command{patch}
 @cindex traditional @command{patch}
 
-The current version of @sc{gnu} @command{patch} normally follows the
-@sc{posix} standard.  @xref{patch and POSIX}, for the few exceptions
+The current version of @acronym{GNU} @command{patch} normally follows the
+@acronym{POSIX} standard.  @xref{patch and POSIX}, for the few exceptions
 to this general rule.
 
-Unfortunately, @sc{posix} redefined the behavior of @command{patch} in
+Unfortunately, @acronym{POSIX} redefined the behavior of @command{patch} in
 several important ways.  You should be aware of the following
 differences if you must interoperate with traditional @command{patch},
-or with @sc{gnu} @command{patch} version 2.1 and earlier.
+or with @acronym{GNU} @command{patch} version 2.1 and earlier.
 
 @itemize @bullet
 @item
@@ -3175,22 +3192,22 @@ In traditional @command{patch}, backups were enabled by default.  This
 behavior is now enabled with the @option{-b} or @option{--backup}
 option.
 
-Conversely, in @sc{posix} @command{patch}, backups are never made,
-even when there is a mismatch.  In @sc{gnu} @command{patch}, this
+Conversely, in @acronym{POSIX} @command{patch}, backups are never made,
+even when there is a mismatch.  In @acronym{GNU} @command{patch}, this
 behavior is enabled with the @option{--no-backup-if-mismatch} option,
-or by conforming to @sc{posix}.
+or by conforming to @acronym{POSIX}.
 
 The @option{-b@ @var{suffix}} option of traditional @command{patch} is
-equivalent to the @samp{-b -z@ @var{suffix}} options of @sc{gnu}
+equivalent to the @samp{-b -z@ @var{suffix}} options of @acronym{GNU}
 @command{patch}.
 
 @item
 Traditional @command{patch} used a complicated (and incompletely
 documented) method to intuit the name of the file to be patched from
-the patch header.  This method did not conform to @sc{posix}, and had
+the patch header.  This method did not conform to @acronym{POSIX}, and had
 a few gotchas.  Now @command{patch} uses a different, equally
 complicated (but better documented) method that is optionally
-@sc{posix}-conforming; we hope it has fewer gotchas.  The two methods
+@acronym{POSIX}-conforming; we hope it has fewer gotchas.  The two methods
 are compatible if the file names in the context diff header and the
 @samp{Index:} line are all identical after prefix-stripping.  Your
 patch is normally compatible if each header's file names all contain
@@ -3214,9 +3231,9 @@ Now @command{patch} exits with status 1 if some hunks failed, or with
 
 @item
 Limit yourself to the following options when sending instructions
-meant to be executed by anyone running @sc{gnu} @command{patch},
+meant to be executed by anyone running @acronym{GNU} @command{patch},
 traditional @command{patch}, or a @command{patch} that conforms to
-@sc{posix}.  Spaces are significant in the following list, and
+@acronym{POSIX}.  Spaces are significant in the following list, and
 operands are required.
 
 @example
@@ -3292,10 +3309,10 @@ A patch producer should tell recipients how to apply the patches, so
 the first rule of thumb for a patch consumer is to follow the
 instructions supplied with the patch.
 
-@sc{gnu} @command{diff} can analyze files with arbitrarily long lines
+@acronym{GNU} @command{diff} can analyze files with arbitrarily long lines
 and files that end in incomplete lines.  However, older versions of
 @command{patch} cannot patch such files.  If you are having trouble
-applying such patches, try upgrading to a recent version of @sc{gnu}
+applying such patches, try upgrading to a recent version of @acronym{GNU}
 @command{patch}.
 
 @node Avoiding Common Mistakes
@@ -3397,7 +3414,8 @@ files.
 @cindex @command{cmp} invocation
 
 The @command{cmp} command compares two files, and if they differ,
-tells the first byte and line number where they differ.  Bytes and
+tells the first byte and line number where they differ or reports
+that one file is a prefix of the other.  Bytes and
 lines are numbered starting with 1.  The arguments of @command{cmp}
 are as follows:
 
@@ -3411,6 +3429,25 @@ also uses the standard input if one file name is omitted.  The
 ignore at the start of each file; they are equivalent to the
 @option{--ignore-initial=@var{from-skip}:@var{to-skip}} option.
 
+By default, @command{cmp} outputs nothing if the two files have the
+same contents.  If one file is a prefix of the other, @command{cmp}
+prints to standard error a message of the following form:
+
+@example
+cmp: EOF on @var{shorter-file}
+@end example
+
+Otherwise, @command{cmp} prints to standard output a message of the
+following form:
+
+@example
+@var{from-file} @var{to-file} differ: char @var{byte-number}, line @var{line-number}
+@end example
+
+The message formats can differ outside the @acronym{POSIX} locale.
+Also, @acronym{POSIX} allows the @acronym{EOF} message to be followed
+by a blank and some additional information.
+
 An exit status of 0 means no differences were found, 1 means some
 differences were found, and 2 means trouble.
 
@@ -3423,12 +3460,12 @@ differences were found, and 2 means trouble.
 @cindex @command{cmp} options
 @cindex options for @command{cmp}
 
-Below is a summary of all of the options that @sc{gnu} @command{cmp} accepts.
-Most options have two equivalent names, one of which is a single letter
-preceded by @samp{-}, and the other of which is a long name preceded by
-@samp{--}.  Multiple single letter options (unless they take an
-argument) can be combined into a single command line word: @option{-bl} is
-equivalent to @option{-b -l}.
+Below is a summary of all of the options that @acronym{GNU}
+@command{cmp} accepts.  Most options have two equivalent names, one of
+which is a single letter preceded by @samp{-}, and the other of which
+is a long name preceded by @samp{--}.  Multiple single letter options
+(unless they take an argument) can be combined into a single command
+line word: @option{-bl} is equivalent to @option{-b -l}.
 
 @table @option
 @item -b
@@ -3451,7 +3488,8 @@ second.
 
 @item -l
 @itemx --verbose
-Print the (decimal) byte numbers and (octal) values of all differing bytes.
+Output the (decimal) byte numbers and (octal) values of all differing bytes,
+instead of the default standard output.
 
 @item -n @var{count}
 @itemx --bytes=@var{count}
@@ -3497,7 +3535,7 @@ kilobyte: @math{10^3 = 1000}.
 @cindex kibibyte, definition of
 kibibyte: @math{2^10 = 1024}.  @samp{K} is special: the SI prefix is
 @samp{k} and the IEC 60027-2 prefix is @samp{Ki}, but tradition and
-@sc{posix} use @samp{k} to mean @samp{KiB}.
+@acronym{POSIX} use @samp{k} to mean @samp{KiB}.
 @item MB
 @cindex megabyte, definition of
 megabyte: @math{10^6 = 1,000,000}.
@@ -3601,14 +3639,14 @@ differences were found, and 2 means trouble.
 @cindex @command{diff} options
 @cindex options for @command{diff}
 
-Below is a summary of all of the options that @sc{gnu} @command{diff} accepts.
-Most options have two equivalent names, one of which is a single letter
-preceded by @samp{-}, and the other of which is a long name preceded by
-@samp{--}.  Multiple single letter options (unless they take an
-argument) can be combined into a single command line word: @option{-ac} is
-equivalent to @option{-a -c}.  Long named options can be abbreviated to
-any unique prefix of their name.  Brackets ([ and ]) indicate that an
-option takes an optional argument.
+Below is a summary of all of the options that @acronym{GNU}
+@command{diff} accepts.  Most options have two equivalent names, one
+of which is a single letter preceded by @samp{-}, and the other of
+which is a long name preceded by @samp{--}.  Multiple single letter
+options (unless they take an argument) can be combined into a single
+command line word: @option{-ac} is equivalent to @option{-a -c}.  Long
+named options can be abbreviated to any unique prefix of their name.
+Brackets ([ and ]) indicate that an option takes an optional argument.
 
 @table @option
 @item -a
@@ -3641,7 +3679,7 @@ context.
 
 On older systems, @command{diff} supports an obsolete option
 @option{-@var{lines}} that has effect when combined with @option{-c}
-or @option{-p}.  @sc{posix} 1003.1-2001 (@pxref{Standards
+or @option{-p}.  @acronym{POSIX} 1003.1-2001 (@pxref{Standards
 conformance}) does not allow this; use @option{-C @var{lines}}
 instead.
 
@@ -3698,7 +3736,7 @@ equivalent.  @xref{Case Folding}.
 @item -I @var{regexp}
 @itemx --ignore-matching-lines=@var{regexp}
 Ignore changes that just insert or delete lines that match @var{regexp}.
-@xref{Specified Folding}.
+@xref{Specified Lines}.
 
 @item --ignore-file-name-case
 Ignore case when comparing file names during recursive comparison.
@@ -3723,7 +3761,7 @@ Use @var{format} to output all input lines in if-then-else format.
 
 @item -n
 @itemx --rcs
-Output @sc{rcs}-format diffs; like @option{-f} except that each command
+Output @acronym{RCS}-format diffs; like @option{-f} except that each command
 specifies the number of lines affected.  @xref{RCS}.
 
 @item -N
@@ -3794,6 +3832,10 @@ Output a tab rather than a space before the text of a line in normal or
 context format.  This causes the alignment of tabs in the line to look
 normal.  @xref{Tabs}.
 
+@item --tabsize=@var{columns}
+Assume that tab stops are set every @var{columns} (default 8) print
+columns.  @xref{Tabs}.
+
 @item --to-file=@var{file}
 Compare each operand to @var{file}; @var{file} may be a directory.
 
@@ -3823,7 +3865,7 @@ context.
 
 On older systems, @command{diff} supports an obsolete option
 @option{-@var{lines}} that has effect when combined with @option{-u}.
-@sc{posix} 1003.1-2001 (@pxref{Standards conformance}) does not allow
+@acronym{POSIX} 1003.1-2001 (@pxref{Standards conformance}) does not allow
 this; use @option{-U @var{lines}} instead.
 
 @item -v
@@ -3882,7 +3924,7 @@ conflicts were found, and 2 means trouble.
 @cindex @command{diff3} options
 @cindex options for @command{diff3}
 
-Below is a summary of all of the options that @sc{gnu} @command{diff3}
+Below is a summary of all of the options that @acronym{GNU} @command{diff3}
 accepts.  Multiple single letter options (unless they take an argument)
 can be combined into a single command line argument.
 
@@ -4018,7 +4060,7 @@ if @var{file} is one of the input files.
 @cindex @command{patch} options
 @cindex options for @command{patch}
 
-Here is a summary of all of the options that @sc{gnu} @command{patch}
+Here is a summary of all of the options that @acronym{GNU} @command{patch}
 accepts.  @xref{patch and Tradition}, for which of these options are
 safe to use in older versions of @command{patch}.
 
@@ -4038,12 +4080,12 @@ Prepend @var{prefix} to backup file names.  @xref{Backup Names}.
 @item --backup-if-mismatch
 Back up the original contents of each file if the patch does not
 exactly match the file.  This is the default behavior when not
-conforming to @sc{posix}.  @xref{Backups}.
+conforming to @acronym{POSIX}.  @xref{Backups}.
 
 @item --binary
 Read and write all files in binary mode, except for standard output
 and @file{/dev/tty}.  This option has no effect on
-@sc{posix}-conforming systems like @sc{gnu}/Linux.  On systems where
+@acronym{POSIX}-conforming systems like @acronym{GNU}/Linux.  On systems where
 this option makes a difference, the patch should be generated by
 @samp{diff -a --binary}.  @xref{Binary}.
 
@@ -4113,7 +4155,7 @@ See also @option{-R}.  @xref{Reversed Patches}.
 
 @item --no-backup-if-mismatch
 Do not back up the original contents of files.  This is the default
-behavior when conforming to @sc{posix}.  @xref{Backups}.
+behavior when conforming to @acronym{POSIX}.  @xref{Backups}.
 
 @item -o @var{file}
 @itemx --output=@var{file}
@@ -4124,7 +4166,7 @@ Use @var{file} as the output file name.  @xref{patch Options}.
 Set the file name strip count to @var{number}.  @xref{patch Directories}.
 
 @item --posix
-Conform to @sc{posix}, as if the @env{POSIXLY_CORRECT} environment
+Conform to @acronym{POSIX}, as if the @env{POSIXLY_CORRECT} environment
 variable had been set.  @xref{patch and POSIX}.
 
 @item --quoting-style=@var{word}
@@ -4189,7 +4231,7 @@ Use @var{suffix} as the backup extension instead of @samp{.orig} or
 @itemx --set-utc
 Set the modification and access times of patched files from time
 stamps given in context diff headers, assuming that the context diff
-headers use @sc{utc}.  @xref{Patching Time Stamps}.
+headers use @acronym{UTC}.  @xref{Patching Time Stamps}.
 
 @end table
 
@@ -4232,12 +4274,13 @@ differences were found, and 2 means trouble.
 @cindex @command{sdiff} options
 @cindex options for @command{sdiff}
 
-Below is a summary of all of the options that @sc{gnu} @command{sdiff} accepts.
-Each option has two equivalent names, one of which is a single
-letter preceded by @samp{-}, and the other of which is a long name
-preceded by @samp{--}.  Multiple single letter options (unless they take
-an argument) can be combined into a single command line argument.  Long
-named options can be abbreviated to any unique prefix of their name.
+Below is a summary of all of the options that @acronym{GNU}
+@command{sdiff} accepts.  Each option has two equivalent names, one of
+which is a single letter preceded by @samp{-}, and the other of which
+is a long name preceded by @samp{--}.  Multiple single letter options
+(unless they take an argument) can be combined into a single command
+line argument.  Long named options can be abbreviated to any unique
+prefix of their name.
 
 @table @option
 @item -a
@@ -4280,7 +4323,7 @@ Ignore changes in case; consider upper- and lower-case to be the same.
 @item -I @var{regexp}
 @itemx --ignore-matching-lines=@var{regexp}
 Ignore changes that just insert or delete lines that match @var{regexp}.
-@xref{Specified Folding}.
+@xref{Specified Lines}.
 
 @item -l
 @itemx --left-column
@@ -4308,6 +4351,10 @@ Strip any trailing carriage return at the end of an input line.
 Expand tabs to spaces in the output, to preserve the alignment of tabs
 in the input files.  @xref{Tabs}.
 
+@item --tabsize=@var{columns}
+Assume that tab stops are set every @var{columns} (default 8) print
+columns.  @xref{Tabs}.
+
 @item -v
 @itemx --version
 Output version information and then exit.
@@ -4327,13 +4374,13 @@ Note that for historical reasons, this option is @option{-w} in @command{diff},
 
 @node Standards conformance
 @chapter Standards conformance
-@cindex @sc{posix}
+@cindex @acronym{POSIX}
 
 @vindex POSIXLY_CORRECT
-In a few cases, the @sc{gnu} utilities' default behavior is
-incompatible with the @sc{posix} standard.  To suppress these
+In a few cases, the @acronym{GNU} utilities' default behavior is
+incompatible with the @acronym{POSIX} standard.  To suppress these
 incompatibilities, define the @env{POSIXLY_CORRECT} environment
-variable.  Unless you are checking for @sc{posix} conformance, you
+variable.  Unless you are checking for @acronym{POSIX} conformance, you
 probably do not need to define @env{POSIXLY_CORRECT}.
 
 Normally options and operands can appear in any order, and programs act
@@ -4343,35 +4390,35 @@ as if all the options appear before any operands.  For example,
 @env{POSIXLY_CORRECT} environment variable is set, options must appear
 before operands, unless otherwise specified for a particular command.
 
-Newer versions of @sc{posix} are occasionally incompatible with older
-versions.  For example, older versions of @sc{posix} allowed the
+Newer versions of @acronym{POSIX} are occasionally incompatible with older
+versions.  For example, older versions of @acronym{POSIX} allowed the
 command @samp{diff -c -10} to have the same meaning as @samp{diff -C
-10}, but @sc{posix} 1003.1-2001 @samp{diff} no longer allows
+10}, but @acronym{POSIX} 1003.1-2001 @samp{diff} no longer allows
 digit-string options like @option{-10}.
 
 @vindex _POSIX2_VERSION
-The @sc{gnu} utilities normally conform to the version of @sc{posix}
+The @acronym{GNU} utilities normally conform to the version of @acronym{POSIX}
 that is standard for your system.  To cause them to conform to a
-different version of @sc{posix}, define the @env{_POSIX2_VERSION}
+different version of @acronym{POSIX}, define the @env{_POSIX2_VERSION}
 environment variable to a value of the form @var{yyyymm} specifying
 the year and month the standard was adopted.  Two values are currently
 supported for @env{_POSIX2_VERSION}: @samp{199209} stands for
-@sc{posix} 1003.2-1992, and @samp{200112} stands for @sc{posix}
+@acronym{POSIX} 1003.2-1992, and @samp{200112} stands for @acronym{POSIX}
 1003.1-2001.  For example, if you are running older software that
-assumes an older version of @sc{posix} and uses @samp{diff -c -10},
+assumes an older version of @acronym{POSIX} and uses @samp{diff -c -10},
 you can work around the compatibility problems by setting
 @samp{_POSIX2_VERSION=199209} in your environment.
 
 @node Projects
 @chapter Future Projects
 
-Here are some ideas for improving @sc{gnu} @command{diff} and
-@command{patch}.  The @sc{gnu} project has identified some
+Here are some ideas for improving @acronym{GNU} @command{diff} and
+@command{patch}.  The @acronym{GNU} project has identified some
 improvements as potential programming projects for volunteers.  You
 can also help by reporting any bugs that you find.
 
 If you are a programmer and would like to contribute something to the
-@sc{gnu} project, please consider volunteering for one of these
+@acronym{GNU} project, please consider volunteering for one of these
 projects.  If you are seriously contemplating work, please write to
 @email{gnu@@gnu.org} to coordinate with other volunteers.
 
@@ -4381,16 +4428,16 @@ projects.  If you are seriously contemplating work, please write to
 @end menu
 
 @node Shortcomings
-@section Suggested Projects for Improving @sc{gnu} @command{diff} and @command{patch}
+@section Suggested Projects for Improving @acronym{GNU} @command{diff} and @command{patch}
 @cindex projects for directories
 
-One should be able to use @sc{gnu} @command{diff} to generate a patch from any
-pair of directory trees, and given the patch and a copy of one such
-tree, use @command{patch} to generate a faithful copy of the other.
-Unfortunately, some changes to directory trees cannot be expressed using
-current patch formats; also, @command{patch} does not handle some of the
-existing formats.  These shortcomings motivate the following suggested
-projects.
+One should be able to use @acronym{GNU} @command{diff} to generate a
+patch from any pair of directory trees, and given the patch and a copy
+of one such tree, use @command{patch} to generate a faithful copy of
+the other.  Unfortunately, some changes to directory trees cannot be
+expressed using current patch formats; also, @command{patch} does not
+handle some of the existing formats.  These shortcomings motivate the
+following suggested projects.
 
 @menu
 * Internationalization:: Handling multibyte and varying-width characters.
@@ -4421,8 +4468,9 @@ These problems need to be fixed without unduly affecting the
 performance of the utilities in unibyte environments.
 
 The IBM GNU/Linux Technology Center Internationalization Team has
-proposed some patches to support internationalized @command{diff}
-@uref{http://oss.software.ibm.com/developer/opensource/linux/patches/i18n/diffutils-2.7.2-i18n-0.1.patch.gz}.
+proposed
+@uref{http://oss.software.ibm.com/developer/opensource/linux/patches/i18n/diffutils-2.7.2-i18n-0.1.patch.gz,patches
+to support internationalized @command{diff}}.
 Unfortunately, these patches are incomplete and are to an older
 version of @command{diff}, so more work needs to be done in this area.
 
@@ -4483,10 +4531,10 @@ extended to handle all possible file names.
 @subsection Outputting Diffs in Time Stamp Order
 
 Applying @command{patch} to a multiple-file diff can result in files
-whose time stamps are out of order.  @sc{gnu} @command{patch} has
+whose time stamps are out of order.  @acronym{GNU} @command{patch} has
 options to restore the time stamps of the updated files
 (@pxref{Patching Time Stamps}), but sometimes it is useful to generate
-a patch that works even if the recipient does not have @sc{gnu} patch,
+a patch that works even if the recipient does not have @acronym{GNU} patch,
 or does not use these options.  One way to do this would be to
 implement a @command{diff} option to output diffs in time stamp order.
 
@@ -4525,12 +4573,12 @@ time stamps have the same content.  @xref{diff Performance}.
 @cindex bug reports
 @cindex reporting bugs
 
-If you think you have found a bug in @sc{gnu} @command{cmp},
+If you think you have found a bug in @acronym{GNU} @command{cmp},
 @command{diff}, @command{diff3}, or @command{sdiff}, please report it
 by electronic mail to the
 @uref{http://mail.gnu.org/mailman/listinfo/bug-gnu-utils,GNU utilities
 bug report mailing list} @email{bug-gnu-utils@@gnu.org}.  Please send
-bug reports for @sc{gnu} @command{patch} to
+bug reports for @acronym{GNU} @command{patch} to
 @email{bug-patch@@gnu.org}.  Send as precise a description of the
 problem as you can, including the output of the @option{--version}
 option and sample input files that produce the bug, if applicable.  If
