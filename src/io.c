@@ -115,7 +115,9 @@ sip (struct file_data *current, bool skip_test)
 	  /* Check first part of file to see if it's a binary file.  */
 
 	  bool was_binary = set_binary_mode (current->desc, 1);
+	  off_t buffered;
 	  file_block_read (current, current->bufsize);
+	  buffered = current->buffered;
 
 	  if (! was_binary)
 	    {
@@ -124,7 +126,6 @@ sip (struct file_data *current, bool skip_test)
 		 descriptors like stdin might not start at offset
 		 zero.  */
 
-	      off_t buffered = current->buffered;
 	      if (lseek (current->desc, - buffered, SEEK_CUR) == -1)
 		pfatal_with_name (current->name);
 	      set_binary_mode (current->desc, 0);
@@ -132,7 +133,7 @@ sip (struct file_data *current, bool skip_test)
 	      current->eof = 0;
 	    }
 
-	  return binary_file_p (current->buffer, current->buffered);
+	  return binary_file_p (current->buffer, buffered);
 	}
     }
 
