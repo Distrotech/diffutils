@@ -70,7 +70,10 @@ const char textchar[] = {
 
 /* Check for binary files and compare them for exact identity.  */
 
-/* Return 1 if BUF contains a non text character.
+/* Return 1 if BUF is a binary file.
+   We use a heuristic that allows a few odd control characters through
+   (such as used in RMAIL or Info files) but rejects files that have
+   more than a small percentage of control chars.
    SIZE is the number of characters in BUF.  */
 
 static int
