@@ -1,3 +1,13 @@
+User-visible changes in version 2.8.2:
+
+* New diff and sdiff option:
+  --tabsize=COLUMNS
+* If --ignore-space-change or --ignore-all-space is also specified,
+  --ignore-blank-lines now considers lines to be empty if they contain
+  only white space.
+* More platforms now handle multibyte characters correctly when
+  excluding files by name (diff -x and -X).
+
 User-visible changes in version 2.8.1:
 
 * Documentation fixes.
@@ -39,6 +49,7 @@ User-visible changes in version 2.8:
   --inhibit-hunk-merge (omit; it has no effect)
 * Recursive diffs now sort file names according to the LC_COLLATE locale
   category if possible, instead of using native byte comparison.
+* Recursive diffs now detect and report directory loops.
 * Diff printf specs can now use the "0" and "'" flags.
 * The new sdiff interactive command `ed' precedes each version with a header.
 * On 64-bit hosts, files larger than 2 GB can be compared.
