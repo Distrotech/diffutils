@@ -86,32 +86,37 @@ format_ifdef (format, beg0, end0, beg1, end1)
 {
   register FILE *out = outfile;
   register char c;
+  register const char *f = format;
 
-  while ((c = *format++) != 0)
+  while ((c = *f++) != 0)
     {
       if (c == '%')
-	switch ((c = *format++))
+	switch ((c = *f++))
 	  {
 	  case 0:
 	    return;
 
 	  case '<':
 	    /* Print lines deleted from first file.  */
-	    print_ifdef_lines (line_prefix[0], &files[0], beg0, end0);
+	    print_ifdef_lines (line_format[0], &files[0], beg0, end0);
 	    continue;
 
 	  case '=':
 	    /* Print common lines.  */
-	    print_ifdef_lines (line_prefix[2], &files[0], beg0, end0);
+	    print_ifdef_lines (line_format[2], &files[0], beg0, end0);
 	    continue;
 
 	  case '>':
 	    /* Print lines inserted from second file.  */
 	    if (end1 == -1)
-	      print_ifdef_lines (line_prefix[1], &files[0], beg0, end0);
+	      print_ifdef_lines (line_format[1], &files[0], beg0, end0);
 	    else
-	      print_ifdef_lines (line_prefix[1], &files[1], beg1, end1);
+	      print_ifdef_lines (line_format[1], &files[1], beg1, end1);
 	    continue;
+
+	  case '0':
+	    c = 0;
+	    break;
 
 	  case 'n':
 	    c = '\n';
@@ -124,22 +129,54 @@ format_ifdef (format, beg0, end0, beg1, end1)
   }
 }
 
-/* Print PREFIX before each line of CURRENT starting with FROM
+const char default_line_format[] = "%l%n";
+
+/* Use FORMAT to print each line of CURRENT starting with FROM
    and continuing up to UPTO.  */
 static void
-print_ifdef_lines (prefix, current, from, upto)
-     const char *prefix;
+print_ifdef_lines (format, current, from, upto)
+     const char *format;
      const struct file_data *current;
      int from, upto;
 {
   const char * const *linbuf = current->linbuf;
 
-  if (!*prefix && !tab_expand_flag)
+  /* If possible, use a single fwrite; it's faster.  */
+  if (format == default_line_format && !tab_expand_flag)
     fwrite (linbuf[from], sizeof (char), linbuf[upto] - linbuf[from], outfile);
   else
-    while (from < upto)
+    for (;  from < upto;  from++)
       {
-	fputs (prefix, outfile);
-	print_1_line ((char *)0, &linbuf[from++]);
+	register FILE *out = outfile;
+	register char c;
+	register const char *f = format;
+
+	while ((c = *f++) != 0)
+	  {
+	    if (c == '%')
+	      switch ((c = *f++))
+		{
+		case 0:
+		  goto format_done;
+		
+		case 'l':
+		  output_1_line (linbuf[from], linbuf[from + 1] - 1, 0, 0);
+		  continue;
+
+		case '0':
+		  c = 0;
+		  break;
+
+		case 'n':
+		  c = '\n';
+		  break;
+
+		default:
+		  break;
+		}
+	    putc (c, out);
+	  }
+
+      format_done:;
       }
 }

@@ -402,8 +402,7 @@ print_1_line (line_flag, line)
      const char *line_flag;
      const char * const *line;
 {
-  const char *text = line[0]; /* Help the compiler.  */
-  int length = line[1] - text; /* must be nonzero */
+  const char *text = line[0], *limit = line[1]; /* Help the compiler.  */
   FILE *out = outfile; /* Help the compiler some more.  */
   const char *flag_format = 0;
 
@@ -417,59 +416,68 @@ print_1_line (line_flag, line)
       fprintf (out, flag_format, line_flag);
     }
 
-  /* Now output the contents of the line.
-     If -t was specified, expand tabs to spaces.
-     Otherwise output verbatim.  */
+  output_1_line (text, limit, flag_format, line_flag);
 
-  if (tab_expand_flag)
-    {
-      register unsigned column = 0;
-      register int i;
-      for (i = 0; i < length; i++)
-	{
-	  register char c = text[i];
-	  switch (c)
-	    {
-	    case '\t':
-	      {
-		unsigned spaces = TAB_WIDTH - column % TAB_WIDTH;
-		column += spaces;
-		do
-		  putc (' ', out);
-		while (--spaces);
-	      }
-	      break;
-
-	    case '\r':
-	      putc (c, out);
-	      if (flag_format && i+1 < length && text[i+1] != '\n')
-		fprintf (out, flag_format, line_flag);
-	      column = 0;
-	      break;
-
-	    case '\b':
-	      if (column == 0)
-		continue;
-	      column--;
-	      putc (c, out);
-	      break;
-
-	    default:
-	      if (textchar[(unsigned char) c])
-		column++;
-	      /* fall into */
-	    case '\f':
-	    case '\v':
-	      putc (c, out);
-	      break;
-	    }
-	}
-    }
-  else
-    fwrite (text, sizeof (char), length, out);
-  if ((line_flag == NULL || line_flag[0] != 0) && text[length - 1] != '\n'
+  if ((line_flag == NULL || line_flag[0] != 0) && limit[-1] != '\n'
       && line_end_char == '\n')
     fprintf (out, "\n\\ No newline at end of file\n");
+}
+
+/* Output a line from TEXT up to LIMIT.  Without -t, output verbatim.
+   With -t, expand white space characters to spaces, and if FLAG_FORMAT
+   is nonzero, output it with argument LINE_FLAG after every
+   internal carriage return, so that tab stops continue to line up.  */
+
+void
+output_1_line (text, limit, flag_format, line_flag)
+     const char *text, *limit, *flag_format, *line_flag;
+{
+  if (!tab_expand_flag)
+    fwrite (text, sizeof (char), limit - text, outfile);
+  else
+    {
+      register FILE *out = outfile;
+      register char c;
+      register const char *t = text;
+      register unsigned column = 0;
+
+      while (t < limit)
+	switch ((c = *t++))
+	  {
+	  case '\t':
+	    {
+	      unsigned spaces = TAB_WIDTH - column % TAB_WIDTH;
+	      column += spaces;
+	      do
+		putc (' ', out);
+	      while (--spaces);
+	    }
+	    break;
+
+	  case '\r':
+	    putc (c, out);
+	    if (flag_format && t < limit && *t != '\n')
+	      fprintf (out, flag_format, line_flag);
+	    column = 0;
+	    break;
+
+	  case '\b':
+	    if (column == 0)
+	      continue;
+	    column--;
+	    putc (c, out);
+	    break;
+
+	  default:
+	    if (textchar[(unsigned char) c])
+	      column++;
+	    /* fall into */
+	  case '\f':
+	  case '\v':
+	    putc (c, out);
+	    break;
+	  }
+    }
 }
 
 int
