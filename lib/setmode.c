@@ -23,24 +23,16 @@
 # include <config.h>
 #endif
 
-#if HAVE_STDBOOL_H
-# include <stdbool.h>
-#else
-typedef enum {false = 0, true = 1} bool;
-#endif
-
-#if HAVE_SETMODE_DOS
-# include <io.h>
-# if HAVE_FCNTL_H
-#  include <fcntl.h>
-# endif
-# if HAVE_UNISTD_H
-#  include <unistd.h>
-# endif
-#endif
-
 #include "setmode.h"
 #undef set_binary_mode
+
+#include <io.h>
+#if HAVE_FCNTL_H
+# include <fcntl.h>
+#endif
+#if HAVE_UNISTD_H
+# include <unistd.h>
+#endif
 
 #ifndef __attribute__
 # if __GNUC__ < 3 || __STRICT_ANSI__
@@ -49,12 +41,9 @@ typedef enum {false = 0, true = 1} bool;
 #endif
 
 /* Set the binary mode of FD to MODE, returning its previous mode.
-   MODE is 1 for binary and 0 for text.  If setting the mode might
-   cause problems, ignore the request and return MODE.  Always return
-   1 on POSIX platforms, which do not distinguish between text and
-   binary.  */
+   MODE is true for binary and false for text.  If setting the mode might
+   cause problems, ignore the request and return MODE.  */
 
-#if HAVE_SETMODE_DOS
 bool
 set_binary_mode (int fd, bool mode)
 {
@@ -62,6 +51,3 @@ set_binary_mode (int fd, bool mode)
     return mode;
   return setmode (fd, mode ? O_BINARY : O_TEXT) != O_TEXT;
 }
-#else
-static char dummy;
-#endif
