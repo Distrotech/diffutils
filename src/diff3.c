@@ -26,6 +26,7 @@ static char const copyright_string[] =
 static char const authorship_msgid[] = N_("Written by Randy Smith.");
 
 #include <c-stack.h>
+#include <cmpbuf.h>
 #include <error.h>
 #include <exitfail.h>
 #include <freesoft.h>
@@ -1141,7 +1142,6 @@ read_diff (char const *filea,
 {
   char *diff_result;
   size_t current_chunk_size, total;
-  ssize_t bytes;
   int fd, wstatus;
   int werrno = 0;
   struct stat pipestat;
@@ -1221,27 +1221,21 @@ read_diff (char const *filea,
   diff_result = xmalloc (current_chunk_size);
   total = 0;
 
-  while ((bytes = read (fd, diff_result + total, current_chunk_size - total)))
+  for (;;)
     {
-      if (bytes < 0)
-	{
-	  /* Accommodate ancient AIX hosts that set errno to EINTR
-	     after uncaught SIGCONT.  See
-	     <news:1r77ojINN85n@ftp.UU.NET> (1993-04-22).  */
-	  if (! SA_RESTART && errno == EINTR)
-	    continue;
-
-	  perror_with_exit (_("read failed"));
-	}
-
+      size_t bytes_to_read = current_chunk_size - total;
+      size_t bytes = block_read (fd, diff_result + total, bytes_to_read);
       total += bytes;
-      if (total == current_chunk_size)
+      if (bytes != bytes_to_read)
 	{
-	  if (PTRDIFF_MAX / 2 <= current_chunk_size)
-	    xalloc_die ();
-	  current_chunk_size *= 2;
-	  diff_result = xrealloc (diff_result, current_chunk_size);
+	  if (bytes == SIZE_MAX)
+	    perror_with_exit (_("read failed"));
+	  break;
 	}
+      if (PTRDIFF_MAX / 2 <= current_chunk_size)
+	xalloc_die ();
+      current_chunk_size *= 2;
+      diff_result = xrealloc (diff_result, current_chunk_size);
     }
 
   if (total != 0 && diff_result[total-1] != '\n')
