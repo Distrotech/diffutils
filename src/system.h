@@ -186,9 +186,10 @@ char *getenv ();
 #  define strrchr rindex
 # endif
 char *strchr (), *strrchr ();
-void *memchr ();
-# if !HAVE_MEMCPY
+# if !HAVE_MEMCHR
+#  define memcmp(s1, s2, n) bcmp (s1, s2, n)
 #  define memcpy(d, s, n) bcopy (s, d, n)
+void *memchr ();
 # endif
 #endif
 
