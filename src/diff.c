@@ -42,11 +42,11 @@ static char const copyright_string[] =
   "Copyright (C) 2001 Free Software Foundation, Inc.";
 
 #ifndef DEFAULT_WIDTH
-#define DEFAULT_WIDTH 130
+# define DEFAULT_WIDTH 130
 #endif
 
 #ifndef GUTTER_WIDTH_MINIMUM
-#define GUTTER_WIDTH_MINIMUM 3
+# define GUTTER_WIDTH_MINIMUM 3
 #endif
 
 struct regexp_list
@@ -398,7 +398,7 @@ main (int argc, char **argv)
 	    try_help ("pagination not supported on this host", 0);
 	  paginate = 1;
 #if !defined SIGCHLD && defined SIGCLD
-#define SIGCHLD SIGCLD
+# define SIGCHLD SIGCLD
 #endif
 #ifdef SIGCHLD
 	  /* Pagination requires forking and waiting, and
@@ -521,7 +521,7 @@ main (int argc, char **argv)
 	     On POSIX hosts, this has no effect.  */
 #if HAVE_SETMODE
 	  binary = 1;
-	  setmode (STDOUT_FILENO, O_BINARY);
+	  set_binary_mode (STDOUT_FILENO, 1);
 #endif
 	  break;
 
@@ -1027,7 +1027,7 @@ compare_files (struct comparison const *parent,
 	       char const *name1)
 {
   struct comparison cmp;
-# define DIR_P(f) (S_ISDIR (cmp.file[f].stat.st_mode) != 0)
+#define DIR_P(f) (S_ISDIR (cmp.file[f].stat.st_mode) != 0)
   register int f;
   int status = 0;
   bool same_files;
@@ -1053,11 +1053,11 @@ compare_files (struct comparison const *parent,
   cmp.parent = parent;
 
   /* cmp.file[f].desc markers */
-# define NONEXISTENT (-1) /* nonexistent file */
-# define UNOPENED (-2) /* unopened file (e.g. directory) */
-# define ERRNO_ENCODE(errno) (-3 - (errno)) /* encoded errno value */
+#define NONEXISTENT (-1) /* nonexistent file */
+#define UNOPENED (-2) /* unopened file (e.g. directory) */
+#define ERRNO_ENCODE(errno) (-3 - (errno)) /* encoded errno value */
 
-# define ERRNO_DECODE(desc) (-3 - (desc)) /* inverse of ERRNO_ENCODE */
+#define ERRNO_DECODE(desc) (-3 - (desc)) /* inverse of ERRNO_ENCODE */
 
   cmp.file[0].desc = name0 == 0 ? NONEXISTENT : UNOPENED;
   cmp.file[1].desc = name1 == 0 ? NONEXISTENT : UNOPENED;
@@ -1286,7 +1286,7 @@ compare_files (struct comparison const *parent,
       if (binary)
 	for (f = 0; f < 2; f++)
 	  if (0 <= cmp.file[f].desc)
-	    setmode (cmp.file[f].desc, O_BINARY);
+	    set_binary_mode (cmp.file[f].desc, 1);
 #endif
 
       /* Compare the files, if no error was found.  */
