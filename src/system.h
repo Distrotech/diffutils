@@ -118,7 +118,7 @@ the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 #else
 #include <strings.h>
 #endif
-#if !HAVE_MEMCHR && !STDC_HEADERS
+#if !HAVE_MEMCHR
 char *memchr ();
 #endif
 
