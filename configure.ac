@@ -5,7 +5,7 @@
 AC_INIT(src/diff.c)
 AM_CONFIG_HEADER([config.h:config.hin])
 AC_PREREQ(2.52)
-AM_INIT_AUTOMAKE(diffutils, 2.7.3)
+AM_INIT_AUTOMAKE(diffutils, 2.7.4)
 ALL_LINGUAS="da de en_GB eo es fr gl id pl ru sv tr"
 
 AC_PROG_AWK
@@ -28,7 +28,7 @@ AC_C_CONST
 AC_C_INLINE
 AC_C_VARARRAYS
 
-AC_DEFINE_UNQUOTED(DEFAULT_DIFF_PROGRAM, "$bindir/diff",
+AC_DEFINE(DEFAULT_DIFF_PROGRAM, "diff",
   [Name of "diff" program, unless overridden.])
 
 AC_DEFINE(DEFAULT_EDITOR_PROGRAM, "ed",
@@ -40,15 +40,15 @@ AC_DEFINE(PR_PROGRAM, "$PR_PROGRAM", [Name of "pr" program.])
 AC_HEADER_STDC
 AC_CHECK_HEADERS(fcntl.h libintl.h limits.h locale.h \
   stdbool.h stdlib.h string.h sys/file.h time.h unistd.h)
+AC_CHECK_MEMBERS([struct stat.st_blksize])
+AC_CHECK_MEMBERS([struct stat.st_rdev])
 AC_CHECK_TYPES([ptrdiff_t, uintmax_t])
 AM_GNU_GETTEXT
 XGETTEXT="AWK='$AWK' \$(SHELL) \$(top_srcdir)/exgettext $XGETTEXT"
 AC_HEADER_DIRENT
 AC_HEADER_STAT
 AC_HEADER_SYS_WAIT
-AC_STRUCT_ST_BLKSIZE
 AC_STRUCT_ST_MTIM_NSEC
-AC_STRUCT_ST_RDEV
 AC_TYPE_PID_T
 AC_TYPE_SIGNAL
 
@@ -60,19 +60,17 @@ if test $ac_cv_func_mkstemp != yes; then
 fi
 AC_FUNC_ALLOCA
 AC_FUNC_CLOSEDIR_VOID
+AC_FUNC_FORK
+AC_FUNC_VPRINTF
 jm_FUNC_GLIBC_UNLOCKED_IO
 jm_FUNC_GNU_STRFTIME
 # No need for AC_FUNC_MEMCMP, since memcmp is used only to test for equality.
-AC_FUNC_VFORK
-AC_FUNC_VPRINTF
 jm_FUNC_MALLOC
 jm_FUNC_REALLOC
 jm_PREREQ_ERROR
 jm_PREREQ_QUOTEARG
 jm_PREREQ_REGEX
 jm_PREREQ_TEMPNAME
-# We don't actually use xstrtoumax, but we use nearly all the things
-# it uses.
 jm_AC_PREREQ_XSTRTOUMAX
 
 # Check for clock_gettime and its library.  Solaris puts it in -lrt or
@@ -106,7 +104,8 @@ else
   rm -f lib/regex.h
 fi
 
-AC_OUTPUT([Makefile doc/Makefile intl/Makefile \
-	   lib/Makefile lib/posix/Makefile \
-	   m4/Makefile po/Makefile.in src/Makefile],
-	  [date > stamp-h])
+AC_CONFIG_FILES([Makefile doc/Makefile intl/Makefile \
+		 lib/Makefile lib/posix/Makefile \
+		 m4/Makefile po/Makefile.in src/Makefile])
+AC_CONFIG_COMMANDS([default], [date > stamp-h])
+AC_OUTPUT
