@@ -282,7 +282,7 @@ finish_output (void)
   if (outfile != 0 && outfile != stdout)
     {
       int wstatus;
-      int werrno;
+      int werrno = 0;
       if (ferror (outfile))
 	fatal ("write failed");
 #if ! (HAVE_WORKING_FORK || HAVE_WORKING_VFORK)
@@ -415,6 +415,9 @@ lines_differ (char const *s1, char const *s2)
 		  if (column != column2)
 		    return 1;
 		}
+	      break;
+
+	    case IGNORE_NO_WHITE_SPACE:
 	      break;
 	    }
 
@@ -650,7 +653,7 @@ analyze_hunk (struct change *hunk,
   bool trivial = ignore_blank_lines || ignore_regexp.fastmap;
   size_t trivial_length = (int) ignore_blank_lines - 1;
     /* If 0, ignore zero-length lines;
-       if (size_t) -1, do not ignore lines just because of their length.  */
+       if SIZE_MAX, do not ignore lines just because of their length.  */
 
   char const * const *linbuf0 = files[0].linbuf;  /* Help the compiler.  */
   char const * const *linbuf1 = files[1].linbuf;
