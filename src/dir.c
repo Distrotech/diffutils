@@ -1,21 +1,22 @@
 /* Read, sort and compare two directories.  Used for GNU DIFF.
-   Copyright (C) 1988, 1989, 1992, 1993, 1994 Free Software Foundation, Inc.
+   Copyright 1988, 89, 92, 93, 94, 95, 1997 Free Software Foundation, Inc.
 
-This file is part of GNU DIFF.
+   This file is part of GNU DIFF.
 
-GNU DIFF is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
-any later version.
+   GNU DIFF is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation; either version 2, or (at your option)
+   any later version.
 
-GNU DIFF is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+   GNU DIFF is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
 
-You should have received a copy of the GNU General Public License
-along with GNU DIFF; see the file COPYING.  If not, write to
-the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
+   You should have received a copy of the GNU General Public License
+   along with this program; see the file COPYING.
+   If not, write to the Free Software Foundation, 
+   59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
 
 #include "diff.h"
 
@@ -31,6 +32,7 @@ struct dirdata
 };
 
 static int compare_names PARAMS((void const *, void const *));
+static int dir_loop PARAMS((struct comparison const *, int));
 static int dir_sort PARAMS((struct file_data const *, struct dirdata *));
 
 static int
@@ -132,41 +134,45 @@ compare_names (file1, file2)
 		       * (char const *const *) file2);
 }
 
-/* Compare the contents of two directories named in FILEVEC[0] and FILEVEC[1].
+/* Compare the contents of two directories named in CMP.
    This is a top-level routine; it does everything necessary for diff
    on two directories.
 
-   FILEVEC[0].desc == -1 says directory FILEVEC[0] doesn't exist,
-   but pretend it is empty.  Likewise for FILEVEC[1].
+   CMP->file[0].desc == -1 says directory CMP->file[0] doesn't exist,
+   but pretend it is empty.  Likewise for CMP->file[1].
 
    HANDLE_FILE is a caller-provided subroutine called to handle each file.
-   It gets five operands: dir and name (rel to original working dir) of file
-   in dir 0, dir and name pathname of file in dir 1, and the recursion depth.
+   It gets three operands: CMP, name of file in dir 0, name of file in dir 1.
+   These names are relative to the original working directory.
 
    For a file that appears in only one of the dirs, one of the name-args
    to HANDLE_FILE is zero.
-
-   DEPTH is the current depth in recursion, used for skipping top-level
-   files by the -S option.
 
    Returns the maximum of all the values returned by HANDLE_FILE,
    or 2 if trouble is encountered in opening files.  */
 
 int
-diff_dirs (filevec, handle_file, depth)
-     struct file_data const filevec[];
-     int (*handle_file) PARAMS((char const *, char const *, char const *, char const *, int));
-     int depth;
+diff_dirs (cmp, handle_file)
+     struct comparison const *cmp;
+     int (*handle_file) PARAMS((struct comparison const *, char const *, char const *));
 {
   struct dirdata dirdata[2];
   int val = 0;			/* Return value.  */
   int i;
 
+  if ((cmp->file[0].desc == -1 || dir_loop (cmp, 0))
+      && (cmp->file[1].desc == -1 || dir_loop (cmp, 1)))
+    {
+      error (0, 0, "%s: recursive directory loop",
+	     cmp->file[cmp->file[0].desc == -1].name);
+      return 2;
+    }
+
   /* Get sorted contents of both dirs.  */
   for (i = 0; i < 2; i++)
-    if (dir_sort (&filevec[i], &dirdata[i]) != 0)
+    if (dir_sort (&cmp->file[i], &dirdata[i]) != 0)
       {
-	perror_with_name (filevec[i].name);
+	perror_with_name (cmp->file[i].name);
 	val = 2;
       }
 
@@ -174,13 +180,11 @@ diff_dirs (filevec, handle_file, depth)
     {
       register char const * const *names0 = dirdata[0].names;
       register char const * const *names1 = dirdata[1].names;
-      char const *name0 = filevec[0].name;
-      char const *name1 = filevec[1].name;
 
       /* If `-S name' was given, and this is the topmost level of comparison,
 	 ignore all file names less than the specified starting name.  */
 
-      if (dir_start_file && depth == 0)
+      if (dir_start_file && ! cmp->parent)
 	{
 	  while (*names0 && filename_cmp (*names0, dir_start_file) < 0)
 	    names0++;
@@ -196,9 +200,9 @@ diff_dirs (filevec, handle_file, depth)
 	     pretend the "next name" in that dir is very large.  */
 	  int nameorder = (!*names0 ? 1 : !*names1 ? -1
 			   : filename_cmp (*names0, *names1));
-	  int v1 = (*handle_file) (name0, 0 < nameorder ? 0 : *names0++,
-				   name1, nameorder < 0 ? 0 : *names1++,
-				   depth + 1);
+	  int v1 = (*handle_file) (cmp,
+				   0 < nameorder ? 0 : *names0++,
+				   nameorder < 0 ? 0 : *names1++);
 	  if (v1 > val)
 	    val = v1;
 	}
@@ -213,4 +217,18 @@ diff_dirs (filevec, handle_file, depth)
     }
 
   return val;
+}
+
+/* Return nonzero if CMP is looping recursively in argument I.  */
+
+static int
+dir_loop (cmp, i)
+     struct comparison const *cmp;
+     int i;
+{
+  struct comparison const *p = cmp;
+  while ((p = p->parent))
+    if (0 < same_file (&p->file[i].stat, &cmp->file[i].stat))
+      return 1;
+  return 0;
 }
