@@ -1,5 +1,6 @@
 /* hard-locale.c -- Determine whether a locale is hard.
-   Copyright 1997, 1998, 1999 Free Software Foundation, Inc.
+
+   Copyright (C) 1997, 1998, 1999, 2002 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -48,12 +49,14 @@ char *alloca ();
 # include <string.h>
 #endif
 
+#include "hard-locale.h"
+
 /* Return nonzero if the current CATEGORY locale is hard, i.e. if you
    can't get away with assuming traditional C or POSIX behavior.  */
 int
 hard_locale (int category)
 {
-#if ! (defined ENABLE_NLS && HAVE_SETLOCALE)
+#if ! HAVE_SETLOCALE
   return 0;
 #else
 
