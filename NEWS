@@ -1,11 +1,4 @@
-User-visible changes in test version 2.7.6:
-
-* New diff3 and sdiff option: --diff-program=PROGRAM.
-* The test-version environment variables DIFF_OPTIONS and DIFF_PROGRAM
-  have been withdrawn, as they caused compatibility problems.
-  You can use aliases or shell script wrappers instead.
-
-Other user-visible changes since version 2.7:
+User-visible changes in test version 2.7.7:
 
 * cmp now supports trailing operands SKIP1 and SKIP2, like BSD cmp.
 * cmp -i or --ignore-initial now accepts SKIP1:SKIP2 option value.
@@ -14,7 +7,7 @@ Other user-visible changes since version 2.7:
   use -b or --print-bytes instead.
 * cmp now outputs "byte" rather than "char" outside the POSIX locale.
 * cmp -l's index column width now autoadjusts to fit larger (or smaller) files.
-* diff uses ISO 8601 format for output times (e.g. "2001-11-23
+* diff uses ISO 8601 style time stamps for output times (e.g. "2001-11-23
   16:44:36.875702460 -0800") unless in the C or POSIX locale.
 * diff's -I and -F options use the regexp syntax of grep, not of Emacs.
 * New diff and sdiff options:
@@ -24,17 +17,17 @@ Other user-visible changes since version 2.7:
   --from-file=FILE, --to-file=FILE
   --ignore-file-name-case
   --no-ignore-file-name-case
+* New diff3 and sdiff option:
+  --diff-program=PROGRAM
 * diff file name exclusion is now case insensitive when file name case
   is being ignored.
 * Recursive diffs now sort file names according to the LC_COLLATE locale
   category, instead of using native byte comparison.
-* Diff printf specs can now use the 0 and ' flags.
+* Diff printf specs can now use the "0" and "'" flags.
 * Later, conflicting diff options now silently override earlier ones.
   For example, `diff -c -u' is now equivalent to `diff -u'.
 * The summary output of diff now notes whether regular files are executable.
 * The new sdiff interactive command `ed' precedes each version with a header.
-* New diff3 and sdiff option:
-  --diff-program=PROGRAM
 * On 64-bit hosts, files larger than 2 GB can be compared.
 * Some internationalization support has been added.
   Some diagnostics have been reworded slightly for consistency.
@@ -48,7 +41,7 @@ Other user-visible changes since version 2.7:
 
 User-visible changes in version 2.7:
 
-* New diff option: --binary (useful only on non-Posix hosts)
+* New diff option: --binary (useful only on non-POSIX hosts)
 * diff -b and -w now ignore line incompleteness; -B no longer does this.
 * cmp -c now uses locale to decide which output characters to quote.
 * Help and version messages are reorganized.
@@ -112,8 +105,8 @@ User-visible changes in version 2.4:
 * The format spec %0 introduced in version 2.1 has been removed, since it
   is incompatible with printf specs like %02d.  To represent a null char,
   use %c'\0' instead.
-* cmp and diff now conform to Posix.2 (ISO/IEC 9945-2:1993)
-  if the underlying system conforms to Posix:
+* cmp and diff now conform to POSIX 1003.2-1992 (ISO/IEC 9945-2:1993)
+  if the underlying system conforms to POSIX:
   - Some messages' wordings are changed in minor ways.
   - ``White space'' is now whatever C's `isspace' says it is.
   - When comparing directories, if `diff' finds a file that is not a regular
@@ -172,3 +165,25 @@ User-visible changes in version 2.0:
 * Add long-named equivalents for other diff3 options.
 * diff options -F (--show-function-line) and -I (--ignore-matching-lines)
   can now be given more than once.
+
+
+
+Copyright (C) 1993, 1994, 1998, 2001, 2002 Free Software Foundation,
+Inc.
+
+This file is part of GNU Diffutils.
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2, or (at your option)
+any later version.
+
+This program is distributed in the hope that they will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; see the file COPYING.  If not, write to
+the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+Boston, MA 02111-1307, USA.
