@@ -134,23 +134,22 @@ the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 #endif
 #endif
 
-#if DIRENT
-#include <dirent.h>
-#else /* ! DIRENT */
-#if SYSNDIR
-#include <sys/ndir.h>
+#if HAVE_DIRENT_H
+# include <dirent.h>
+# define NAMLEN(dirent) (strlen((dirent)->d_name))
 #else
-#if SYSDIR
-#include <sys/dir.h>
-#else
-#include <ndir.h>
+# define dirent direct
+# define NAMLEN(dirent) ((dirent)->d_namlen)
+# if HAVE_SYS_NDIR_H
+#  include <sys/ndir.h>
+# endif
+# if HAVE_SYS_DIR_H
+#  include <sys/dir.h>
+# endif
+# if HAVE_NDIR_H
+#  include <ndir.h>
+# endif
 #endif
-#endif
-#ifdef dirent
-#undef dirent
-#endif
-#define dirent direct
-#endif /* ! DIRENT */
 
 #if HAVE_VFORK_H
 #include <vfork.h>
