@@ -19,20 +19,19 @@
 
 noinst_LIBRARIES = libdiffutils.a
 
-noinst_HEADERS = cmpbuf.h inttostr.h prepargs.h quotesys.h
+noinst_HEADERS = cmpbuf.h prepargs.h quotesys.h
 
 libdiffutils_a_SOURCES = $(lib_SOURCES)
 lib_SOURCES = \
   cmpbuf.c \
-  imaxtostr.c offtostr.c prepargs.c quotesys.c \
-  umaxtostr.c
+  prepargs.c quotesys.c
 
 libdiffutils_a_LIBADD = @ALLOCA@ @LIBOBJS@
 libdiffutils_a_DEPENDENCIES = $(libdiffutils_a_LIBADD)
 
 BUILT_SOURCES =
 DISTCLEANFILES =
-EXTRA_DIST = inttostr.c waitpid.c
+EXTRA_DIST = waitpid.c
 MOSTLYCLEANFILES =
 
 include gnulib.mk
