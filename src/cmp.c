@@ -482,12 +482,12 @@ cmp (void)
 		    static char const byte_msgid[] =
 		      N_("%s %s differ: byte %s, line %s\n");
 		    char const *byte_message = _(byte_msgid);
-		    bool use_translation = (byte_message != byte_msgid
-					    || hard_locale_LC_MESSAGES);
+		    bool use_byte_message = (byte_message != byte_msgid
+					     || hard_locale_LC_MESSAGES);
 
-		    printf (use_translation
-			    ? byte_message
-			    : "%s %s differ: char %s, line %s\n"),
+		    printf ((use_byte_message
+			     ? byte_message
+			     : "%s %s differ: char %s, line %s\n"),
 			    file[0], file[1], byte_num, line_num);
 		  }
 		else
