@@ -25,12 +25,13 @@ static char const copyright_string[] =
 
 static char const authorship_msgid[] = N_("Written by Randy Smith.");
 
+#include <c-stack.h>
 #include <error.h>
+#include <exitfail.h>
 #include <freesoft.h>
 #include <getopt.h>
 #include <inttostr.h>
 #include <quotesys.h>
-#include <signal.h>
 #include <stdio.h>
 #include <xalloc.h>
 
@@ -143,12 +144,6 @@ struct diff3_block {
   ((linenum)						\
    - D_LOWLINE ((diff), (fromfile))			\
    + D_LOWLINE ((diff), (tofile)))
-
-/*
- * General memory allocation function.
- */
-#define	ALLOCATE(number, type)	\
-  (type *) xmalloc ((number) * sizeof (type))
 
 /* Options variables for flags set on command line.  */
 
@@ -191,7 +186,6 @@ static bool compare_line_list (char * const[], size_t const[], char * const[], s
 static bool copy_stringlist (char * const[], size_t const[], char *[], size_t[], lin);
 static bool output_diff3_edscript (FILE *, struct diff3_block *, int const[3], int const[3], char const *, char const *, char const *);
 static bool output_diff3_merge (FILE *, FILE *, struct diff3_block *, int const[3], int const[3], char const *, char const *, char const *);
-static size_t myread (int, char *, size_t);
 static struct diff3_block *create_diff3_block (lin, lin, lin, lin, lin, lin);
 static struct diff3_block *make_3way_diff (struct diff_block *, struct diff_block *);
 static struct diff3_block *reverse_diff3_blocklist (struct diff3_block *);
@@ -251,12 +245,13 @@ main (int argc, char **argv)
   char **file;
   struct stat statb;
 
-  xalloc_exit_failure = 2;
+  exit_failure = 2;
   initialize_main (&argc, &argv);
   program_name = argv[0];
   setlocale (LC_ALL, "");
   bindtextdomain (PACKAGE, LOCALEDIR);
   textdomain (PACKAGE);
+  c_stack_action (c_stack_die);
 
   while ((c = getopt_long (argc, argv, "aeimvx3AEL:TX", longopts, 0)) != -1)
     {
@@ -301,14 +296,14 @@ main (int argc, char **argv)
 		  version_string, copyright_string,
 		  _(free_software_msgid), _(authorship_msgid));
 	  check_stdout ();
-	  exit (0);
+	  return EXIT_SUCCESS;
 	case DIFF_PROGRAM_OPTION:
 	  diff_program = optarg;
 	  break;
 	case HELP_OPTION:
 	  usage ();
 	  check_stdout ();
-	  exit (0);
+	  return EXIT_SUCCESS;
 	case 'L':
 	  /* Handle up to three -L options.  */
 	  if (tag_count < 3)
@@ -385,12 +380,9 @@ main (int argc, char **argv)
 	if (stat (file[i], &statb) < 0)
 	  perror_with_exit (file[i]);
 	else if (S_ISDIR (statb.st_mode))
-	  error (2, EISDIR, "%s", file[i]);
+	  error (EXIT_TROUBLE, EISDIR, "%s", file[i]);
       }
 
-#if !defined SIGCHLD && defined SIGCLD
-#define SIGCHLD SIGCLD
-#endif
 #ifdef SIGCHLD
   /* System V fork+wait does not work if SIGCHLD is ignored.  */
   signal (SIGCHLD, SIG_DFL);
@@ -430,7 +422,8 @@ try_help (char const *reason_msgid, char const *operand)
 {
   if (reason_msgid)
     error (0, 0, _(reason_msgid), operand);
-  error (2, 0, _("Try `%s --help' for more information."), program_name);
+  error (EXIT_TROUBLE, 0,
+	 _("Try `%s --help' for more information."), program_name);
   abort ();
 }
 
@@ -863,7 +856,7 @@ create_diff3_block (lin low0, lin high0,
 		    lin low1, lin high1,
 		    lin low2, lin high2)
 {
-  struct diff3_block *result = ALLOCATE (1, struct diff3_block);
+  struct diff3_block *result = xmalloc (sizeof *result);
   lin numlines;
 
   D3_TYPE (result) = ERROR;
@@ -956,6 +949,9 @@ process_diff (char const *filea,
   enum diff_type dt;
   lin i;
   struct diff_block *block_list, **block_list_end, *bptr;
+  size_t too_many_lines = (PTRDIFF_MAX
+			   / MIN (sizeof *bptr->lines[1],
+				  sizeof *bptr->lengths[1]));
 
   diff_limit = read_diff (filea, fileb, &diff_contents);
   scan_diff = diff_contents;
@@ -964,7 +960,7 @@ process_diff (char const *filea,
 
   while (scan_diff < diff_limit)
     {
-      bptr = ALLOCATE (1, struct diff_block);
+      bptr = xmalloc (sizeof *bptr);
       bptr->lines[0] = bptr->lines[1] = 0;
       bptr->lengths[0] = bptr->lengths[1] = 0;
 
@@ -977,7 +973,7 @@ process_diff (char const *filea,
 	      putc (*scan_diff, stderr);
 	    }
 	  while (*scan_diff++ != '\n');
-	  exit (2);
+	  exit (EXIT_TROUBLE);
 	}
       scan_diff++;
 
@@ -1002,8 +998,10 @@ process_diff (char const *filea,
       if (dt != ADD)
 	{
 	  lin numlines = D_NUMLINES (bptr, 0);
-	  bptr->lines[0] = ALLOCATE (numlines, char *);
-	  bptr->lengths[0] = ALLOCATE (numlines, size_t);
+	  if (too_many_lines <= numlines)
+	    xalloc_die ();
+	  bptr->lines[0] = xmalloc (numlines * sizeof *bptr->lines[0]);
+	  bptr->lengths[0] = xmalloc (numlines * sizeof *bptr->lengths[0]);
 	  for (i = 0; i < numlines; i++)
 	    scan_diff = scan_diff_line (scan_diff,
 					&(bptr->lines[0][i]),
@@ -1025,8 +1023,10 @@ process_diff (char const *filea,
       if (dt != DELETE)
 	{
 	  lin numlines = D_NUMLINES (bptr, 1);
-	  bptr->lines[1] = ALLOCATE (numlines, char *);
-	  bptr->lengths[1] = ALLOCATE (numlines, size_t);
+	  if (too_many_lines <= numlines)
+	    xalloc_die ();
+	  bptr->lines[1] = xmalloc (numlines * sizeof *bptr->lines[1]);
+	  bptr->lengths[1] = xmalloc (numlines * sizeof *bptr->lengths[1]);
 	  for (i = 0; i < numlines; i++)
 	    scan_diff = scan_diff_line (scan_diff,
 					&(bptr->lines[1][i]),
@@ -1140,7 +1140,8 @@ read_diff (char const *filea,
 	   char **output_placement)
 {
   char *diff_result;
-  size_t bytes, current_chunk_size, total;
+  size_t current_chunk_size, total;
+  ssize_t bytes;
   int fd, wstatus;
   int werrno = 0;
   struct stat pipestat;
@@ -1180,7 +1181,7 @@ read_diff (char const *filea,
 	 hosts with a nonstandard prototype for execvp.  */
       execvp (diff_program, (char **) argv);
 
-      _exit (127);
+      _exit (errno == ENOEXEC ? 126 : 127);
     }
 
   if (pid == -1)
@@ -1219,18 +1220,29 @@ read_diff (char const *filea,
   current_chunk_size = MAX (1, STAT_BLOCKSIZE (pipestat));
   diff_result = xmalloc (current_chunk_size);
   total = 0;
-  do {
-    bytes = myread (fd,
-		    diff_result + total,
-		    current_chunk_size - total);
-    total += bytes;
-    if (total == current_chunk_size)
-      {
-	if (2 * current_chunk_size <= current_chunk_size)
-	  xalloc_die ();
-	diff_result = xrealloc (diff_result, (current_chunk_size *= 2));
-      }
-  } while (bytes);
+
+  while ((bytes = read (fd, diff_result + total, current_chunk_size - total)))
+    {
+      if (bytes < 0)
+	{
+	  /* Accommodate ancient AIX hosts that set errno to EINTR
+	     after uncaught SIGCONT.  See
+	     <news:1r77ojINN85n@ftp.UU.NET> (1993-04-22).  */
+	  if (! SA_RESTART && errno == EINTR)
+	    continue;
+
+	  perror_with_exit (_("read failed"));
+	}
+
+      total += bytes;
+      if (total == current_chunk_size)
+	{
+	  if (PTRDIFF_MAX / 2 <= current_chunk_size)
+	    xalloc_die ();
+	  current_chunk_size *= 2;
+	  diff_result = xrealloc (diff_result, current_chunk_size);
+	}
+    }
 
   if (total != 0 && diff_result[total-1] != '\n')
     fatal ("invalid diff format; incomplete last line");
@@ -1252,10 +1264,19 @@ read_diff (char const *filea,
 
 #endif
 
-  if (! werrno && WIFEXITED (wstatus) && WEXITSTATUS (wstatus) == 127)
-    error (2, 0, _("subsidiary program `%s' not found"), diff_program);
+  if (! werrno && WIFEXITED (wstatus))
+    switch (WEXITSTATUS (wstatus))
+      {
+      case 126:
+	error (EXIT_TROUBLE, 0, _("subsidiary program `%s' not executable"),
+	       diff_program);
+      case 127:
+	error (EXIT_TROUBLE, 0, _("subsidiary program `%s' not found"),
+	       diff_program);
+      }
   if (werrno || ! (WIFEXITED (wstatus) && WEXITSTATUS (wstatus) < 2))
-    error (2, werrno, _("subsidiary program `%s' failed"), diff_program);
+    error (EXIT_TROUBLE, werrno, _("subsidiary program `%s' failed"),
+	   diff_program);
 
   return diff_result + total;
 }
@@ -1715,25 +1736,16 @@ reverse_diff3_blocklist (struct diff3_block *diff)
   return prev;
 }
 
-static size_t
-myread (int fd, char *ptr, size_t size)
-{
-  size_t result = read (fd, ptr, size);
-  if (result == -1)
-    perror_with_exit (_("read failed"));
-  return result;
-}
-
 static void
 fatal (char const *msgid)
 {
-  error (2, 0, "%s", _(msgid));
+  error (EXIT_TROUBLE, 0, "%s", _(msgid));
   abort ();
 }
 
 static void
 perror_with_exit (char const *string)
 {
-  error (2, errno, "%s", string);
+  error (EXIT_TROUBLE, errno, "%s", string);
   abort ();
 }
