@@ -1,6 +1,6 @@
 /* Buffer primitives for comparison operations.
 
-   Copyright (C) 1993, 1995, 1998, 2001 Free Software Foundation, Inc.
+   Copyright (C) 1993, 1995, 1998, 2001, 2002 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -30,7 +30,7 @@
 
 /* Read NBYTES bytes from descriptor FD into BUF.
    Return the number of characters successfully read.
-   On error, return (size_t) -1.
+   On error, return SIZE_MAX.
    The number returned is always NBYTES unless end-of-file or error.  */
 
 size_t
