@@ -22,6 +22,7 @@ the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 #ifndef PR_PROGRAM
 #define PR_PROGRAM "/bin/pr"
 #endif
+static char const pr_program[] = PR_PROGRAM;
 
 /* Queue up one-line messages to be printed at the end,
    when -l is specified.  Each message is recorded with a `struct msg'.  */
@@ -190,8 +191,8 @@ begin_output ()
 	      close (pipes[0]);
 	    }
 
-	  execl (PR_PROGRAM, PR_PROGRAM, "-f", "-h", name, 0);
-	  pfatal_with_name (PR_PROGRAM);
+	  execl (pr_program, pr_program, "-f", "-h", name, 0);
+	  pfatal_with_name (pr_program);
 	}
       else
 	{
@@ -201,12 +202,12 @@ begin_output ()
 	    pfatal_with_name ("fdopen");
 	}
 #else /* ! HAVE_FORK */
-      char *command = xmalloc (4 * strlen (name) + strlen (PR_PROGRAM) + 10);
+      char *command = xmalloc (sizeof (pr_program) - 1 + 7
+			       + system_quote_arg ((char *) 0, name) + 1);
       char *p;
-      char const *a = name;
-      sprintf (command, "%s -f -h ", PR_PROGRAM);
-      p = command + strlen (command);
-      SYSTEM_QUOTE_ARG (p, a);
+      sprintf (command, "%s -f -h ", pr_program);
+      p = command + sizeof (pr_program) - 1 + 7;
+      p += system_quote_arg (p, name);
       *p = 0;
       outfile = popen (command, "w");
       if (!outfile)
@@ -599,10 +600,16 @@ analyze_hunk (hunk, first0, last0, first1, last1, deletes, inserts)
      int *first0, *last0, *first1, *last1;
      int *deletes, *inserts;
 {
+  struct change *next;
   int l0, l1, show_from, show_to;
   int i;
-  int trivial = ignore_blank_lines_flag || ignore_regexp_list;
-  struct change *next;
+  int trivial = ignore_blank_lines_flag || ignore_regexp.fastmap;
+  int trivial_length = ignore_blank_lines_flag - 1;
+    /* If 0, ignore zero-length lines;
+       if -1, do not ignore any lines just because of their length.  */
+
+  char const * const *linbuf0 = files[0].linbuf;  /* Help the compiler.  */
+  char const * const *linbuf1 = files[1].linbuf;
 
   show_from = show_to = 0;
 
@@ -618,36 +625,24 @@ analyze_hunk (hunk, first0, last0, first1, last1, deletes, inserts)
       show_to += next->inserted;
 
       for (i = next->line0; i <= l0 && trivial; i++)
-	if (!ignore_blank_lines_flag || files[0].linbuf[i][0] != '\n')
-	  {
-	    struct regexp_list *r;
-	    char const *line = files[0].linbuf[i];
-	    int len = files[0].linbuf[i + 1] - line;
-
-	    for (r = ignore_regexp_list; r; r = r->next)
-	      if (0 <= re_search (&r->buf, line, len, 0, len, 0))
-		break;	/* Found a match.  Ignore this line.  */
-	    /* If we got all the way through the regexp list without
-	       finding a match, then it's nontrivial.  */
-	    if (!r)
-	      trivial = 0;
-	  }
+	{
+	  char const *line = linbuf0[i];
+	  int len = linbuf0[i + 1] - line - 1;
+	  if (len != trivial_length
+	      && (! ignore_regexp.fastmap
+		  || re_search (&ignore_regexp, line, len, 0, len, 0) < 0))
+	    trivial = 0;
+	}
 
       for (i = next->line1; i <= l1 && trivial; i++)
-	if (!ignore_blank_lines_flag || files[1].linbuf[i][0] != '\n')
-	  {
-	    struct regexp_list *r;
-	    char const *line = files[1].linbuf[i];
-	    int len = files[1].linbuf[i + 1] - line;
-
-	    for (r = ignore_regexp_list; r; r = r->next)
-	      if (0 <= re_search (&r->buf, line, len, 0, len, 0))
-		break;	/* Found a match.  Ignore this line.  */
-	    /* If we got all the way through the regexp list without
-	       finding a match, then it's nontrivial.  */
-	    if (!r)
-	      trivial = 0;
-	  }
+	{
+	  char const *line = linbuf1[i];
+	  int len = linbuf1[i + 1] - line - 1;
+	  if (len != trivial_length
+	      && (! ignore_regexp.fastmap
+		  || re_search (&ignore_regexp, line, len, 0, len, 0) < 0))
+	    trivial = 0;
+	}
     }
   while ((next = next->link) != 0);
 
