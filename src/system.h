@@ -172,7 +172,7 @@ void *alloca (size_t);
 #endif
 
 #ifndef STAT_BLOCKSIZE
-# if HAVE_ST_BLKSIZE
+# if HAVE_STRUCT_STAT_ST_BLKSIZE
 #  define STAT_BLOCKSIZE(s) ((s).st_blksize)
 # else
 #  define STAT_BLOCKSIZE(s) (8 * 1024)
@@ -194,10 +194,6 @@ void *alloca (size_t);
 # if HAVE_NDIR_H
 #  include <ndir.h>
 # endif
-#endif
-
-#if HAVE_VFORK_H
-# include <vfork.h>
 #endif
 
 #if HAVE_STDLIB_H
@@ -303,6 +299,14 @@ void *memchr ();
 #else
 # define bool unsigned char
 #endif
+
+#if HAVE_VFORK_H
+# include <vfork.h>
+#endif
+
+#if ! HAVE_WORKING_VFORK
+# define vfork fork
+#endif
 
 /* Type used for fast comparison of several bytes at a time.  */
 
@@ -330,10 +334,6 @@ verify (lin_is_printable_as_long, sizeof (lin) <= sizeof (long));
 # define file_name_lastdirchar(name) strrchr (name, '/')
 #endif
 
-#ifndef HAVE_FORK
-# define HAVE_FORK 1
-#endif
-
 #ifndef HAVE_SETMODE
 # define HAVE_SETMODE 0
 #endif
@@ -349,12 +349,12 @@ verify (lin_is_printable_as_long, sizeof (lin) <= sizeof (long));
 /* Do struct stat *S, *T describe the same special file?  */
 #ifndef same_special_file
 # if HAVE_ST_RDEV && defined S_ISBLK && defined S_ISCHR
-#   define same_special_file(s, t) \
-      (((S_ISBLK ((s)->st_mode) && S_ISBLK ((t)->st_mode)) \
-	|| (S_ISCHR ((s)->st_mode) && S_ISCHR ((t)->st_mode))) \
-       && (s)->st_rdev == (t)->st_rdev)
+#  define same_special_file(s, t) \
+     (((S_ISBLK ((s)->st_mode) && S_ISBLK ((t)->st_mode)) \
+       || (S_ISCHR ((s)->st_mode) && S_ISCHR ((t)->st_mode))) \
+      && (s)->st_rdev == (t)->st_rdev)
 # else
-#   define same_special_file(s, t) 0
+#  define same_special_file(s, t) 0
 # endif
 #endif
 
@@ -399,4 +399,19 @@ verify (lin_is_printable_as_long, sizeof (lin) <= sizeof (long));
     && (s)->st_size == (t)->st_size \
     && (s)->st_mtime == (t)->st_mtime \
     && (s)->st_ctime == (t)->st_ctime)
+#endif
+
+
+/* Set the binary mode of FD to MODE, returning its previous mode.
+   MODE is 1 for binary and 0 for text.  If setting the mode might
+   cause problems, ignore the request and return the current mode.
+   Always return 1 on POSIX platforms, which do not distinguish
+   between text and binary.  */
+#ifndef set_binary_mode
+# if HAVE_SETMODE
+#  define set_binary_mode(fd, mode) \
+     (! isatty (fd) && setmode (fd, ((mode) ? O_BINARY : 0)))
+# else
+#  define set_binary_mode(fd, mode) 1
+# endif
 #endif
