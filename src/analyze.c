@@ -308,7 +308,7 @@ compareseq (xoff, xlim, yoff, ylim)
    When we discard a line, we also mark it as a deletion or insertion
    so that it will be printed in the output.  */
 
-void
+static void
 discard_confusing_lines (filevec)
      struct file_data filevec[];
 {
