@@ -181,6 +181,18 @@ void *memchr ();
 # endif
 #endif
 
+#if HAVE_LIBINTL_H
+# include <libintl.h>
+#else
+# define gettext(msgid) (msgid)
+#endif
+
+#if HAVE_LOCALE_H
+# include <locale.h>
+#else
+# define setlocale(category, locale)
+#endif
+
 #include <ctype.h>
 /* CTYPE_DOMAIN (C) is nonzero if the unsigned char C can safely be given
    as an argument to <ctype.h> macros like `isspace'.  */
