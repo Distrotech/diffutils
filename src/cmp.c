@@ -1,11 +1,9 @@
-/* cmp -- compare two files.  */
+/* cmp -- compare two files.
 
-#include "system.h"
+   Copyright (C) 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1998, 2001
+   Free Software Foundation, Inc.
 
-static char const copyright_string[] =
-   "Copyright 1990, 91,92,93,94,95,96, 1998 Free Software Foundation, Inc.";
-
-/* This program is free software; you can redistribute it and/or modify
+   This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2, or (at your option)
    any later version.
@@ -19,33 +17,30 @@ static char const copyright_string[] =
    along with this program; see the file COPYING.
    If not, write to the Free Software Foundation,
    59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
+
+#include "system.h"
+
+#include <stdio.h>
+#include <cmpbuf.h>
+#include <error.h>
+#include <freesoft.h>
+#include <getopt.h>
+#include <inttostr.h>
+#include <xalloc.h>
 
 static char const authorship_msgid[] =
-  "Written by Torbjorn Granlund and David MacKenzie.";
-
-#include <stdio.h>
-#include "getopt.h"
-#include "cmpbuf.h"
+  N_("Written by Torbjorn Granlund and David MacKenzie.");
 
-extern char const free_software_msgid[];
+static char const copyright_string[] =
+  "Copyright (C) 2001 Free Software Foundation, Inc.";
+
 extern char const version_string[];
 
-#if __STDC__ && (HAVE_VPRINTF || HAVE_DOPRNT)
-void error (int, int, char const *, ...) __attribute__((format (printf, 3, 4)));
-#else
-void error ();
-#endif
-VOID *xmalloc PARAMS((size_t));
-extern int xmalloc_exit_failure;
-
-static int cmp PARAMS((void));
-static off_t file_position PARAMS((int));
-static size_t block_compare PARAMS((char const *, char const *));
-static size_t block_compare_and_count PARAMS((char const *, char const *, long *));
-static void sprintc PARAMS((char *, int, unsigned));
-static void try_help PARAMS((char const *, char const *)) __attribute__((noreturn));
-static void check_stdout PARAMS((void));
-static void usage PARAMS((void));
+static int cmp (void);
+static off_t file_position (int);
+static size_t block_compare (word const *, word const *);
+static size_t block_compare_and_count (word const *, word const *, off_t *);
+static void sprintc (char *, int, unsigned char);
 
 /* Name under which this program was invoked.  */
 char *program_name;
@@ -57,7 +52,7 @@ static char const *file[2];
 static int file_desc[2];
 
 /* Read buffers for the files.  */
-static char *buffer[2];
+static word *buffer[2];
 
 /* Optimal block size for the files.  */
 static size_t buf_size;
@@ -77,17 +72,13 @@ static enum
     type_first_diff, type_all_diffs, type_status
   } comparison_type;
 
-/* Type used for fast comparison of several bytes at a time.  */
-#ifndef word
-#define word int
-#endif
-
 /* If nonzero, print values of bytes quoted like cat -t does. */
-static int opt_print_chars;
+static bool opt_print_bytes;
 
 static struct option const long_options[] =
 {
-  {"print-chars", 0, 0, 'c'},
+  {"print-bytes", 0, 0, 'b'},
+  {"print-chars", 0, 0, 'c'}, /* obsolescent as of diffutils 2.7.3 */
   {"ignore-initial", 1, 0, 'i'},
   {"verbose", 0, 0, 'l'},
   {"silent", 0, 0, 's'},
@@ -97,10 +88,9 @@ static struct option const long_options[] =
   {0, 0, 0, 0}
 };
 
+static void try_help (char const *, char const *) __attribute__((noreturn));
 static void
-try_help (reason_msgid, operand)
-     char const *reason_msgid;
-     char const *operand;
+try_help (char const *reason_msgid, char const *operand)
 {
   if (reason_msgid)
     error (0, 0, _(reason_msgid), operand);
@@ -109,26 +99,26 @@ try_help (reason_msgid, operand)
 }
 
 static void
-check_stdout ()
+check_stdout (void)
 {
   if (ferror (stdout))
     error (2, 0, _("write failed"));
   else if (fclose (stdout) != 0)
-    error (2, errno, _("write failed"));
+    error (2, errno, _("standard output"));
 }
 
 static char const * const option_help_msgid[] = {
-  "-c  --print-chars  Output differing bytes as characters.",
-  "-i N  --ignore-initial=N  Ignore differences in the first N bytes of input.",
-  "-l  --verbose  Output offsets and codes of all differing bytes.",
-  "-s  --quiet  --silent  Output nothing; yield exit status only.",
-  "-v  --version  Output version info.",
-  "--help  Output this help.",
+  N_("-b  --print-bytes  Output differing bytes as characters."),
+  N_("-i N  --ignore-initial=N  Ignore differences in the first N bytes of input."),
+  N_("-l  --verbose  Output offsets and codes of all differing bytes."),
+  N_("-s  --quiet  --silent  Output nothing; yield exit status only."),
+  N_("-v  --version  Output version info."),
+  N_("--help  Output this help."),
   0
 };
 
 static void
-usage ()
+usage (void)
 {
   char const * const *p;
 
@@ -140,42 +130,38 @@ usage ()
 }
 
 int
-main (argc, argv)
-     int argc;
-     char *argv[];
+main (int argc, char **argv)
 {
-  int c, i, exit_status;
+  int c, f, exit_status;
   struct stat stat_buf[2];
-  size_t alloc_size;
+  size_t words_per_buffer;
 
   initialize_main (&argc, &argv);
-  setlocale (LC_ALL, "");
   program_name = argv[0];
-  xmalloc_exit_failure = 2;
+  setlocale (LC_ALL, "");
+  bindtextdomain (PACKAGE, LOCALEDIR);
+  textdomain (PACKAGE);
+  xalloc_exit_failure = 2;
 
   /* Parse command line options.  */
 
-  while ((c = getopt_long (argc, argv, "ci:lsv", long_options, 0))
+  while ((c = getopt_long (argc, argv, "bci:lsv", long_options, 0))
 	 != -1)
     switch (c)
       {
-      case 'c':
-	opt_print_chars = 1;
+      case 'b':
+      case 'c': /* 'c' is obsolescent as of diffutils 2.7.3 */
+	opt_print_bytes = 1;
 	break;
 
       case 'i':
 	{
-	  char const *p = optarg;
-	  ignore_initial = 0;
-	  while (*p)
-	    {
-	      /* Don't use `atol'; `off_t' may be longer than `long'.  */
-	      unsigned digit = *p++ - '0';
-	      if (9 < digit)
-		try_help ("--ignore-initial value `%s' is not a nonnegative integer",
-			  optarg);
-	      ignore_initial = 10 * ignore_initial + digit;
-	    }
+	  char *numend;
+	  uintmax_t val;
+	  errno = 0;
+	  ignore_initial = val = strtoumax (optarg, &numend, 10);;
+	  if (ignore_initial < 0 || ignore_initial != val || errno || *numend)
+	    try_help ("invalid --ignore-initial value `%s'", optarg);
 	}
 	break;
 
@@ -211,29 +197,29 @@ main (argc, argv)
   if (optind < argc)
     try_help ("extra operand `%s'", argv[optind]);
 
-  for (i = 0; i < 2; i++)
+  for (f = 0; f < 2; f++)
     {
       /* If file[1] is "-", treat it first; this avoids a misdiagnostic if
 	 stdin is closed and opening file[0] yields file descriptor 0.  */
-      int i1 = i ^ (strcmp (file[1], "-") == 0);
+      int f1 = f ^ (strcmp (file[1], "-") == 0);
 
       /* Two files with the same name are identical.
 	 But wait until we open the file once, for proper diagnostics.  */
-      if (i && filename_cmp (file[0], file[1]) == 0)
+      if (f && file_name_cmp (file[0], file[1]) == 0)
 	exit (0);
 
-      file_desc[i1] = (strcmp (file[i1], "-") == 0
+      file_desc[f1] = (strcmp (file[f1], "-") == 0
 		       ? STDIN_FILENO
-		       : open (file[i1], O_RDONLY, 0));
-      if (file_desc[i1] < 0 || fstat (file_desc[i1], &stat_buf[i1]) != 0)
+		       : open (file[f1], O_RDONLY, 0));
+      if (file_desc[f1] < 0 || fstat (file_desc[f1], stat_buf + f1) != 0)
 	{
-	  if (file_desc[i1] < 0 && comparison_type == type_status)
+	  if (file_desc[f1] < 0 && comparison_type == type_status)
 	    exit (2);
 	  else
-	    error (2, errno, "%s", file[i1]);
+	    error (2, errno, "%s", file[f1]);
 	}
 #if HAVE_SETMODE
-      setmode (file_desc[i1], O_BINARY);
+      setmode (file_desc[f1], O_BINARY);
 #endif
     }
 
@@ -241,6 +227,7 @@ main (argc, argv)
      they are identical.  */
 
   if (0 < same_file (&stat_buf[0], &stat_buf[1])
+      && same_file_attributes (&stat_buf[0], &stat_buf[1])
       && file_position (0) == file_position (1))
     exit (0);
 
@@ -267,7 +254,7 @@ main (argc, argv)
       off_t s0 = stat_buf[0].st_size - file_position (0);
       off_t s1 = stat_buf[1].st_size - file_position (1);
 
-      if (max (0, s0) != max (0, s1))
+      if (MAX (0, s0) != MAX (0, s1))
 	exit (1);
     }
 
@@ -278,16 +265,15 @@ main (argc, argv)
 
   /* Allocate word-aligned buffers, with space for sentinels at the end.  */
 
-  alloc_size = buf_size + 2 * sizeof (word) - 1;
-  alloc_size -= alloc_size % sizeof (word);
-  buffer[0] = xmalloc (2 * alloc_size);
-  buffer[1] = buffer[0] + alloc_size;
+  words_per_buffer = (buf_size + 2 * sizeof (word) - 1) / sizeof (word);
+  buffer[0] = xmalloc (2 * sizeof (word) * words_per_buffer);
+  buffer[1] = buffer[0] + words_per_buffer;
 
   exit_status = cmp ();
 
-  for (i = 0; i < 2; i++)
-    if (close (file_desc[i]) != 0)
-      error (2, errno, "%s", file[i]);
+  for (f = 0; f < 2; f++)
+    if (close (file_desc[f]) != 0)
+      error (2, errno, "%s", file[f]);
   if (exit_status != 0  &&  comparison_type != type_status)
     check_stdout ();
   exit (exit_status);
@@ -299,32 +285,34 @@ main (argc, argv)
    Return 0 if identical, 1 if different, >1 if error. */
 
 static int
-cmp ()
+cmp (void)
 {
-  long line_number = 1;		/* Line number (1...) of first difference. */
-  long char_number = ignore_initial + 1;
+  off_t line_number = 1;	/* Line number (1...) of first difference. */
+  off_t char_number = ignore_initial + 1;
 				/* Offset (1...) in files of 1st difference. */
-  size_t read0, read1;		/* Number of chars read from each file. */
+  size_t read0, read1;		/* Number of bytes read from each file. */
   size_t first_diff;		/* Offset (0...) in buffers of 1st diff. */
   size_t smaller;		/* The lesser of `read0' and `read1'. */
-  char *buf0 = buffer[0];
-  char *buf1 = buffer[1];
+  word *buffer0 = buffer[0];
+  word *buffer1 = buffer[1];
+  char *buf0 = (char *) buffer0;
+  char *buf1 = (char *) buffer1;
   int ret = 0;
-  int i;
+  int f;
 
   if (ignore_initial)
-    for (i = 0; i < 2; i++)
-      if (file_position (i) == -1)
+    for (f = 0; f < 2; f++)
+      if (file_position (f) == -1)
 	{
 	  /* lseek failed; read and discard the ignored initial prefix.  */
 	  off_t ig = ignore_initial;
 	  do
 	    {
-	      size_t r = read (file_desc[i], buf0, (size_t) min (ig, buf_size));
+	      ssize_t r = read (file_desc[f], buf0, MIN (ig, buf_size));
 	      if (!r)
 		break;
-	      if (r == -1)
-		error (2, errno, "%s", file[i]);
+	      if (r < 0)
+		error (2, errno, "%s", file[f]);
 	      ig -= r;
 	    }
 	  while (ig);
@@ -333,10 +321,10 @@ cmp ()
   do
     {
       read0 = block_read (file_desc[0], buf0, buf_size);
-      if (read0 == -1)
+      if (read0 == (size_t) -1)
 	error (2, errno, "%s", file[0]);
       read1 = block_read (file_desc[1], buf1, buf_size);
-      if (read1 == -1)
+      if (read1 == (size_t) -1)
 	error (2, errno, "%s", file[1]);
 
       /* Insert sentinels for the block compare.  */
@@ -348,35 +336,40 @@ cmp ()
 	 compare the blocks and count the number of newlines
 	 simultaneously.  */
       first_diff = (comparison_type == type_first_diff
-		    ? block_compare_and_count (buf0, buf1, &line_number)
-		    : block_compare (buf0, buf1));
+		    ? block_compare_and_count (buffer0, buffer1, &line_number)
+		    : block_compare (buffer0, buffer1));
 
       char_number += first_diff;
-      smaller = min (read0, read1);
+      smaller = MIN (read0, read1);
 
       if (first_diff < smaller)
 	{
 	  switch (comparison_type)
 	    {
 	    case type_first_diff:
-	      if (!opt_print_chars)
-		{
-		  /* See Posix.2 section 4.10.6.1 for this format.  */
-		  printf (_("%s %s differ: char %lu, line %lu\n"),
-			  file[0], file[1], char_number, line_number);
+	      {
+		char char_buf[INT_BUFSIZE_BOUND (off_t)];
+		char line_buf[INT_BUFSIZE_BOUND (off_t)];
+		char const *char_num = offtostr (char_number, char_buf);
+		char const *line_num = offtostr (line_number, line_buf);
+		if (!opt_print_bytes)
+		  /* See POSIX 1003.2-1992 section 4.10.6.1 for this
+                     format.  */
+		  printf (_("%s %s differ: char %s, line %s\n"),
+			  file[0], file[1], char_num, line_num);
+		else
+		  {
+		    unsigned char c0 = buf0[first_diff];
+		    unsigned char c1 = buf1[first_diff];
+		    char s0[5];
+		    char s1[5];
+		    sprintc (s0, 0, c0);
+		    sprintc (s1, 0, c1);
+		    printf (_("%s %s differ: byte %s, line %s is %3o %s %3o %s\n"),
+			    file[0], file[1], char_num, line_num,
+			    c0, s0, c1, s1);
 		}
-	      else
-		{
-		  unsigned char c0 = buf0[first_diff];
-		  unsigned char c1 = buf1[first_diff];
-		  char s0[5];
-		  char s1[5];
-		  sprintc (s0, 0, c0);
-		  sprintc (s1, 0, c1);
-		  printf (_("%s %s differ: char %lu, line %lu is %3o %s %3o %s\n"),
-			  file[0], file[1], char_number, line_number,
-			  c0, s0, c1, s1);
-		}
+	      }
 	      /* Fall through.  */
 	    case type_status:
 	      return 1;
@@ -388,18 +381,21 @@ cmp ()
 		  unsigned char c1 = buf1[first_diff];
 		  if (c0 != c1)
 		    {
-		      if (opt_print_chars)
+		      char char_buf[INT_BUFSIZE_BOUND (off_t)];
+		      char const *char_num = offtostr (char_number, char_buf);
+		      if (!opt_print_bytes)
+			/* See POSIX 1003.2-1992 section 4.10.6.1 for
+                           this format.  */
+			printf ("%6s %3o %3o\n", char_num, c0, c1);
+		      else
 			{
 			  char s0[5];
 			  char s1[5];
 			  sprintc (s0, 4, c0);
 			  sprintc (s1, 0, c1);
-			  printf ("%6lu %3o %s %3o %s\n",
-				  char_number, c0, s0, c1, s1);
+			  printf ("%6s %3o %s %3o %s\n",
+				  char_num, c0, s0, c1, s1);
 			}
-		      else
-			/* See Posix.2 section 4.10.6.1 for this format.  */
-			printf ("%6lu %3o %3o\n", char_number, c0, c1);
 		    }
 		  char_number++;
 		  first_diff++;
@@ -413,7 +409,7 @@ cmp ()
       if (read0 != read1)
 	{
 	  if (comparison_type != type_status)
-	    /* See Posix.2 section 4.10.6.2 for this format.  */
+	    /* See POSIX 1003.2-1992 section 4.10.6.2 for this format.  */
 	    fprintf (stderr, _("cmp: EOF on %s\n"), file[read1 < read0]);
 
 	  return 1;
@@ -426,7 +422,6 @@ cmp ()
 /* Compare two blocks of memory P0 and P1 until they differ,
    and count the number of '\n' occurrences in the common
    part of P0 and P1.
-   Assumes that P0 and P1 are aligned at word addresses!
    If the blocks are not guaranteed to be different, put sentinels at the ends
    of the blocks before calling this function.
 
@@ -434,31 +429,26 @@ cmp ()
    Increment *COUNT by the count of '\n' occurrences.  */
 
 static size_t
-block_compare_and_count (p0, p1, count)
-     char const *p0, *p1;
-     long *count;
+block_compare_and_count (word const *p0, word const *p1, off_t *count)
 {
   word l;		/* One word from first buffer. */
   word const *l0, *l1;	/* Pointers into each buffer. */
   char const *c0, *c1;	/* Pointers for finding exact address. */
-  long cnt = 0;		/* Number of '\n' occurrences. */
+  size_t cnt = 0;	/* Number of '\n' occurrences. */
   word nnnn;		/* Newline, sizeof (word) times.  */
   int i;
 
-  l0 = (word const *) p0;
-  l1 = (word const *) p1;
-
   nnnn = 0;
-  for (i = 0; i < sizeof (word); i++)
+  for (i = 0; i < sizeof nnnn; i++)
     nnnn = (nnnn << CHAR_BIT) | '\n';
 
   /* Find the rough position of the first difference by reading words,
      not bytes.  */
 
-  while ((l = *l0++) == *l1++)
+  for (l0 = p0, l1 = p1;  (l = *l0) == *l1;  l0++, l1++)
     {
       l ^= nnnn;
-      for (i = 0; i < sizeof (word); i++)
+      for (i = 0; i < sizeof l; i++)
 	{
 	  cnt += ! (unsigned char) l;
 	  l >>= CHAR_BIT;
@@ -467,64 +457,49 @@ block_compare_and_count (p0, p1, count)
 
   /* Find the exact differing position (endianness independent).  */
 
-  c0 = (char const *) (l0 - 1);
-  c1 = (char const *) (l1 - 1);
-  while (*c0 == *c1)
-    {
-      cnt += *c0 == '\n';
-      c0++;
-      c1++;
-    }
+  for (c0 = (char const *) l0, c1 = (char const *) l1;
+       *c0 == *c1;
+       c0++, c1++)
+    cnt += *c0 == '\n';
 
   *count += cnt;
-  return c0 - p0;
+  return c0 - (char const *) p0;
 }
 
 /* Compare two blocks of memory P0 and P1 until they differ.
-   Assumes that P0 and P1 are aligned at word addresses!
    If the blocks are not guaranteed to be different, put sentinels at the ends
    of the blocks before calling this function.
 
    Return the offset of the first byte that differs.  */
 
 static size_t
-block_compare (p0, p1)
-     char const *p0, *p1;
+block_compare (word const *p0, word const *p1)
 {
   word const *l0, *l1;
   char const *c0, *c1;
 
-  l0 = (word const *) p0;
-  l1 = (word const *) p1;
-
   /* Find the rough position of the first difference by reading words,
      not bytes.  */
 
-  while (*l0++ == *l1++)
-    ;
+  for (l0 = p0, l1 = p1;  *l0 == *l1;  l0++, l1++)
+    continue;
 
   /* Find the exact differing position (endianness independent).  */
 
-  c0 = (char const *) (l0 - 1);
-  c1 = (char const *) (l1 - 1);
-  while (*c0 == *c1)
-    {
-      c0++;
-      c1++;
-    }
+  for (c0 = (char const *) l0, c1 = (char const *) l1;
+       *c0 == *c1;
+       c0++, c1++)
+    continue;
 
-  return c0 - p0;
+  return c0 - (char const *) p0;
 }
 
-/* Put into BUF the character C, making unprintable characters
+/* Put into BUF the unsigned char C, making unprintable chars
    visible by quoting like cat -t does.
    Pad with spaces on the right to WIDTH characters.  */
 
 static void
-sprintc (buf, width, c)
-     char *buf;
-     int width;
-     unsigned c;
+sprintc (char *buf, int width, unsigned char c)
 {
   if (! ISPRINT (c))
     {
@@ -555,20 +530,19 @@ sprintc (buf, width, c)
   *buf = 0;
 }
 
-/* Position file I to `ignore_initial' bytes from its initial position,
+/* Position file F to `ignore_initial' bytes from its initial position,
    and yield its new position.  Don't try more than once.  */
 
 static off_t
-file_position (i)
-     int i;
+file_position (int f)
 {
-  static int positioned[2];
+  static bool positioned[2];
   static off_t position[2];
 
-  if (! positioned[i])
+  if (! positioned[f])
     {
-      positioned[i] = 1;
-      position[i] = lseek (file_desc[i], ignore_initial, SEEK_CUR);
+      positioned[f] = 1;
+      position[f] = lseek (file_desc[f], ignore_initial, SEEK_CUR);
     }
-  return position[i];
+  return position[f];
 }
