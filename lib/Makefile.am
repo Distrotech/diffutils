@@ -1,6 +1,6 @@
 # Automakefile for GNU Diffutils library.
 
-# Copyright (C) 2001, 2002 Free Software Foundation, Inc.
+# Copyright (C) 2001, 2002, 2004 Free Software Foundation, Inc.
 
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -19,25 +19,20 @@
 
 noinst_LIBRARIES = libdiffutils.a
 
-EXTRA_DIST = alloca.c fnmatch.c fnmatch_loop.c \
-  inttostr.c malloc.c memchr.c mkstemp.c \
-  realloc.c regex.c strcasecmp.c strtoimax.c strtol.c tempname.c waitpid.c \
-  xstrtol.c
-SUBDIRS = posix
+noinst_HEADERS = cmpbuf.h inttostr.h prepargs.h quotesys.h
 
-noinst_HEADERS = \
-  c-stack.h cmpbuf.h dirname.h error.h exclude.h exitfail.h \
-  file-type.h fnmatch_.h getopt.h \
-  gettext.h hard-locale.h inttostr.h prepargs.h posixver.h quotesys.h \
-  regex_.h setmode.h unlocked-io.h version-etc.h xalloc.h xstrtol.h
-
-libdiffutils_a_SOURCES = \
-  basename.c c-stack.c cmpbuf.c error.c exclude.c exitfail.c \
-  file-type.c getopt.c getopt1.c \
-  hard-locale.c imaxtostr.c offtostr.c prepargs.c posixver.c quotesys.c \
-  setmode.c strftime.c umaxtostr.c version-etc.c xmalloc.c xstrtoumax.c
+libdiffutils_a_SOURCES = $(lib_SOURCES)
+lib_SOURCES = \
+  cmpbuf.c \
+  imaxtostr.c offtostr.c prepargs.c quotesys.c \
+  umaxtostr.c
 
 libdiffutils_a_LIBADD = @ALLOCA@ @LIBOBJS@
 libdiffutils_a_DEPENDENCIES = $(libdiffutils_a_LIBADD)
 
-DISTCLEANFILES = fnmatch.h regex.h
+BUILT_SOURCES =
+DISTCLEANFILES =
+EXTRA_DIST = inttostr.c waitpid.c
+MOSTLYCLEANFILES =
+
+include gnulib.mk
