@@ -1,0 +1,12 @@
+# Translation catalog for English in the UK.
+# Only differences are given.
+
+# `Thou whoreson zed!  Thou unnecessary letter!'  -- Kent in _King Lear_
+msgid  "%s: unrecognized option `%c%s'\n"
+msgstr "%s: unrecognised option `%c%s'\n"
+
+msgid  "%s: unrecognized option `--%s'\n"
+msgstr "%s: unrecognised option `--%s'\n"
+
+msgid  "subsidiary program failed"
+msgstr "subsidiary programme failed"
