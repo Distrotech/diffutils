@@ -78,9 +78,13 @@ jm_AC_PREREQ_XSTRTOUMAX
 # Check for clock_gettime and its library.  Solaris puts it in -lrt or
 # -lposix4, but we don't want to link that library unless we have to.
 diff_saved_libs=$LIBS
-AC_SEARCH_LIBS(clock_gettime, [rt posix4],
-	       [LIB_CLOCK_GETTIME=$ac_cv_search_clock_gettime],
-	       [LIB_CLOCK_GETTIME=])
+AC_SEARCH_LIBS(clock_gettime, [rt posix4])
+case $ac_cv_search_clock_gettime in
+no | 'none required')
+  LIB_CLOCK_GETTIME=;;
+*)
+  LIB_CLOCK_GETTIME=$ac_cv_search_clock_gettime;;
+esac
 AC_SUBST([LIB_CLOCK_GETTIME])
 AC_CHECK_FUNCS(clock_gettime)
 LIBS=$diff_saved_libs
