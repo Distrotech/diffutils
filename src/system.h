@@ -59,6 +59,12 @@ the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 #define WIFEXITED(stat_val) (((stat_val) & 255) == 0)
 #endif
 
+#if HAVE_ST_BLKSIZE
+#define STAT_BLOCKSIZE(s) (s).st_blksize
+#else
+#define STAT_BLOCKSIZE(s) (S_ISREG ((s).st_mode) ? 8192 : 4096)
+#endif
+
 #if defined (DIRENT) || defined (_POSIX_VERSION)
 #include <dirent.h>
 #ifdef direct

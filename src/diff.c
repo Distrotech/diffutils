@@ -1,5 +1,5 @@
 /* GNU DIFF main routine.
-   Copyright (C) 1988, 1989 Free Software Foundation, Inc.
+   Copyright (C) 1988-1992 Free Software Foundation, Inc.
 
 This file is part of GNU DIFF.
 
@@ -35,6 +35,7 @@ the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 int compare_files ();
 int diff_dirs ();
 int diff_2_files ();
+int wildmat ();
 void add_regexp();
 void specify_style ();
 void usage ();
@@ -96,9 +97,64 @@ ck_atoi (str, out)
   return 0;
 }
 
-/* The numbers 129-133 that appear in the fourth element
-   for the context and unidiff entries are used as a way of
-   telling the big switch in `main' how to process those options.  */
+/* Keep track of excluded file name patterns.  */
+
+static const char **exclude;
+static int exclude_alloc, exclude_count;
+
+int
+excluded_filename (f)
+     const char *f;
+{
+  int i;
+  for (i = 0;  i < exclude_count;  i++)
+    if (wildmat (f, exclude[i]))
+      return 1;
+  return 0;
+}
+
+static void
+add_exclude (pattern)
+     const char *pattern;
+{
+  if (exclude_alloc <= exclude_count)
+    exclude = (const char **)
+	      (exclude_alloc == 0
+	       ? xmalloc ((exclude_alloc = 64) * sizeof (*exclude))
+	       : xrealloc (exclude, (exclude_alloc *= 2) * sizeof (*exclude)));
+
+  exclude[exclude_count++] = pattern;
+}
+
+static int
+add_exclude_file (name)
+     const char *name;
+{
+  struct file_data f;
+  char *p, *q, *lim;
+
+  f.name = optarg;
+  f.desc = strcmp (optarg, "-") == 0 ? 0 : open (optarg, O_RDONLY, 0);
+  if (f.desc < 0 || fstat (f.desc, &f.stat) != 0)
+    return -1;
+
+  (void) sip (&f);
+  slurp (&f);
+
+  for (p = f.buffer, lim = p + f.buffered_chars;  p < lim;  p = q)
+    {
+      q = memchr (p, '\n', lim - p);
+      if (!q)
+	q = lim;
+      *q++ = 0;
+      add_exclude (p);
+    }
+
+  return close (f.desc);
+}
+
+/* The numbers 129- that appear in the fourth element of some entries
+   tell the big switch in `main' how to process those options.  */
 
 static struct option longopts[] =
 {
@@ -134,6 +190,8 @@ static struct option longopts[] =
   {"expand-tabs", 0, 0, 't'},
   {"version", 0, 0, 'v'},
   {"ignore-all-space", 0, 0, 'w'},
+  {"exclude", 1, 0, 'x'},
+  {"exclude-from", 1, 0, 'X'},
   {"side-by-side", 0, 0, 'y'},
   {"unified", 2, 0, 130},
   {"left-column", 0, 0, 131},
@@ -185,7 +243,7 @@ main (argc, argv)
   /* Decode the options.  */
 
   while ((c = getopt_long (argc, argv,
-			   "0123456789abBcC:dD:efF:hHiI:lL:nNpPqrsS:tTuvwW:y",
+			   "0123456789abBcC:dD:efF:hHiI:lL:nNpPqrsS:tTuvwW:x:X:y",
 			   longopts, (int *)0)) != EOF)
     {
       switch (c)
@@ -389,6 +447,15 @@ main (argc, argv)
 	  length_varies = 1;
 	  break;
 
+	case 'x':
+	  add_exclude (optarg);
+	  break;
+
+	case 'X':
+	  if (add_exclude_file (optarg) != 0)
+	    pfatal_with_name (optarg);
+	  break;
+
 	case 'y':
 	  /* Use side-by-side (sdiff-style) columnar output. */
 	  specify_style (OUTPUT_SDIFF);
@@ -532,12 +599,11 @@ compare_files (dir0, name0, dir1, name1, depth)
      char *name0, *name1;
      int depth;
 {
-  static char Standard_Input[] = "Standard Input";
   struct file_data inf[2];
   register int i;
   int val;
+  int same_files;
   int errorcount = 0;
-  int stat_result[2];
 
   /* If this is directory comparison, perhaps we have a file
      that exists only in one of the directories.
@@ -570,47 +636,34 @@ compare_files (dir0, name0, dir1, name1, depth)
   inf[0].name = dir0 == 0 ? name0 : concat (dir0, "/", name0);
   inf[1].name = dir1 == 0 ? name1 : concat (dir1, "/", name1);
 
-  /* Stat the files.  Record whether they are directories.
-     Record in stat_result whether stat fails.  */
+  /* Stat the files.  Record whether they are directories.  */
 
   for (i = 0; i <= 1; i++)
     {
       bzero (&inf[i].stat, sizeof (struct stat));
       inf[i].dir_p = 0;
-      stat_result[i] = 0;
 
       if (inf[i].desc != -1)
 	{
-	  char *filename = inf[i].name;
+	  int stat_result;
 
-	  stat_result[i] = 
-	    strcmp (filename, "-")
-	      ? stat (filename, &inf[i].stat)
-	      : fstat (0, &inf[i].stat);
-		  
-	  if (stat_result[i] < 0)
+	  if (strcmp (inf[i].name, "-") == 0)
 	    {
-	      perror_with_name (filename);
+	      inf[i].desc = 0;
+	      inf[i].name = "Standard Input";
+	      stat_result = fstat (0, &inf[i].stat);
+	    }
+	  else
+	    stat_result = stat (inf[i].name, &inf[i].stat);
+
+	  if (stat_result != 0)
+	    {
+	      perror_with_name (inf[i].name);
 	      errorcount = 1;
 	    }
 	  else
-	    inf[i].dir_p =
-	      S_ISDIR (inf[i].stat.st_mode)
-	      && strcmp (filename, "-");
+	    inf[i].dir_p = S_ISDIR (inf[i].stat.st_mode) && inf[i].desc != 0;
 	}
-    }
-
-  /* See if the two named files are actually the same physical file.
-     If so, we know they are identical without actually reading them.  */
-
-  if (no_diff_means_no_output
-      && inf[0].stat.st_ino == inf[1].stat.st_ino
-      && inf[0].stat.st_dev == inf[1].stat.st_dev
-      && stat_result[0] == 0
-      && stat_result[1] == 0)
-    {
-      val = 0;
-      goto done;
     }
 
   if (name0 == 0)
@@ -618,40 +671,49 @@ compare_files (dir0, name0, dir1, name1, depth)
   if (name1 == 0)
     inf[1].dir_p = inf[0].dir_p;
 
-  /* Open the files and record their descriptors.  */
-
-  for (i = 0; i <= 1; i++)
+  if (errorcount == 0 && depth == 0 && inf[0].dir_p != inf[1].dir_p)
     {
-      if (inf[i].desc == -1)
-	;
-      else if (!strcmp (inf[i].name, "-"))
-	{
-	  inf[i].desc = 0;
-	  inf[i].name = Standard_Input;
-	}
-      /* Don't bother opening if stat already failed.  */
-      else if (stat_result[i] == 0 && ! inf[i].dir_p)
-	{
-	  char *filename = inf[i].name;
+      /* If one is a directory, and it was specified in the command line,
+	 use the file in that dir with the other file's basename.  */
 
-	  inf[i].desc = open (filename, O_RDONLY, 0);
-	  if (0 > inf[i].desc)
-	    {
-	      perror_with_name (filename);
-	      errorcount = 1;
-	    }
+      int fnm_arg = inf[0].dir_p;
+      int dir_arg = 1 - fnm_arg;
+      char *p = rindex (inf[fnm_arg].name, '/');
+      char *filename = inf[dir_arg].name
+	= concat (inf[dir_arg].name,  "/", (p ? p+1 : inf[fnm_arg].name));
+
+      if (inf[fnm_arg].desc == 0)
+	fatal ("can't compare - to a directory");
+
+      if (stat (filename, &inf[dir_arg].stat) != 0)
+	{
+	  perror_with_name (filename);
+	  errorcount = 1;
 	}
+      else
+	inf[dir_arg].dir_p = S_ISDIR (inf[dir_arg].stat.st_mode);
     }
 
   if (errorcount)
     {
 
-      /* If either file should exist but fails to be opened, return 2.  */
+      /* If either file should exist but does not, return 2.  */
 
       val = 2;
 
     }
-  else if (inf[0].dir_p && inf[1].dir_p)
+  else if ((same_files =    inf[0].stat.st_ino == inf[1].stat.st_ino
+			 && inf[0].stat.st_dev == inf[1].stat.st_dev
+			 && inf[0].desc != -1
+			 && inf[1].desc != -1)
+	   && no_diff_means_no_output)
+    {
+      /* The two named files are actually the same physical file.
+	 We know they are identical without actually reading them.  */
+
+      val = 0;
+    }
+  else if (inf[0].dir_p & inf[1].dir_p)
     {
       if (output_style == OUTPUT_IFDEF)
 	fatal ("-D option not supported with directories");
@@ -673,58 +735,16 @@ compare_files (dir0, name0, dir1, name1, depth)
 	}
 
     }
-  else if (depth == 0 && (inf[0].dir_p || inf[1].dir_p))
-    {
-
-      /* If only one is a directory, and it was specified in the command line,
-	 use the file in that dir whose basename matches the other file.  */
-
-      int dir_arg = (inf[0].dir_p ? 0 : 1);
-      int fnm_arg = (inf[0].dir_p ? 1 : 0);
-      char *p = rindex (inf[fnm_arg].name, '/');
-      char *filename = concat (inf[dir_arg].name,  "/",
-			       (p ? p+1 : inf[fnm_arg].name));
-
-      if (inf[fnm_arg].name == Standard_Input)
-	fatal ("can't compare - to a directory");
-
-      inf[dir_arg].desc = open (filename, O_RDONLY, 0);
-
-      if (0 > inf[dir_arg].desc)
-	{
-	  perror_with_name (filename);
-	  val = 2;
-	}
-      else
-	{
-	  /* JF: patch from the net to check and make sure we can really free
-	     this.  If it's from argv[], freeing it is a *really* bad idea */
-	  if (0 != (dir_arg ? dir1 : dir0))
-	    free (inf[dir_arg].name);
-	  inf[dir_arg].name = filename;
-	  if (fstat (inf[dir_arg].desc, &inf[dir_arg].stat) < 0)
-	    pfatal_with_name (inf[dir_arg].name);
-
-	  inf[dir_arg].dir_p = S_ISDIR (inf[dir_arg].stat.st_mode);
-	  if (inf[dir_arg].dir_p)
-	    {
-	      error ("%s is a directory but %s is not",
-		     inf[dir_arg].name, inf[fnm_arg].name);
-	      val = 1;
-	    }
-	  else
-	    val = diff_2_files (inf, depth);
-	}
-
-    }
-  else if (depth > 0 && (inf[0].dir_p || inf[1].dir_p))
+  else if (inf[0].dir_p | inf[1].dir_p)
     {
       /* Perhaps we have a subdirectory that exists only in one directory.
 	 If so, just print a message to that effect.  */
 
       if (inf[0].desc == -1 || inf[1].desc == -1)
 	{
-	  if (entire_new_file_flag && recursive)
+	  if (recursive
+	      && (entire_new_file_flag
+		  || (unidirectional_new_file_flag && inf[0].desc == -1)))
 	    val = diff_dirs (inf[0].name, inf[1].name, compare_files, depth,
 			     inf[0].desc == -1, inf[1].desc == -1);
 	  else
@@ -739,40 +759,64 @@ compare_files (dir0, name0, dir1, name1, depth)
 	  /* We have a subdirectory in one directory
 	     and a file in the other.  */
 
-	  if (inf[0].dir_p)
-	    message ("%s is a directory but %s is not\n",
-		     inf[0].name, inf[1].name);
-	  else
-	    message ("%s is a directory but %s is not\n",
-		     inf[1].name, inf[0].name);
+	  message ("%s is a directory but %s is not\n",
+		   inf[1 - inf[0].dir_p].name, inf[inf[0].dir_p].name);
+
 	  /* This is a difference.  */
 	  val = 1;
 	}
     }
+  else if (no_details_flag
+	   && inf[0].stat.st_size != inf[1].stat.st_size
+	   && (inf[0].desc == -1 || S_ISREG (inf[0].stat.st_mode))
+	   && (inf[1].desc == -1 || S_ISREG (inf[1].stat.st_mode)))
+    {
+      message ("Files %s and %s differ\n", inf[0].name, inf[1].name);
+      val = 1;
+    }
   else
     {
+      /* Both exist and neither is a directory.  */
 
-      /* Both exist and both are ordinary files.  */
+      /* Open the files and record their descriptors.  */
 
-      val = diff_2_files (inf, depth);
+      if (inf[0].desc == -2)
+	if ((inf[0].desc = open (inf[0].name, O_RDONLY, 0)) < 0)
+	  {
+	    perror_with_name (inf[0].name);
+	    errorcount = 1;
+	  }
+      if (inf[1].desc == -2)
+	if (same_files)
+	  inf[1].desc = inf[0].desc;
+	else if ((inf[1].desc = open (inf[1].name, O_RDONLY, 0)) < 0)
+	  {
+	    perror_with_name (inf[1].name);
+	    errorcount = 1;
+	  }
+    
+      /* Compare the files, if no error was found.  */
 
-    }
+      val = errorcount ? 2 : diff_2_files (inf, depth);
 
-  if (inf[0].desc >= 0 && close (inf[0].desc) < 0)
-    {
-      perror_with_name (inf[0].name);
-      val = 2;
-    }
-  if (inf[1].desc >= 0 && inf[0].desc != inf[1].desc && close (inf[1].desc) < 0)
-    {
-      perror_with_name (inf[1].name);
-      val = 2;
+      /* Close the file descriptors.  */
+
+      if (inf[0].desc >= 0 && close (inf[0].desc) != 0)
+	{
+	  perror_with_name (inf[0].name);
+	  val = 2;
+	}
+      if (inf[1].desc >= 0 && inf[0].desc != inf[1].desc
+	  && close (inf[1].desc) != 0)
+	{
+	  perror_with_name (inf[1].name);
+	  val = 2;
+	}
     }
 
   /* Now the comparison has been done, if no error prevented it,
      and VAL is the value this function will return.  */
 
- done:
   if (val == 0 && !inf[0].dir_p)
     {
       if (print_file_same_flag)

@@ -1,5 +1,5 @@
 /* Read, sort and compare two directories.  Used for GNU DIFF.
-   Copyright (C) 1988, 1989 Free Software Foundation, Inc.
+   Copyright (C) 1988-1992 Free Software Foundation, Inc.
 
 This file is part of GNU DIFF.
 
@@ -74,13 +74,16 @@ dir_sort (dirname, nonex)
   /* Read the directory entries, and insert the subfiles
      into the `files' table.  */
 
-  while (next = readdir (reading))
+  while ((next = readdir (reading)) != 0)
     {
       /* Ignore the files `.' and `..' */
       if (next->d_name[0] == '.'
 	  && (next->d_name[1] == 0
 	      || (next->d_name[1] == '.'
 		  && next->d_name[2] == 0)))
+	continue;
+
+      if (excluded_filename (next->d_name))
 	continue;
 
       if (files_index == nfiles)

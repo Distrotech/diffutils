@@ -1,5 +1,5 @@
 /* Context-format output routines for GNU DIFF.
-   Copyright (C) 1988, 1989 Free Software Foundation, Inc.
+   Copyright (C) 1988, 89, 91, 92 Free Software Foundation, Inc.
 
 This file is part of GNU DIFF.
 
@@ -129,7 +129,7 @@ pr_context_hunk (hunk)
   int first0, last0, first1, last1, show_from, show_to, i;
   struct change *next;
   char *prefix;
-  char *function;
+  const char *function;
   int function_length;
   FILE *out;
 
@@ -142,10 +142,11 @@ pr_context_hunk (hunk)
 
   /* Include a context's width before and after.  */
 
-  first0 = max (first0 - context, 0);
-  first1 = max (first1 - context, 0);
-  last0 = min (last0 + context, files[0].buffered_lines - 1);
-  last1 = min (last1 + context, files[1].buffered_lines - 1);
+  i = - files[0].prefix_lines;
+  first0 = max (first0 - context, i);
+  first1 = max (first1 - context, i);
+  last0 = min (last0 + context, files[0].valid_lines - 1);
+  last1 = min (last1 + context, files[1].valid_lines - 1);
 
   /* If desired, find the preceding function definition line in file 0.  */
   function = 0;
@@ -274,10 +275,11 @@ pr_unidiff_hunk (hunk)
 
   /* Include a context's width before and after.  */
 
-  first0 = max (first0 - context, 0);
-  first1 = max (first1 - context, 0);
-  last0 = min (last0 + context, files[0].buffered_lines - 1);
-  last1 = min (last1 + context, files[1].buffered_lines - 1);
+  i = - files[0].prefix_lines;
+  first0 = max (first0 - context, i);
+  first1 = max (first1 - context, i);
+  last0 = min (last0 + context, files[0].valid_lines - 1);
+  last1 = min (last1 + context, files[1].valid_lines - 1);
 
   /* If desired, find the preceding function definition line in file 0.  */
   function = 0;
@@ -424,7 +426,7 @@ static void
 find_function (file, linenum, linep, lenp)
      struct file_data *file;
      int linenum;
-     char **linep;
+     const char **linep;
      int *lenp;
 {
   int i = linenum;
@@ -435,16 +437,14 @@ find_function (file, linenum, linep, lenp)
     {
       /* See if this line is what we want.  */
       struct regexp_list *r;
+      const char *line = file->linbuf[i];
+      int len = file->linbuf[i + 1] - line;
 
       for (r = function_regexp_list; r; r = r->next)
-	if (0 <= re_search (&r->buf,
-			    file->linbuf[i].text,
-			    file->linbuf[i].length,
-			    0, file->linbuf[i].length,
-			    0))
+	if (0 <= re_search (&r->buf, line, len, 0, len, 0))
 	  {
-	    *linep = file->linbuf[i].text;
-	    *lenp = file->linbuf[i].length;
+	    *linep = line;
+	    *lenp = len;
 	    find_function_last_match = i;
 	    return;
 	  }
@@ -454,8 +454,8 @@ find_function (file, linenum, linep, lenp)
   if (find_function_last_match >= 0)
     {
       i = find_function_last_match;
-      *linep = file->linbuf[i].text;
-      *lenp = file->linbuf[i].length;
+      *linep = file->linbuf[i];
+      *lenp = file->linbuf[i + 1] - *linep;
       return;
     }
   return;

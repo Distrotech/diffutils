@@ -1,5 +1,5 @@
 /* #ifdef-format output routines for GNU DIFF.
-   Copyright (C) 1989 Free Software Foundation, Inc.
+   Copyright (C) 1989, 91, 92 Free Software Foundation, Inc.
 
 This file is part of GNU DIFF.
 
@@ -32,16 +32,16 @@ void
 print_ifdef_script (script)
      struct change *script;
 {
-  next_line = 0;
+  next_line = - files[0].prefix_lines;
   print_script (script, find_change, print_ifdef_hunk);
-  if (next_line < files[0].buffered_lines)
+  if (next_line < files[0].valid_lines)
     {
       begin_output ();
       do
 	{
 	  print_1_line ("", &files[0].linbuf[next_line++]);
 	}
-      while (next_line < files[0].buffered_lines);
+      while (next_line < files[0].valid_lines);
     }
 }
 

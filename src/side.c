@@ -1,5 +1,5 @@
 /* sdiff-format output routines for GNU DIFF.
-   Copyright (C) 1991 Free Software Foundation, Inc.
+   Copyright (C) 1991, 92 Free Software Foundation, Inc.
 
 This file is part of GNU DIFF.
 
@@ -37,10 +37,10 @@ print_sdiff_script (script)
 {
   begin_output ();
 
-  next0 = next1 = 0;
+  next0 = next1 = - files[0].prefix_lines;
   print_script (script, find_change, print_sdiff_hunk);
 
-  print_sdiff_common_lines (files[0].buffered_lines, files[1].buffered_lines);
+  print_sdiff_common_lines (files[0].valid_lines, files[1].valid_lines);
   if (sdiff_help_sdiff)
     fputs ("q\n", outfile);
 }
@@ -72,14 +72,14 @@ tab_from_to (from, to)
  */
 static unsigned
 print_half_line (line, indent, out_bound)
-     struct line_def *line;
+     const char * const *line;
      unsigned indent, out_bound;
 {
   FILE *out = outfile;
   register unsigned in_position = 0, out_position = 0;
-  register char const
-	*text_pointer = line->text,
-	*text_limit = text_pointer + line->length;
+  register const char
+	*text_pointer = line[0],
+	*text_limit = line[1];
 
   while (text_pointer < text_limit)
     {
@@ -162,9 +162,9 @@ print_half_line (line, indent, out_bound)
 
 static void
 print_1sdiff_line (left, sep, right)
-     struct line_def *left;
+     const char * const *left;
      int sep;
-     struct line_def *right;
+     const char * const *right;
 {
   FILE *out = outfile;
   unsigned hw = sdiff_half_width, c2o = sdiff_column2_offset;
@@ -176,7 +176,7 @@ print_1sdiff_line (left, sep, right)
       putc (sep, out);
     }
 
-  if (right && right->text[0] != '\n')
+  if (right && **right != '\n')
     {
       col = tab_from_to (col, c2o);
       print_half_line (right, col, hw);
