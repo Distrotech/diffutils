@@ -164,16 +164,12 @@ the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 
 #if HAVE_STDLIB_H
 #include <stdlib.h>
+#else
+VOID *malloc ();
+VOID *realloc ();
 #endif
-/* These declarations turn off annoying warnings in old-fashioned hosts.  */
 #ifndef getenv
 char *getenv ();
-#endif
-#ifndef malloc
-VOID *malloc ();
-#endif
-#ifndef realloc
-VOID *realloc ();
 #endif
 
 #if HAVE_LIMITS_H
@@ -206,7 +202,7 @@ VOID *realloc ();
 #define memcmp(s1,s2,n) bcmp (s1,s2,n)
 #endif
 #endif /* !HAVE_STRING_H */
-#ifndef memchr
+#if !HAVE_MEMCHR
 char *memchr ();
 #endif
 
