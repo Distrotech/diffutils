@@ -1,3 +1,5 @@
+Version 2.8.7 contains no user-visible changes.
+
 User-visible changes in version 2.8.6:
 
 * New diff3 option --strip-trailing-cr.
