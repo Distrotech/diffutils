@@ -18,6 +18,7 @@ s|@prefix@|c:/$(env)/docs|g
 s|@srcdir@|.|g
 s|@[0-9A-Z_a-z]*@||g
 
+s|quote.o *||g
 s|regex.o|$(REGEX)|g
 s|\$(REGEX):|regex.o:|g
 
