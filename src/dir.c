@@ -1,7 +1,7 @@
 /* Read, sort and compare two directories.  Used for GNU DIFF.
 
-   Copyright (C) 1988, 1989, 1992, 1993, 1994, 1995, 1998, 2001 Free
-   Software Foundation, Inc.
+   Copyright (C) 1988, 1989, 1992, 1993, 1994, 1995, 1998, 2001, 2002
+   Free Software Foundation, Inc.
 
    This file is part of GNU DIFF.
 
@@ -23,6 +23,7 @@
 #include "diff.h"
 #include <error.h>
 #include <exclude.h>
+#include <setjmp.h>
 #include <xalloc.h>
 
 /* Read the directory named by DIR and store into DIRDATA a sorted vector
@@ -32,15 +33,25 @@
 
 struct dirdata
 {
-  char const **names;	/* Sorted names of files in dir, 0-terminated.  */
+  size_t nnames;	/* Number of names.  */
+  char const **names;	/* Sorted names of files in dir, followed by 0.  */
   char *data;	/* Allocated storage for file names.  */
 };
+
+/* Whether file names in directories should be compared with strcoll.  */
+static bool locale_specific_sorting;
+
+/* Where to go if strcoll fails.  */
+static jmp_buf failed_strcoll;
 
 static bool dir_loop (struct comparison const *, int);
 static int compare_names_for_qsort (void const *, void const *);
 
+
+/* Read a directory and get its vector of names.  */
+
 static bool
-dir_sort (struct file_data const *dir, struct dirdata *dirdata)
+dir_read (struct file_data const *dir, struct dirdata *dirdata)
 {
   register struct dirent *next;
   register size_t i;
@@ -112,16 +123,13 @@ dir_sort (struct file_data const *dir, struct dirdata *dirdata)
 
   /* Create the `names' table from the `data' table.  */
   dirdata->names = names = xmalloc ((nnames + 1) * sizeof *names);
+  dirdata->nnames = nnames;
   for (i = 0;  i < nnames;  i++)
     {
       names[i] = data;
       data += strlen (data) + 1;
     }
   names[nnames] = 0;
-
-  /* Sort the table.  */
-  qsort (names, nnames, sizeof (char *), compare_names_for_qsort);
-
   return 1;
 }
 
@@ -130,29 +138,29 @@ dir_sort (struct file_data const *dir, struct dirdata *dirdata)
 static int
 compare_names (char const *name1, char const *name2)
 {
-  int r = 0;
-  int e = 0;
-
   if (ignore_file_name_case)
     {
-      errno = 0;
-      r = strcasecmp (name1, name2);
-      e = errno;
+      int r = strcasecmp (name1, name2);
+      if (r)
+	return r;
     }
 
-  if (! r)
+  if (locale_specific_sorting)
     {
+      int r;
       errno = 0;
       r = strcoll (name1, name2);
       if (errno)
-	e = errno;
+	{
+	  error (0, errno, _("cannot compare file names `%s' and `%s'"),
+		 name1, name2);
+	  longjmp (failed_strcoll, 1);
+	}
+      if (r)
+	return r;
     }
 
-  if (e)
-    error (0, e, _("Warning: cannot compare file name `%s' to `%s'"),
-	   name1, name2);
-
-  return r ? r : file_name_cmp (name1, name2);
+  return file_name_cmp (name1, name2);
 }
 
 /* A wrapper for compare_names suitable as an argument for qsort.  */
@@ -188,7 +196,7 @@ diff_dirs (struct comparison const *cmp,
 			       char const *, char const *))
 {
   struct dirdata dirdata[2];
-  int val = 0;			/* Return value.  */
+  int volatile val = 0;
   int i;
 
   if ((cmp->file[0].desc == -1 || dir_loop (cmp, 0))
@@ -199,9 +207,9 @@ diff_dirs (struct comparison const *cmp,
       return 2;
     }
 
-  /* Get sorted contents of both dirs.  */
+  /* Get contents of both dirs.  */
   for (i = 0; i < 2; i++)
-    if (! dir_sort (&cmp->file[i], &dirdata[i]))
+    if (! dir_read (&cmp->file[i], &dirdata[i]))
       {
 	perror_with_name (cmp->file[i].name);
 	val = 2;
@@ -209,32 +217,43 @@ diff_dirs (struct comparison const *cmp,
 
   if (val == 0)
     {
-      register char const * const *names0 = dirdata[0].names;
-      register char const * const *names1 = dirdata[1].names;
+      char const **volatile names[2];
+      names[0] = dirdata[0].names;
+      names[1] = dirdata[1].names;
+
+      /* Use locale-specific sorting if possible, else native byte order.  */
+      locale_specific_sorting = 1;
+      if (setjmp (failed_strcoll))
+	locale_specific_sorting = 0;
+
+      /* Sort the directories.  */
+      for (i = 0; i < 2; i++)
+	qsort (names[i], dirdata[i].nnames, sizeof *dirdata[i].names,
+	       compare_names_for_qsort);
 
       /* If `-S name' was given, and this is the topmost level of comparison,
 	 ignore all file names less than the specified starting name.  */
 
       if (starting_file && ! cmp->parent)
 	{
-	  while (*names0 && compare_names (*names0, starting_file) < 0)
-	    names0++;
-	  while (*names1 && compare_names (*names1, starting_file) < 0)
-	    names1++;
+	  while (*names[0] && compare_names (*names[0], starting_file) < 0)
+	    names[0]++;
+	  while (*names[1] && compare_names (*names[1], starting_file) < 0)
+	    names[1]++;
 	}
 
       /* Loop while files remain in one or both dirs.  */
-      while (*names0 || *names1)
+      while (*names[0] || *names[1])
 	{
 	  /* Compare next name in dir 0 with next name in dir 1.
 	     At the end of a dir,
 	     pretend the "next name" in that dir is very large.  */
-	  int nameorder = (!*names0 ? 1 : !*names1 ? -1
-			   : compare_names (*names0, *names1));
+	  int nameorder = (!*names[0] ? 1 : !*names[1] ? -1
+			   : compare_names (*names[0], *names[1]));
 	  int v1 = (*handle_file) (cmp,
-				   0 < nameorder ? 0 : *names0++,
-				   nameorder < 0 ? 0 : *names1++);
-	  if (v1 > val)
+				   0 < nameorder ? 0 : *names[0]++,
+				   nameorder < 0 ? 0 : *names[1]++);
+	  if (val < v1)
 	    val = v1;
 	}
     }
