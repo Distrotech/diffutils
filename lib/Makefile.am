@@ -27,15 +27,15 @@ SUBDIRS = posix
 
 noinst_HEADERS = \
   c-stack.h cmpbuf.h dirname.h error.h exclude.h exitfail.h \
-  file-type.h fnmatch_.h freesoft.h getopt.h \
+  file-type.h fnmatch_.h getopt.h \
   gettext.h hard-locale.h inttostr.h prepargs.h posixver.h quotesys.h \
-  regex_.h setmode.h unlocked-io.h xalloc.h xstrtol.h
+  regex_.h setmode.h unlocked-io.h version-etc.h xalloc.h xstrtol.h
 
 libdiffutils_a_SOURCES = \
   basename.c c-stack.c cmpbuf.c error.c exclude.c exitfail.c \
-  file-type.c freesoft.c getopt.c getopt1.c \
+  file-type.c getopt.c getopt1.c \
   hard-locale.c imaxtostr.c offtostr.c prepargs.c posixver.c quotesys.c \
-  setmode.c strftime.c umaxtostr.c xmalloc.c xstrtoumax.c
+  setmode.c strftime.c umaxtostr.c version-etc.c xmalloc.c xstrtoumax.c
 
 libdiffutils_a_LIBADD = @ALLOCA@ @LIBOBJS@
 libdiffutils_a_DEPENDENCIES = $(libdiffutils_a_LIBADD)
