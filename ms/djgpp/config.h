@@ -1,6 +1,6 @@
 /* DJGPP configuration */
 
-#include <pc/config.h>
+#include <pc\config.h>
 
 #define HAVE_ST_BLKSIZE 1
 
