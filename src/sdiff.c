@@ -21,11 +21,13 @@
    59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
 
 #include "system.h"
+#include "paths.h"
 
 #include <c-stack.h>
 #include <dirname.h>
 #include <error.h>
 #include <exitfail.h>
+#include <file-type.h>
 #include <freesoft.h>
 #include <getopt.h>
 #include <quotesys.h>
@@ -34,8 +36,8 @@
 
 static char const authorship_msgid[] = N_("Written by Thomas Lord.");
 
-static char const copyright_string[] =
-  "Copyright (C) 2002 Free Software Foundation, Inc.";
+static char const copyright_notice[] =
+  "Copyright %s 2002 Free Software Foundation, Inc.";
 
 extern char const version_string[];
 
@@ -56,7 +58,7 @@ static pid_t volatile diffpid;
 
 struct line_filter;
 
-static RETSIGTYPE catchsig (int);
+static void catchsig (int);
 static bool edit (struct line_filter *, char const *, lin, lin, struct line_filter *, char const *, lin, lin, FILE *);
 static bool interact (struct line_filter *, struct line_filter *, char const *, struct line_filter *, char const *, FILE *);
 static void checksigs (void);
@@ -93,9 +95,9 @@ static int const sigs[] = {
   /* Prefer `sigaction' if available, since `signal' can lose signals.  */
   static struct sigaction initial_action[NUM_SIGS];
 # define initial_handler(i) (initial_action[i].sa_handler)
-  static void signal_handler (int, RETSIGTYPE (*) (int));
+  static void signal_handler (int, void (*) (int));
 #else
-  static RETSIGTYPE (*initial_action[NUM_SIGS]) ();
+  static void (*initial_action[NUM_SIGS]) ();
 # define initial_handler(i) (initial_action[i])
 # define signal_handler(sig, handler) signal (sig, handler)
 #endif
@@ -133,7 +135,8 @@ enum
 {
   DIFF_PROGRAM_OPTION = CHAR_MAX + 1,
   HELP_OPTION,
-  STRIP_TRAILING_CR_OPTION
+  STRIP_TRAILING_CR_OPTION,
+  TABSIZE_OPTION
 };
 
 static struct option const longopts[] =
@@ -153,6 +156,7 @@ static struct option const longopts[] =
   {"speed-large-files", 0, 0, 'H'},
   {"strip-trailing-cr", 0, 0, STRIP_TRAILING_CR_OPTION},
   {"suppress-common-lines", 0, 0, 's'},
+  {"tabsize", 1, 0, TABSIZE_OPTION},
   {"text", 0, 0, 'a'},
   {"version", 0, 0, 'v'},
   {"width", 1, 0, 'w'},
@@ -191,11 +195,12 @@ static char const * const option_help_msgid[] = {
   N_("--strip-trailing-cr  Strip trailing carriage return on input."),
   N_("-a  --text  Treat all files as text."),
   "",
-  N_("-w NUM  --width=NUM  Output at most NUM (default 130) columns per line."),
+  N_("-w NUM  --width=NUM  Output at most NUM (default 130) print columns."),
   N_("-l  --left-column  Output only the left column of common lines."),
   N_("-s  --suppress-common-lines  Do not output common lines."),
   "",
   N_("-t  --expand-tabs  Expand tabs to spaces in output."),
+  N_("--tabsize=NUM  Tab stops are every NUM (default 8) print columns."),
   "",
   N_("-d  --minimal  Try hard to find a smaller set of changes."),
   N_("-H  --speed-large-files  Assume large files and many scattered small changes."),
@@ -223,8 +228,10 @@ usage (void)
 	  _("Report bugs to <bug-gnu-utils@gnu.org>."));
 }
 
+/* Clean up after a signal or other failure.  This function is
+   async-signal-safe.  */
 static void
-cleanup (void)
+cleanup (int signo __attribute__((unused)))
 {
 #if HAVE_WORKING_FORK || HAVE_WORKING_VFORK
   if (0 < diffpid)
@@ -238,7 +245,7 @@ static void exiterr (void) __attribute__((noreturn));
 static void
 exiterr (void)
 {
-  cleanup ();
+  cleanup (0);
   untrapsig (0);
   checksigs ();
   exit (EXIT_TROUBLE);
@@ -265,18 +272,11 @@ ck_editor_status (int errnum, int status)
 {
   if (errnum | status)
     {
-      char const *failure_msgid = N_("subsidiary program `%s' failed");
-      if (! errnum && WIFEXITED (status))
-	switch (WEXITSTATUS (status))
-	  {
-	  case 126:
-	    failure_msgid = N_("subsidiary program `%s' not executable");
-	    break;
-	  case 127:
-	    failure_msgid = N_("subsidiary program `%s' not found");
-	    break;
-	  }
-      error (0, errnum, _(failure_msgid), editor_program);
+      error (0, errnum,
+	     _(! errnum && WIFEXITED (status) && WEXITSTATUS (status) == 127
+	       ? "subsidiary program `%s' not found"
+	       : "subsidiary program `%s' failed"),
+	     editor_program);
       exiterr ();
     }
 }
@@ -340,8 +340,6 @@ expand_name (char *name, bool is_dir, char const *other_name)
       return r;
     }
 }
-
-
 
 struct line_filter {
   FILE *infile;
@@ -440,9 +438,7 @@ lf_snarf (struct line_filter *lf, char *buffer, size_t bufsize)
       bufsize -= s;
     }
 }
-
 
-
 int
 main (int argc, char *argv[])
 {
@@ -455,7 +451,7 @@ main (int argc, char *argv[])
   setlocale (LC_ALL, "");
   bindtextdomain (PACKAGE, LOCALEDIR);
   textdomain (PACKAGE);
-  c_stack_action (c_stack_die);
+  c_stack_action (argv, cleanup);
 
   prog = getenv ("EDITOR");
   if (prog)
@@ -519,8 +515,9 @@ main (int argc, char *argv[])
 	  break;
 
 	case 'v':
-	  printf ("sdiff %s\n%s\n\n%s\n\n%s\n",
-		  version_string, copyright_string,
+	  printf ("sdiff %s\n", version_string);
+	  printf (copyright_notice, _("(C)"));
+	  printf ("\n\n%s\n\n%s\n",
 		  _(free_software_msgid), _(authorship_msgid));
 	  check_stdout ();
 	  return EXIT_SUCCESS;
@@ -545,6 +542,11 @@ main (int argc, char *argv[])
 
 	case STRIP_TRAILING_CR_OPTION:
 	  diffarg ("--strip-trailing-cr");
+	  break;
+
+	case TABSIZE_OPTION:
+	  diffarg ("--tabsize");
+	  diffarg (optarg);
 	  break;
 
 	default:
@@ -664,7 +666,7 @@ main (int argc, char *argv[])
 	      }
 
 	    execvp (diffargv[0], (char **) diffargv);
-	    _exit (errno == ENOEXEC ? 126 : 127);
+	    _exit (127);
 	  }
 
 # if HAVE_WORKING_VFORK
@@ -750,17 +752,14 @@ diffarg (char const *a)
     }
   diffargv[diffargs++] = a;
 }
-
 
-
-
 /* Signal handling */
 
 static bool volatile ignore_SIGINT;
 static int volatile signal_received;
 static bool sigs_trapped;
 
-static RETSIGTYPE
+static void
 catchsig (int s)
 {
 #if ! HAVE_SIGACTION
@@ -774,7 +773,7 @@ catchsig (int s)
 static struct sigaction catchaction;
 
 static void
-signal_handler (int sig, RETSIGTYPE (*handler) (int))
+signal_handler (int sig, void (*handler) (int))
 {
   catchaction.sa_handler = handler;
   sigaction (sig, &catchaction, 0);
@@ -821,11 +820,13 @@ untrapsig (int s)
   if (sigs_trapped)
     for (i = 0;  i < NUM_SIGS;  i++)
       if ((! s || sigs[i] == s)  &&  initial_handler (i) != SIG_IGN)
+	{
 #if HAVE_SIGACTION
 	  sigaction (sigs[i], &initial_action[i], 0);
 #else
 	  signal (sigs[i], initial_action[i]);
 #endif
+	}
 }
 
 /* Exit if a signal has been received.  */
@@ -835,7 +836,7 @@ checksigs (void)
   int s = signal_received;
   if (s)
     {
-      cleanup ();
+      cleanup (0);
 
       /* Yield an exit status indicating that a signal was received.  */
       untrapsig (s);
@@ -845,7 +846,6 @@ checksigs (void)
       exit (EXIT_TROUBLE);
     }
 }
-
 
 static void
 give_help (void)
@@ -1072,7 +1072,7 @@ edit (struct line_filter *left, char const *lname, lin lline, lin llen,
 		    argv[i] = 0;
 
 		    execvp (editor_program, (char **) argv);
-		    _exit (errno == ENOEXEC ? 126 : 127);
+		    _exit (127);
 		  }
 
 		if (pid < 0)
@@ -1109,9 +1109,7 @@ edit (struct line_filter *left, char const *lname, lin lline, lin llen,
 	}
     }
 }
-
 
-
 /* Alternately reveal bursts of diff output and handle user commands.  */
 static bool
 interact (struct line_filter *diff,
