@@ -14,7 +14,7 @@ Diff: (diff).                 Comparing and merging files.
 
 @dircategory Individual utilities
 @direntry
-* cmp: (diff)Invoking cmp.                      Character-by-character diff.
+* cmp: (diff)Invoking cmp.                      Byte-by-byte diff.
 * diff3: (diff)Invoking diff3.                  Three-way diff.
 * patch: (diff)Invoking patch.                  Automatically applying diffs.
 * sdiff: (diff)Invoking sdiff.                  Interactively merge files.
@@ -118,7 +118,7 @@ often called a @dfn{diff} or @dfn{patch}.  For files that are identical,
 @command{diff} normally reports only that they are different.
 
 You can use the @command{cmp} command to show the byte and line numbers
-where two files differ.  @command{cmp} can also show all the characters
+where two files differ.  @command{cmp} can also show all the bytes
 that differ between the two files, side by side.  Another way to compare
 two files character by character is the Emacs command @kbd{M-x
 compare-windows}.  @xref{Other Window, , Other Window, emacs, The @sc{gnu}
@@ -196,20 +196,20 @@ provide.  These options can accumulate; for example, you can ignore
 changes in both white space and alphabetic case.
 
 Another way to think of the differences between two files is as a
-sequence of pairs of characters that can be either identical or
+sequence of pairs of bytes that can be either identical or
 different.  @command{cmp} reports the differences between two files
-character by character, instead of line by line.  As a result, it is
+byte by byte, instead of line by line.  As a result, it is often
 more useful than @command{diff} for comparing binary files.  For text
 files, @command{cmp} is useful mainly when you want to know only whether
 two files are identical.
 
-To illustrate the effect that considering changes character by character
+To illustrate the effect that considering changes byte by byte
 can have compared with considering them line by line, think of what
 happens if a single newline character is added to the beginning of a
 file.  If that file is then compared with an otherwise identical file
 that lacks the newline at the beginning, @command{diff} will report that a
 blank line has been added to the file, while @command{cmp} will report that
-almost every character of the two files differs.
+almost every byte of the two files differs.
 
 @command{diff3} normally compares three input files line by line, finds
 groups of lines that differ, and reports each group of differing lines.
@@ -409,7 +409,7 @@ by line comparisons are usually not meaningful for binary files.
 
 @command{diff} determines whether a file is text or binary by checking the
 first few bytes in the file; the exact number of bytes is system
-dependent, but it is typically several thousand.  If every character in
+dependent, but it is typically several thousand.  If every byte in
 that part of the file is non-null, @command{diff} considers the file to be
 text; otherwise it considers the file to be binary.
 
@@ -462,7 +462,7 @@ If @command{diff3} thinks that any of the files it is comparing is binary
 (a non-text file), it normally reports an error, because such
 comparisons are usually not useful.  @command{diff3} uses the same test as
 @command{diff} to decide whether a file is binary.  As with @command{diff}, if
-the input files contain a few non-text characters but otherwise are like
+the input files contain a few non-text bytes but otherwise are like
 text files, you can force @command{diff3} to consider all files to be text
 files and compare them line by line by using the @option{-a} or
 @option{--text} options.
@@ -2733,11 +2733,14 @@ lines are numbered starting with 1.  The arguments of @command{cmp}
 are as follows:
 
 @example
-cmp @var{options}@dots{} @var{from-file} @r{[}@var{to-file}@r{]}
+cmp @var{options}@dots{} @var{from-file} @r{[}@var{to-file} @r{[}@var{from-skip} @r{[}@var{to-skip}@r{]}@r{]}@r{]}
 @end example
 
-The file name @file{-} is always the standard input.  @command{cmp} also
-uses the standard input if one file name is omitted.
+The file name @file{-} is always the standard input.  @command{cmp}
+also uses the standard input if one file name is omitted.  The
+@var{from-skip} and @var{to-skip} operands specify how many bytes to
+ignore at the start of each file; they are equivalent to the
+@option{--ignore-initial=@var{from-skip}:@var{to-skip}} option.
 
 An exit status of 0 means no differences were found, 1 means some
 differences were found, and 2 means trouble.
@@ -2761,20 +2764,30 @@ equivalent to @option{-c -l}.
 @table @option
 @item -b
 Print the differing bytes.  Display control bytes as a
-@samp{^} followed by a letter of the alphabet and precede characters
+@samp{^} followed by a letter of the alphabet and precede bytes
 that have the high bit set with @samp{M-} (which stands for ``meta'').
 
-@item -i @var{bytes}
-@itemx --ignore-initial=@var{bytes}
-Ignore any differences in the first @var{bytes} bytes of the input files.
-Treat files with fewer than @var{bytes} bytes as if they are empty.
+@item --bytes=@var{count}
+Compare at most @var{count} input bytes.
+
+@item -i @var{skip}
+@itemx --ignore-initial=@var{skip}
+Ignore any differences in the first @var{skip} bytes of the input
+files.  Treat files with fewer than @var{skip} bytes as if they are
+empty.  If @var{skip} is of the form
+@option{@var{from-skip}:@var{to-skip}}, skip the first @var{from-skip}
+bytes of the first input file and the first @var{to-skip} bytes of the
+second.
 
 @item -l
 Print the (decimal) indices and (octal) values of all differing bytes.
 
+@item -n @var{count}
+Compare at most @var{count} input bytes.
+
 @item --print-bytes
 Print the differing bytes.  Display control bytes as a
-@samp{^} followed by a letter of the alphabet and precede characters
+@samp{^} followed by a letter of the alphabet and precede bytes
 that have the high bit set with @samp{M-} (which stands for ``meta'').
 
 @item --quiet
@@ -2791,6 +2804,68 @@ Print the (decimal) indices and (octal) values of all differing bytes.
 
 @item --version
 Output the version number of @command{cmp}.
+@end table
+
+In the above table, operands that are byte counts are normally
+decimal, but may be preceded by @samp{0} for octal and @samp{0x} for
+hexadecimal.
+
+A byte count can be followed by a size letter.  A bare size letter, or
+one followd by @samp{iB}, specifies a multiple of that size using
+powers of 1024.  A size letter followed by @samp{B} specifies powers
+of 1000 instead.  For example, the options @option{-n 4M} and
+@option{-n 4MiB} are equivalent to @option{-n 4194304}, whereas the
+option @option{-n 4MB} is equivalent to @option{-n 4000000}.  This
+notation is upward compatible with the
+@uref{http://www.bipm.fr/enus/3_SI/si-prefixes.html, SI prefixes} for
+decimal multiples, and with the
+@uref{http://physics.nist.gov/cuu/Units/binary.html, IEC 60027-2
+prefixes for binary multiples}.
+
+The following suffixes are defined.  Large sizes like @code{1Y} may be
+rejected by your computer due to limitations of its arithmetic.
+
+@table @samp
+@item kB
+kilobyte: @math{10^3 = 1,000}.
+@item K
+@itemx KiB
+kibibyte: @math{2^10 = 1,024}.
+@item MB
+megabyte: @math{10^6 = 1,000,000}.
+@item M
+@itemx MiB
+mebibyte: @math{2^20 = 1,048,576}.
+@item GB
+gigabyte: @math{10^9 = 1,000,000,000}.
+@item G
+@itemx GiB
+gibibyte: @math{2^30 = 1,073,741,824}.
+@item TB
+terabyte:  @math{10^12 = 1,000,000,000,000}.
+@item T
+@itemx TiB
+tebibyte: @math{2^40 = 1,099,511,627,776}.
+@item PB
+petabyte: @math{10^15 = 1,000,000,000,000,000}.
+@item P
+@item PiB
+pebibyte: @math{2^50 = 1,125,899,906,842,624}.
+@item EB
+exabyte: @math{10^18 = 1,000,000,000,000,000,000}.
+@item E
+@itemx EiB
+exbibyte: @math{2^60 = 1,152,921,504,606,846,976}.
+@item ZB
+zettabyte: @math{10^21 = 1,000,000,000,000,000,000,000}
+@item Z
+@itemx ZiB
+@math{2^70 = 1,180,591,620,717,411,303,424}.
+@item YB
+yottabyte: @math{10^24 = 1,000,000,000,000,000,000,000,000}.
+@item Y
+@itemx YiB
+@math{2^80 = 1,208,925,819,614,629,174,706,176}.
 @end table
 
 @node Invoking diff
