@@ -26,7 +26,7 @@ noinst_HEADERS = diff.h system.h
 datadir = $(prefix)/@DATADIRNAME@
 localedir = $(datadir)/locale
 
-INCLUDES = -I.. -I$(srcdir) -I$(top_srcdir)/lib -I../intl -I$(top_srcdir)/intl
+INCLUDES = -I.. -I$(srcdir) -I../lib -I$(top_srcdir)/lib -I../intl -I$(top_srcdir)/intl
 DEFS = -DLOCALEDIR=\"$(localedir)\" @DEFS@
 
 # Link libdiffutils.a after @INTLLIBS@, since @INTLLIBS@ might invoke
