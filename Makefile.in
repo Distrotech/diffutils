@@ -238,7 +238,7 @@ $D.tar.gz: $(distfiles)
 	mkdir $(D_dirs)
 	chmod a+rwx $(D_dirs)
 	for file in $(distfiles); do \
-	  ln $$file $D/$$file 2>/dev/null || cp -p $$file $D/$$file; \
+	  cp -p $$file $D/$$file; \
 	done
 	tar -chf - $D | gzip -9 >$@
 	rm -fr $D
