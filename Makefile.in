@@ -144,7 +144,7 @@ uninstall:
 Makefile: Makefile.in config.status
 	$(SHELL) config.status
 config.status: configure
-	$(SHELL) $(srcdir)/configure --no-create
+	$(SHELL) config.status --recheck
 configure: configure.in
 	cd $(srcdir); autoconf
 
