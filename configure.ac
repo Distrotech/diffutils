@@ -1,6 +1,7 @@
 dnl Process this file with autoconf to produce a configure script.
 AC_INIT(diff.h)
 AC_CONFIG_HEADER(config.h:config.hin)
+AC_ARG_PROGRAM
 AC_PROG_CC
 AC_PROG_CPP
 AC_PROG_INSTALL
@@ -21,4 +22,4 @@ dnl No need for AC_FUNC_MEMCMP, since memcmp is used only to test for equality.
 AC_FUNC_VFORK
 AC_FUNC_VPRINTF
 AC_STRUCT_ST_BLKSIZE
-AC_OUTPUT(Makefile)
+AC_OUTPUT(Makefile, [date > stamp-h])
