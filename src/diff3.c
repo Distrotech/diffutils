@@ -1195,11 +1195,11 @@ scan_diff_line (scan_ptr, set_start, set_length, limit, firstchar)
      char *scan_ptr, **set_start;
      size_t *set_length;
      char *limit;
-     char firstchar;
+     int firstchar;
 {
   char *line_ptr;
 
-  if (!(scan_ptr[0] == (firstchar)
+  if (!(scan_ptr[0] == firstchar
 	&& scan_ptr[1] == ' '))
     fatal ("invalid diff format; incorrect leading line chars");
 
