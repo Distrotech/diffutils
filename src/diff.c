@@ -253,7 +253,7 @@ main (int argc, char **argv)
   int prev = -1;
   lin ocontext = -1;
   bool explicit_context = 0;
-  int width = 130;
+  int width = 0;
   bool show_c_function = 0;
   char const *from_file = 0;
   char const *to_file = 0;
@@ -657,9 +657,10 @@ main (int argc, char **argv)
      *		so that tabs in the right column line up.
      */
     unsigned int t = expand_tabs ? 1 : TAB_WIDTH;
-    int off = (width + t + GUTTER_WIDTH_MINIMUM) / (2 * t)  *  t;
-    sdiff_half_width = MAX (0, MIN (off - GUTTER_WIDTH_MINIMUM, width - off)),
-    sdiff_column2_offset = sdiff_half_width ? off : width;
+    int w = width ? width : 130;
+    int off = (w + t + GUTTER_WIDTH_MINIMUM) / (2 * t)  *  t;
+    sdiff_half_width = MAX (0, MIN (off - GUTTER_WIDTH_MINIMUM, w - off)),
+    sdiff_column2_offset = sdiff_half_width ? off : w;
   }
 
   /* Make the horizon at least as large as the context, so that
