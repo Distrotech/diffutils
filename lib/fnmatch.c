@@ -1,4 +1,5 @@
-/* Copyright (C) 1991-1993,1996-1999,2000,2001 Free Software Foundation, Inc.
+/* Copyright (C) 1991, 1992, 1993, 1996, 1997, 1998, 1999, 2000, 2001,
+   2002 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -23,6 +24,27 @@
 # define _GNU_SOURCE	1
 #endif
 
+#ifdef __GNUC__
+# define alloca __builtin_alloca
+# define HAVE_ALLOCA 1
+#else
+# if defined HAVE_ALLOCA_H || defined _LIBC
+#  include <alloca.h>
+# else
+#  ifdef _AIX
+ #pragma alloca
+#  else
+#   ifndef alloca
+char *alloca ();
+#   endif
+#  endif
+# endif
+#endif
+
+#if ! defined __builtin_expect && __GNUC__ < 3
+# define __builtin_expect(expr, expected) (expr)
+#endif
+
 #include <assert.h>
 #include <errno.h>
 #include <fnmatch.h>
@@ -31,10 +53,13 @@
 #if HAVE_STRING_H || defined _LIBC
 # include <string.h>
 #else
-# include <strings.h>
+# if HAVE_STRINGS_H
+#  include <strings.h>
+# endif
 #endif
 
 #if defined STDC_HEADERS || defined _LIBC
+# include <stddef.h>
 # include <stdlib.h>
 #endif
 
@@ -66,15 +91,16 @@ extern int fnmatch (const char *pattern, const char *string, int flags);
 #define NO_LEADING_PERIOD(flags) \
   ((flags & (FNM_FILE_NAME | FNM_PERIOD)) == (FNM_FILE_NAME | FNM_PERIOD))
 
-/* Comment out all this code if we are using the GNU C Library, and are not
-   actually compiling the library itself.  This code is part of the GNU C
+/* Comment out all this code if we are using the GNU C Library, are not
+   actually compiling the library itself, and have not detected a bug
+   in the library.  This code is part of the GNU C
    Library, but also included in many other GNU distributions.  Compiling
    and linking in this code is a waste when using the GNU C library
    (especially if it is a shared library).  Rather than having every GNU
    program understand `configure --with-gnu-libc' and omit the object files,
    it is simpler to just do this in the source for each such file.  */
 
-#if defined _LIBC || !defined __GNU_LIBRARY__
+#if defined _LIBC || !defined __GNU_LIBRARY__ || !HAVE_FNMATCH_GNU
 
 
 # if defined STDC_HEADERS || !defined isascii
@@ -150,7 +176,7 @@ extern int fnmatch (const char *pattern, const char *string, int flags);
 /* Avoid depending on library functions or files
    whose names are inconsistent.  */
 
-# if !defined _LIBC && !defined getenv
+# if !defined _LIBC && !defined getenv && !HAVE_DECL_GETENV
 extern char *getenv ();
 # endif
 
@@ -160,34 +186,6 @@ extern int errno;
 
 /* Global variable.  */
 static int posixly_correct;
-
-/* This function doesn't exist on most systems.  */
-
-# if !defined HAVE___STRCHRNUL && !defined _LIBC
-static char *
-__strchrnul (s, c)
-     const char *s;
-     int c;
-{
-  char *result = strchr (s, c);
-  if (result == NULL)
-    result = strchr (s, '\0');
-  return result;
-}
-# endif
-
-# if HANDLE_MULTIBYTE && !defined HAVE___STRCHRNUL && !defined _LIBC
-static wchar_t *
-__wcschrnul (s, c)
-     const wchar_t *s;
-     wint_t c;
-{
-  wchar_t *result = wcschr (s, c);
-  if (result == NULL)
-    result = wcschr (s, '\0');
-  return result;
-}
-# endif
 
 # ifndef internal_function
 /* Inside GNU libc we mark some function in a special way.  In other
@@ -215,30 +213,43 @@ __wcschrnul (s, c)
 # endif
 # define STRLEN(S) strlen (S)
 # define STRCAT(D, S) strcat (D, S)
-# define MEMPCPY(D, S, N) __mempcpy (D, S, N)
+# ifdef _LIBC
+#  define MEMPCPY(D, S, N) __mempcpy (D, S, N)
+# else
+#  if HAVE_MEMPCPY
+#   define MEMPCPY(D, S, N) mempcpy (D, S, N)
+#  else
+#   define MEMPCPY(D, S, N) ((void *) ((char *) memcpy (D, S, N) + (N)))
+#  endif
+# endif
 # define MEMCHR(S, C, N) memchr (S, C, N)
 # define STRCOLL(S1, S2) strcoll (S1, S2)
 # include "fnmatch_loop.c"
 
 
 # if HANDLE_MULTIBYTE
-/* Note that this evaluates C many times.  */
-#  ifdef _LIBC
-#   define FOLD(c) ((flags & FNM_CASEFOLD) ? towlower (c) : (c))
-#  else
-#   define FOLD(c) ((flags & FNM_CASEFOLD) && ISUPPER (c) ? towlower (c) : (c))
-#  endif
+#  define FOLD(c) ((flags & FNM_CASEFOLD) ? towlower (c) : (c))
 #  define CHAR	wchar_t
 #  define UCHAR	wint_t
 #  define INT	wint_t
 #  define FCT	internal_fnwmatch
 #  define EXT	ext_wmatch
-# define END	end_wpattern
+#  define END	end_wpattern
 #  define L(CS)	L##CS
 #  define BTOWC(C)	(C)
-#  define STRLEN(S) __wcslen (S)
-#  define STRCAT(D, S) __wcscat (D, S)
-#  define MEMPCPY(D, S, N) __wmempcpy (D, S, N)
+#  ifdef _LIBC
+#   define STRLEN(S) __wcslen (S)
+#   define STRCAT(D, S) __wcscat (D, S)
+#   define MEMPCPY(D, S, N) __wmempcpy (D, S, N)
+#  else
+#   define STRLEN(S) wcslen (S)
+#   define STRCAT(D, S) wcscat (D, S)
+#   if HAVE_WMEMPCPY
+#    define MEMPCPY(D, S, N) wmempcpy (D, S, N)
+#   else
+#    define MEMPCPY(D, S, N) (wmemcpy (D, S, N) + (N))
+#   endif
+#  endif
 #  define MEMCHR(S, C, N) wmemchr (S, C, N)
 #  define STRCOLL(S1, S2) wcscoll (S1, S2)
 #  define WIDE_CHAR_VERSION 1
