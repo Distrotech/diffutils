@@ -128,7 +128,7 @@ XTERN bool ignore_case;
 /* Ignore differences in case of letters in file names.  */
 XTERN bool ignore_file_name_case;
 
-/* File labels for `-c' output headers (-L).  */
+/* File labels for `-c' output headers (--label).  */
 XTERN char *file_label[2];
 
 /* Regexp to identify function-header lines (-F).  */
