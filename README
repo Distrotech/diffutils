@@ -26,13 +26,52 @@ significantly faster.
 
 Please see the file COPYING for copying conditions.
 
+Please see the file doc/version.texi for version information.
+
 Please see the file doc/diff.texi (or doc/diff.info) for documentation
 that can be printed with TeX, or read with the `info' program or with
-Emacs's `M-x info'.  There are no man pages.
+Emacs's `M-x info'.  Brief man pages are in man/*, but they are no
+substitute for the documentation.
 
-See the file INSTALL for generic compilation and installation instructions,
-and the file INSTALLME for instructions specific to GNU diff.
+Please see the file ABOUT-NLS for notes about translations.
 
-See the file ABOUT-NLS for notes about translations.
+Please see the file INSTALL for generic compilation and installation
+instructions.  Briefly, you can run "./configure; make install".  The
+"configure" command recognizes the following --enable and --with
+options:
+
+  --disable-dependency-tracking  Omit include-file dependency tracking.
+  --disable-largefile            Omit support for large files.
+  --disable-nls                  Omit Native Language Support.
+  --with-gnu-ld                  Assume the C compiler uses GNU ld.
+  --with-libiconv-prefix=DIR     Search for libiconv include, lib in DIR.
+  --with-libintl-prefix=DIR      Likewise, for libintl.
+  --without-included-regex       Don't use our own regex package.
+
+If you have a problem with internationalization, you might be able to
+work around it as described in ABOUT-NLS by invoking `./configure
+--disable-nls'.  Many of the problems arise from dynamic linking
+issues on non-GNU platforms (e.g. with the iconv library).  Such
+problems tend to be shared by other GNU applications on these
+platforms, and can usually be fixed by carefully tweaking your non-GNU
+installation.  If you have an older version of libiconv, please
+upgrade to the latest one, preferably libiconv-1.8 or newer.
+(libiconv-1.8 is not yet available as of this writing, but it should
+be out soon.)  If the problem seems isolated to diffutils, though,
+please report a bug.
+
+This program requires a Standard C compiler (C89 or later).  If you
+have a nonstandard compiler, please install GCC first.
+
+If you make changes to the source code, you may need appropriate
+versions of GNU build tools to regenerate the intermediate files.  The
+following versions were used to generate the intermediate files in
+this distribution:
+
+* Autoconf 2.53   <ftp://ftp.gnu.org/gnu/autoconf/autoconf-2.53.tar.gz>
+* Automake 1.6.1  <ftp://ftp.gnu.org/gnu/automake/automake-1.6.1.tar.gz>
+* gettext 0.11.2  <ftp://ftp.gnu.org/gnu/gettext/gettext-0.11.2.tar.gz>
+* help2man 1.28   <ftp://ftp.gnu.org/gnu/help2man/help2man-1.28.tar.gz>
+* Texinfo 4.2     <ftp://ftp.gnu.org/gnu/texinfo/texinfo-4.2.tar.gz>
 
 Please report bugs to <bug-gnu-utils@gnu.org>.
