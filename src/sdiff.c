@@ -1,4 +1,4 @@
-/* SDIFF -- interactive merge front end to diff
+/* sdiff - side-by-side merge of file differences
 
    Copyright (C) 1992, 1993, 1994, 1995, 1996, 1998, 2001, 2002 Free
    Software Foundation, Inc.
@@ -180,7 +180,6 @@ check_stdout (void)
 }
 
 static char const * const option_help_msgid[] = {
-  "",
   N_("-o FILE  --output=FILE  Operate interactively, sending output to FILE."),
   "",
   N_("-i  --ignore-case  Consider upper- and lower-case to be the same."),
@@ -204,7 +203,6 @@ static char const * const option_help_msgid[] = {
   "",
   N_("-v  --version  Output version info."),
   N_("--help  Output this help."),
-  "",
   0
 };
 
@@ -214,13 +212,15 @@ usage (void)
   char const * const *p;
 
   printf (_("Usage: %s [OPTION]... FILE1 FILE2\n"), program_name);
-  printf ("%s\n", _("If a FILE is `-', read standard input."));
+  printf ("%s\n\n", _("Side-by-side merge of file differences."));
   for (p = option_help_msgid;  *p;  p++)
     if (**p)
       printf ("  %s\n", _(*p));
     else
       putchar ('\n');
-  printf ("%s\n", _("Report bugs to <bug-gnu-utils@gnu.org>."));
+  printf ("\n%s\n\n%s\n",
+	  _("If a FILE is `-', read standard input."),
+	  _("Report bugs to <bug-gnu-utils@gnu.org>."));
 }
 
 static void

@@ -1,4 +1,4 @@
-/* Three way file comparison program (diff3) for Project GNU.
+/* diff3 - compare three files line by line
 
    Copyright (C) 1988, 1989, 1992, 1993, 1994, 1995, 1996, 1998, 2001,
    2002 Free Software Foundation, Inc.
@@ -437,7 +437,6 @@ check_stdout (void)
 }
 
 static char const * const option_help_msgid[] = {
-  "",
   N_("-e  --ed  Output unmerged changes from OLDFILE to YOURFILE into MYFILE."),
   N_("-E  --show-overlap  Output unmerged changes, bracketing conflicts."),
   N_("-A  --show-all  Output all changes, bracketing conflicts."),
@@ -454,7 +453,6 @@ static char const * const option_help_msgid[] = {
   "",
   N_("-v  --version  Output version info."),
   N_("--help  Output this help."),
-  "",
   0
 };
 
@@ -465,13 +463,15 @@ usage (void)
 
   printf (_("Usage: %s [OPTION]... MYFILE OLDFILE YOURFILE\n"),
 	  program_name);
-  printf ("%s\n", _("If a FILE is `-', read standard input."));
+  printf ("%s\n\n", _("Compare three files line by line."));
   for (p = option_help_msgid;  *p;  p++)
     if (**p)
       printf ("  %s\n", _(*p));
     else
       putchar ('\n');
-  printf ("%s\n", _("Report bugs to <bug-gnu-utils@gnu.org>."));
+  printf ("\n%s\n\n%s\n",
+	  _("If a FILE is `-', read standard input."),
+	  _("Report bugs to <bug-gnu-utils@gnu.org>."));
 }
 
 /*
