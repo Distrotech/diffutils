@@ -150,7 +150,7 @@ case $SKIP_PO in
 '')
   echo "$0: getting translations into po..."
   (cd po &&
-   rm -f dummy `ls | sed -n '/\.gmo$/p; /\.po/p'` &&
+   rm -f dummy `ls | sed -n '/\.gmo$/p; /^en\.po$d/; /\.po/p'` &&
    wget -nv -nd -r -l 1 -A .po -C off \
      http://www2.iro.umontreal.ca/~gnutra/po/maint/$package/ &&
    ls *.po | sed 's/\.po$//' >LINGUAS
