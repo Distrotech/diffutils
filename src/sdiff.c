@@ -17,14 +17,14 @@ You should have received a copy of the GNU General Public License
 along with GNU DIFF; see the file COPYING.  If not, write to
 the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 
-/* GNU SDIFF was written by Thomas Lord. */
+/* GNU SDIFF was written by Thomas Lord.  */
 
 #include "system.h"
 #include <stdio.h>
 #include <signal.h>
 #include "getopt.h"
 
-/* Size of chunks read from files which must be parsed into lines. */
+/* Size of chunks read from files which must be parsed into lines.  */
 #define SDIFF_BUFSIZE ((size_t) 65536)
 
 /* Default name of the diff program */
@@ -38,7 +38,8 @@ the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 #endif
 
 extern char version_string[];
-static char const *program_name;
+char *program_name;
+
 static char const *diffbin = DIFF_PROGRAM;
 static char const *edbin = DEFAULT_EDITOR_PROGRAM;
 static char const **diffargv;
@@ -54,7 +55,6 @@ struct line_filter;
 
 static FILE *ck_fopen PARAMS((char const *, char const *));
 static RETSIGTYPE catchsig PARAMS((int));
-static VOID *xmalloc PARAMS((size_t));
 static char const *expand_name PARAMS((char *, int, char const *));
 static int edit PARAMS((struct line_filter *, int, struct line_filter *, int, FILE*));
 static int interact PARAMS((struct line_filter *, struct line_filter *, struct line_filter *, FILE*));
@@ -97,6 +97,11 @@ static int exists PARAMS((char const *));
 #endif
 static int diraccess PARAMS((char const *));
 
+void error PARAMS((int, int, char const *, ...));
+VOID *xmalloc PARAMS((size_t));
+VOID *xrealloc PARAMS((VOID *, size_t));
+extern int xmalloc_exit_failure;
+
 /* Options: */
 
 /* name of output file if -o spec'd */
@@ -130,10 +135,8 @@ try_help (reason)
      char const *reason;
 {
   if (reason)
-    fprintf (stderr, "%s: %s\n", program_name, reason);
-  fprintf (stderr, "%s: Try `%s --help' for more information.\n",
-	   program_name, program_name);
-  exit (2);
+    error (0, 0, "%s", reason);
+  error (2, 0, "Try `%s --help' for more information.", program_name);
 }
 
 static void
@@ -188,7 +191,7 @@ static void
 fatal (msg)
      char const *msg;
 {
-  fprintf (stderr, "%s: %s\n", program_name, msg);
+  error (0, 0, "%s", msg);
   exiterr ();
 }
 
@@ -198,22 +201,8 @@ perror_fatal (msg)
 {
   int e = errno;
   checksigs ();
-  fprintf (stderr, "%s: ", program_name);
-  errno = e;
-  perror (msg);
+  error (0, e, "%s", msg);
   exiterr ();
-}
-
-
-/* malloc freely or DIE! */
-static VOID *
-xmalloc (size)
-     size_t size;
-{
-  VOID *r = (VOID *) malloc (size);
-  if (!r)
-    fatal ("memory exhausted");
-  return r;
 }
 
 static FILE *
@@ -414,6 +403,7 @@ main (argc, argv)
 
   initialize_main (&argc, &argv);
   program_name = argv[0];
+  xmalloc_exit_failure = 2;
 
   editor = getenv ("EDITOR");
   if (editor)
@@ -635,27 +625,20 @@ main (argc, argv)
 	exit (WEXITSTATUS (wstatus));
       }
     }
-  return 0;			/* Fool -Wall . . . */
+  return 0;			/* Fool `-Wall'.  */
 }
 
 static void
 diffarg (a)
      char const *a;
 {
-  static unsigned diffargs, diffargsmax;
+  static unsigned diffargs, diffarglim;
 
-  if (diffargs == diffargsmax)
+  if (diffargs == diffarglim)
     {
-      if (! diffargsmax)
-	{
-	  diffargv = (char const **) xmalloc (sizeof (char));
-	  diffargsmax = 8;
-	}
-      diffargsmax *= 2;
-      diffargv = (char const **) realloc (diffargv,
-					  diffargsmax * sizeof (char const *));
-      if (! diffargv)
-	fatal ("out of memory");
+      diffarglim = diffarglim ? 2 * diffarglim : 16;
+      diffargv = (char const **) xrealloc (diffargv,
+					   diffarglim * sizeof (char const *));
     }
   diffargv[diffargs++] = a;
 }
@@ -753,7 +736,7 @@ trapsigs ()
     }
 #endif /* ! HAVE_SIGACTION */
 
-#if !defined(SIGCHLD) && defined(SIGCLD)
+#if !defined (SIGCHLD) && defined (SIGCLD)
 #define SIGCHLD SIGCLD
 #endif
 #ifdef SIGCHLD
