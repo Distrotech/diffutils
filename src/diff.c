@@ -771,7 +771,12 @@ compare_files (dir0, name0, dir1, name1, depth)
 	{
 	  int stat_result;
 
-	  if (strcmp (inf[i].name, "-") == 0)
+	  if (i && strcmp (inf[i].name, inf[0].name) == 0)
+	    {
+	      inf[i].stat = inf[0].stat;
+	      stat_result = 0;
+	    }
+	  else if (strcmp (inf[i].name, "-") == 0)
 	    {
 	      inf[i].desc = STDIN_FILENO;
 	      stat_result = fstat (STDIN_FILENO, &inf[i].stat);
