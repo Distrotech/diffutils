@@ -1,6 +1,6 @@
 # Check for setmode, DOS style.
 
-# Copyright (C) 2001, 2002 Free Software Foundation, Inc.
+# Copyright (C) 2001, 2002, 2004 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -33,6 +33,7 @@ AC_DEFUN([AC_FUNC_SETMODE_DOS],
 	[ac_cv_func_setmode_dos=yes],
 	[ac_cv_func_setmode_dos=no])])
    if test $ac_cv_func_setmode_dos = yes; then
+     AC_LIBOBJ(setmode)
      AC_DEFINE(HAVE_SETMODE_DOS, 1,
        [Define to 1 if you have the DOS-style `setmode' function.])
    fi])
