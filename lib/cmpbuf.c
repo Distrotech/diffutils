@@ -21,12 +21,50 @@
 # include <config.h>
 #endif
 
+#include <errno.h>
+#if !STDC_HEADERS
+ extern int errno;
+#endif
+
+#include <signal.h>
+#ifndef SA_RESTART
+# ifdef SA_INTERRUPT /* e.g. SunOS 4.1.x */
+#  define SA_RESTART SA_INTERRUPT
+# else
+#  define SA_RESTART 0
+# endif
+#endif
+
 #if HAVE_UNISTD_H
 # include <unistd.h>
 #endif
 
+#if HAVE_INTTYPES_H
+# include <inttypes.h>
+#endif
+#ifndef PTRDIFF_MAX
+# define PTRDIFF_MAX TYPE_MAXIMUM (ptrdiff_t)
+#endif
+
 #include <sys/types.h>
 #include "cmpbuf.h"
+
+/* Determine whether an integer type is signed, and its bounds.
+   This code assumes two's (or one's!) complement with no holes.  */
+
+/* The extra casts work around common compiler bugs,
+   e.g. Cray C 5.0.3.0 when t == time_t.  */
+#ifndef TYPE_SIGNED
+# define TYPE_SIGNED(t) (! ((t) 0 < (t) -1))
+#endif
+#ifndef TYPE_MINIMUM
+# define TYPE_MINIMUM(t) ((t) (TYPE_SIGNED (t) \
+			       ? ~ (t) 0 << (sizeof (t) * CHAR_BIT - 1) \
+			       : (t) 0))
+#endif
+#ifndef TYPE_MAXIMUM
+# define TYPE_MAXIMUM(t) ((t) (~ (t) 0 - TYPE_MINIMUM (t)))
+#endif
 
 /* Read NBYTES bytes from descriptor FD into BUF.
    Return the number of characters successfully read.
@@ -42,10 +80,19 @@ block_read (int fd, char *buf, size_t nbytes)
   do
     {
       ssize_t nread = read (fd, bp, buflim - bp);
-      if (nread < 0)
-	return -1;
-      if (nread == 0)
-	break;
+      if (nread <= 0)
+	{
+	  if (nread == 0)
+	    break;
+
+	  /* Accommodate ancient AIX hosts that set errno to EINTR
+	     after uncaught SIGCONT.  See
+	     <news:1r77ojINN85n@ftp.UU.NET> (1993-04-22).  */
+	  if (! SA_RESTART && errno == EINTR)
+	    continue;
+
+	  return -1;
+	}
       bp += nread;
     }
   while (bp < buflim);
@@ -53,12 +100,14 @@ block_read (int fd, char *buf, size_t nbytes)
   return bp - buf;
 }
 
-/* Least common multiple of two buffer sizes A and B.  */
+/* Least common multiple of two buffer sizes A and B.  However, if
+   either A or B is zero, or if the multiple is greater than LCM_MAX,
+   return a reasonable buffer size.  */
 
 size_t
-buffer_lcm (size_t a, size_t b)
+buffer_lcm (size_t a, size_t b, size_t lcm_max)
 {
-  size_t m, n, r;
+  size_t lcm, m, n, q, r;
 
   /* Yield reasonable values if buffer sizes are zero.  */
   if (!a)
@@ -70,5 +119,8 @@ buffer_lcm (size_t a, size_t b)
   for (m = a, n = b;  (r = m % n) != 0;  m = n, n = r)
     continue;
 
-  return a/n * b;
+  /* Yield a if there is an overflow.  */
+  q = a / n;
+  lcm = q * b;
+  return lcm <= lcm_max && lcm / b == q ? lcm : a;
 }
