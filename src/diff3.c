@@ -1206,8 +1206,9 @@ read_diff (filea, fileb, output_placement)
 
 #endif /* ! HAVE_FORK */
 
-  current_chunk_size = (fstat (fd, &pipestat) == 0
-			? STAT_BLOCKSIZE (pipestat) : 8 * 1024);
+  current_chunk_size = 8 * 1024;
+  if (fstat (fd, &pipestat) == 0)
+    current_chunk_size = max (current_chunk_size, STAT_BLOCKSIZE (pipestat));
 
   diff_result = xmalloc (current_chunk_size);
   total = 0;
