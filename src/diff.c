@@ -1,30 +1,35 @@
-/* GNU DIFF main routine.
-   Copyright (C) 1988, 1989, 1992, 1993, 1994 Free Software Foundation, Inc.
+/* GNU DIFF main routine.  */
 
-This file is part of GNU DIFF.
+static char const copyright_string[] =
+  "Copyright 1988, 89, 92, 93, 94, 96, 1997 Free Software Foundation, Inc.";
 
-GNU DIFF is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
-any later version.
+/* This file is part of GNU DIFF.
 
-GNU DIFF is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+   GNU DIFF is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation; either version 2, or (at your option)
+   any later version.
 
-You should have received a copy of the GNU General Public License
-along with GNU DIFF; see the file COPYING.  If not, write to
-the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
+   GNU DIFF is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+   See the GNU General Public License for more details.
 
-/* GNU DIFF was written by Mike Haertel, David Hayes,
-   Richard Stallman, Len Tower, and Paul Eggert.  */
+   You should have received a copy of the GNU General Public License
+   along with GNU DIFF; see the file COPYING.
+   If not, write to the Free Software Foundation,
+   59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
+
+static char const authorship_msgid[] =
+  "Written by Paul Eggert, Mike Haertel, David Hayes,\n\
+Richard Stallman, and Len Tower.";
 
 #define GDIFF_MAIN
 #include "diff.h"
 #include <signal.h>
 #include "getopt.h"
 #include "fnmatch.h"
+#include "quotearg.h"
 
 #ifndef DEFAULT_WIDTH
 #define DEFAULT_WIDTH 130
@@ -46,14 +51,14 @@ struct regexp_list
 static char const *filetype PARAMS((struct stat const *));
 static char *option_list PARAMS((char **, int));
 static int add_exclude_file PARAMS((char const *));
-static int ck_atoi PARAMS((char const *, int *));
-static int compare_files PARAMS((char const *, char const *, char const *, char const *, int));
+static int compare_files PARAMS((struct comparison const *, char const *, char const *));
 static int specify_format PARAMS((char **, char *));
 static void add_exclude PARAMS((char const *));
 static void add_regexp PARAMS((struct regexp_list *, char const *));
+static void numeric_arg PARAMS((char const *, char const *, int *));
 static void summarize_regexp_list PARAMS((struct regexp_list *));
 static void specify_style PARAMS((enum output_style));
-static void try_help PARAMS((char const *));
+static void try_help PARAMS((char const *, char const *)) __attribute__((noreturn));
 static void check_stdout PARAMS((void));
 static void usage PARAMS((void));
 
@@ -62,18 +67,29 @@ static void usage PARAMS((void));
 
 static int recursive;
 
-/* For debugging: don't do discard_confusing_lines.  */
-
-int no_discards;
-
 /* For -F and -I: lists of regular expressions.  */
-struct regexp_list function_regexp_list;
-struct regexp_list ignore_regexp_list;
+static struct regexp_list function_regexp_list;
+static struct regexp_list ignore_regexp_list;
 
 #if HAVE_SETMODE
-/* I/O mode: nonzero only if using binary input/output.  */
-static int binary_I_O;
+/* Use binary input/output (--binary).  */
+static int binary_flag;
 #endif
+
+/* If a file is new (appears in only one dir)
+   include its entire contents (-N).
+   Then `patch' would create the file with appropriate contents.  */
+static int entire_new_file_flag;
+
+/* If a file is new (appears in only the second dir)
+   include its entire contents (-P).
+   Then `patch' would create the file with appropriate contents.  */
+static int unidirectional_new_file_flag;
+
+/* Report files compared that match (-s).
+   Normally nothing is output when that happens.  */
+static int print_file_same_flag;
+
 
 /* Return a string containing the command options with which diff was invoked.
    Spaces appear between what were separate ARGV-elements.
@@ -94,34 +110,51 @@ option_list (optionvec, count)
   char *p;
 
   for (i = 0; i < count; i++)
-    size += 1 + system_quote_arg ((char *) 0, optionvec[i]);
+    size += 1 + quote_system_arg ((char *) 0, optionvec[i]);
 
   p = result = xmalloc (size);
 
   for (i = 0; i < count; i++)
     {
       *p++ = ' ';
-      p += system_quote_arg (p, optionvec[i]);
+      p += quote_system_arg (p, optionvec[i]);
     }
 
   *p = 0;
   return result;
 }
 
-/* Convert STR to a positive integer, storing the result in *OUT.
-   If STR is not a valid integer, return -1 (otherwise 0).  */
-static int
-ck_atoi (str, out)
+/* Handle a numeric argument of type ARGTYPE_MSGID by converting
+   STR to a nonnegative integer, storing the result in *OUT.  */
+static void
+numeric_arg (argtype_msgid, str, out)
+     char const *argtype_msgid;
      char const *str;
      int *out;
 {
-  char const *p;
-  for (p = str; *p; p++)
-    if (*p < '0' || *p > '9')
-      return -1;
+  int value = 0;
+  char const *p = str;
 
-  *out = atoi (optarg);
-  return 0;
+  do
+    {
+      int v10 = value * 10;
+      int digit = *p - '0';
+
+      if (9 < (unsigned) digit)
+	error (2, 0, _("%s `%s' is not a number"), _(argtype_msgid), str);
+
+      if (v10 / 10 != value || v10 + digit < v10)
+	error (2, 0, _("%s `%s' is too large"), _(argtype_msgid), str);
+
+      value = v10 + digit;
+    }
+  while (*++p);
+
+  if (0 <= *out && *out != value)
+    error (2, 0, _("%s `%d' conflicts with `%d'"),
+	   _(argtype_msgid), *out, value);
+
+  *out = value;
 }
 
 /* Keep track of excluded file name patterns.  */
@@ -183,9 +216,6 @@ add_exclude_file (name)
   return close (f.desc);
 }
 
-/* The numbers 129- that appear in the fourth element of some entries
-   tell the big switch in `main' how to process those options.  */
-
 static struct option const longopts[] =
 {
   {"ignore-blank-lines", 0, 0, 'B'},
@@ -195,22 +225,18 @@ static struct option const longopts[] =
   {"speed-large-files", 0, 0, 'H'},
   {"ignore-matching-lines", 1, 0, 'I'},
   {"label", 1, 0, 'L'},
-  {"file-label", 1, 0, 'L'},	/* An alias, no longer recommended */
   {"new-file", 0, 0, 'N'},
-  {"entire-new-file", 0, 0, 'N'},	/* An alias, no longer recommended */
   {"unidirectional-new-file", 0, 0, 'P'},
   {"starting-file", 1, 0, 'S'},
   {"initial-tab", 0, 0, 'T'},
   {"width", 1, 0, 'W'},
   {"text", 0, 0, 'a'},
-  {"ascii", 0, 0, 'a'},		/* An alias, no longer recommended */
   {"ignore-space-change", 0, 0, 'b'},
   {"minimal", 0, 0, 'd'},
   {"ed", 0, 0, 'e'},
   {"forward-ed", 0, 0, 'f'},
   {"ignore-case", 0, 0, 'i'},
   {"paginate", 0, 0, 'l'},
-  {"print", 0, 0, 'l'},		/* An alias, no longer recommended */
   {"rcs", 0, 0, 'n'},
   {"show-c-function", 0, 0, 'p'},
   {"brief", 0, 0, 'q'},
@@ -223,20 +249,23 @@ static struct option const longopts[] =
   {"exclude-from", 1, 0, 'X'},
   {"side-by-side", 0, 0, 'y'},
   {"unified", 2, 0, 'U'},
-  {"left-column", 0, 0, 129},
-  {"suppress-common-lines", 0, 0, 130},
-  {"sdiff-merge-assist", 0, 0, 131},
-  {"old-line-format", 1, 0, 132},
-  {"new-line-format", 1, 0, 133},
-  {"unchanged-line-format", 1, 0, 134},
-  {"line-format", 1, 0, 135},
-  {"old-group-format", 1, 0, 136},
-  {"new-group-format", 1, 0, 137},
-  {"unchanged-group-format", 1, 0, 138},
-  {"changed-group-format", 1, 0, 139},
-  {"horizon-lines", 1, 0, 140},
-  {"help", 0, 0, 141},
-  {"binary", 0, 0, 142},
+  {"left-column", 0, 0, CHAR_MAX + 1},
+  {"suppress-common-lines", 0, 0, CHAR_MAX + 2},
+  {"sdiff-merge-assist", 0, 0, CHAR_MAX + 3},
+  {"old-line-format", 1, 0, CHAR_MAX + 4},
+  {"new-line-format", 1, 0, CHAR_MAX + 5},
+  {"unchanged-line-format", 1, 0, CHAR_MAX + 6},
+  {"line-format", 1, 0, CHAR_MAX + 7},
+  {"old-group-format", 1, 0, CHAR_MAX + 8},
+  {"new-group-format", 1, 0, CHAR_MAX + 9},
+  {"unchanged-group-format", 1, 0, CHAR_MAX + 10},
+  {"changed-group-format", 1, 0, CHAR_MAX + 11},
+  {"horizon-lines", 1, 0, CHAR_MAX + 12},
+  {"help", 0, 0, CHAR_MAX + 13},
+  {"binary", 0, 0, CHAR_MAX + 14},
+  {"from-file", 1, 0, CHAR_MAX + 15},
+  {"to-file", 1, 0, CHAR_MAX + 16},
+  {"inhibit-hunk-merge", 0, 0, CHAR_MAX + 17},
   {0, 0, 0, 0}
 };
 
@@ -245,11 +274,13 @@ main (argc, argv)
      int argc;
      char *argv[];
 {
-  int val;
+  int exit_status = 0;
   int c;
   int prev = -1;
-  int width = DEFAULT_WIDTH;
+  int width = -1;
   int show_c_function = 0;
+  char const *old_file = 0;
+  char const *new_file = 0;
 
   /* Do our initializations.  */
   initialize_main (&argc, &argv);
@@ -258,6 +289,7 @@ main (argc, argv)
   xmalloc_exit_failure = 2;
   output_style = OUTPUT_NORMAL;
   context = -1;
+  horizon_lines = -1;
   function_regexp_list.buf = &function_regexp;
   ignore_regexp_list.buf = &ignore_regexp;
 
@@ -265,7 +297,8 @@ main (argc, argv)
 
   while ((c = getopt_long (argc, argv,
 			   "0123456789abBcC:dD:efF:hHiI:lL:nNpPqrsS:tTuU:vwW:x:X:y",
-			   longopts, 0)) != EOF)
+			   longopts, 0))
+	 != -1)
     {
       switch (c)
 	{
@@ -311,13 +344,7 @@ main (argc, argv)
 	case 'C':		/* +context[=lines] */
 	case 'U':		/* +unified[=lines] */
 	  if (optarg)
-	    {
-	      if (context >= 0)
-		fatal ("context length specified twice");
-
-	      if (ck_atoi (optarg, &context))
-		fatal ("context length must be a nonnegative integer");
-	    }
+	    numeric_arg ("context length", optarg, &context);
 	  /* Fall through.  */
 	case 'c':
 	  /* Make context-style output.  */
@@ -350,7 +377,7 @@ main (argc, argv)
 		b += strlen (b) + 1;
 	      }
 	    if (err)
-	      error (0, 0, gettext ("conflicting #ifdef format"));
+	      error (0, 0, _("conflicting #ifdef format"));
 	  }
 	  break;
 
@@ -400,6 +427,8 @@ main (argc, argv)
 
 	case 'l':
 	  /* Pass the output through `pr' to paginate it.  */
+	  if (!pr_program[0])
+	    error (2, 0, _("pagination not supported on this host"));
 	  paginate_flag = 1;
 #if !defined (SIGCHLD) && defined (SIGCLD)
 #define SIGCHLD SIGCLD
@@ -464,6 +493,8 @@ main (argc, argv)
 	case 'S':
 	  /* When comparing directories, start with the specified
 	     file name.  This is used for resuming an aborted comparison.  */
+	  if (dir_start_file && strcmp (dir_start_file, optarg) != 0)
+	    fatal ("conflicting starting file");
 	  dir_start_file = optarg;
 	  break;
 
@@ -486,7 +517,10 @@ main (argc, argv)
 	  break;
 
 	case 'v':
-	  printf ("diff - %s\n", version_string);
+	  printf ("diff %s\n%s\n\n%s\n\n%s\n",
+		  version_string, copyright_string,
+		  _(free_software_msgid), _(authorship_msgid));
+	  check_stdout ();
 	  exit (0);
 
 	case 'w':
@@ -511,80 +545,95 @@ main (argc, argv)
 
 	case 'W':
 	  /* Set the line width for OUTPUT_SDIFF.  */
-	  if (ck_atoi (optarg, &width) || width <= 0)
-	    fatal ("column width must be a positive integer");
+	  numeric_arg ("column width", optarg, &width);
+	  if (!width)
+	    fatal ("column width is zero");
 	  break;
 
-	case 129:
+	case CHAR_MAX + 1:
 	  sdiff_left_only = 1;
 	  break;
 
-	case 130:
+	case CHAR_MAX + 2:
 	  sdiff_skip_common_lines = 1;
 	  break;
 
-	case 131:
+	case CHAR_MAX + 3:
 	  /* sdiff-style columns output.  */
 	  specify_style (OUTPUT_SDIFF);
 	  sdiff_help_sdiff = 1;
 	  break;
 
-	case 132:
-	case 133:
-	case 134:
+	case CHAR_MAX + 4:
+	case CHAR_MAX + 5:
+	case CHAR_MAX + 6:
 	  specify_style (OUTPUT_IFDEF);
-	  if (specify_format (&line_format[c - 132], optarg) != 0)
-	    error (0, 0, gettext ("conflicting line format"));
+	  if (specify_format (&line_format[c - (CHAR_MAX + 4)], optarg) != 0)
+	    error (0, 0, _("conflicting line format"));
 	  break;
 
-	case 135:
+	case CHAR_MAX + 7:
 	  specify_style (OUTPUT_IFDEF);
 	  {
 	    int i, err = 0;
 	    for (i = 0; i < sizeof (line_format) / sizeof (*line_format); i++)
 	      err |= specify_format (&line_format[i], optarg);
 	    if (err)
-	      error (0, 0, gettext ("conflicting line format"));
+	      error (0, 0, _("conflicting line format"));
 	  }
 	  break;
 
-	case 136:
-	case 137:
-	case 138:
-	case 139:
+	case CHAR_MAX + 8:
+	case CHAR_MAX + 9:
+	case CHAR_MAX + 10:
+	case CHAR_MAX + 11:
 	  specify_style (OUTPUT_IFDEF);
-	  if (specify_format (&group_format[c - 136], optarg) != 0)
-	    error (0, 0, gettext ("conflicting group format"));
+	  if (specify_format (&group_format[c - (CHAR_MAX + 8)], optarg) != 0)
+	    error (0, 0, _("conflicting group format"));
 	  break;
 
-	case 140:
-	  if (ck_atoi (optarg, &horizon_lines) || horizon_lines < 0)
-	    fatal ("horizon must be a nonnegative integer");
+	case CHAR_MAX + 12:
+	  numeric_arg ("horizon length", optarg, &horizon_lines);
 	  break;
 
-	case 141:
+	case CHAR_MAX + 13:
 	  usage ();
 	  check_stdout ();
 	  exit (0);
 
-	case 142:
+	case CHAR_MAX + 14:
 	  /* Use binary I/O when reading and writing data.
 	     On Posix hosts, this has no effect.  */
 #if HAVE_SETMODE
-	  binary_I_O = 1;
+	  binary_flag = 1;
 	  setmode (STDOUT_FILENO, O_BINARY);
 #endif
 	  break;
 
+	case CHAR_MAX + 15:
+	  if (old_file)
+	    fatal ("multiple `--from-file' options");
+	  old_file = optarg;
+	  break;
+
+	case CHAR_MAX + 16:
+	  if (new_file)
+	    fatal ("multiple `--to-file' options");
+	  new_file = optarg;
+	  break;
+
+	case CHAR_MAX + 17:
+	  inhibit_hunk_merge = 1;
+	  break;
+
 	default:
-	  try_help (0);
+	  try_help (0, 0);
 	}
       prev = c;
     }
 
-  if (argc - optind != 2)
-    try_help (argc - optind < 2 ? "missing operand" : "extra operand");
-
+  if (width < 0)
+    width = DEFAULT_WIDTH;
 
   {
     /*
@@ -612,6 +661,11 @@ main (argc, argv)
     /* Default amount of context for -c.  */
     context = 3;
 
+  /* Make the horizon at least as large as the context, so that
+     shift_boundaries has more freedom to shift the first and last hunks.  */
+  if (horizon_lines < context)
+    horizon_lines = context;
+
   summarize_regexp_list (&function_regexp_list);
   summarize_regexp_list (&ignore_regexp_list);
 
@@ -624,15 +678,15 @@ main (argc, argv)
       int i;
       for (i = 0; i < sizeof (line_format) / sizeof (*line_format); i++)
 	if (!line_format[i])
-	  line_format[i] = "%l\n";
+	  line_format[i] = (char *) "%l\n";
       if (!group_format[OLD])
 	group_format[OLD]
-	  = group_format[UNCHANGED] ? group_format[UNCHANGED] : "%<";
+	  = group_format[UNCHANGED] ? group_format[UNCHANGED] : (char *) "%<";
       if (!group_format[NEW])
 	group_format[NEW]
-	  = group_format[UNCHANGED] ? group_format[UNCHANGED] : "%>";
+	  = group_format[UNCHANGED] ? group_format[UNCHANGED] : (char *) "%>";
       if (!group_format[UNCHANGED])
-	group_format[UNCHANGED] = "%=";
+	group_format[UNCHANGED] = (char *) "%=";
       if (!group_format[CHANGED])
 	group_format[CHANGED] = concat (group_format[OLD],
 					group_format[NEW], "");
@@ -647,14 +701,48 @@ main (argc, argv)
 
   switch_string = option_list (argv + 1, optind - 1);
 
-  val = compare_files (0, argv[optind], 0, argv[optind + 1], 0);
+  if (old_file)
+    {
+      for (;  optind < argc;  optind++)
+	{
+	  int status = compare_files ((struct comparison *) 0,
+				      old_file, argv[optind]);
+	  if (exit_status < status)
+	    exit_status = status;
+	}
+    }
+
+  if (new_file)
+    {
+      for (;  optind < argc;  optind++)
+	{
+	  int status = compare_files ((struct comparison *) 0,
+				      argv[optind], new_file);
+	  if (exit_status < status)
+	    exit_status = status;
+	}
+    }
+  
+  if (!old_file && !new_file)
+    {
+      if (argc - optind != 2)
+	{
+	  if (argc - optind < 2)
+	    try_help ("missing operand after `%s'", argv[argc - 1]);
+	  else
+	    try_help ("extra operand `%s'", argv[optind + 2]);
+	}
+
+      exit_status = compare_files ((struct comparison *) 0,
+				   argv[optind], argv[optind + 1]);
+    }
 
   /* Print any messages that were saved up for last.  */
   print_message_queue ();
 
   check_stdout ();
-  exit (val);
-  return val;
+  exit (exit_status);
+  return exit_status;
 }
 
 /* Append to REGLIST the regexp PATTERN.  */
@@ -721,12 +809,14 @@ summarize_regexp_list (reglist)
 }
 
 static void
-try_help (reason_msgid)
+try_help (reason_msgid, operand)
      char const *reason_msgid;
+     char const *operand;
 {
   if (reason_msgid)
-    error (0, 0, "%s", gettext (reason_msgid));
-  error (2, 0, gettext ("Try `%s --help' for more information."), program_name);
+    error (0, 0, _(reason_msgid), operand);
+  error (2, 0, _("Try `%s --help' for more information."), program_name);
+  abort ();
 }
 
 static void
@@ -737,6 +827,9 @@ check_stdout ()
 }
 
 static char const * const option_help_msgid[] = {
+  "FILES are `FILE1 FILE2' or `DIR1 DIR2' or `DIR FILE...' or `FILE... DIR';",
+  "if --from-file or --to-file is given, there are no restrictions on FILES.",
+  "If a FILE is `-', read standard input.",
   "",
   "-i  --ignore-case  Consider upper- and lower-case to be the same.",
   "-w  --ignore-all-space  Ignore all white space.",
@@ -745,46 +838,48 @@ static char const * const option_help_msgid[] = {
   "-I RE  --ignore-matching-lines=RE  Ignore changes whose lines all match RE.",
 #if HAVE_SETMODE
   "--binary  Read and write data in binary mode.",
+#else
+  "--binary  Read and write data in binary mode (no effect on this platform).",
 #endif
   "-a  --text  Treat all files as text.",
   "",
-  "-c  -C NUM  --context[=NUM]  Output NUM (default 2) lines of copied context.",
-  "-u  -U NUM  --unified[=NUM]  Output NUM (default 2) lines of unified context.",
-  "  -NUM  Use NUM context lines.",
-  "  -L LABEL  --label LABEL  Use LABEL instead of file name.",
-  "  -p  --show-c-function  Show which C function each change is in.",
-  "  -F RE  --show-function-line=RE  Show the most recent line matching RE.",
+  "-c  -C NUM  --context[=NUM]  Output NUM (default 2) lines of copied context.\n\
+-u  -U NUM  --unified[=NUM]  Output NUM (default 2) lines of unified context.\n\
+  -NUM  Use NUM context lines.\n\
+  -L LABEL  --label LABEL  Use LABEL instead of file name.\n\
+  -p  --show-c-function  Show which C function each change is in.\n\
+  -F RE  --show-function-line=RE  Show the most recent line matching RE.",
   "-q  --brief  Output only whether files differ.",
   "-e  --ed  Output an ed script.",
   "-n  --rcs  Output an RCS format diff.",
-  "-y  --side-by-side  Output in two columns.",
-  "  -w NUM  --width=NUM  Output at most NUM (default 130) characters per line.",
-  "  --left-column  Output only the left column of common lines.",
-  "  --suppress-common-lines  Do not output common lines.",
-  "-DNAME  --ifdef=NAME  Output merged file to show `#ifdef NAME' diffs.",
+  "-y  --side-by-side  Output in two columns.\n\
+  -W NUM  --width=NUM  Output at most NUM (default 130) characters per line.\n\
+  --left-column  Output only the left column of common lines.\n\
+  --suppress-common-lines  Do not output common lines.",
+  "-D NAME  --ifdef=NAME  Output merged file to show `#ifdef NAME' diffs.",
   "--GTYPE-group-format=GFMT  Similar, but format GTYPE input groups with GFMT.",
   "--line-format=LFMT  Similar, but format all input lines with LFMT.",
   "--LTYPE-line-format=LFMT  Similar, but format LTYPE input lines with LFMT.",
   "  LTYPE is `old', `new', or `unchanged'.  GTYPE is LTYPE or `changed'.",
-  "  GFMT may contain:",
-  "    %<  lines from FILE1",
-  "    %>  lines from FILE2",
-  "    %=  lines common to FILE1 and FILE2",
-  "    %[-][WIDTH][.[PREC]]{doxX}LETTER  printf-style spec for LETTER",
-  "      LETTERs are as follows for new group, lower case for old group:",
-  "        F  first line number",
-  "        L  last line number",
-  "        N  number of lines = L-F+1",
-  "        E  F-1",
-  "        M  L+1",
-  "  LFMT may contain:",
-  "    %L  contents of line",
-  "    %l  contents of line, excluding any trailing newline",
-  "    %[-][WIDTH][.[PREC]]{doxX}n  printf-style spec for input line number",
-  "  Either GFMT or LFMT may contain:",
-  "    %%  %",
-  "    %c'C'  the single character C",
-  "    %c'\\OOO'  the character with octal code OOO",
+  "  GFMT may contain:\n\
+    %<  lines from FILE1\n\
+    %>  lines from FILE2\n\
+    %=  lines common to FILE1 and FILE2\n\
+    %[-][WIDTH][.[PREC]]{doxX}LETTER  printf-style spec for LETTER\n\
+      LETTERs are as follows for new group, lower case for old group:\n\
+        F  first line number\n\
+        L  last line number\n\
+        N  number of lines = L-F+1\n\
+        E  F-1\n\
+        M  L+1",
+  "  LFMT may contain:\n\
+    %L  contents of line\n\
+    %l  contents of line, excluding any trailing newline\n\
+    %[-][WIDTH][.[PREC]]{doxX}n  printf-style spec for input line number",
+  "  Either GFMT or LFMT may contain:\n\
+    %%  %\n\
+    %c'C'  the single character C\n\
+    %c'\\OOO'  the character with octal code OOO",
   "",
   "-l  --paginate  Pass the output through `pr' to paginate it.",
   "-t  --expand-tabs  Expand tabs to spaces in output.",
@@ -797,14 +892,18 @@ static char const * const option_help_msgid[] = {
   "-x PAT  --exclude=PAT  Exclude files that match PAT.",
   "-X FILE  --exclude-from=FILE  Exclude files that match any pattern in FILE.",
   "-S FILE  --starting-file=FILE  Start with FILE when comparing directories.",
+  "--from-file=FILE1  Compare FILE1 to all operands.  FILE1 can be a directory.",
+  "--to-file=FILE2  Compare all operands to FILE2.  FILE2 can be a directory.",
   "",
   "--horizon-lines=NUM  Keep NUM lines of the common prefix and suffix.",
+  "--inhibit-hunk-merge  Do not merge hunks.",
   "-d  --minimal  Try hard to find a smaller set of changes.",
   "-H  --speed-large-files  Assume large files and many scattered small changes.",
   "",
   "-v  --version  Output version info.",
   "--help  Output this help.",
   "",
+  "Report bugs to <bug-gnu-utils@prep.ai.mit.edu>.",
   0
 };
 
@@ -813,13 +912,25 @@ usage ()
 {
   char const * const *p;
 
-  printf (gettext ("Usage: %s [OPTION]... FILE1 FILE2\n"), program_name);
+  printf (_("Usage: %s [OPTION]... FILES\n"), program_name);
+
   for (p = option_help_msgid;  *p;  p++)
-    if (**p)
-      printf ("  %s\n", gettext (*p));
-    else
-      putchar ('\n');
-  printf (gettext ("If a FILE is `-', read standard input.\n"));
+    {
+      if (!**p)
+	putchar ('\n');
+      else
+	{
+	  char const *msg = _(*p);
+	  char const *nl;
+	  while ((nl = strchr (msg, '\n')))
+	    {
+	      printf ("  %.*s", nl + 1 - msg, msg);
+	      msg = nl + 1;
+	    }
+
+	  printf ("  %s\n" + 2 * (*msg != ' ' && *msg != '-'), msg);
+	}
+    }
 }
 
 static int
@@ -838,7 +949,7 @@ specify_style (style)
 {
   if (output_style != OUTPUT_NORMAL
       && output_style != style)
-    error (0, 0, gettext ("conflicting specifications of output style"));
+    error (0, 0, _("conflicting specifications of output style"));
   output_style = style;
 }
 
@@ -853,66 +964,65 @@ filetype (st)
   if (S_ISREG (st->st_mode))
     {
       if (st->st_size == 0)
-	return gettext ("regular empty file");
+	return _("regular empty file");
       /* Posix.2 section 5.14.2 seems to suggest that we must read the file
 	 and guess whether it's C, Fortran, etc., but this is somewhat useless
 	 and doesn't reflect historical practice.  We're allowed to guess
 	 wrong, so we don't bother to read the file.  */
-      return gettext ("regular file");
+      return _("regular file");
     }
-  if (S_ISDIR (st->st_mode)) return gettext ("directory");
+  if (S_ISDIR (st->st_mode)) return _("directory");
 
   /* other Posix.1 file types */
 #ifdef S_ISBLK
-  if (S_ISBLK (st->st_mode)) return gettext ("block special file");
+  if (S_ISBLK (st->st_mode)) return _("block special file");
 #endif
 #ifdef S_ISCHR
-  if (S_ISCHR (st->st_mode)) return gettext ("character special file");
+  if (S_ISCHR (st->st_mode)) return _("character special file");
 #endif
 #ifdef S_ISFIFO
-  if (S_ISFIFO (st->st_mode)) return gettext ("fifo");
+  if (S_ISFIFO (st->st_mode)) return _("fifo");
 #endif
 
   /* other Posix.1b file types */
 #ifdef S_TYPEISMQ
-  if (S_TYPEISMQ (st)) return gettext ("message queue");
+  if (S_TYPEISMQ (st)) return _("message queue");
 #endif
 #ifdef S_TYPEISSEM
-  if (S_TYPEISSEM (st)) return gettext ("semaphore");
+  if (S_TYPEISSEM (st)) return _("semaphore");
 #endif
 #ifdef S_TYPEISSHM
-  if (S_TYPEISSHM (st)) return gettext ("shared memory object");
+  if (S_TYPEISSHM (st)) return _("shared memory object");
 #endif
 
   /* other popular file types */
   /* S_ISLNK is impossible with `fstat' and `stat'.  */
 #ifdef S_ISSOCK
-  if (S_ISSOCK (st->st_mode)) return gettext ("socket");
+  if (S_ISSOCK (st->st_mode)) return _("socket");
 #endif
 
-  return gettext ("weird file");
+  return _("weird file");
 }
 
-/* Compare two files (or dirs) with specified names
-   DIR0/NAME0 and DIR1/NAME1, at level DEPTH in directory recursion.
-   (if DIR0 is 0, then the name is just NAME0, etc.)
+/* Compare two files (or dirs) with parent comparsion PARENT
+   and names NAME0 and NAME1.
+   (If PARENT is 0, then the first name is just NAME0, etc.)
    This is self-contained; it opens the files and closes them.
 
    Value is 0 if files are the same, 1 if different,
    2 if there is a problem opening them.  */
 
 static int
-compare_files (dir0, name0, dir1, name1, depth)
-     char const *dir0, *dir1;
+compare_files (parent, name0, name1)
+     struct comparison const *parent;
      char const *name0, *name1;
-     int depth;
 {
-  struct file_data inf[2];
+  struct comparison cmp;
+# define DIR_P(i) (S_ISDIR (cmp.file[i].stat.st_mode) != 0)
   register int i;
-  int val;
+  int status = 0;
   int same_files;
-  int failed = 0;
-  char *free0 = 0, *free1 = 0;
+  char *free0, *free1;
 
   /* If this is directory comparison, perhaps we have a file
      that exists only in one of the directories.
@@ -923,19 +1033,25 @@ compare_files (dir0, name0, dir1, name1, depth)
 	 || entire_new_file_flag))
     {
       char const *name = name0 == 0 ? name1 : name0;
-      char const *dir = name0 == 0 ? dir1 : dir0;
+      char const *dir = parent->file[name0 == 0].name;
+      /* See Posix.2 section 4.17.6.1.1 for this format.  */
       message ("Only in %s: %s\n", dir, name);
       /* Return 1 so that diff_dirs will return 1 ("some files differ").  */
       return 1;
     }
 
-  bzero (inf, sizeof (inf));
+  bzero (cmp.file, sizeof (cmp.file));
+  cmp.parent = parent;
 
-  /* Mark any nonexistent file with -1 in the desc field.
-     Mark unopened files (e.g. directories) with -2.  */
+  /* cmp.file[i].desc markers */
+# define NONEXISTENT (-1) /* nonexistent file */
+# define UNOPENED (-2) /* unopened file (e.g. directory) */
+# define ERRNO_ENCODE(errno) (-3 - (errno)) /* encoded errno value */
 
-  inf[0].desc = name0 == 0 ? -1 : -2;
-  inf[1].desc = name1 == 0 ? -1 : -2;
+# define ERRNO_DECODE(desc) (-3 - (desc)) /* inverse of ERRNO_ENCODE */
+
+  cmp.file[0].desc = name0 == 0 ? NONEXISTENT : UNOPENED;
+  cmp.file[1].desc = name1 == 0 ? NONEXISTENT : UNOPENED;
 
   /* Now record the full name of each file, including nonexistent ones.  */
 
@@ -944,146 +1060,163 @@ compare_files (dir0, name0, dir1, name1, depth)
   if (name1 == 0)
     name1 = name0;
 
-  inf[0].name = dir0 == 0 ? name0 : (free0 = dir_file_pathname (dir0, name0));
-  inf[1].name = dir1 == 0 ? name1 : (free1 = dir_file_pathname (dir1, name1));
+  if (!parent)
+    {
+      free0 = 0;
+      free1 = 0;
+      cmp.file[0].name = name0;
+      cmp.file[1].name = name1;
+    }
+  else
+    {
+      cmp.file[0].name = free0
+	= dir_file_pathname (parent->file[0].name, name0);
+      cmp.file[1].name = free1
+	= dir_file_pathname (parent->file[1].name, name1);
+    }
 
-  /* Stat the files.  Record whether they are directories.  */
+  /* Stat the files.  */
 
   for (i = 0; i <= 1; i++)
     {
-      if (inf[i].desc != -1)
+      if (cmp.file[i].desc != NONEXISTENT)
 	{
-	  int stat_result;
-
-	  if (i && filename_cmp (inf[i].name, inf[0].name) == 0)
+	  if (i && filename_cmp (cmp.file[i].name, cmp.file[0].name) == 0)
 	    {
-	      inf[i].stat = inf[0].stat;
-	      stat_result = 0;
+	      cmp.file[i].desc = cmp.file[0].desc;
+	      cmp.file[i].stat = cmp.file[0].stat;
 	    }
-	  else if (strcmp (inf[i].name, "-") == 0)
+	  else if (strcmp (cmp.file[i].name, "-") == 0)
 	    {
-	      inf[i].desc = STDIN_FILENO;
-	      stat_result = fstat (STDIN_FILENO, &inf[i].stat);
-	      if (stat_result == 0 && S_ISREG (inf[i].stat.st_mode))
+	      cmp.file[i].desc = STDIN_FILENO;
+	      if (fstat (STDIN_FILENO, &cmp.file[i].stat) != 0)
+		cmp.file[i].desc = ERRNO_ENCODE (errno);
+	      else if (S_ISREG (cmp.file[i].stat.st_mode))
 		{
 		  off_t pos = lseek (STDIN_FILENO, (off_t) 0, SEEK_CUR);
 		  if (pos == -1)
-		    stat_result = -1;
+		    cmp.file[i].desc = ERRNO_ENCODE (errno);
 		  else
 		    {
-		      if (pos <= inf[i].stat.st_size)
-			inf[i].stat.st_size -= pos;
+		      if (pos <= cmp.file[i].stat.st_size)
+			cmp.file[i].stat.st_size -= pos;
 		      else
-			inf[i].stat.st_size = 0;
+			cmp.file[i].stat.st_size = 0;
 		      /* Posix.2 4.17.6.1.4 requires current time for stdin.  */
-		      time (&inf[i].stat.st_mtime);
+		      time (&cmp.file[i].stat.st_mtime);
 		    }
 		}
 	    }
-	  else
-	    stat_result = stat (inf[i].name, &inf[i].stat);
-
-	  if (stat_result != 0)
-	    {
-	      perror_with_name (inf[i].name);
-	      failed = 1;
-	    }
-	  else
-	    {
-	      inf[i].dir_p = S_ISDIR (inf[i].stat.st_mode) && inf[i].desc != 0;
-	      if (inf[1 - i].desc == -1)
-		{
-		  inf[1 - i].dir_p = inf[i].dir_p;
-		  inf[1 - i].stat.st_mode = inf[i].stat.st_mode;
-		}
-	    }
+	  else if (stat (cmp.file[i].name, &cmp.file[i].stat) != 0)
+	    cmp.file[i].desc = ERRNO_ENCODE (errno);
 	}
     }
 
-  if (! failed && depth == 0 && inf[0].dir_p != inf[1].dir_p)
+  /* Mark files as nonexistent at the top level as needed for -N and -P.  */
+  if (! parent)
+    {
+      if ((entire_new_file_flag | unidirectional_new_file_flag)
+	  && cmp.file[0].desc == ERRNO_ENCODE (ENOENT)
+	  && cmp.file[1].desc == UNOPENED)
+	cmp.file[0].desc = NONEXISTENT;
+
+      if (entire_new_file_flag
+	  && cmp.file[0].desc == UNOPENED
+	  && cmp.file[1].desc == ERRNO_ENCODE (ENOENT))
+	cmp.file[1].desc = NONEXISTENT;
+    }
+
+  for (i = 0; i <= 1; i++)
+    if (cmp.file[i].desc == NONEXISTENT)
+      cmp.file[i].stat.st_mode = cmp.file[1 - i].stat.st_mode;
+
+  for (i = 0; i <= 1; i++)
+    {
+      int e = ERRNO_DECODE (cmp.file[i].desc);
+      if (0 <= e)
+	{
+	  errno = e;
+	  perror_with_name (cmp.file[i].name);
+	  status = 2;
+	}
+    }
+
+  if (status == 0 && ! parent && DIR_P (0) != DIR_P (1))
     {
       /* If one is a directory, and it was specified in the command line,
 	 use the file in that dir with the other file's basename.  */
 
-      int fnm_arg = inf[0].dir_p;
+      int fnm_arg = DIR_P (0);
       int dir_arg = 1 - fnm_arg;
-      char const *fnm = inf[fnm_arg].name;
-      char const *dir = inf[dir_arg].name;
+      char const *fnm = cmp.file[fnm_arg].name;
+      char const *dir = cmp.file[dir_arg].name;
       char const *p = filename_lastdirchar (fnm);
-      char const *filename = inf[dir_arg].name
+      char const *filename = cmp.file[dir_arg].name = free0
 	= dir_file_pathname (dir, p ? p + 1 : fnm);
 
       if (strcmp (fnm, "-") == 0)
 	fatal ("cannot compare `-' to a directory");
 
-      if (stat (filename, &inf[dir_arg].stat) != 0)
+      if (stat (filename, &cmp.file[dir_arg].stat) != 0)
 	{
 	  perror_with_name (filename);
-	  failed = 1;
+	  status = 2;
 	}
-      else
-	inf[dir_arg].dir_p = S_ISDIR (inf[dir_arg].stat.st_mode);
     }
 
-  if (failed)
+  if (status != 0)
     {
-
-      /* If either file should exist but does not, return 2.  */
-
-      val = 2;
-
+      /* One of the files should exist but does not.  */
     }
-  else if ((same_files = inf[0].desc != -1 && inf[1].desc != -1
-			 && 0 < same_file (&inf[0].stat, &inf[1].stat))
+  else if ((same_files
+	    = (cmp.file[0].desc != NONEXISTENT
+	       && cmp.file[1].desc != NONEXISTENT
+	       && 0 < same_file (&cmp.file[0].stat, &cmp.file[1].stat)))
 	   && no_diff_means_no_output)
     {
       /* The two named files are actually the same physical file.
 	 We know they are identical without actually reading them.  */
-
-      val = 0;
     }
-  else if (inf[0].dir_p & inf[1].dir_p)
+  else if (DIR_P (0) & DIR_P (1))
     {
       if (output_style == OUTPUT_IFDEF)
 	fatal ("-D option not supported with directories");
 
       /* If both are directories, compare the files in them.  */
 
-      if (depth > 0 && !recursive)
+      if (parent && !recursive)
 	{
 	  /* But don't compare dir contents one level down
-	     unless -r was specified.  */
+	     unless -r was specified.
+	     See Posix.2 section 4.17.6.1.1 for this format.  */
 	  message ("Common subdirectories: %s and %s\n",
-		   inf[0].name, inf[1].name);
-	  val = 0;
+		   cmp.file[0].name, cmp.file[1].name);
 	}
       else
-	{
-	  val = diff_dirs (inf, compare_files, depth);
-	}
-
+	status = diff_dirs (&cmp, compare_files);
     }
-  else if ((inf[0].dir_p | inf[1].dir_p)
-	   || (depth > 0
-	       && (! S_ISREG (inf[0].stat.st_mode)
-		   || ! S_ISREG (inf[1].stat.st_mode))))
+  else if ((DIR_P (0) | DIR_P (1))
+	   || (parent
+	       && (! S_ISREG (cmp.file[0].stat.st_mode)
+		   || ! S_ISREG (cmp.file[1].stat.st_mode))))
     {
-      /* Perhaps we have a subdirectory that exists only in one directory.
-	 If so, just print a message to that effect.  */
-
-      if (inf[0].desc == -1 || inf[1].desc == -1)
+      if (cmp.file[0].desc == NONEXISTENT || cmp.file[1].desc == NONEXISTENT)
 	{
-	  if ((inf[0].dir_p | inf[1].dir_p)
+	  /* We have a subdirectory that exists only in one directory.  */
+
+	  if ((DIR_P (0) | DIR_P (1))
 	      && recursive
 	      && (entire_new_file_flag
-		  || (unidirectional_new_file_flag && inf[0].desc == -1)))
-	    val = diff_dirs (inf, compare_files, depth);
+		  || (unidirectional_new_file_flag
+		      && cmp.file[0].desc == NONEXISTENT)))
+	    status = diff_dirs (&cmp, compare_files);
 	  else
 	    {
-	      char const *dir = (inf[0].desc == -1) ? dir1 : dir0;
+	      char const *dir
+		= parent->file[cmp.file[0].desc == NONEXISTENT].name;
 	      /* See Posix.2 section 4.17.6.1.1 for this format.  */
 	      message ("Only in %s: %s\n", dir, name0);
-	      val = 1;
+	      status = 1;
 	    }
 	}
       else
@@ -1092,24 +1225,26 @@ compare_files (dir0, name0, dir1, name1, depth)
 
 	  /* See Posix.2 section 4.17.6.1.1 for this format.  */
 	  message5 ("File %s is a %s while file %s is a %s\n",
-		    file_label[0] ? file_label[0] : inf[0].name,
-		    filetype (&inf[0].stat),
-		    file_label[1] ? file_label[1] : inf[1].name,
-		    filetype (&inf[1].stat));
+		    file_label[0] ? file_label[0] : cmp.file[0].name,
+		    filetype (&cmp.file[0].stat),
+		    file_label[1] ? file_label[1] : cmp.file[1].name,
+		    filetype (&cmp.file[1].stat));
 
 	  /* This is a difference.  */
-	  val = 1;
+	  status = 1;
 	}
     }
   else if ((no_details_flag & ~ignore_some_changes)
-	   && inf[0].stat.st_size != inf[1].stat.st_size
-	   && (inf[0].desc == -1 || S_ISREG (inf[0].stat.st_mode))
-	   && (inf[1].desc == -1 || S_ISREG (inf[1].stat.st_mode)))
+	   && cmp.file[0].stat.st_size != cmp.file[1].stat.st_size
+	   && (cmp.file[0].desc == NONEXISTENT
+	       || S_ISREG (cmp.file[0].stat.st_mode))
+	   && (cmp.file[1].desc == NONEXISTENT
+	       || S_ISREG (cmp.file[1].stat.st_mode)))
     {
       message ("Files %s and %s differ\n",
-	       file_label[0] ? file_label[0] : inf[0].name,
-	       file_label[1] ? file_label[1] : inf[1].name);
-      val = 1;
+	       file_label[0] ? file_label[0] : cmp.file[0].name,
+	       file_label[1] ? file_label[1] : cmp.file[1].name);
+      status = 1;
     }
   else
     {
@@ -1117,64 +1252,73 @@ compare_files (dir0, name0, dir1, name1, depth)
 
       /* Open the files and record their descriptors.  */
 
-      if (inf[0].desc == -2)
-	if ((inf[0].desc = open (inf[0].name, O_RDONLY, 0)) < 0)
+      if (cmp.file[0].desc == UNOPENED)
+	if ((cmp.file[0].desc = open (cmp.file[0].name, O_RDONLY, 0)) < 0)
 	  {
-	    perror_with_name (inf[0].name);
-	    failed = 1;
+	    perror_with_name (cmp.file[0].name);
+	    status = 2;
 	  }
-      if (inf[1].desc == -2)
-	if (same_files)
-	  inf[1].desc = inf[0].desc;
-	else if ((inf[1].desc = open (inf[1].name, O_RDONLY, 0)) < 0)
-	  {
-	    perror_with_name (inf[1].name);
-	    failed = 1;
-	  }
+      if (cmp.file[1].desc == UNOPENED)
+	{
+	  if (same_files)
+	    cmp.file[1].desc = cmp.file[0].desc;
+	  else if ((cmp.file[1].desc = open (cmp.file[1].name, O_RDONLY, 0))
+		   < 0)
+	    {
+	      perror_with_name (cmp.file[1].name);
+	      status = 2;
+	    }
+	}
 
 #if HAVE_SETMODE
-      if (binary_I_O)
+      if (binary_flag)
 	for (i = 0; i <= 1; i++)
-	  if (0 <= inf[i].desc)
-	    setmode (inf[i].desc, O_BINARY);
+	  if (0 <= cmp.file[i].desc)
+	    setmode (cmp.file[i].desc, O_BINARY);
 #endif
 
       /* Compare the files, if no error was found.  */
 
-      val = failed ? 2 : diff_2_files (inf, depth);
+      if (status == 0)
+	status = diff_2_files (&cmp);
 
       /* Close the file descriptors.  */
 
-      if (inf[0].desc >= 0 && close (inf[0].desc) != 0)
+      if (0 <= cmp.file[0].desc && close (cmp.file[0].desc) != 0)
 	{
-	  perror_with_name (inf[0].name);
-	  val = 2;
+	  perror_with_name (cmp.file[0].name);
+	  status = 2;
 	}
-      if (inf[1].desc >= 0 && inf[0].desc != inf[1].desc
-	  && close (inf[1].desc) != 0)
+      if (0 <= cmp.file[1].desc && cmp.file[0].desc != cmp.file[1].desc
+	  && close (cmp.file[1].desc) != 0)
 	{
-	  perror_with_name (inf[1].name);
-	  val = 2;
+	  perror_with_name (cmp.file[1].name);
+	  status = 2;
 	}
     }
 
   /* Now the comparison has been done, if no error prevented it,
-     and VAL is the value this function will return.  */
+     and STATUS is the value this function will return.  */
 
-  if (val == 0 && !inf[0].dir_p)
+  if (status == 0)
     {
-      if (print_file_same_flag)
+      if (print_file_same_flag && !DIR_P (0))
 	message ("Files %s and %s are identical\n",
-		 file_label[0] ? file_label[0] : inf[0].name,
-		 file_label[1] ? file_label[1] : inf[1].name);
+		 file_label[0] ? file_label[0] : cmp.file[0].name,
+		 file_label[1] ? file_label[1] : cmp.file[1].name);
     }
   else
-    fflush (stdout);
+    {
+      /* Flush stdout so that the user sees differences immediately.
+	 This can hurt performance, unfortunately.  */
+      if (fflush (stdout) != 0)
+	pfatal_with_name (_("write failed"));
+    }
 
   if (free0)
     free (free0);
   if (free1)
     free (free1);
 
-  return val;
+  return status;
 }
