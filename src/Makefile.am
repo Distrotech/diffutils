@@ -1,6 +1,6 @@
 # Automakefile for GNU diffutils programs.
 
-# Copyright (C) 2001 Free Software Foundation, Inc.
+# Copyright (C) 2001, 2002 Free Software Foundation, Inc.
 
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -23,16 +23,13 @@ bin_PROGRAMS = cmp diff diff3 sdiff
 
 noinst_HEADERS = diff.h system.h
 
-datadir = $(prefix)/@DATADIRNAME@
+datadir = $(prefix)/share
 localedir = $(datadir)/locale
 
-INCLUDES = -I.. -I$(srcdir) -I../lib -I$(top_srcdir)/lib -I../intl -I$(top_srcdir)/intl
+INCLUDES = -I.. -I$(srcdir) -I../lib -I$(top_srcdir)/lib
 DEFS = -DLOCALEDIR=\"$(localedir)\" @DEFS@
 
-# Link libdiffutils.a after @INTLLIBS@, since @INTLLIBS@ might invoke
-# rpl_realloc.  And link it before @INTTLIBS@, since it invokes i18n
-# functions.
-LDADD = ../lib/libdiffutils.a @INTLLIBS@ ../lib/libdiffutils.a
+LDADD = ../lib/libdiffutils.a @LIBINTL@
 diff_LDADD = $(LDADD) @LIB_CLOCK_GETTIME@
 
 cmp_SOURCES = cmp.c version.c
