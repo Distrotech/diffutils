@@ -19,7 +19,7 @@
 
 AUTOMAKE_OPTIONS = gnits dist-shar
 EXTRA_DIST = exgettext
-SUBDIRS = doc lib intl m4 src po
+SUBDIRS = doc intl lib m4 src po
 DISTCLEANFILES = intl/libintl.h
 
 ACLOCAL_AMFLAGS = -I m4
