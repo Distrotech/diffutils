@@ -2,6 +2,7 @@ Thanks to all the following for their contributions to GNU diffutils:
 
 Thomas Bushnell  <tb@becket.net>
 Wayne Davison  <wayned@users.sourceforge.net>
+Ulrich Drepper  <drepper@redhat.com>
 Paul Eggert  <eggert@twinsun.com>
 Jay Fenlason <hack@gnu.org>
 John Gilmore  <gnu@cygnus.com>
