@@ -37,27 +37,6 @@
 # define volatile
 #endif
 
-/* Handle `alloca' now, since the AIX pragma must occur before any
-   system include files.  */
-#if ! HAVE_C_VARARRAYS
-# if HAVE_ALLOCA_H
-#  include <alloca.h>
-# else
-#  ifdef _AIX
- #  pragma alloca
-#  else
-#   ifdef _WIN32
-#    include <malloc.h>
-#    include <io.h>
-#   else
-#    ifndef alloca
-void *alloca (size_t);
-#    endif
-#   endif
-#  endif
-# endif
-#endif
-
 /* Verify a requirement at compile-time (unlike assert, which is runtime).  */
 #define verify(name, assertion) struct name { char a[(assertion) ? 1 : -1]; }
 
@@ -174,7 +153,7 @@ void *alloca (size_t);
 # include <sys/wait.h>
 #endif
 #ifndef WEXITSTATUS
-# define WEXITSTATUS(stat_val) ((unsigned) (stat_val) >> 8)
+# define WEXITSTATUS(stat_val) ((unsigned int) (stat_val) >> 8)
 #endif
 #ifndef WIFEXITED
 # define WIFEXITED(stat_val) (((stat_val) & 255) == 0)
@@ -212,6 +191,14 @@ void *alloca (size_t);
    char *getenv ();
 # endif
 #endif
+#ifndef EXIT_SUCCESS
+# define EXIT_SUCCESS 0
+#endif
+#if !EXIT_FAILURE
+# undef EXIT_FAILURE /* Sony NEWS-OS 4.0C defines EXIT_FAILURE to 0.  */
+# define EXIT_FAILURE 1
+#endif
+#define EXIT_TROUBLE 2
 
 #include <limits.h>
 
@@ -266,7 +253,7 @@ void *memchr ();
 #if STDC_HEADERS
 # define CTYPE_DOMAIN(c) 1
 #else
-# define CTYPE_DOMAIN(c) ((unsigned) (c) <= 0177)
+# define CTYPE_DOMAIN(c) ((unsigned int) (c) <= 0177)
 #endif
 #define ISPRINT(c) (CTYPE_DOMAIN (c) && isprint (c))
 #define ISSPACE(c) (CTYPE_DOMAIN (c) && isspace (c))
@@ -284,15 +271,26 @@ void *memchr ();
    - Its arg may be any int or unsigned int; it need not be an unsigned char.
    - It's guaranteed to evaluate its argument exactly once.
    - It's typically faster.
-   POSIX 1003.2-1992 section 2.5.2.1 page 50 lines 1556-1558 says that
-   only '0' through '9' are digits.  POSIX 1003.1-2001 is unchanged here.
+   POSIX 1003.1-2001 says that only '0' through '9' are digits.
    Prefer ISDIGIT to isdigit unless it's important to use the locale's
    definition of `digit' even when the host does not conform to POSIX.  */
-#define ISDIGIT(c) ((unsigned) (c) - '0' <= 9)
+#define ISDIGIT(c) ((unsigned int) (c) - '0' <= 9)
 
 #include <errno.h>
 #if !STDC_HEADERS
  extern int errno;
+#endif
+
+#include <signal.h>
+#ifndef SA_RESTART
+# ifdef SA_INTERRUPT /* e.g. SunOS 4.1.x */
+#  define SA_RESTART SA_INTERRUPT
+# else
+#  define SA_RESTART 0
+# endif
+#endif
+#if !defined SIGCHLD && defined SIGCLD
+# define SIGCHLD SIGCLD
 #endif
 
 #undef MIN
