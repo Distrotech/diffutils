@@ -183,18 +183,15 @@ __xstrtol (const char *s, char **ptr, int strtol_base,
 	  switch (p[0][1])
 	    {
 	    case 'i':
-	      suffixes++;
+	      if (p[0][2] == 'B')
+		suffixes = 3;
 	      break;
 
-	    case '\0':
-	      break;
-
-	    default:
+	    case 'B':
+	      suffixes = 2;
 	      base = 1000;
 	      break;
 	    }
-
-	  suffixes += (p[0][suffixes] == 'B');
 	}
 
       switch (**p)
@@ -211,11 +208,11 @@ __xstrtol (const char *s, char **ptr, int strtol_base,
 	  overflow = 0;
 	  break;
 
-	case 'E': /* Exa or exbi */
+	case 'E': /* exa or exbi */
 	  overflow = bkm_scale_by_power (&tmp, base, 6);
 	  break;
 
-	case 'G': /* Giga or gibi */
+	case 'G': /* giga or gibi */
 	case 'g': /* 'g' is undocumented; for compatibility only */
 	  overflow = bkm_scale_by_power (&tmp, base, 3);
 	  break;
@@ -225,16 +222,16 @@ __xstrtol (const char *s, char **ptr, int strtol_base,
 	  overflow = bkm_scale_by_power (&tmp, base, 1);
 	  break;
 
-	case 'M': /* Mega or mebi */
+	case 'M': /* mega or mebi */
 	case 'm': /* 'm' is undocumented; for compatibility only */
 	  overflow = bkm_scale_by_power (&tmp, base, 2);
 	  break;
 
-	case 'P': /* Peta or pebi */
+	case 'P': /* peta or pebi */
 	  overflow = bkm_scale_by_power (&tmp, base, 5);
 	  break;
 
-	case 'T': /* Tera or tebi */
+	case 'T': /* tera or tebi */
 	case 't': /* 't' is undocumented; for compatibility only */
 	  overflow = bkm_scale_by_power (&tmp, base, 4);
 	  break;
@@ -243,11 +240,11 @@ __xstrtol (const char *s, char **ptr, int strtol_base,
 	  overflow = bkm_scale (&tmp, 2);
 	  break;
 
-	case 'Y': /* Yotta */
+	case 'Y': /* yotta */
 	  overflow = bkm_scale_by_power (&tmp, base, 8);
 	  break;
 
-	case 'Z': /* Zetta */
+	case 'Z': /* zetta */
 	  overflow = bkm_scale_by_power (&tmp, base, 7);
 	  break;
 
