@@ -31,46 +31,58 @@ filename_lastdirchar (char const *filename)
   return (char *) last;
 }
 
-char *
-system_quote_arg (char *q, char const *a)
+/* Place into QUOTED a quoted version of ARG suitable for `system'.
+   Return the length of the resulting string (which is not null-terminated).
+   If QUOTED is null, return the length without any side effects.  */
+
+size_t
+system_quote_arg (char *quoted, char const *arg)
 {
-  int needs_quoting = !*a || strchr (a, ' ') || strchr (a, '\t');
+  int needs_quoting = !*arg || strchr (arg, ' ') || strchr (arg, '\t');
   size_t backslashes = 0;
-  char c;
+  size_t len = 0;
 
   if (needs_quoting)
-    *q++ = '"';
-
-  for (;;  *q++ = c)
     {
-      c = *a++;
+      if (quoted)
+	quoted[len] = '"';
+      len++;
+    }
+
+  for (;;)
+    {
+      char c = *arg++;
       switch (c)
 	{
-	case '\\':
-	  backslashes++;
-	  continue;
+	case 0:
+	  if (needs_quoting)
+	    {
+	      if (quoted)
+		{
+		  memset (quoted + len, '\\', backslashes);
+		  quoted[len + backslashes] = '"';
+		}
+	      len += backslashes + 1;
+	    }
+	  return len;
 
 	case '"':
 	  backslashes++;
-	  memset (q, '\\', backslashes);
-	  q += backslashes;
+	  if (quoted)
+	    memset (quoted + len, '\\', backslashes);
+	  len += backslashes;
 	  /* fall through */
 	default:
 	  backslashes = 0;
-	  continue;
+	  break;
 
-	case 0:
+	case '\\':
+	  backslashes++;
 	  break;
 	}
-      break;
-    }
 
-  if (needs_quoting)
-    {
-      memset (q, '\\', backslashes);
-      q += backslashes;
-      *q++ = '"';
+      if (quoted)
+	quoted[len] = c;
+      len++;
     }
-
-  return q;
 }
