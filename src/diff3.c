@@ -1060,7 +1060,7 @@ readnum (char *s, lin *pnum)
    the string pointer (whose location is passed to this routine) is
    updated to point beyond the end of the string parsed.  Note that
    only the ranges in the diff_block will be set by this routine.
-  
+
    If some specific pair of numbers has been reduced to a single
    number, then both corresponding numbers in the diff block are set
    to that number.  In general these numbers are interpreted as ranges
@@ -1400,7 +1400,7 @@ output_diff3 (FILE *outputfile, struct diff3_block *diff,
 
 /* Output to OUTPUTFILE the lines of B taken from FILENUM.  Double any
    initial '.'s; yield nonzero if any initial '.'s were doubled.  */
-   
+
 static bool
 dotlines (FILE *outputfile, struct diff3_block *b, int filenum)
 {
@@ -1428,7 +1428,7 @@ dotlines (FILE *outputfile, struct diff3_block *b, int filenum)
    output a command that removes initial '.'s starting with line START
    and continuing for NUM lines.  (START is long, not lin, for
    convenience with printf %ld formats.)  */
-   
+
 static void
 undotlines (FILE *outputfile, bool leading_dot, long start, lin num)
 {
