@@ -21,7 +21,7 @@ AC_DEFUN([AC_SYS_XSI_STACK_OVERFLOW_HEURISTIC],
   [# for STACK_DIRECTION
    AC_REQUIRE([AC_FUNC_ALLOCA])
 
-   AC_CACHE_CHECK([for working POSIX+XSI stack overflow detection heuristic],
+   AC_CACHE_CHECK([for working C stack overflow detection],
      ac_cv_sys_xsi_stack_overflow_heuristic,
      [AC_TRY_RUN(
 	[
@@ -126,9 +126,6 @@ AC_DEFUN([jm_PREREQ_C_STACK],
    # for STACK_DIRECTION
    AC_REQUIRE([AC_FUNC_ALLOCA])
 
-   AC_CHECK_HEADERS(stdbool.h ucontext.h unistd.h)
+   AC_CHECK_HEADERS(unistd.h)
 
-   AC_CHECK_TYPES([siginfo_t, stack_t], , , [#include <signal.h>])
-   AC_CHECK_TYPES([ucontext_t], , , [#include <ucontext.h>])
-
-   AC_CHECK_DECLS([sigaction, sigaltstack], , , [#include <signal.h>])])
+   AC_CHECK_TYPES([siginfo_t, stack_t], , , [#include <signal.h>])])
