@@ -117,7 +117,7 @@ often called a @dfn{diff} or @dfn{patch}.  For files that are identical,
 @command{diff} normally produces no output; for binary (non-text) files,
 @command{diff} normally reports only that they are different.
 
-You can use the @command{cmp} command to show the offsets and line numbers
+You can use the @command{cmp} command to show the byte and line numbers
 where two files differ.  @command{cmp} can also show all the characters
 that differ between the two files, side by side.  Another way to compare
 two files character by character is the Emacs command @kbd{M-x
@@ -387,7 +387,7 @@ it knows that there are any differences.
 You can also get a brief indication of whether two files differ by using
 @command{cmp}.  For files that are identical, @command{cmp} produces no
 output.  When the files differ, by default, @command{cmp} outputs the byte
-offset and line number where the first difference occurs.  You can use
+and line number where the first difference occurs.  You can use
 the @option{-s} option to suppress that information, so that @command{cmp}
 produces no output and reports whether the files differ using only its
 exit status (@pxref{Invoking cmp}).
@@ -2727,9 +2727,10 @@ remove the scratch directory.
 @cindex invoking @command{cmp}
 @cindex @command{cmp} invocation
 
-The @command{cmp} command compares two files, and if they differ, tells the
-first byte and line number where they differ.  Its arguments are as
-follows:
+The @command{cmp} command compares two files, and if they differ,
+tells the first byte and line number where they differ.  Bytes and
+lines are numbered starting with 1.  The arguments of @command{cmp}
+are as follows:
 
 @example
 cmp @var{options}@dots{} @var{from-file} @r{[}@var{to-file}@r{]}
@@ -2769,7 +2770,7 @@ Ignore any differences in the first @var{bytes} bytes of the input files.
 Treat files with fewer than @var{bytes} bytes as if they are empty.
 
 @item -l
-Print the (decimal) offsets and (octal) values of all differing bytes.
+Print the (decimal) indices and (octal) values of all differing bytes.
 
 @item --print-bytes
 Print the differing bytes.  Display control bytes as a
@@ -2786,7 +2787,7 @@ the files differ.
 Output the version number of @command{cmp}.
 
 @item --verbose
-Print the (decimal) offsets and (octal) values of all differing bytes.
+Print the (decimal) indices and (octal) values of all differing bytes.
 
 @item --version
 Output the version number of @command{cmp}.
