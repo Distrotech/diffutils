@@ -1,5 +1,7 @@
 /* Analyze file differences for GNU DIFF.
-   Copyright 1988, 89, 92, 93, 94, 95, 1997 Free Software Foundation, Inc.
+
+   Copyright (C) 1988, 1989, 1992, 1993, 1994, 1995, 1998, 2001 Free
+   Software Foundation, Inc.
 
    This file is part of GNU DIFF.
 
@@ -15,7 +17,7 @@
 
    You should have received a copy of the GNU General Public License
    along with this program; see the file COPYING.
-   If not, write to the Free Software Foundation, 
+   If not, write to the Free Software Foundation,
    59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
 
 /* The basic algorithm is described in:
@@ -32,37 +34,31 @@
    Information and Control Vol. 64, 1985, pp. 100-118.  */
 
 #include "diff.h"
-#include "cmpbuf.h"
+#include <cmpbuf.h>
+#include <error.h>
+#include <regex.h>
+#include <xalloc.h>
 
-static int *xvec, *yvec;	/* Vectors being compared. */
-static int *fdiag;		/* Vector, indexed by diagonal, containing
+static lin *xvec, *yvec;	/* Vectors being compared. */
+static lin *fdiag;		/* Vector, indexed by diagonal, containing
 				   1 + the X coordinate of the point furthest
 				   along the given diagonal in the forward
 				   search of the edit matrix. */
-static int *bdiag;		/* Vector, indexed by diagonal, containing
+static lin *bdiag;		/* Vector, indexed by diagonal, containing
 				   the X coordinate of the point furthest
 				   along the given diagonal in the backward
 				   search of the edit matrix. */
-static int too_expensive;	/* Edit scripts longer than this are too
+static lin too_expensive;	/* Edit scripts longer than this are too
 				   expensive to compute.  */
 
 #define SNAKE_LIMIT 20	/* Snakes bigger than this are considered `big'.  */
 
 struct partition
 {
-  int xmid, ymid;	/* Midpoints of this partition.  */
-  int lo_minimal;	/* Nonzero if low half will be analyzed minimally.  */
-  int hi_minimal;	/* Likewise for high half.  */
+  lin xmid, ymid;	/* Midpoints of this partition.  */
+  bool lo_minimal;	/* Nonzero if low half will be analyzed minimally.  */
+  bool hi_minimal;	/* Likewise for high half.  */
 };
-
-static int briefly_report PARAMS((int, struct file_data const[]));
-static int diag PARAMS((int, int, int, int, int, struct partition *));
-static struct change *add_change PARAMS((int, int, int, int, struct change *));
-static struct change *build_reverse_script PARAMS((struct file_data const[]));
-static struct change *build_script PARAMS((struct file_data const[]));
-static void compareseq PARAMS((int, int, int, int, int));
-static void discard_confusing_lines PARAMS((struct file_data[]));
-static void shift_boundaries PARAMS((struct file_data[]));
 
 /* Find the midpoint of the shortest edit script for a specified
    portion of the two files.
@@ -72,19 +68,19 @@ static void shift_boundaries PARAMS((struct file_data[]));
    When the two searches meet, we have found the midpoint of the shortest
    edit sequence.
 
-   If MINIMAL is nonzero, find the minimal edit script regardless
+   If FIND_MINIMAL is nonzero, find the minimal edit script regardless
    of expense.  Otherwise, if the search is too expensive, use
    heuristics to stop the search and report a suboptimal answer.
 
-   Set PART->(XMID,YMID) to the midpoint (XMID,YMID).  The diagonal number
+   Set PART->(xmid,ymid) to the midpoint (XMID,YMID).  The diagonal number
    XMID - YMID equals the number of inserted lines minus the number
    of deleted lines (counting only lines before the midpoint).
    Return the approximate edit cost; this is the total number of
    lines inserted or deleted (counting only lines before the midpoint),
    unless a heuristic is used to terminate the search prematurely.
 
-   Set PART->LEFT_MINIMAL to nonzero iff the minimal edit script for the
-   left half of the partition is known; similarly for PART->RIGHT_MINIMAL.
+   Set PART->lo_minimal to true iff the minimal edit script for the
+   left half of the partition is known; similarly for PART->hi_minimal.
 
    This function assumes that the first lines of the specified portions
    of the two files do not match, and likewise that the last lines do not
@@ -95,23 +91,22 @@ static void shift_boundaries PARAMS((struct file_data[]));
    the worst this can do is cause suboptimal diff output.
    It cannot cause incorrect diff output.  */
 
-static int
-diag (xoff, xlim, yoff, ylim, minimal, part)
-     int xoff, xlim, yoff, ylim, minimal;
-     struct partition *part;
+static lin
+diag (lin xoff, lin xlim, lin yoff, lin ylim, bool find_minimal,
+      struct partition *part)
 {
-  int *const fd = fdiag;	/* Give the compiler a chance. */
-  int *const bd = bdiag;	/* Additional help for the compiler. */
-  int const *const xv = xvec;	/* Still more help for the compiler. */
-  int const *const yv = yvec;	/* And more and more . . . */
-  int const dmin = xoff - ylim;	/* Minimum valid diagonal. */
-  int const dmax = xlim - yoff;	/* Maximum valid diagonal. */
-  int const fmid = xoff - yoff;	/* Center diagonal of top-down search. */
-  int const bmid = xlim - ylim;	/* Center diagonal of bottom-up search. */
-  int fmin = fmid, fmax = fmid;	/* Limits of top-down search. */
-  int bmin = bmid, bmax = bmid;	/* Limits of bottom-up search. */
-  int c;			/* Cost. */
-  int odd = (fmid - bmid) & 1;	/* True if southeast corner is on an odd
+  lin *const fd = fdiag;	/* Give the compiler a chance. */
+  lin *const bd = bdiag;	/* Additional help for the compiler. */
+  lin const *const xv = xvec;	/* Still more help for the compiler. */
+  lin const *const yv = yvec;	/* And more and more . . . */
+  lin const dmin = xoff - ylim;	/* Minimum valid diagonal. */
+  lin const dmax = xlim - yoff;	/* Maximum valid diagonal. */
+  lin const fmid = xoff - yoff;	/* Center diagonal of top-down search. */
+  lin const bmid = xlim - ylim;	/* Center diagonal of bottom-up search. */
+  lin fmin = fmid, fmax = fmid;	/* Limits of top-down search. */
+  lin bmin = bmid, bmax = bmid;	/* Limits of bottom-up search. */
+  lin c;			/* Cost. */
+  bool odd = (fmid - bmid) & 1;	/* True if southeast corner is on an odd
 				   diagonal with respect to the northwest. */
 
   fd[fmid] = xoff;
@@ -119,15 +114,15 @@ diag (xoff, xlim, yoff, ylim, minimal, part)
 
   for (c = 1;; ++c)
     {
-      int d;			/* Active diagonal. */
-      int big_snake = 0;
+      lin d;			/* Active diagonal. */
+      bool big_snake = 0;
 
       /* Extend the top-down search by an edit step in each diagonal. */
       fmin > dmin ? fd[--fmin - 1] = -1 : ++fmin;
       fmax < dmax ? fd[++fmax + 1] = -1 : --fmax;
       for (d = fmax; d >= fmin; d -= 2)
 	{
-	  int x, y, oldx, tlo = fd[d - 1], thi = fd[d + 1];
+	  lin x, y, oldx, tlo = fd[d - 1], thi = fd[d + 1];
 
 	  if (tlo >= thi)
 	    x = tlo + 1;
@@ -150,11 +145,11 @@ diag (xoff, xlim, yoff, ylim, minimal, part)
 	}
 
       /* Similarly extend the bottom-up search.  */
-      bmin > dmin ? bd[--bmin - 1] = INT_MAX : ++bmin;
-      bmax < dmax ? bd[++bmax + 1] = INT_MAX : --bmax;
+      bmin > dmin ? bd[--bmin - 1] = LIN_MAX : ++bmin;
+      bmax < dmax ? bd[++bmax + 1] = LIN_MAX : --bmax;
       for (d = bmax; d >= bmin; d -= 2)
 	{
-	  int x, y, oldx, tlo = bd[d - 1], thi = bd[d + 1];
+	  lin x, y, oldx, tlo = bd[d - 1], thi = bd[d + 1];
 
 	  if (tlo < thi)
 	    x = tlo;
@@ -176,7 +171,7 @@ diag (xoff, xlim, yoff, ylim, minimal, part)
 	    }
 	}
 
-      if (minimal)
+      if (find_minimal)
 	continue;
 
       /* Heuristic: check occasionally for a diagonal that has made
@@ -187,17 +182,17 @@ diag (xoff, xlim, yoff, ylim, minimal, part)
 	 With this heuristic, for files with a constant small density
 	 of changes, the algorithm is linear in the file size.  */
 
-      if (c > 200 && big_snake && heuristic)
+      if (200 < c && big_snake && speed_large_files)
 	{
-	  int best;
+	  lin best;
 
 	  best = 0;
 	  for (d = fmax; d >= fmin; d -= 2)
 	    {
-	      int dd = d - fmid;
-	      int x = fd[d];
-	      int y = x - d;
-	      int v = (x - xoff) * 2 - dd;
+	      lin dd = d - fmid;
+	      lin x = fd[d];
+	      lin y = x - d;
+	      lin v = (x - xoff) * 2 - dd;
 	      if (v > 12 * (c + (dd < 0 ? -dd : dd)))
 		{
 		  if (v > best
@@ -229,10 +224,10 @@ diag (xoff, xlim, yoff, ylim, minimal, part)
 	  best = 0;
 	  for (d = bmax; d >= bmin; d -= 2)
 	    {
-	      int dd = d - bmid;
-	      int x = bd[d];
-	      int y = x - d;
-	      int v = (xlim - x) * 2 + dd;
+	      lin dd = d - bmid;
+	      lin x = bd[d];
+	      lin y = x - d;
+	      lin v = (xlim - x) * 2 + dd;
 	      if (v > 12 * (c + (dd < 0 ? -dd : dd)))
 		{
 		  if (v > best
@@ -266,8 +261,8 @@ diag (xoff, xlim, yoff, ylim, minimal, part)
 	 give up and report halfway between our best results so far.  */
       if (c >= too_expensive)
 	{
-	  int fxybest, fxbest;
-	  int bxybest, bxbest;
+	  lin fxybest, fxbest;
+	  lin bxybest, bxbest;
 
 	  fxbest = bxbest = 0;  /* Pacify `gcc -Wall'.  */
 
@@ -275,8 +270,8 @@ diag (xoff, xlim, yoff, ylim, minimal, part)
 	  fxybest = -1;
 	  for (d = fmax; d >= fmin; d -= 2)
 	    {
-	      int x = min (fd[d], xlim);
-	      int y = x - d;
+	      lin x = MIN (fd[d], xlim);
+	      lin y = x - d;
 	      if (ylim < y)
 		x = ylim + d, y = ylim;
 	      if (fxybest < x + y)
@@ -287,11 +282,11 @@ diag (xoff, xlim, yoff, ylim, minimal, part)
 	    }
 
 	  /* Find backward diagonal that minimizes X + Y.  */
-	  bxybest = INT_MAX;
+	  bxybest = LIN_MAX;
 	  for (d = bmax; d >= bmin; d -= 2)
 	    {
-	      int x = max (xoff, bd[d]);
-	      int y = x - d;
+	      lin x = MAX (xoff, bd[d]);
+	      lin y = x - d;
 	      if (y < yoff)
 		x = yoff + d, y = yoff;
 	      if (x + y < bxybest)
@@ -324,23 +319,22 @@ diag (xoff, xlim, yoff, ylim, minimal, part)
 /* Compare in detail contiguous subsequences of the two files
    which are known, as a whole, to match each other.
 
-   The results are recorded in the vectors files[N].changed_flag, by
-   storing a 1 in the element for each line that is an insertion or deletion.
+   The results are recorded in the vectors files[N].changed, by
+   storing 1 in the element for each line that is an insertion or deletion.
 
    The subsequence of file 0 is [XOFF, XLIM) and likewise for file 1.
 
    Note that XLIM, YLIM are exclusive bounds.
    All line numbers are origin-0 and discarded lines are not counted.
 
-   If MINIMAL is nonzero, find a minimal difference no matter how
+   If FIND_MINIMAL, find a minimal difference no matter how
    expensive it is.  */
 
 static void
-compareseq (xoff, xlim, yoff, ylim, minimal)
-     int xoff, xlim, yoff, ylim, minimal;
+compareseq (lin xoff, lin xlim, lin yoff, lin ylim, bool find_minimal)
 {
-  int * const xv = xvec; /* Help the compiler.  */
-  int * const yv = yvec;
+  lin * const xv = xvec; /* Help the compiler.  */
+  lin * const yv = yvec;
 
   /* Slide down the bottom initial diagonal. */
   while (xoff < xlim && yoff < ylim && xv[xoff] == yv[yoff])
@@ -352,18 +346,18 @@ compareseq (xoff, xlim, yoff, ylim, minimal)
   /* Handle simple cases. */
   if (xoff == xlim)
     while (yoff < ylim)
-      files[1].changed_flag[files[1].realindexes[yoff++]] = 1;
+      files[1].changed[files[1].realindexes[yoff++]] = 1;
   else if (yoff == ylim)
     while (xoff < xlim)
-      files[0].changed_flag[files[0].realindexes[xoff++]] = 1;
+      files[0].changed[files[0].realindexes[xoff++]] = 1;
   else
     {
-      int c;
+      lin c;
       struct partition part;
 
       /* Find a point of correspondence in the middle of the files.  */
 
-      c = diag (xoff, xlim, yoff, ylim, minimal, &part);
+      c = diag (xoff, xlim, yoff, ylim, find_minimal, &part);
 
       if (c == 1)
 	{
@@ -376,9 +370,9 @@ compareseq (xoff, xlim, yoff, ylim, minimal)
 	  /* The two subsequences differ by a single insert or delete;
 	     record it and we are done.  */
 	  if (part.xmid - part.ymid < xoff - yoff)
-	    files[1].changed_flag[files[1].realindexes[part.ymid - 1]] = 1;
+	    files[1].changed[files[1].realindexes[part.ymid - 1]] = 1;
 	  else
-	    files[0].changed_flag[files[0].realindexes[part.xmid]] = 1;
+	    files[0].changed[files[0].realindexes[part.xmid]] = 1;
 #endif
 	}
       else
@@ -403,17 +397,17 @@ compareseq (xoff, xlim, yoff, ylim, minimal)
    so that it will be printed in the output.  */
 
 static void
-discard_confusing_lines (filevec)
-     struct file_data filevec[];
+discard_confusing_lines (struct file_data filevec[])
 {
-  unsigned int f, i;
+  int f;
+  lin i;
   char *discarded[2];
-  int *equiv_count[2];
-  int *p;
+  lin *equiv_count[2];
+  lin *p;
 
   /* Allocate our results.  */
-  p = (int *) xmalloc ((filevec[0].buffered_lines + filevec[1].buffered_lines)
-		       * (2 * sizeof (int)));
+  p = xmalloc ((filevec[0].buffered_lines + filevec[1].buffered_lines)
+	       * (2 * sizeof *p));
   for (f = 0; f < 2; f++)
     {
       filevec[f].undiscarded = p;  p += filevec[f].buffered_lines;
@@ -423,10 +417,9 @@ discard_confusing_lines (filevec)
   /* Set up equiv_count[F][I] as the number of lines in file F
      that fall in equivalence class I.  */
 
-  p = (int *) xmalloc (filevec[0].equiv_max * (2 * sizeof (int)));
+  p = zalloc (filevec[0].equiv_max * (2 * sizeof *p));
   equiv_count[0] = p;
   equiv_count[1] = p + filevec[0].equiv_max;
-  bzero (p, filevec[0].equiv_max * (2 * sizeof (int)));
 
   for (i = 0; i < filevec[0].buffered_lines; ++i)
     ++equiv_count[0][filevec[0].equivs[i]];
@@ -435,24 +428,21 @@ discard_confusing_lines (filevec)
 
   /* Set up tables of which lines are going to be discarded.  */
 
-  discarded[0] = xmalloc (sizeof (char)
-			  * (filevec[0].buffered_lines
-			     + filevec[1].buffered_lines));
+  discarded[0] = zalloc (filevec[0].buffered_lines
+			 + filevec[1].buffered_lines);
   discarded[1] = discarded[0] + filevec[0].buffered_lines;
-  bzero (discarded[0], sizeof (char) * (filevec[0].buffered_lines
-					+ filevec[1].buffered_lines));
 
   /* Mark to be discarded each line that matches no line of the other file.
      If a line matches many lines, mark it as provisionally discardable.  */
 
   for (f = 0; f < 2; f++)
     {
-      unsigned int end = filevec[f].buffered_lines;
+      size_t end = filevec[f].buffered_lines;
       char *discards = discarded[f];
-      int *counts = equiv_count[1 - f];
-      int *equivs = filevec[f].equivs;
-      unsigned int many = 5;
-      unsigned int tem = end / 64;
+      lin *counts = equiv_count[1 - f];
+      lin *equivs = filevec[f].equivs;
+      size_t many = 5;
+      size_t tem = end / 64;
 
       /* Multiply MANY by approximate square root of number of lines.
 	 That is the threshold for provisionally discardable lines.  */
@@ -461,7 +451,7 @@ discard_confusing_lines (filevec)
 
       for (i = 0; i < end; i++)
 	{
-	  int nmatch;
+	  lin nmatch;
 	  if (equivs[i] == 0)
 	    continue;
 	  nmatch = counts[equivs[i]];
@@ -478,7 +468,7 @@ discard_confusing_lines (filevec)
 
   for (f = 0; f < 2; f++)
     {
-      unsigned int end = filevec[f].buffered_lines;
+      lin end = filevec[f].buffered_lines;
       register char *discards = discarded[f];
 
       for (i = 0; i < end; i++)
@@ -489,9 +479,9 @@ discard_confusing_lines (filevec)
 	  else if (discards[i] != 0)
 	    {
 	      /* We have found a nonprovisional discard.  */
-	      register int j;
-	      unsigned int length;
-	      unsigned int provisional = 0;
+	      register lin j;
+	      lin length;
+	      lin provisional = 0;
 
 	      /* Find end of this run of discardable lines.
 		 Count how many are provisionally discardable.  */
@@ -521,16 +511,16 @@ discard_confusing_lines (filevec)
 		}
 	      else
 		{
-		  register unsigned int consec;
-		  unsigned int minimum = 1;
-		  unsigned int tem = length / 4;
+		  register lin consec;
+		  lin minimum = 1;
+		  lin tem = length >> 2;
 
 		  /* MINIMUM is approximate square root of LENGTH/4.
 		     A subrun of two or more provisionals can stand
 		     when LENGTH is at least 16.
 		     A subrun of 4 or more can stand when LENGTH >= 64.  */
-		  while ((tem = tem >> 2) > 0)
-		    minimum *= 2;
+		  while (0 < (tem >>= 2))
+		    minimum <<= 1;
 		  minimum++;
 
 		  /* Cancel any subrun of MINIMUM or more provisionals
@@ -588,16 +578,16 @@ discard_confusing_lines (filevec)
   for (f = 0; f < 2; f++)
     {
       char *discards = discarded[f];
-      unsigned int end = filevec[f].buffered_lines;
-      unsigned int j = 0;
+      lin end = filevec[f].buffered_lines;
+      lin j = 0;
       for (i = 0; i < end; ++i)
-	if (no_discards || discards[i] == 0)
+	if (minimal || discards[i] == 0)
 	  {
 	    filevec[f].undiscarded[j] = filevec[f].equivs[i];
 	    filevec[f].realindexes[j++] = i;
 	  }
 	else
-	  filevec[f].changed_flag[i] = 1;
+	  filevec[f].changed[i] = 1;
       filevec[f].nondiscarded_lines = j;
     }
 
@@ -616,28 +606,27 @@ discard_confusing_lines (filevec)
    to be the "change".  */
 
 static void
-shift_boundaries (filevec)
-     struct file_data filevec[];
+shift_boundaries (struct file_data filevec[])
 {
   int f;
 
   for (f = 0; f < 2; f++)
     {
-      char *changed = filevec[f].changed_flag;
-      char const *other_changed = filevec[1-f].changed_flag;
-      int const *equivs = filevec[f].equivs;
-      int i = 0;
-      int j = 0;
-      int i_end = filevec[f].buffered_lines;
+      bool *changed = filevec[f].changed;
+      bool const *other_changed = filevec[1 - f].changed;
+      lin const *equivs = filevec[f].equivs;
+      lin i = 0;
+      lin j = 0;
+      lin i_end = filevec[f].buffered_lines;
 
       while (1)
 	{
-	  int runlength, start, corresponding;
+	  lin runlength, start, corresponding;
 
 	  /* Scan forwards to find beginning of another run of changes.
 	     Also keep track of the corresponding point in the other file.  */
 
-	  while (i < i_end && changed[i] == 0)
+	  while (i < i_end && !changed[i])
 	    {
 	      while (other_changed[j++])
 		continue;
@@ -662,21 +651,18 @@ shift_boundaries (filevec)
 		 we can later determine whether the run has grown.  */
 	      runlength = i - start;
 
-	      if (! inhibit_hunk_merge)
-		{
-		  /* Move the changed region back, so long as the
-		     previous unchanged line matches the last changed one.
-		     This merges with previous changed regions.  */
+	      /* Move the changed region back, so long as the
+		 previous unchanged line matches the last changed one.
+		 This merges with previous changed regions.  */
 
-		  while (start && equivs[start - 1] == equivs[i - 1])
-		    {
-		      changed[--start] = 1;
-		      changed[--i] = 0;
-		      while (changed[start - 1])
-			start--;
-		      while (other_changed[--j])
-			continue;
-		    }
+	      while (start && equivs[start - 1] == equivs[i - 1])
+		{
+		  changed[--start] = 1;
+		  changed[--i] = 0;
+		  while (changed[start - 1])
+		    start--;
+		  while (other_changed[--j])
+		    continue;
 		}
 
 	      /* Set CORRESPONDING to the end of the changed run, at the last
@@ -684,15 +670,13 @@ shift_boundaries (filevec)
 		 CORRESPONDING == I_END means no such point has been found.  */
 	      corresponding = other_changed[j - 1] ? i : i_end;
 
-	      /* Shift the changed region forward, so long as the
-		 first changed line matches the following unchanged one,
-		 but if INHIBIT_HUNK_MERGE is 1 do not shift if
-		 this would merge with another changed region.
+	      /* Move the changed region forward, so long as the
+		 first changed line matches the following unchanged one.
+		 This merges with following changed regions.
 		 Do this second, so that if there are no merges,
 		 the changed region is moved forward as far as possible.  */
 
-	      while (i != i_end && equivs[start] == equivs[i]
-		     && ! (inhibit_hunk_merge & other_changed[j + 1]))
+	      while (i != i_end && equivs[start] == equivs[i])
 		{
 		  changed[start++] = 0;
 		  changed[i++] = 1;
@@ -727,11 +711,10 @@ shift_boundaries (filevec)
    which the insertion was done; vice versa for INSERTED and LINE1.  */
 
 static struct change *
-add_change (line0, line1, deleted, inserted, old)
-     int line0, line1, deleted, inserted;
-     struct change *old;
+add_change (lin line0, lin line1, lin deleted, lin inserted,
+	    struct change *old)
 {
-  struct change *new = (struct change *) xmalloc (sizeof (struct change));
+  struct change *new = xmalloc (sizeof *new);
 
   new->line0 = line0;
   new->line1 = line1;
@@ -745,24 +728,23 @@ add_change (line0, line1, deleted, inserted, old)
    producing an edit script in reverse order.  */
 
 static struct change *
-build_reverse_script (filevec)
-     struct file_data const filevec[];
+build_reverse_script (struct file_data const filevec[])
 {
   struct change *script = 0;
-  char *changed0 = filevec[0].changed_flag;
-  char *changed1 = filevec[1].changed_flag;
-  int len0 = filevec[0].buffered_lines;
-  int len1 = filevec[1].buffered_lines;
+  bool *changed0 = filevec[0].changed;
+  bool *changed1 = filevec[1].changed;
+  lin len0 = filevec[0].buffered_lines;
+  lin len1 = filevec[1].buffered_lines;
 
-  /* Note that changedN[len0] does exist, and contains 0.  */
+  /* Note that changedN[len0] does exist, and is 0.  */
 
-  int i0 = 0, i1 = 0;
+  lin i0 = 0, i1 = 0;
 
   while (i0 < len0 || i1 < len1)
     {
-      if (changed0[i0] || changed1[i1])
+      if (changed0[i0] | changed1[i1])
 	{
-	  int line0 = i0, line1 = i1;
+	  lin line0 = i0, line1 = i1;
 
 	  /* Find # lines changed here in each file.  */
 	  while (changed0[i0]) ++i0;
@@ -783,21 +765,20 @@ build_reverse_script (filevec)
    producing an edit script in forward order.  */
 
 static struct change *
-build_script (filevec)
-     struct file_data const filevec[];
+build_script (struct file_data const filevec[])
 {
   struct change *script = 0;
-  char *changed0 = filevec[0].changed_flag;
-  char *changed1 = filevec[1].changed_flag;
-  int i0 = filevec[0].buffered_lines, i1 = filevec[1].buffered_lines;
+  bool *changed0 = filevec[0].changed;
+  bool *changed1 = filevec[1].changed;
+  lin i0 = filevec[0].buffered_lines, i1 = filevec[1].buffered_lines;
 
-  /* Note that changedN[-1] does exist, and contains 0.  */
+  /* Note that changedN[-1] does exist, and is 0.  */
 
   while (i0 >= 0 || i1 >= 0)
     {
-      if (changed0[i0 - 1] || changed1[i1 - 1])
+      if (changed0[i0 - 1] | changed1[i1 - 1])
 	{
-	  int line0 = i0, line1 = i1;
+	  lin line0 = i0, line1 = i1;
 
 	  /* Find # lines changed here in each file.  */
 	  while (changed0[i0 - 1]) --i0;
@@ -817,16 +798,14 @@ build_script (filevec)
 /* If CHANGES, briefly report that two files differed.
    Return 2 if trouble, CHANGES otherwise.  */
 static int
-briefly_report (changes, filevec)
-     int changes;
-     struct file_data const filevec[];
+briefly_report (int changes, struct file_data const filevec[])
 {
   if (changes)
     {
       char const *label0 = file_label[0] ? file_label[0] : filevec[0].name;
       char const *label1 = file_label[1] ? file_label[1] : filevec[1].name;
 
-      if (no_details_flag)
+      if (brief)
 	message ("Files %s and %s differ\n", label0, label1);
       else
 	{
@@ -840,11 +819,10 @@ briefly_report (changes, filevec)
 
 /* Report the differences of two files.  */
 int
-diff_2_files (cmp)
-     struct comparison *cmp;
+diff_2_files (struct comparison *cmp)
 {
-  int diags;
-  int i;
+  lin diags;
+  int f;
   struct change *e, *p;
   struct change *script;
   int changes;
@@ -856,7 +834,7 @@ diff_2_files (cmp)
      Also, --brief without any --ignore-* options means
      we can speed things up by treating the files as binary.  */
 
-  if (read_files (cmp->file, no_details_flag & ~ignore_some_changes))
+  if (read_files (cmp->file, files_can_be_treated_as_binary))
     {
       /* Files with different lengths must be different.  */
       if (cmp->file[0].stat.st_size != cmp->file[1].stat.st_size
@@ -872,42 +850,33 @@ diff_2_files (cmp)
 	/* Scan both files, a buffer at a time, looking for a difference.  */
 	{
 	  /* Allocate same-sized buffers for both files.  */
-	  size_t buffer_size = buffer_lcm (STAT_BLOCKSIZE (cmp->file[0].stat),
-					   STAT_BLOCKSIZE (cmp->file[1].stat));
-	  for (i = 0; i < 2; i++)
-	    cmp->file[i].buffer = xrealloc (cmp->file[i].buffer, buffer_size);
+	  size_t buffer_size =
+	    buffer_lcm (sizeof (word),
+			buffer_lcm (STAT_BLOCKSIZE (cmp->file[0].stat),
+				    STAT_BLOCKSIZE (cmp->file[1].stat)));
+	  for (f = 0; f < 2; f++)
+	    cmp->file[f].buffer = xrealloc (cmp->file[f].buffer, buffer_size);
 
-	  for (;;cmp->file[0].buffered_chars = cmp->file[1].buffered_chars = 0)
+	  for (;; cmp->file[0].buffered = cmp->file[1].buffered = 0)
 	    {
 	      /* Read a buffer's worth from both files.  */
-	      for (i = 0; i < 2; i++)
-		if (0 <= cmp->file[i].desc)
-		  while (cmp->file[i].buffered_chars != buffer_size)
-		    {
-		      int r = read (cmp->file[i].desc,
-				    cmp->file[i].buffer
-				    + cmp->file[i].buffered_chars,
-				    buffer_size - cmp->file[i].buffered_chars);
-		      if (r == 0)
-			break;
-		      if (r < 0)
-			pfatal_with_name (cmp->file[i].name);
-		      cmp->file[i].buffered_chars += r;
-		    }
+	      for (f = 0; f < 2; f++)
+		if (0 <= cmp->file[f].desc)
+		  file_block_read (&cmp->file[f],
+				   buffer_size - cmp->file[f].buffered);
 
 	      /* If the buffers differ, the files differ.  */
-	      if (cmp->file[0].buffered_chars != cmp->file[1].buffered_chars
-		  || (cmp->file[0].buffered_chars != 0
-		      && memcmp (cmp->file[0].buffer,
-				 cmp->file[1].buffer,
-				 cmp->file[0].buffered_chars) != 0))
+	      if (cmp->file[0].buffered != cmp->file[1].buffered
+		  || memcmp (cmp->file[0].buffer,
+			     cmp->file[1].buffer,
+			     cmp->file[0].buffered))
 		{
 		  changes = 1;
 		  break;
 		}
 
 	      /* If we reach end of file, the files are the same.  */
-	      if (cmp->file[0].buffered_chars != buffer_size)
+	      if (cmp->file[0].buffered != buffer_size)
 		{
 		  changes = 0;
 		  break;
@@ -922,13 +891,12 @@ diff_2_files (cmp)
       /* Allocate vectors for the results of comparison:
 	 a flag for each line of each file, saying whether that line
 	 is an insertion or deletion.
-	 Allocate an extra element, always zero, at each end of each vector.  */
+	 Allocate an extra element, always 0, at each end of each vector.  */
 
       size_t s = cmp->file[0].buffered_lines + cmp->file[1].buffered_lines + 4;
-      char *flag_space = xmalloc (s);
-      bzero (flag_space, s);
-      cmp->file[0].changed_flag = flag_space + 1;
-      cmp->file[1].changed_flag = flag_space + cmp->file[0].buffered_lines + 3;
+      bool *flag_space = zalloc (s * sizeof *flag_space);
+      cmp->file[0].changed = flag_space + 1;
+      cmp->file[1].changed = flag_space + cmp->file[0].buffered_lines + 3;
 
       /* Some lines are obviously insertions or deletions
 	 because they don't match anything.  Detect them now, and
@@ -943,7 +911,7 @@ diff_2_files (cmp)
       yvec = cmp->file[1].undiscarded;
       diags = (cmp->file[0].nondiscarded_lines
 	       + cmp->file[1].nondiscarded_lines + 3);
-      fdiag = (int *) xmalloc (diags * (2 * sizeof (int)));
+      fdiag = xmalloc (diags * (2 * sizeof *fdiag));
       bdiag = fdiag + diags;
       fdiag += cmp->file[1].nondiscarded_lines + 1;
       bdiag += cmp->file[1].nondiscarded_lines + 1;
@@ -951,15 +919,15 @@ diff_2_files (cmp)
       /* Set TOO_EXPENSIVE to be approximate square root of input size,
 	 bounded below by 256.  */
       too_expensive = 1;
-      for (i = diags;  i != 0;  i >>= 2)
+      for (;  diags != 0;  diags >>= 2)
 	too_expensive <<= 1;
-      too_expensive = max (256, too_expensive);
+      too_expensive = MAX (256, too_expensive);
 
       files[0] = cmp->file[0];
       files[1] = cmp->file[1];
 
       compareseq (0, cmp->file[0].nondiscarded_lines,
-		  0, cmp->file[1].nondiscarded_lines, no_discards);
+		  0, cmp->file[1].nondiscarded_lines, minimal);
 
       free (fdiag - (cmp->file[1].nondiscarded_lines + 1));
 
@@ -978,7 +946,7 @@ diff_2_files (cmp)
 
       /* Set CHANGES if we had any diffs.
 	 If some changes are ignored, we must scan the script to decide.  */
-      if (ignore_blank_lines_flag || ignore_regexp.fastmap)
+      if (ignore_blank_lines || ignore_regexp.fastmap)
 	{
 	  struct change *next = script;
 	  changes = 0;
@@ -986,7 +954,7 @@ diff_2_files (cmp)
 	  while (next && changes == 0)
 	    {
 	      struct change *this, *end;
-	      int first0, last0, first1, last1, deletes, inserts;
+	      lin first0, last0, first1, last1;
 
 	      /* Find a set of changes that belong together.  */
 	      this = next;
@@ -998,24 +966,21 @@ diff_2_files (cmp)
 	      end->link = 0;
 
 	      /* Determine whether this hunk is really a difference.  */
-	      analyze_hunk (this, &first0, &last0, &first1, &last1,
-			    &deletes, &inserts);
+	      if (analyze_hunk (this, &first0, &last0, &first1, &last1))
+		changes = 1;
 
 	      /* Reconnect the script so it will all be freed properly.  */
 	      end->link = next;
-
-	      if (deletes || inserts)
-		changes = 1;
 	    }
 	}
       else
 	changes = (script != 0);
 
-      if (no_details_flag)
+      if (brief)
 	changes = briefly_report (changes, cmp->file);
       else
 	{
-	  if (changes || ! no_diff_means_no_output)
+	  if (changes | !no_diff_means_no_output)
 	    {
 	      /* Record info for starting up output,
 		 to be used if and when we have some output to print.  */
@@ -1055,6 +1020,10 @@ diff_2_files (cmp)
 
 		case OUTPUT_SDIFF:
 		  print_sdiff_script (script);
+		  break;
+
+		default:
+		  abort ();
 		}
 
 	      finish_output ();
@@ -1065,11 +1034,11 @@ diff_2_files (cmp)
 
       free (flag_space);
 
-      for (i = 1; i >= 0; --i)
-	free (cmp->file[i].equivs);
-
-      for (i = 0; i < 2; ++i)
-	free (cmp->file[i].linbuf + cmp->file[i].linbuf_base);
+      for (f = 0; f < 2; f++)
+	{
+	  free (cmp->file[f].equivs);
+	  free (cmp->file[f].linbuf + cmp->file[f].linbuf_base);
+	}
 
       for (e = script; e; e = p)
 	{
@@ -1078,11 +1047,11 @@ diff_2_files (cmp)
 	}
 
       if (! ROBUST_OUTPUT_STYLE (output_style))
-	for (i = 0; i < 2; ++i)
-	  if (cmp->file[i].missing_newline)
+	for (f = 0; f < 2; ++f)
+	  if (cmp->file[f].missing_newline)
 	    {
 	      error (0, 0, "%s: %s\n",
-		     file_label[i] ? file_label[i] : cmp->file[i].name,
+		     file_label[f] ? file_label[f] : cmp->file[f].name,
 		     _("No newline at end of file"));
 	      changes = 2;
 	    }
