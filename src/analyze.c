@@ -822,9 +822,15 @@ briefly_report (changes, filevec)
      struct file_data const filevec[];
 {
   if (changes)
-    message (no_details_flag ? "Files %s and %s differ\n"
-	     : "Binary files %s and %s differ\n",
-	     filevec[0].name, filevec[1].name);
+    {
+      char const *label0 = file_label[0] ? file_label[0] : filevec[0].name;
+      char const *label1 = file_label[1] ? file_label[1] : filevec[1].name;
+
+      if (no_details_flag)
+	message ("Files %s and %s differ\n", label0, label1);
+      else
+	message ("Binary files %s and %s differ\n", label0, label1);
+    }
 }
 
 /* Report the differences of two files.  DEPTH is the current directory
@@ -1011,7 +1017,9 @@ diff_2_files (filevec, depth)
 	    {
 	      /* Record info for starting up output,
 		 to be used if and when we have some output to print.  */
-	      setup_output (files[0].name, files[1].name, depth);
+	      setup_output (file_label[0] ? file_label[0] : files[0].name,
+			    file_label[1] ? file_label[1] : files[1].name,
+			    depth);
 
 	      switch (output_style)
 		{
@@ -1071,7 +1079,9 @@ diff_2_files (filevec, depth)
 	for (i = 0; i < 2; ++i)
 	  if (filevec[i].missing_newline)
 	    {
-	      error (0, 0, "No newline at end of file %s", filevec[i].name);
+	      error (0, 0, "%s: %s\n",
+		     file_label[i] ? file_label[i] : filevec[i].name,
+		     gettext ("No newline at end of file"));
 	      changes = 2;
 	    }
     }
