@@ -1,23 +1,25 @@
 /* File I/O for GNU DIFF.
-   Copyright (C) 1988, 1989, 1992, 1993, 1994 Free Software Foundation, Inc.
+   Copyright 1988, 89, 92, 93, 94, 95, 1997 Free Software Foundation, Inc.
 
-This file is part of GNU DIFF.
+   This file is part of GNU DIFF.
 
-GNU DIFF is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
-any later version.
+   GNU DIFF is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation; either version 2, or (at your option)
+   any later version.
 
-GNU DIFF is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+   GNU DIFF is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
 
-You should have received a copy of the GNU General Public License
-along with GNU DIFF; see the file COPYING.  If not, write to
-the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
+   You should have received a copy of the GNU General Public License
+   along with this program; see the file COPYING.
+   If not, write to the Free Software Foundation, 
+   59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
 
 #include "diff.h"
+#include "cmpbuf.h"
 
 /* Rotate an unsigned value to the left.  */
 #define ROL(v, n) ((v) << (n) | (v) >> (sizeof (v) * CHAR_BIT - (n)))
@@ -141,19 +143,22 @@ slurp (current)
       /* Get the size out of the stat block.
 	 Allocate just enough room for appended newline plus word sentinel,
 	 plus word-alignment since we want the buffer word-aligned.  */
-      cc = current->stat.st_size + 2 * sizeof (word);
-      cc -= cc % sizeof (word);
+      size_t file_size = current->stat.st_size;
+      cc = file_size + 2 * sizeof (word) - file_size % sizeof (word);
+      if (file_size != current->stat.st_size || cc < file_size)
+	error (2, 0, _("Memory exhausted"));
+
       if (current->bufsize < cc)
 	{
 	  current->bufsize = cc;
 	  current->buffer = xrealloc (current->buffer, cc);
 	}
 
-      if (current->buffered_chars < current->stat.st_size)
+      if (current->buffered_chars < file_size)
 	{
-	  cc = read (current->desc,
-		     current->buffer + current->buffered_chars,
-		     current->stat.st_size - current->buffered_chars);
+	  cc = block_read (current->desc,
+			   current->buffer + current->buffered_chars,
+			   file_size - current->buffered_chars);
 	  if (cc == -1)
 	    pfatal_with_name (current->name);
 	  current->buffered_chars += cc;
