@@ -1,5 +1,5 @@
 /* Normal-format output routines for GNU DIFF.
-   Copyright 1988, 1989, 1993, 1995, 1997 Free Software Foundation, Inc.
+   Copyright 1988, 1989, 1993, 1995, 1998 Free Software Foundation, Inc.
 
    This file is part of GNU DIFF.
 
