@@ -19,18 +19,19 @@
 
 AC_PREREQ(2.52)
 
-AC_INIT(GNU diff, 2.7.8, bug-gnu-utils@gnu.org)
+AC_INIT(GNU diffutils, 2.7.9, bug-gnu-utils@gnu.org)
 AC_CONFIG_SRCDIR(src/diff.c)
 
 AC_CONFIG_AUX_DIR(config)
 AM_CONFIG_HEADER([config.h:config.hin])
-AM_INIT_AUTOMAKE(diffutils, 2.7.8)
+AM_INIT_AUTOMAKE([gnits dist-shar])
 
 AC_PROG_AWK
 AC_PROG_CC
 AC_ISC_POSIX
 AM_PROG_CC_STDC
 AC_PROG_CPP
+AM_MISSING_PROG(HELP2MAN, help2man)
 AC_PROG_INSTALL
 AC_PROG_RANLIB
 
@@ -86,6 +87,8 @@ jm_PREREQ_C_STACK
 jm_PREREQ_ERROR
 jm_PREREQ_QUOTEARG
 jm_PREREQ_REGEX
+AC_DEFINE([REGEX_MALLOC], 1,
+  [Define to 1 to avoid alloca in the regular-expression implementation.])
 jm_PREREQ_TEMPNAME
 jm_AC_PREREQ_XSTRTOUMAX
 
@@ -124,7 +127,7 @@ jm_AC_DOS
 AC_FUNC_SETMODE_DOS
 
 AC_CONFIG_FILES([Makefile doc/Makefile \
-		 lib/Makefile lib/posix/Makefile \
+		 lib/Makefile lib/posix/Makefile man/Makefile \
 		 m4/Makefile ms/Makefile po/Makefile.in src/Makefile])
 AC_CONFIG_COMMANDS([default], [date > stamp-h])
 AC_OUTPUT
