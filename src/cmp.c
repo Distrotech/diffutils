@@ -357,7 +357,7 @@ cmp ()
 	  return 1;
 	}
     }
-  while (read0);
+  while (read0 == buf_size);
   return ret;
 }
 
@@ -455,7 +455,8 @@ block_compare (p0, p1)
 }
 
 /* Read NCHARS bytes from descriptor FD into BUF.
-   Return the number of characters successfully read.  */
+   Return the number of characters successfully read.
+   The number returned is always NCHARS unless end-of-file or error.  */
 
 static size_t
 block_read (fd, buf, nchars)
