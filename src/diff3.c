@@ -19,7 +19,6 @@
 
 #include "system.h"
 #include <stdio.h>
-#include <ctype.h>
 #include <signal.h>
 #include "getopt.h"
 
@@ -296,7 +295,7 @@ main (argc, argv)
 	      tag_strings[tag_count++] = optarg;
 	      break;
 	    }
-	  /* Falls through */
+	  try_help ("Too many labels were given.  The limit is 3.");
 	default:
 	  try_help (0);
 	}
@@ -1070,9 +1069,9 @@ process_diff_control (string, db)
 
 #define	SKIPWHITE(s)	{ while (*s == ' ' || *s == '\t') s++; }
 #define	READNUM(s, num)	\
-	{ unsigned char c = *s; if (!isdigit (c)) return ERROR; holdnum = 0; \
+	{ unsigned char c = *s; if (!ISDIGIT (c)) return ERROR; holdnum = 0; \
 	  do { holdnum = (c - '0' + holdnum * 10); }	\
-	  while (isdigit (c = *++s)); (num) = holdnum; }
+	  while (ISDIGIT (c = *++s)); (num) = holdnum; }
 
   /* Read first set of digits */
   SKIPWHITE (s);
@@ -1192,28 +1191,12 @@ read_diff (filea, fileb, output_placement)
   char *command = xmalloc (sizeof (diff_program) + 30 + INT_STRLEN_BOUND (int)
 			   + 4 * (strlen (filea) + strlen (fileb)));
   char *p;
-  char const *q;
-  sprintf (command, "%s -a --horizon-lines=%d -- '",
+  sprintf (command, "%s -a --horizon-lines=%d -- ",
 	   diff_program, horizon_lines);
   p = command + strlen (command);
-  for (q = filea;  *q;  *p++ = *q++)
-    if (*q == '\'')
-      {
-	*p++ = '\'';
-	*p++ = '\\';
-	*p++ = '\'';
-      }
-  *p++ = '\'';
+  SYSTEM_QUOTE_ARG (p, filea);
   *p++ = ' ';
-  *p++ = '\'';
-  for (q = fileb;  *q;  *p++ = *q++)
-    if (*q == '\'')
-      {
-	*p++ = '\'';
-	*p++ = '\\';
-	*p++ = '\'';
-      }
-  *p++ = '\'';
+  SYSTEM_QUOTE_ARG (p, fileb);
   *p = '\0';
   fpipe = popen (command, "r");
   if (!fpipe)
