@@ -181,7 +181,7 @@ EXTERN char *	switch_string;
 EXTERN int	heuristic;
 
 /* Name of program the user invoked (for error messages).  */
-EXTERN char *	program;
+EXTERN char *program_name;
 
 /* The result of comparison is an "edit script": a chain of `struct change'.
    Each `struct change' represents one place where some lines are deleted

@@ -48,7 +48,7 @@ perror_with_name (text)
      char const *text;
 {
   int e = errno;
-  fprintf (stderr, "%s: ", program);
+  fprintf (stderr, "%s: ", program_name);
   errno = e;
   perror (text);
 }
@@ -61,7 +61,7 @@ pfatal_with_name (text)
 {
   int e = errno;
   print_message_queue ();
-  fprintf (stderr, "%s: ", program);
+  fprintf (stderr, "%s: ", program_name);
   errno = e;
   perror (text);
   exit (2);
@@ -74,7 +74,7 @@ void
 error (format, arg, arg1)
      char const *format, *arg, *arg1;
 {
-  fprintf (stderr, "%s: ", program);
+  fprintf (stderr, "%s: ", program_name);
   fprintf (stderr, format, arg, arg1);
   fprintf (stderr, "\n");
 }

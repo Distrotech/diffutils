@@ -39,7 +39,7 @@ the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 #endif
 
 extern char version_string[];
-static char const *prog;
+static char const *program_name;
 static char const *diffbin = DIFF_PROGRAM;
 static char const *edbin = DEFAULT_EDITOR;
 static char const **diffargv;
@@ -124,15 +124,16 @@ try_help (reason)
      char const *reason;
 {
   if (reason)
-    fprintf (stderr, "%s: %s\n", prog, reason);
-  fprintf (stderr, "%s: Try `%s --help' for more information.\n", prog, prog);
+    fprintf (stderr, "%s: %s\n", program_name, reason);
+  fprintf (stderr, "%s: Try `%s --help' for more information.\n",
+	   program_name, program_name);
   exit (2);
 }
 
 static void
 usage ()
 {
-  printf ("Usage: %s [OPTIONS]... FILE1 FILE2\n\n", prog);
+  printf ("Usage: %s [OPTIONS]... FILE1 FILE2\n\n", program_name);
   printf ("%s", "\
   -o FILE  --output=FILE  Operate interactively, sending output to FILE.\n\n");
   printf ("%s", "\
@@ -181,7 +182,7 @@ static void
 fatal (msg)
      char const *msg;
 {
-  fprintf (stderr, "%s: %s\n", prog, msg);
+  fprintf (stderr, "%s: %s\n", program_name, msg);
   exiterr ();
 }
 
@@ -191,7 +192,7 @@ perror_fatal (msg)
 {
   int e = errno;
   checksigs ();
-  fprintf (stderr, "%s: ", prog);
+  fprintf (stderr, "%s: ", program_name);
   errno = e;
   perror (msg);
   exiterr ();
@@ -407,7 +408,7 @@ main (argc, argv)
   char *differ;
 
   initialize_main (&argc, &argv);
-  prog = argv[0];
+  program_name = argv[0];
 
   editor = getenv ("EDITOR");
   if (editor)

@@ -237,7 +237,7 @@ main (argc, argv)
 
   /* Do our initializations.  */
   initialize_main (&argc, &argv);
-  program = argv[0];
+  program_name = argv[0];
   output_style = OUTPUT_NORMAL;
   context = -1;
 
@@ -662,7 +662,7 @@ try_help (reason)
 {
   if (reason)
     error ("%s", reason, 0);
-  error ("Try `%s --help' for more information.", program, 0);
+  error ("Try `%s --help' for more information.", program_name, 0);
   exit (2);
 }
 
@@ -743,7 +743,7 @@ usage ()
 {
   char const * const *p;
 
-  printf ("Usage: %s [OPTION]... FILE1 FILE2\n\n", program);
+  printf ("Usage: %s [OPTION]... FILE1 FILE2\n\n", program_name);
   for (p = option_help;  *p;  p++)
     printf ("  %s\n", *p);
   printf ("\nIf FILE1 or FILE2 is `-', read standard input.\n");

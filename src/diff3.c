@@ -174,7 +174,7 @@ static int finalwrite;
 /* If nonzero, output a merged file.  */
 static int merge;
 
-static char *argv0;
+static char *program_name;
 
 static VOID *xmalloc PARAMS((size_t));
 static VOID *xrealloc PARAMS((VOID *, size_t));
@@ -242,7 +242,7 @@ main (argc, argv)
   struct stat statb;
 
   initialize_main (&argc, &argv);
-  argv0 = argv[0];
+  program_name = argv[0];
 
   while ((c = getopt_long (argc, argv, "aeimvx3AEL:TX", longopts, 0)) != EOF)
     {
@@ -355,7 +355,8 @@ main (argc, argv)
 	  perror_with_exit (file[i]);
 	else if (S_ISDIR(statb.st_mode))
 	  {
-	    fprintf (stderr, "%s: %s: Is a directory\n", argv0, file[i]);
+	    fprintf (stderr, "%s: %s: Is a directory\n",
+		     program_name, file[i]);
 	    exit (2);
 	  }
       }
@@ -408,8 +409,9 @@ try_help (reason)
      char const *reason;
 {
   if (reason)
-    fprintf (stderr, "%s: %s\n", argv0, reason);
-  fprintf (stderr, "%s: Try `%s --help' for more information.\n", argv0, argv0);
+    fprintf (stderr, "%s: %s\n", program_name, reason);
+  fprintf (stderr, "%s: Try `%s --help' for more information.\n",
+	   program_name, program_name);
   exit (2);
 }
 
@@ -426,7 +428,7 @@ check_stdout ()
 static void
 usage ()
 {
-  printf ("Usage: %s [OPTION]... MYFILE OLDFILE YOURFILE\n\n", argv0);
+  printf ("Usage: %s [OPTION]... MYFILE OLDFILE YOURFILE\n\n", program_name);
 
   printf ("%s", "\
   -e  --ed  Output unmerged changes from OLDFILE to YOURFILE into MYFILE.\n\
@@ -960,7 +962,7 @@ process_diff (filea, fileb, last_block)
       dt = process_diff_control (&scan_diff, bptr);
       if (dt == ERROR || *scan_diff != '\n')
 	{
-	  fprintf (stderr, "%s: diff error: ", argv0);
+	  fprintf (stderr, "%s: diff error: ", program_name);
 	  do
 	    {
 	      putc (*scan_diff, stderr);
@@ -1301,7 +1303,7 @@ scan_diff_line (scan_ptr, set_start, set_length, limit, leadingchar)
   if (line_ptr < limit && *line_ptr == '\\')
     {
       if (edscript)
-	fprintf (stderr, "%s:", argv0);
+	fprintf (stderr, "%s:", program_name);
       else
 	--*set_length;
       line_ptr++;
@@ -1776,7 +1778,7 @@ static void
 fatal (string)
      char const *string;
 {
-  fprintf (stderr, "%s: %s\n", argv0, string);
+  fprintf (stderr, "%s: %s\n", program_name, string);
   exit (2);
 }
 
@@ -1785,7 +1787,7 @@ perror_with_exit (string)
      char const *string;
 {
   int e = errno;
-  fprintf (stderr, "%s: ", argv0);
+  fprintf (stderr, "%s: ", program_name);
   errno = e;
   perror (string);
   exit (2);
