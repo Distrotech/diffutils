@@ -38,7 +38,7 @@ dir_sort (dir, dirdata)
      struct file_data const *dir;
      struct dirdata *dirdata;
 {
-  register struct direct *next;
+  register struct dirent *next;
   register int i;
 
   /* Address of block containing the files that are described.  */
@@ -88,7 +88,7 @@ dir_sort (dir, dirdata)
 	  d_size = strlen (d_name) + 1;
 	  while (data_alloc < data_used + d_size)
 	    dirdata->data = data = xrealloc (data, data_alloc *= 2);
-	  bcopy (d_name, data + data_used, d_size);
+	  memcpy (data + data_used, d_name, d_size);
 	  data_used += d_size;
 	  nnames++;
 	}
@@ -99,7 +99,7 @@ dir_sort (dir, dirdata)
 	  errno = e;
 	  return -1;
 	}
-#ifdef VOID_CLOSEDIR
+#if VOID_CLOSEDIR
       closedir (reading);
 #else
       if (closedir (reading) != 0)
@@ -203,7 +203,7 @@ diff_dirs (filevec, handle_file, depth)
 	    val = v1;
 	}
     }
-  
+
   for (i = 0; i < 2; i++)
     {
       if (dirdata[i].names)
