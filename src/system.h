@@ -108,19 +108,10 @@ the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 #endif
 
 #if HAVE_SYS_WAIT_H
-#ifndef _POSIX_VERSION
-/* Prevent the NeXT prototype using union wait from causing problems.  */
-#define wait system_wait
-#endif
 #include <sys/wait.h>
-#ifndef _POSIX_VERSION
-#undef wait
 #endif
-#endif /* HAVE_SYS_WAIT_H */
-
 #ifndef WEXITSTATUS
-#define WEXITSTATUS(stat_val) ((unsigned)(stat_val) >> 8)
-#undef WIFEXITED		/* Avoid 4.3BSD incompatibility with Posix.  */
+#define WEXITSTATUS(stat_val) ((unsigned) (stat_val) >> 8)
 #endif
 #ifndef WIFEXITED
 #define WIFEXITED(stat_val) (((stat_val) & 255) == 0)
