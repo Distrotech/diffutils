@@ -35,10 +35,7 @@ regex.lib : pc/$(env)/gnuregex.def
 	emximp -o $@ pc/$(env)/gnuregex.def
 
 pc-clean:
-	$(SUBSHELL) for %%f in (*.o* *.bat *.dll *.lib fname) do del %%f
-
-%.exe: %
-	coff2exe $<
+	$(SUBSHELL) for %%f in (*.bat *.dll *.exe *.lib *.o* fname) do del %%f
 
 # dist.bat must use `\', since DOS tools require it.
 dist:
