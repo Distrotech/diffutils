@@ -34,7 +34,7 @@ AC_DEFUN([AC_SYS_XSI_STACK_OVERFLOW_HEURISTIC],
 	 {
 	   char buffer[SIGSTKSZ];
 	   long double ld;
-	   uintmax_t u;
+	   long u;
 	   void *p;
 	 } alternate_signal_stack;
 
@@ -127,6 +127,7 @@ AC_DEFUN([jm_PREREQ_C_STACK],
    # for STACK_DIRECTION
    AC_REQUIRE([AC_FUNC_ALLOCA])
 
+   AC_CHECK_FUNCS(getcontext sigaltstack)
    AC_CHECK_DECLS([getcontext], , , [#include <ucontext.h>])
    AC_CHECK_DECLS([sigaltstack], , , [#include <signal.h>])
 
