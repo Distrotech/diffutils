@@ -48,7 +48,7 @@ AC_DEFUN([AC_HEADER_STDBOOL],
 	  char b[false == 0 ? 1 : -1];
 	  char c[__bool_true_false_are_defined == 1 ? 1 : -1];
 	  char d[(bool) -0.5 == true ? 1 : -1];
-	  char e[(bool) &s == true ? 1 : -1];
+	  bool e = &s;
 	  char f[(_Bool) -0.0 == false ? 1 : -1];
 	  char g[true];
 	  char h[sizeof (_Bool)];
