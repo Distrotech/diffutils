@@ -88,7 +88,8 @@ static bool binary;
 static bool new_file;
 
 /* When comparing directories, if a file appears only in the second
-   directory of the two, treat it as present but empty in the other (-P).
+   directory of the two, treat it as present but empty in the other
+   (--unidirectional-new-file).
    Then `patch' would create the file with appropriate contents.  */
 static bool unidirectional_new_file;
 
@@ -845,7 +846,7 @@ static char const * const option_help_msgid[] = {
   "",
   N_("-c  -C NUM  --context[=NUM]  Output NUM (default 3) lines of copied context.\n\
 -u  -U NUM  --unified[=NUM]  Output NUM (default 3) lines of unified context.\n\
-  -L LABEL  --label LABEL  Use LABEL instead of file name.\n\
+  --label LABEL  Use LABEL instead of file name.\n\
   -p  --show-c-function  Show which C function each change is in.\n\
   -F RE  --show-function-line=RE  Show the most recent line matching RE."),
   N_("-q  --brief  Output only whether files differ."),
@@ -887,7 +888,7 @@ static char const * const option_help_msgid[] = {
   "",
   N_("-r  --recursive  Recursively compare any subdirectories found."),
   N_("-N  --new-file  Treat absent files as empty."),
-  N_("-P  --unidirectional-new-file  Treat absent first files as empty."),
+  N_("--unidirectional-new-file  Treat absent first files as empty."),
   N_("-s  --report-identical-files  Report when two files are the same."),
   N_("-x PAT  --exclude=PAT  Exclude files that match PAT."),
   N_("-X FILE  --exclude-from=FILE  Exclude files that match any pattern in FILE."),
@@ -895,10 +896,8 @@ static char const * const option_help_msgid[] = {
   N_("--from-file=FILE1  Compare FILE1 to all operands.  FILE1 can be a directory."),
   N_("--to-file=FILE2  Compare all operands to FILE2.  FILE2 can be a directory."),
   "",
-  N_("--horizon-lines=NUM  Keep NUM lines of the common prefix and suffix."),
-  N_("--inhibit-hunk-merge  Do not merge hunks."),
   N_("-d  --minimal  Try hard to find a smaller set of changes."),
-  N_("-H  --speed-large-files  Assume large files and many scattered small changes."),
+  N_("--speed-large-files  Assume large files and many scattered small changes."),
   "",
   N_("-v  --version  Output version info."),
   N_("--help  Output this help."),
@@ -1146,7 +1145,8 @@ compare_files (struct comparison const *parent,
 	}
     }
 
-  /* Mark files as nonexistent at the top level as needed for -N and -P.  */
+  /* Mark files as nonexistent at the top level as needed for -N and
+     --unidirectional-new-file.  */
   if (! parent)
     {
       if ((new_file | unidirectional_new_file)
