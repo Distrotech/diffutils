@@ -1,0 +1,75 @@
+#!/bin/sh
+
+# Extract message IDs from source files.
+# This shell script is a temporary expedient until glocale+xgettext works.
+
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2, or (at your option)
+# any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+
+case $1 in
+-* | '') echo >&2 "Usage: $0 file..."; exit 1
+esac
+
+# Sed script to output names of every function and macro
+# whose first parameter's name ends in `msgid'.
+# By convention, these parameters are message IDs.
+getmsgidUsers='
+  /^\([$A-Z_a-z][$0-9A-Z_a-z]*\)[	 ]*([^),]*msgid[	 ]*[),].*/{s//\1/; p; d; }
+  /^#[	 ]*define[	 ][	 ]*\([$A-Z_a-z][$0-9A-Z_a-z]*\)([^),]*msgid[	 ]*[),].*/{s//\1/; p; d; }
+  d
+'
+
+# Sed script to turn each such function or macro name F (alone on a line)
+# into a sed command converting `F ("msgid"' to `msgid  "msgid"' on a new line.
+turnIntoSedScript='
+  s|.*|s/[^$0-9A-Z_a-z]&[	 ]*([	 ]*\\("[^"]*"\\)/\\\
+msgid  \\1\\\
+/g|
+'
+
+# Generate a sed script to extract message ID directives from function callers.
+extractFromCallers=`
+	sed "$getmsgidUsers" "${@?}" | sort -u | sed "$turnIntoSedScript"
+`
+
+# Extract the message IDs, removing duplicates.
+sed '
+  # Remove backslash-newlines.
+  : start
+  /\\$/{
+    N
+    s/\\\n//
+    b start
+  }
+
+  # Translate escaped backslashes and double-quotes into something safe.
+  # Do backslashes first!
+  s/\\\\/\\134/g
+  s/\\"/\\042/g
+
+  # Convert all strings between "...msgid[] =" and "}" lines to msgid lines.
+  /^[	 $*0-9A-Z_a-z]*msgid[	 ]*\[[	 ]*\][	 ]*=/,/^[	 ]*}/{
+    s/"[^"][^"]*"/\
+msgid  &\
+/g
+  }
+
+  # Convert caller msgid strings to msgid lines.
+  '"$extractFromCallers"'
+
+  # Restore escaped backslashes and double-quotes.
+  s/\\042/\\"/g
+  s/\\134/\\\\/g
+
+' "${@?}" | grep '^msgid  "' | sort -u
