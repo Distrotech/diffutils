@@ -1,5 +1,5 @@
 /* Analyze file differences for GNU DIFF.
-   Copyright (C) 1988, 1989, 1992, 1993 Free Software Foundation, Inc.
+   Copyright (C) 1988, 1989, 1992, 1993, 1994 Free Software Foundation, Inc.
 
 This file is part of GNU DIFF.
 
@@ -332,7 +332,7 @@ diag (xoff, xlim, yoff, ylim, minimal, part)
 
    Note that XLIM, YLIM are exclusive bounds.
    All line numbers are origin-0 and discarded lines are not counted.
- 
+
    If MINIMAL is nonzero, find a minimal difference no matter how
    expensive it is.  */
 
@@ -970,7 +970,7 @@ diff_2_files (filevec, depth)
 
       /* Set CHANGES if we had any diffs.
 	 If some changes are ignored, we must scan the script to decide.  */
-      if (ignore_blank_lines_flag || ignore_regexp_list)
+      if (ignore_blank_lines_flag || ignore_regexp.fastmap)
 	{
 	  struct change *next = script;
 	  changes = 0;
