@@ -17,6 +17,7 @@ You should have received a copy of the GNU General Public License
 along with GNU DIFF; see the file COPYING.  If not, write to
 the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 
+#include "config.h"
 #include <sys/types.h>
 #include <sys/stat.h>
 
@@ -27,8 +28,35 @@ the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 #define S_ISREG(mode) (((mode) & S_IFMT) == S_IFREG)
 #endif
 
+#ifndef S_IXOTH
+#define S_IXOTH 1
+#endif
+#ifndef S_IXGRP
+#define S_IXGRP (S_IXOTH << 3)
+#endif
+#ifndef S_IXUSR
+#define S_IXUSR (S_IXGRP << 3)
+#endif
+
 #if HAVE_UNISTD_H
 #include <unistd.h>
+#endif
+
+#ifndef SEEK_SET
+#define SEEK_SET 0
+#endif
+#ifndef SEEK_CUR
+#define SEEK_CUR 1
+#endif
+
+#ifndef STDIN_FILENO
+#define STDIN_FILENO 0
+#endif
+#ifndef STDOUT_FILENO
+#define STDOUT_FILENO 1
+#endif
+#ifndef STDERR_FILENO
+#define STDERR_FILENO 2
 #endif
 
 #if HAVE_TIME_H
@@ -152,7 +180,17 @@ extern int errno;
 #define	FALSE		0
 
 #if !__STDC__
+#ifndef volatile
 #define volatile
+#endif
+#endif
+
+#if __STDC__
+#define PARAMS(args) args
+#define VOID void
+#else
+#define PARAMS(args) ()
+#define VOID char
 #endif
 
 #define min(a,b) ((a) <= (b) ? (a) : (b))
