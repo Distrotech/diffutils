@@ -19,16 +19,18 @@
    59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
 
 #include "system.h"
-
-static char const copyright_string[] =
-  "Copyright (C) 2002 Free Software Foundation, Inc.";
+#include "paths.h"
 
 static char const authorship_msgid[] = N_("Written by Randy Smith.");
+
+static char const copyright_notice[] =
+  "Copyright %s 2002 Free Software Foundation, Inc.";
 
 #include <c-stack.h>
 #include <cmpbuf.h>
 #include <error.h>
 #include <exitfail.h>
+#include <file-type.h>
 #include <freesoft.h>
 #include <getopt.h>
 #include <inttostr.h>
@@ -38,26 +40,20 @@ static char const authorship_msgid[] = N_("Written by Randy Smith.");
 
 extern char const version_string[];
 
-/*
- * Internal data structures and macros for the diff3 program; includes
- * data structures for both diff3 diffs and normal diffs.
- */
+/* Internal data structures and macros for the diff3 program; includes
+   data structures for both diff3 diffs and normal diffs.  */
 
 /* Different files within a three way diff.  */
 #define	FILE0	0
 #define	FILE1	1
 #define	FILE2	2
 
-/*
- * A three way diff is built from two two-way diffs; the file which
- * the two two-way diffs share is:
- */
+/* A three way diff is built from two two-way diffs; the file which
+   the two two-way diffs share is:  */
 #define	FILEC	FILE2
 
-/*
- * Different files within a two way diff.
- * FC is the common file, FO the other file.
- */
+/* Different files within a two way diff.
+   FC is the common file, FO the other file.  */
 #define FO 0
 #define FC 1
 
@@ -94,9 +90,7 @@ struct diff3_block {
   struct diff3_block *next;
 };
 
-/*
- * Access the ranges on a diff block.
- */
+/* Access the ranges on a diff block.  */
 #define	D_LOWLINE(diff, filenum)	\
   ((diff)->ranges[filenum][RANGE_START])
 #define	D_HIGHLINE(diff, filenum)	\
@@ -104,38 +98,28 @@ struct diff3_block {
 #define	D_NUMLINES(diff, filenum)	\
   (D_HIGHLINE (diff, filenum) - D_LOWLINE (diff, filenum) + 1)
 
-/*
- * Access the line numbers in a file in a diff by relative line
- * numbers (i.e. line number within the diff itself).  Note that these
- * are lvalues and can be used for assignment.
- */
+/* Access the line numbers in a file in a diff by relative line
+   numbers (i.e. line number within the diff itself).  Note that these
+   are lvalues and can be used for assignment.  */
 #define	D_RELNUM(diff, filenum, linenum)	\
   ((diff)->lines[filenum][linenum])
 #define	D_RELLEN(diff, filenum, linenum)	\
   ((diff)->lengths[filenum][linenum])
 
-/*
- * And get at them directly, when that should be necessary.
- */
+/* And get at them directly, when that should be necessary.  */
 #define	D_LINEARRAY(diff, filenum)	\
   ((diff)->lines[filenum])
 #define	D_LENARRAY(diff, filenum)	\
   ((diff)->lengths[filenum])
 
-/*
- * Next block.
- */
+/* Next block.  */
 #define	D_NEXT(diff)	((diff)->next)
 
-/*
- * Access the type of a diff3 block.
- */
+/* Access the type of a diff3 block.  */
 #define	D3_TYPE(diff)	((diff)->correspond)
 
-/*
- * Line mappings based on diffs.  The first maps off the top of the
- * diff, the second off of the bottom.
- */
+/* Line mappings based on diffs.  The first maps off the top of the
+   diff, the second off of the bottom.  */
 #define	D_HIGH_MAPLINE(diff, fromfile, tofile, linenum)	\
   ((linenum)						\
    - D_HIGHLINE ((diff), (fromfile))			\
@@ -225,10 +209,6 @@ static struct option const longopts[] =
   {0, 0, 0, 0}
 };
 
-/*
- * Main program.  Calls diff twice on two pairs of input files,
- * combines the two diffs, and outputs them.
- */
 int
 main (int argc, char **argv)
 {
@@ -252,7 +232,7 @@ main (int argc, char **argv)
   setlocale (LC_ALL, "");
   bindtextdomain (PACKAGE, LOCALEDIR);
   textdomain (PACKAGE);
-  c_stack_action (c_stack_die);
+  c_stack_action (argv, 0);
 
   while ((c = getopt_long (argc, argv, "aeimvx3AEL:TX", longopts, 0)) != -1)
     {
@@ -293,8 +273,9 @@ main (int argc, char **argv)
 	  initial_tab = 1;
 	  break;
 	case 'v':
-	  printf ("diff3 %s\n%s\n\n%s\n\n%s\n",
-		  version_string, copyright_string,
+	  printf ("diff3 %s\n", version_string);
+	  printf (copyright_notice, _("(C)"));
+	  printf ("\n\n%s\n\n%s\n",
 		  _(free_software_msgid), _(authorship_msgid));
 	  check_stdout ();
 	  return EXIT_SUCCESS;
@@ -389,6 +370,9 @@ main (int argc, char **argv)
   signal (SIGCHLD, SIG_DFL);
 #endif
 
+  /* Invoke diff twice on two pairs of input files, combine the two
+     diffs, and output them.  */
+
   commonname = file[rev_mapping[FILEC]];
   thread1 = process_diff (file[rev_mapping[FILE1]], commonname, &last_block);
   thread0 = process_diff (file[rev_mapping[FILE0]], commonname, &last_block);
@@ -475,95 +459,90 @@ usage (void)
 	  _("Report bugs to <bug-gnu-utils@gnu.org>."));
 }
 
-/*
- * Routines that combine the two diffs together into one.  The
- * algorithm used follows:
- *
- *   File2 is shared in common between the two diffs.
- *   Diff02 is the diff between 0 and 2.
- *   Diff12 is the diff between 1 and 2.
- *
- *	1) Find the range for the first block in File2.
- *	    a) Take the lowest of the two ranges (in File2) in the two
- *	       current blocks (one from each diff) as being the low
- *	       water mark.  Assign the upper end of this block as
- *	       being the high water mark and move the current block up
- *	       one.  Mark the block just moved over as to be used.
- *	    b) Check the next block in the diff that the high water
- *	       mark is *not* from.
- *
- *	       *If* the high water mark is above
- *	       the low end of the range in that block,
- *
- *		   mark that block as to be used and move the current
- *		   block up.  Set the high water mark to the max of
- *		   the high end of this block and the current.  Repeat b.
- *
- *	 2) Find the corresponding ranges in File0 (from the blocks
- *	    in diff02; line per line outside of diffs) and in File1.
- *	    Create a diff3_block, reserving space as indicated by the ranges.
- *
- *	 3) Copy all of the pointers for file2 in.  At least for now,
- *	    do memcmp's between corresponding strings in the two diffs.
- *
- *	 4) Copy all of the pointers for file0 and 1 in.  Get what you
- *	    need from file2 (when there isn't a diff block, it's
- *	    identical to file2 within the range between diff blocks).
- *
- *	 5) If the diff blocks you used came from only one of the two
- *	    strings of diffs, then that file (i.e. the one other than
- *	    the common file in that diff) is the odd person out.  If you used
- *	    diff blocks from both sets, check to see if files 0 and 1 match:
- *
- *		Same number of lines?  If so, do a set of memcmp's (if a
- *	    memcmp matches; copy the pointer over; it'll be easier later
- *	    if you have to do any compares).  If they match, 0 & 1 are
- *	    the same.  If not, all three different.
- *
- *   Then you do it again, until you run out of blocks.
- *
- */
+/* Combine the two diffs together into one.
+   Here is the algorithm:
 
-/*
- * This routine makes a three way diff (chain of diff3_block's) from two
- * two way diffs (chains of diff_block's).  It is assumed that each of
- * the two diffs passed are onto the same file (i.e. that each of the
- * diffs were made "to" the same file).  The three way diff pointer
- * returned will have numbering FILE0--the other file in diff02,
- * FILE1--the other file in diff12, and FILEC--the common file.
- */
+     File2 is shared in common between the two diffs.
+     Diff02 is the diff between 0 and 2.
+     Diff12 is the diff between 1 and 2.
+
+	1) Find the range for the first block in File2.
+	    a) Take the lowest of the two ranges (in File2) in the two
+	       current blocks (one from each diff) as being the low
+	       water mark.  Assign the upper end of this block as
+	       being the high water mark and move the current block up
+	       one.  Mark the block just moved over as to be used.
+	    b) Check the next block in the diff that the high water
+	       mark is *not* from.
+
+	       *If* the high water mark is above
+	       the low end of the range in that block,
+
+		   mark that block as to be used and move the current
+		   block up.  Set the high water mark to the max of
+		   the high end of this block and the current.  Repeat b.
+
+	 2) Find the corresponding ranges in File0 (from the blocks
+	    in diff02; line per line outside of diffs) and in File1.
+	    Create a diff3_block, reserving space as indicated by the ranges.
+
+	 3) Copy all of the pointers for file2 in.  At least for now,
+	    do memcmp's between corresponding strings in the two diffs.
+
+	 4) Copy all of the pointers for file0 and 1 in.  Get what is
+	    needed from file2 (when there isn't a diff block, it's
+	    identical to file2 within the range between diff blocks).
+
+	 5) If the diff blocks used came from only one of the two
+	    strings of diffs, then that file (i.e. the one other than
+	    the common file in that diff) is the odd person out.  If
+	    diff blocks are used from both sets, check to see if files
+	    0 and 1 match:
+
+		Same number of lines?  If so, do a set of memcmp's (if
+	    a memcmp matches; copy the pointer over; it'll be easier
+	    later during comparisons).  If they match, 0 & 1 are the
+	    same.  If not, all three different.
+
+     Then do it again, until the blocks are exhausted.  */
+
+
+/* Make a three way diff (chain of diff3_block's) from two two way
+   diffs (chains of diff_block's).  Assume that each of the two diffs
+   passed are onto the same file (i.e. that each of the diffs were
+   made "to" the same file).  Return a three way diff pointer with
+   numbering FILE0 = the other file in diff02, FILE1 = the other file
+   in diff12, and FILEC = the common file.  */
+
 static struct diff3_block *
 make_3way_diff (struct diff_block *thread0, struct diff_block *thread1)
 {
-/*
- * This routine works on the two diffs passed to it as threads.
- * Thread number 0 is diff02, thread number 1 is diff12.  The USING
- * array is set to the base of the list of blocks to be used to
- * construct each block of the three way diff; if no blocks from a
- * particular thread are to be used, that element of the using array
- * is set to 0.  The elements LAST_USING array are set to the last
- * elements on each of the using lists.
- *
- * The HIGH_WATER_MARK is set to the highest line number in the common file
- * described in any of the diffs in either of the USING lists.  The
- * HIGH_WATER_THREAD names the thread.  Similarly the BASE_WATER_MARK
- * and BASE_WATER_THREAD describe the lowest line number in the common file
- * described in any of the diffs in either of the USING lists.  The
- * HIGH_WATER_DIFF is the diff from which the HIGH_WATER_MARK was
- * taken.
- *
- * The HIGH_WATER_DIFF should always be equal to LAST_USING
- * [HIGH_WATER_THREAD].  The OTHER_DIFF is the next diff to check for
- * higher water, and should always be equal to
- * CURRENT[HIGH_WATER_THREAD ^ 0x1].  The OTHER_THREAD is the thread
- * in which the OTHER_DIFF is, and hence should always be equal to
- * HIGH_WATER_THREAD ^ 0x1.
- *
- * The variable LAST_DIFF is kept set to the last diff block produced
- * by this routine, for line correspondence purposes between that diff
- * and the one currently being worked on.  It is initialized to
- * ZERO_DIFF before any blocks have been created.
- */
+  /* Work on the two diffs passed to it as threads.  Thread number 0
+     is diff02, thread number 1 is diff12.  USING is the base of the
+     list of blocks to be used to construct each block of the three
+     way diff; if no blocks from a particular thread are to be used,
+     that element of USING is 0.  LAST_USING contains the last
+     elements on each of the using lists.
+
+     HIGH_WATER_MARK is the highest line number in the common file
+     described in any of the diffs in either of the USING lists.
+     HIGH_WATER_THREAD names the thread.  Similarly BASE_WATER_MARK
+     and BASE_WATER_THREAD describe the lowest line number in the
+     common file described in any of the diffs in either of the USING
+     lists.  HIGH_WATER_DIFF is the diff from which the
+     HIGH_WATER_MARK was taken.
+
+     HIGH_WATER_DIFF should always be equal to
+     LAST_USING[HIGH_WATER_THREAD].  OTHER_DIFF is the next diff to
+     check for higher water, and should always be equal to
+     CURRENT[HIGH_WATER_THREAD ^ 1].  OTHER_THREAD is the thread in
+     which the OTHER_DIFF is, and hence should always be equal to
+     HIGH_WATER_THREAD ^ 1.
+
+     LAST_DIFF is the last diff block produced by this routine, for
+     line correspondence purposes between that diff and the one
+     currently being worked on.  It is ZERO_DIFF before any blocks
+     have been created.  */
 
   struct diff_block *using[2];
   struct diff_block *last_using[2];
@@ -682,26 +661,22 @@ make_3way_diff (struct diff_block *thread0, struct diff_block *thread1)
   return result;
 }
 
-/*
- * using_to_diff3_block:
- *   This routine takes two lists of blocks (from two separate diff
- * threads) and puts them together into one diff3 block.
- * It then returns a pointer to this diff3 block or 0 for failure.
- *
- * All arguments besides using are for the convenience of the routine;
- * they could be derived from the using array.
- * LAST_USING is a pair of pointers to the last blocks in the using
- * structure.
- * LOW_THREAD and HIGH_THREAD tell which threads contain the lowest
- * and highest line numbers for File0.
- * last_diff3 contains the last diff produced in the calling routine.
- * This is used for lines mappings which would still be identical to
- * the state that diff ended in.
- *
- * A distinction should be made in this routine between the two diffs
- * that are part of a normal two diff block, and the three diffs that
- * are part of a diff3_block.
- */
+/* Take two lists of blocks (from two separate diff threads) and put
+   them together into one diff3 block.  Return a pointer to this diff3
+   block or 0 for failure.
+
+   All arguments besides using are for the convenience of the routine;
+   they could be derived from the using array.  LAST_USING is a pair
+   of pointers to the last blocks in the using structure.  LOW_THREAD
+   and HIGH_THREAD tell which threads contain the lowest and highest
+   line numbers for File0.  LAST_DIFF3 contains the last diff produced
+   in the calling routine.  This is used for lines mappings that
+   would still be identical to the state that diff ended in.
+
+   A distinction should be made in this routine between the two diffs
+   that are part of a normal two diff block, and the three diffs that
+   are part of a diff3_block.  */
+
 static struct diff3_block *
 using_to_diff3_block (struct diff_block *using[2],
 		      struct diff_block *last_using[2],
@@ -818,13 +793,11 @@ using_to_diff3_block (struct diff_block *using[2],
   return result;
 }
 
-/*
- * This routine copies pointers from a list of strings to a different list
- * of strings.  If a spot in the second list is already filled, it
- * makes sure that it is filled with the same string; if not it
- * returns 0, the copy incomplete.
- * Upon successful completion of the copy, it returns 1.
- */
+/* Copy pointers from a list of strings to a different list of
+   strings.  If a spot in the second list is already filled, make sure
+   that it is filled with the same string; if not, return 0, the copy
+   incomplete.  Upon successful completion of the copy, return 1.  */
+
 static bool
 copy_stringlist (char * const fromptrs[], size_t const fromlengths[],
 		 char *toptrs[], size_t tolengths[],
@@ -838,20 +811,26 @@ copy_stringlist (char * const fromptrs[], size_t const fromlengths[],
   while (copynum--)
     {
       if (*t)
-	{ if (*fl != *tl || memcmp (*f, *t, *fl)) return 0; }
+	{
+	  if (*fl != *tl || memcmp (*f, *t, *fl) != 0)
+	    return 0;
+	}
       else
-	{ *t = *f ; *tl = *fl; }
+	{
+	  *t = *f;
+	  *tl = *fl;
+	}
 
       t++; f++; tl++; fl++;
     }
+
   return 1;
 }
 
-/*
- * Create a diff3_block, with ranges as specified in the arguments.
- * Allocate the arrays for the various pointers (and zero them) based
- * on the arguments passed.  Return the block as a result.
- */
+/* Create a diff3_block, with ranges as specified in the arguments.
+   Allocate the arrays for the various pointers (and zero them) based
+   on the arguments passed.  Return the block as a result.  */
+
 static struct diff3_block *
 create_diff3_block (lin low0, lin high0,
 		    lin low1, lin high1,
@@ -912,32 +891,27 @@ create_diff3_block (lin low0, lin high0,
   return result;
 }
 
-/*
- * Compare two lists of lines of text.
- * Return 1 if they are equivalent, 0 if not.
- */
+/* Compare two lists of lines of text.
+   Return 1 if they are equivalent, 0 if not.  */
+
 static bool
 compare_line_list (char * const list1[], size_t const lengths1[],
 		   char * const list2[], size_t const lengths2[],
 		   lin nl)
 {
-  char
-    * const *l1 = list1,
-    * const *l2 = list2;
-  size_t const
-    *lgths1 = lengths1,
-    *lgths2 = lengths2;
+  char * const *l1 = list1;
+  char * const *l2 = list2;
+  size_t const *lgths1 = lengths1;
+  size_t const *lgths2 = lengths2;
 
   while (nl--)
     if (!*l1 || !*l2 || *lgths1 != *lgths2++
-	|| memcmp (*l1++, *l2++, *lgths1++))
+	|| memcmp (*l1++, *l2++, *lgths1++) != 0)
       return 0;
   return 1;
 }
 
-/*
- * Routines to input and parse two way diffs.
- */
+/* Input and parse two way diffs.  */
 
 static struct diff_block *
 process_diff (char const *filea,
@@ -1046,59 +1020,77 @@ process_diff (char const *filea,
   return block_list;
 }
 
-/*
- * This routine will parse a normal format diff control string.  It
- * returns the type of the diff (ERROR if the format is bad).  All of
- * the other important information is filled into to the structure
- * pointed to by db, and the string pointer (whose location is passed
- * to this routine) is updated to point beyond the end of the string
- * parsed.  Note that only the ranges in the diff_block will be set by
- * this routine.
- *
- * If some specific pair of numbers has been reduced to a single
- * number, then both corresponding numbers in the diff block are set
- * to that number.  In general these numbers are interpreted as ranges
- * inclusive, unless being used by the ADD or DELETE commands.  It is
- * assumed that these will be special cased in a superior routine.
- */
+/* Skip tabs and spaces, and return the first character after them.  */
+
+static char *
+skipwhite (char *s)
+{
+  while (*s == ' ' || *s == '\t')
+    s++;
+  return s;
+}
+
+/* Read a nonnegative line number from S, returning the address of the
+   first character after the line number, and storing the number into
+   *PNUM.  Return 0 if S does not point to a valid line number.  */
+
+static char *
+readnum (char *s, lin *pnum)
+{
+  unsigned char c = *s++;
+  lin num = 0;
+
+  if (! ISDIGIT (c))
+    return 0;
+
+  do
+    {
+      num = c - '0' + num * 10;
+      c = *s++;
+    }
+  while (ISDIGIT (c));
+
+  *pnum = num;
+  return s;
+}
+
+/* Parse a normal format diff control string.  Return the type of the
+   diff (ERROR if the format is bad).  All of the other important
+   information is filled into to the structure pointed to by db, and
+   the string pointer (whose location is passed to this routine) is
+   updated to point beyond the end of the string parsed.  Note that
+   only the ranges in the diff_block will be set by this routine.
+  
+   If some specific pair of numbers has been reduced to a single
+   number, then both corresponding numbers in the diff block are set
+   to that number.  In general these numbers are interpreted as ranges
+   inclusive, unless being used by the ADD or DELETE commands.  It is
+   assumed that these will be special cased in a superior routine.   */
 
 static enum diff_type
 process_diff_control (char **string, struct diff_block *db)
 {
   char *s = *string;
-  lin holdnum;
   enum diff_type type;
 
-/* These macros are defined here because they can use variables
-   defined in this function.  Don't try this at home kids, we're
-   trained professionals!
-
-   Also note that SKIPWHITE only recognizes tabs and spaces, and
-   that READNUM can only read positive, integral numbers */
-
-#define	SKIPWHITE(s)	{ while (*s == ' ' || *s == '\t') s++; }
-#define	READNUM(s, num)	\
-	{ unsigned char c = *s; if (!ISDIGIT (c)) return ERROR; holdnum = 0; \
-	  do { holdnum = (c - '0' + holdnum * 10); }	\
-	  while (ISDIGIT (c = *++s)); (num) = holdnum; }
-
   /* Read first set of digits */
-  SKIPWHITE (s);
-  READNUM (s, db->ranges[0][RANGE_START]);
+  s = readnum (skipwhite (s), &db->ranges[0][RANGE_START]);
+  if (! s)
+    return ERROR;
 
   /* Was that the only digit? */
-  SKIPWHITE (s);
+  s = skipwhite (s);
   if (*s == ',')
     {
-      /* Get the next digit */
-      s++;
-      READNUM (s, db->ranges[0][RANGE_END]);
+      s = readnum (s + 1, &db->ranges[0][RANGE_END]);
+      if (! s)
+	return ERROR;
     }
   else
     db->ranges[0][RANGE_END] = db->ranges[0][RANGE_START];
 
   /* Get the letter */
-  SKIPWHITE (s);
+  s = skipwhite (s);
   switch (*s)
     {
     case 'a':
@@ -1116,17 +1108,18 @@ process_diff_control (char **string, struct diff_block *db)
   s++;				/* Past letter */
 
   /* Read second set of digits */
-  SKIPWHITE (s);
-  READNUM (s, db->ranges[1][RANGE_START]);
+  s = readnum (skipwhite (s), &db->ranges[1][RANGE_START]);
+  if (! s)
+    return ERROR;
 
   /* Was that the only digit? */
-  SKIPWHITE (s);
+  s = skipwhite (s);
   if (*s == ',')
     {
-      /* Get the next digit */
-      s++;
-      READNUM (s, db->ranges[1][RANGE_END]);
-      SKIPWHITE (s);		/* To move to end */
+      s = readnum (s + 1, &db->ranges[1][RANGE_END]);
+      if (! s)
+	return ERROR;
+      s = skipwhite (s);		/* To move to end */
     }
   else
     db->ranges[1][RANGE_END] = db->ranges[1][RANGE_START];
@@ -1181,7 +1174,7 @@ read_diff (char const *filea,
 	 hosts with a nonstandard prototype for execvp.  */
       execvp (diff_program, (char **) argv);
 
-      _exit (errno == ENOEXEC ? 126 : 127);
+      _exit (127);
     }
 
   if (pid == -1)
@@ -1258,31 +1251,22 @@ read_diff (char const *filea,
 
 #endif
 
-  if (! werrno && WIFEXITED (wstatus))
-    switch (WEXITSTATUS (wstatus))
-      {
-      case 126:
-	error (EXIT_TROUBLE, 0, _("subsidiary program `%s' not executable"),
-	       diff_program);
-      case 127:
-	error (EXIT_TROUBLE, 0, _("subsidiary program `%s' not found"),
-	       diff_program);
-      }
   if (werrno || ! (WIFEXITED (wstatus) && WEXITSTATUS (wstatus) < 2))
-    error (EXIT_TROUBLE, werrno, _("subsidiary program `%s' failed"),
+    error (EXIT_TROUBLE, werrno,
+	   _(! werrno && WIFEXITED (wstatus) && WEXITSTATUS (wstatus) == 127
+	     ? "subsidiary program `%s' not found"
+	     : "subsidiary program `%s' failed"),
 	   diff_program);
 
   return diff_result + total;
 }
 
 
-/*
- * Scan a regular diff line (consisting of > or <, followed by a
- * space, followed by text (including nulls) up to a newline.
- *
- * This next routine began life as a macro and many parameters in it
- * are used as call-by-reference values.
- */
+/* Scan a regular diff line (consisting of > or <, followed by a
+   space, followed by text (including nulls) up to a newline.
+
+   This next routine began life as a macro and many parameters in it
+   are used as call-by-reference values.  */
 static char *
 scan_diff_line (char *scan_ptr, char **set_start, size_t *set_length,
 		char *limit, char leadingchar)
@@ -1321,17 +1305,14 @@ scan_diff_line (char *scan_ptr, char **set_start, size_t *set_length,
   return line_ptr;
 }
 
-/*
- * This routine outputs a three way diff passed as a list of
- * diff3_block's.
- * The argument MAPPING is indexed by external file number (in the
- * argument list) and contains the internal file number (from the
- * diff passed).  This is important because the user expects his
- * outputs in terms of the argument list number, and the diff passed
- * may have been done slightly differently (if the last argument
- * was "-", for example).
- * REV_MAPPING is the inverse of MAPPING.
- */
+/* Output a three way diff passed as a list of diff3_block's.  The
+   argument MAPPING is indexed by external file number (in the
+   argument list) and contains the internal file number (from the diff
+   passed).  This is important because the user expects outputs in
+   terms of the argument list number, and the diff passed may have
+   been done slightly differently (if the last argument was "-", for
+   example).  REV_MAPPING is the inverse of MAPPING.  */
+
 static void
 output_diff3 (FILE *outputfile, struct diff3_block *diff,
 	      int const mapping[3], int const rev_mapping[3])
@@ -1417,10 +1398,9 @@ output_diff3 (FILE *outputfile, struct diff3_block *diff,
 }
 
 
-/*
- * Output to OUTPUTFILE the lines of B taken from FILENUM.
- * Double any initial '.'s; yield nonzero if any initial '.'s were doubled.
- */
+/* Output to OUTPUTFILE the lines of B taken from FILENUM.  Double any
+   initial '.'s; yield nonzero if any initial '.'s were doubled.  */
+   
 static bool
 dotlines (FILE *outputfile, struct diff3_block *b, int filenum)
 {
@@ -1444,12 +1424,11 @@ dotlines (FILE *outputfile, struct diff3_block *b, int filenum)
   return leading_dot;
 }
 
-/*
- * Output to OUTPUTFILE a '.' line.  If LEADING_DOT is nonzero,
- * also output a command that removes initial '.'s
- * starting with line START and continuing for NUM lines.
- * (START is long, not lin, for convenience with printf %ld formats.)
- */
+/* Output to OUTPUTFILE a '.' line.  If LEADING_DOT is nonzero, also
+   output a command that removes initial '.'s starting with line START
+   and continuing for NUM lines.  (START is long, not lin, for
+   convenience with printf %ld formats.)  */
+   
 static void
 undotlines (FILE *outputfile, bool leading_dot, long start, lin num)
 {
@@ -1463,27 +1442,24 @@ undotlines (FILE *outputfile, bool leading_dot, long start, lin num)
     }
 }
 
-/*
- * This routine outputs a diff3 set of blocks as an ed script.  This
- * script applies the changes between file's 2 & 3 to file 1.  It
- * takes the precise format of the ed script to be output from global
- * variables set during options processing.  Note that it does
- * destructive things to the set of diff3 blocks it is passed; it
- * reverses their order (this gets around the problems involved with
- * changing line numbers in an ed script).
- *
- * Note that this routine has the same problem of mapping as the last
- * one did; the variable MAPPING maps from file number according to
- * the argument list to file number according to the diff passed.  All
- * files listed below are in terms of the argument list.
- * REV_MAPPING is the inverse of MAPPING.
- *
- * The arguments FILE0, FILE1 and FILE2 are the strings to print
- * as the names of the three files.  These may be the actual names,
- * or may be the arguments specified with -L.
- *
- * Returns 1 if conflicts were found.
- */
+/* Output a diff3 set of blocks as an ed script.  This script applies
+   the changes between file's 2 & 3 to file 1.  Take the precise
+   format of the ed script to be output from global variables set
+   during options processing.  Reverse the order of
+   the set of diff3 blocks in DIFF; this gets
+   around the problems involved with changing line numbers in an ed
+   script.
+
+   As in `output_diff3', the variable MAPPING maps from file number
+   according to the argument list to file number according to the diff
+   passed.  All files listed below are in terms of the argument list.
+   REV_MAPPING is the inverse of MAPPING.
+
+   FILE0, FILE1 and FILE2 are the strings to print as the names of the
+   three files.  These may be the actual names, or may be the
+   arguments specified with -L.
+
+   Return 1 if conflicts were found.  */
 
 static bool
 output_diff3_edscript (FILE *outputfile, struct diff3_block *diff,
@@ -1589,17 +1565,16 @@ output_diff3_edscript (FILE *outputfile, struct diff3_block *diff,
   return conflicts_found;
 }
 
-/*
- * Read from INFILE and output to OUTPUTFILE a set of diff3_ blocks DIFF
- * as a merged file.  This acts like 'ed file0 <[output_diff3_edscript]',
- * except that it works even for binary data or incomplete lines.
- *
- * As before, MAPPING maps from arg list file number to diff file number,
- * REV_MAPPING is its inverse,
- * and FILE0, FILE1, and FILE2 are the names of the files.
- *
- * Returns 1 if conflicts were found.
- */
+/* Read from INFILE and output to OUTPUTFILE a set of diff3_blocks
+   DIFF as a merged file.  This acts like 'ed file0
+   <[output_diff3_edscript]', except that it works even for binary
+   data or incomplete lines.
+
+   As before, MAPPING maps from arg list file number to diff file
+   number, REV_MAPPING is its inverse, and FILE0, FILE1, and FILE2 are
+   the names of the files.
+
+   Return 1 if conflicts were found.  */
 
 static bool
 output_diff3_merge (FILE *infile, FILE *outputfile, struct diff3_block *diff,
@@ -1712,9 +1687,8 @@ output_diff3_merge (FILE *infile, FILE *outputfile, struct diff3_block *diff,
   return conflicts_found;
 }
 
-/*
- * Reverse the order of the list of diff3 blocks.
- */
+/* Reverse the order of the list of diff3 blocks.  */
+
 static struct diff3_block *
 reverse_diff3_blocklist (struct diff3_block *diff)
 {
