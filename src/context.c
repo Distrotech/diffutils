@@ -18,7 +18,6 @@ along with GNU DIFF; see the file COPYING.  If not, write to
 the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 
 #include "diff.h"
-#include "regex.h"
 
 static void pr_context_hunk ();
 static void pr_unidiff_hunk ();
@@ -75,7 +74,7 @@ print_context_script (script, unidiff_flag)
      struct change *script;
      int unidiff_flag;
 {
-  if (ignore_blank_lines_flag || ignore_regexp)
+  if (ignore_blank_lines_flag || ignore_regexp_list)
     mark_ignorable (script);
   else
     {
@@ -150,7 +149,7 @@ pr_context_hunk (hunk)
 
   /* If desired, find the preceding function definition line in file 0.  */
   function = 0;
-  if (function_regexp)
+  if (function_regexp_list)
     find_function (&files[0], first0, &function, &function_length);
 
   begin_output ();
@@ -282,7 +281,7 @@ pr_unidiff_hunk (hunk)
 
   /* If desired, find the preceding function definition line in file 0.  */
   function = 0;
-  if (function_regexp)
+  if (function_regexp_list)
     find_function (&files[0], first0, &function, &function_length);
 
   begin_output ();
@@ -435,18 +434,20 @@ find_function (file, linenum, linep, lenp)
   while (--i >= last)
     {
       /* See if this line is what we want.  */
+      struct regexp_list *r;
 
-      if (0 <= re_search (&function_regexp_compiled,
-			  file->linbuf[i].text,
-			  file->linbuf[i].length,
-			  0, file->linbuf[i].length,
-			  0))
-	{
-	  *linep = file->linbuf[i].text;
-	  *lenp = file->linbuf[i].length;
-	  find_function_last_match = i;
-	  return;
-	}
+      for (r = function_regexp_list; r; r = r->next)
+	if (0 <= re_search (&r->buf,
+			    file->linbuf[i].text,
+			    file->linbuf[i].length,
+			    0, file->linbuf[i].length,
+			    0))
+	  {
+	    *linep = file->linbuf[i].text;
+	    *lenp = file->linbuf[i].length;
+	    find_function_last_match = i;
+	    return;
+	  }
     }
   /* If we search back to where we started searching the previous time,
      find the line we found last time.  */
