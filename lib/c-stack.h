@@ -16,9 +16,4 @@
    along with this program; if not, write to the Free Software Foundation,
    Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
 
-#if ! HAVE_SIGINFO_T
-# define siginfo_t void
-#endif
-
-int c_stack_action (void (*) (int, siginfo_t *, void *));
-void c_stack_die (int, siginfo_t *, void *);
+int c_stack_action (char * const *, void (*) (int));
