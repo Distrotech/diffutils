@@ -28,23 +28,6 @@ INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_DATA = @INSTALL_DATA@
 MAKEINFO = makeinfo
 
-# Things you might add to DEFS:
-# -DSTDC_HEADERS	If you have ANSI C headers and libraries.
-# -DHAVE_UNISTD_H	If you have unistd.h.
-# -DHAVE_STRING_H	If you don't have ANSI C headers but have string.h.
-# -DDIRENT		If you have dirent.h.
-# -DSYSNDIR		Old Xenix systems (sys/ndir.h).
-# -DSYSDIR		Old BSD systems (sys/dir.h).
-# -DNDIR		Old System V systems (ndir.h).
-# -DHAVE_VFORK_H	If you have vfork and it needs vfork.h.
-# -DHAVE_DUP2		If you have dup2 system call.
-# -DHAVE_WAITPID	If you have waitpid system call.
-# -DHAVE_ST_BLKSIZE	If your struct stat has an st_blksize member.
-# -DHAVE_STRERROR	If you have strerror function.
-# -DHAVE_ALLOCA_H	If you have a working alloca.h.
-
-DEFS = @DEFS@
-
 CFLAGS = -g
 LDFLAGS = -g
 LIBS = @LIBS@
@@ -68,23 +51,25 @@ infodir = $(prefix)/info
 SHELL = /bin/sh
 
 # The source files for all of the programs.
-srcs=diff.c analyze.c io.c context.c ed.c normal.c ifdef.c util.c dir.c \
+srcs=diff.c analyze.c cmpbuf.c cmpbuf.h io.c context.c ed.c normal.c ifdef.c \
+	util.c dir.c \
 	version.c diff.h regex.c regex.h side.c system.h \
 	diff3.c sdiff.c cmp.c error.c xmalloc.c getopt.c getopt1.c getopt.h \
 	fnmatch.c fnmatch.h alloca.c
 # Object files for diff only.
-objs=diff.o analyze.o io.o context.o \
+objs=diff.o analyze.o cmpbuf.o io.o context.o \
      ed.o normal.o util.o dir.o fnmatch.o \
      regex.o side.o ifdef.o version.o \
      getopt.o getopt1.o $(ALLOCA)
-distfiles = $(srcs) README INSTALL NEWS diagmeet.note Makefile.in configure \
-	configure.in COPYING ChangeLog diff.texi diff.info* texinfo.tex \
+distfiles = $(srcs) README INSTALL NEWS diagmeet.note Makefile.in \
+	config.h.in configure configure.in COPYING ChangeLog \
+	diff.texi diff.info* texinfo.tex \
 	mkinstalldirs
 
 all: diff diff3 sdiff cmp diff.info
 
 .c.o:
-	$(CC) -c $(DEFS) $(CPPFLAGS) -I. -I$(srcdir) $(CFLAGS) $<
+	$(CC) -c -DHAVE_CONFIG_H $(CPPFLAGS) -I. -I$(srcdir) $(CFLAGS) $<
 
 diff: $(objs)
 	$(CC) -o $@ $(LDFLAGS) $(objs) $(LIBS)
@@ -95,8 +80,8 @@ diff3: diff3.o getopt.o getopt1.o version.o $(ALLOCA)
 sdiff: sdiff.o getopt.o getopt1.o version.o $(ALLOCA)
 	$(CC) -o $@ $(LDFLAGS) sdiff.o getopt.o getopt1.o version.o $(ALLOCA) $(LIBS)
 
-cmp: cmp.o getopt.o getopt1.o error.o xmalloc.o $(ALLOCA)
-	$(CC) -o $@ $(LDFLAGS) cmp.o getopt.o getopt1.o error.o xmalloc.o $(ALLOCA) $(LIBS)
+cmp: cmp.o cmpbuf.o getopt.o getopt1.o error.o xmalloc.o $(ALLOCA)
+	$(CC) -o $@ $(LDFLAGS) cmp.o cmpbuf.o getopt.o getopt1.o error.o xmalloc.o $(ALLOCA) $(LIBS)
 
 diff.info: diff.texi
 	$(MAKEINFO) $(srcdir)/diff.texi
@@ -106,12 +91,13 @@ cmp.o diff3.o sdiff.o: system.h
 context.o diff.o regex.o: regex.h
 cmp.o diff.o diff3.o sdiff.o getopt.o getopt1.o: getopt.h
 diff.o fnmatch.o: fnmatch.h
+analyze.o cmpbuf.o cmp.o: cmpbuf.h
 
 diff3.o: diff3.c
-	$(CC) -c $(DEFS) $(CPPFLAGS) $(CFLAGS) -DDIFF_PROGRAM=\"$(bindir)/$(binprefix)diff\" $(srcdir)/diff3.c
+	$(CC) -c -DHAVE_CONFIG_H $(CPPFLAGS) $(CFLAGS) -DDIFF_PROGRAM=\"$(bindir)/$(binprefix)diff\" $(srcdir)/diff3.c
 
 sdiff.o: sdiff.c
-	$(CC) -c $(DEFS) $(CPPFLAGS) $(CFLAGS) -DDIFF_PROGRAM=\"$(bindir)/$(binprefix)diff\" $(srcdir)/sdiff.c
+	$(CC) -c -DHAVE_CONFIG_H $(CPPFLAGS) $(CFLAGS) -DDIFF_PROGRAM=\"$(bindir)/$(binprefix)diff\" $(srcdir)/sdiff.c
 
 TAGS: $(srcs)
 	etags $(srcs)
@@ -144,9 +130,11 @@ uninstall:
 Makefile: Makefile.in config.status
 	$(SHELL) config.status
 config.status: configure
-	$(SHELL) config.status --recheck
+	$(SHELL) $(srcdir)/configure --no-create
 configure: configure.in
 	cd $(srcdir); autoconf
+config.h.in: configure.in
+	cd $(srcdir); autoheader
 
 dist: $(distfiles)
 	echo diffutils-`sed -e '/version_string/!d' -e 's/[^0-9]*\([0-9a-z.]*\).*/\1/' -e q version.c` > .fname
