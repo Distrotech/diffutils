@@ -1,6 +1,6 @@
 /* inttostr.h -- convert integers to printable strings
 
-   Copyright (C) 2001 Free Software Foundation, Inc.
+   Copyright (C) 2001, 2002 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -37,13 +37,10 @@
 # include <sys/types.h>
 #endif
 
-#define TYPE_SIGNED(t) (! ((t) 0 < (t) -1))
-
 /* Upper bound on the string length of an integer converted to string.
    302 / 1000 is ceil (log10 (2.0)).  Subtract 1 for the sign bit;
    add 1 for integer division truncation; add 1 more for a minus sign.  */
-#define INT_STRLEN_BOUND(t) \
- ((sizeof (t) * CHAR_BIT - TYPE_SIGNED (t)) * 302 / 1000 + 1 + TYPE_SIGNED (t))
+#define INT_STRLEN_BOUND(t) ((sizeof (t) * CHAR_BIT - 1) * 302 / 1000 + 2)
 
 #define INT_BUFSIZE_BOUND(t) (INT_STRLEN_BOUND (t) + 1)
 
