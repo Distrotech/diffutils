@@ -22,6 +22,7 @@
 
 #include "system.h"
 
+#include <dirname.h>
 #include <error.h>
 #include <freesoft.h>
 #include <getopt.h>
@@ -292,13 +293,13 @@ expand_name (char *name, bool is_dir, char const *other_name)
   else
     {
       /* Yield NAME/BASE, where BASE is OTHER_NAME's basename.  */
-      char const *p = file_name_lastdirchar (other_name);
-      char const *base = p ? p+1 : other_name;
+      char const *base = base_name (other_name);
       size_t namelen = strlen (name), baselen = strlen (base);
-      char *r = xmalloc (namelen + baselen + 2);
+      bool insert_slash = *base_name (name) && name[namelen - 1] != '/';
+      char *r = xmalloc (namelen + insert_slash + baselen + 1);
       memcpy (r, name, namelen);
       r[namelen] = '/';
-      memcpy (r + namelen + 1, base, baselen + 1);
+      memcpy (r + namelen + insert_slash, base, baselen + 1);
       return r;
     }
 }
@@ -411,12 +412,12 @@ main (int argc, char *argv[])
   int opt;
   char const *prog;
 
+  xalloc_exit_failure = 2;
   initialize_main (&argc, &argv);
   program_name = argv[0];
   setlocale (LC_ALL, "");
   bindtextdomain (PACKAGE, LOCALEDIR);
   textdomain (PACKAGE);
-  xalloc_exit_failure = 2;
 
   prog = getenv ("EDITOR");
   if (prog)
