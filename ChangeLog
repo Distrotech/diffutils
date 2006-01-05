@@ -10,6 +10,7 @@
 	* bootstrap: Import changes from Bison bootstrap.  Add gettext,
 	gettime, sh-quote, stat-time, verify, version-etc-fsf modules.
 	Remove posixver module.  Retrieve doc/fdl.texi from gnulib.
+	Handle gettext.m4 like glibc21.m4.  Don't remove po/en.po.
 	* configure.ac (AC_PREREQ): Bump to 2.59.
 	(AC_INIT): Bump version to 2.8.7-cvs.
 	(AC_CONFIG_AUX_DIR): Change from config to build-aux.

@@ -148,8 +148,7 @@ for gnulib_file in $gnulib_files; do
   m4/onceonly_2_57.m4) dest=m4/onceonly.m4;;
   # These will be overwritten by autopoint, which still uses
   # old jm_.* macro names, so we have to keep both copies.
-  # m4/gettext.m4 isn't mentioned here, since it's patched below.
-  m4/glibc21.m4 | m4/inttypes_h.m4 | m4/lib-ld.m4 | \
+  m4/gettext.m4 | m4/glibc21.m4 | m4/inttypes_h.m4 | m4/lib-ld.m4 | \
   m4/lib-prefix.m4 | m4/longlong.m4 | \
   m4/po.m4 | m4/stdint_h.m4 | m4/uintmax_t.m4 | \
   m4/ulonglong.m4)
@@ -177,7 +176,7 @@ case $SKIP_PO in
 
   echo "$0: getting translations into po (please ignore the robots.txt ERROR 404)..."
   (cd po &&
-   rm -f dummy `ls | sed -n '/\.gmo$/p; /\.po/p'` &&
+   rm -f dummy `ls | sed -n '/\.gmo$/p; /^en\.po$/d; /\.po/p'` &&
    wget -nv -nd -r -l 1 -A .po $no_cache \
      http://www.iro.umontreal.ca/translation/maint/$package/ &&
    ls *.po | sed 's/\.po$//' >LINGUAS
