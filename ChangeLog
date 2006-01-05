@@ -1,5 +1,7 @@
 2006-01-04  Paul Eggert  <eggert@cs.ucla.edu>
 
+	* README-alpha: Describe CVS access better, using the README-alpha
+	from GNU tar.
 	* AUTHORS: Simplify list by removing legalisms.
 	* THANKS: Add Larry Wall, who contributed to manual.  Update email
 	addresses.

@@ -16,8 +16,8 @@ Rem GNU General Public License for more details.
 
 Rem You should have received a copy of the GNU General Public License
 Rem along with this program; if not, write to the Free Software
-Rem Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
-Rem 02111-1307, USA.
+Rem Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+Rem 02110-1301, USA.
 
 Rem Written by Eli Zaretskii.
 
