@@ -1,7 +1,7 @@
 /* File I/O for GNU DIFF.
 
    Copyright (C) 1988, 1989, 1992, 1993, 1994, 1995, 1998, 2001, 2002,
-   2004 Free Software Foundation, Inc.
+   2004, 2006 Free Software Foundation, Inc.
 
    This file is part of GNU DIFF.
 
@@ -23,7 +23,6 @@
 #include "diff.h"
 #include <cmpbuf.h>
 #include <file-type.h>
-#include <setmode.h>
 #include <xalloc.h>
 
 /* Rotate an unsigned value to the left.  */
@@ -34,7 +33,7 @@
 
 /* The type of a hash value.  */
 typedef size_t hash_value;
-verify (hash_value_is_unsigned, ! TYPE_SIGNED (hash_value));
+verify (! TYPE_SIGNED (hash_value));
 
 /* Lines are put into equivalence classes of lines that match in lines_differ.
    Each equivalence class is represented by one of these structures,
@@ -114,26 +113,11 @@ sip (struct file_data *current, bool skip_test)
 	{
 	  /* Check first part of file to see if it's a binary file.  */
 
-	  bool was_binary = set_binary_mode (current->desc, true);
-	  off_t buffered;
+	  /* FIXME: if O_BINARY, this should revert to text mode
+	     if the file is not binary.  */
+
 	  file_block_read (current, current->bufsize);
-	  buffered = current->buffered;
-
-	  if (! was_binary)
-	    {
-	      /* Revert to text mode and seek back to the beginning to
-		 reread the file.  Use relative seek, since file
-		 descriptors like stdin might not start at offset
-		 zero.  */
-
-	      if (lseek (current->desc, - buffered, SEEK_CUR) == -1)
-		pfatal_with_name (current->name);
-	      set_binary_mode (current->desc, false);
-	      current->buffered = 0;
-	      current->eof = false;
-	    }
-
-	  return binary_file_p (current->buffer, buffered);
+	  return binary_file_p (current->buffer, current->buffered);
 	}
     }
 
@@ -796,8 +780,7 @@ static unsigned char const prime_offset[] =
 
 /* Verify that this host's size_t is not too wide for the above table.  */
 
-verify (enough_prime_offsets,
-	sizeof (size_t) * CHAR_BIT <= sizeof prime_offset);
+verify (sizeof (size_t) * CHAR_BIT <= sizeof prime_offset);
 
 /* Given a vector of two file_data objects, read the file associated
    with each one, and build the table of equivalence classes.
@@ -821,8 +804,7 @@ read_files (struct file_data filevec[], bool pretend_binary)
     }
   if (appears_binary)
     {
-      set_binary_mode (filevec[0].desc, true);
-      set_binary_mode (filevec[1].desc, true);
+      /* FIXME: If O_BINARY, this should set both files to binary mode.  */
       return true;
     }
 

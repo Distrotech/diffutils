@@ -1,6 +1,6 @@
 # Automakefile for GNU Diffutils library.
 
-# Copyright (C) 2001, 2002, 2004 Free Software Foundation, Inc.
+# Copyright (C) 2001, 2002, 2004, 2006 Free Software Foundation, Inc.
 
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -19,17 +19,16 @@
 
 noinst_LIBRARIES = libdiffutils.a
 
-noinst_HEADERS = cmpbuf.h prepargs.h quotesys.h
+noinst_HEADERS = cmpbuf.h prepargs.h
 
 libdiffutils_a_SOURCES = $(lib_SOURCES)
-lib_SOURCES = cmpbuf.c prepargs.c quotesys.c
+lib_SOURCES = cmpbuf.c prepargs.c
 
 libdiffutils_a_LIBADD = @ALLOCA@ @LIBOBJS@
 libdiffutils_a_DEPENDENCIES = $(libdiffutils_a_LIBADD)
 
 BUILT_SOURCES =
-DISTCLEANFILES =
-EXTRA_DIST = setmode.h waitpid.c
+EXTRA_DIST =
 MOSTLYCLEANFILES =
 
 include gnulib.mk

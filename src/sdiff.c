@@ -1,7 +1,7 @@
 /* sdiff - side-by-side merge of file differences
 
-   Copyright (C) 1992, 1993, 1994, 1995, 1996, 1998, 2001, 2002, 2004
-   Free Software Foundation, Inc.
+   Copyright (C) 1992, 1993, 1994, 1995, 1996, 1998, 2001, 2002, 2004,
+   2006 Free Software Foundation, Inc.
 
    This file is part of GNU DIFF.
 
@@ -33,7 +33,7 @@
 #include <exitfail.h>
 #include <file-type.h>
 #include <getopt.h>
-#include <quotesys.h>
+#include <sh-quote.h>
 #include <version-etc.h>
 #include <xalloc.h>
 
@@ -614,11 +614,11 @@ main (int argc, char *argv[])
 	int i;
 
 	for (i = 0;  diffargv[i];  i++)
-	  cmdsize += quote_system_arg (0, diffargv[i]) + 1;
+	  cmdsize += shell_quote_length (diffargv[i]) + 1;
 	command = p = xmalloc (cmdsize);
 	for (i = 0;  diffargv[i];  i++)
 	  {
-	    p += quote_system_arg (p, diffargv[i]);
+	    p = shell_quote_copy (diffargv[i]);
 	    *p++ = ' ';
 	  }
 	p[-1] = 0;
@@ -1056,9 +1056,9 @@ edit (struct line_filter *left, char const *lname, lin lline, lin llen,
 	      {
 #if ! (HAVE_WORKING_FORK || HAVE_WORKING_VFORK)
 		char *command =
-		  xmalloc (quote_system_arg (0, editor_program)
+		  xmalloc (shell_quote_length (editor_program)
 			   + 1 + strlen (tmpname) + 1);
-		sprintf (command + quote_system_arg (command, editor_program),
+		sprintf (shell_quote_copy (command, editor_program),
 			 " %s", tmpname);
 		wstatus = system (command);
 		if (wstatus == -1)

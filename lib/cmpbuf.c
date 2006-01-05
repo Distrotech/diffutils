@@ -1,6 +1,7 @@
 /* Buffer primitives for comparison operations.
 
-   Copyright (C) 1993, 1995, 1998, 2001, 2002 Free Software Foundation, Inc.
+   Copyright (C) 1993, 1995, 1998, 2001, 2002, 2006 Free Software
+   Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -85,11 +86,12 @@ block_read (int fd, char *buf, size_t nbytes)
 {
   char *bp = buf;
   char const *buflim = buf + nbytes;
-  size_t readlim = SSIZE_MAX;
+  size_t readlim = MIN (SSIZE_MAX, SIZE_MAX);
 
   do
     {
-      size_t bytes_to_read = MIN (buflim - bp, readlim);
+      size_t bytes_remaining = buflim - bp;
+      size_t bytes_to_read = MIN (bytes_remaining, readlim);
       ssize_t nread = read (fd, bp, bytes_to_read);
       if (nread <= 0)
 	{

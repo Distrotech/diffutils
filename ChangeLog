@@ -1,7 +1,117 @@
+2006-01-04  Paul Eggert  <eggert@cs.ucla.edu>
+
+	* AUTHORS: Simplify list by removing legalisms.
+	* THANKS: Add Larry Wall, who contributed to manual.  Update email
+	addresses.
+	* Makefile.am (SUBDIRS): Remove m4.  Put lib first, then other
+	source files, so documentation can rely on programs being built.
+	* bootstrap: Import changes from Bison bootstrap.  Add gettext,
+	gettime, sh-quote, stat-time, verify, version-etc-fsf modules.
+	Remove posixver module.  Retrieve doc/fdl.texi from gnulib.
+	* configure.ac (AC_PREREQ): Bump to 2.59.
+	(AC_INIT): Bump version to 2.8.7-cvs.
+	(AC_CONFIG_AUX_DIR): Change from config to build-aux.
+	Prefer AC_CHECK_HEADERS_ONCE to AC_CHECK_HEADERS
+	and AC_CHECK_FUNCS_ONCE to AC_CHECK_FUNCS.
+	Remove jm_AC_TYPE_INTMAX_T, jm_AC_TYPE_UINTMAX_T,
+	AC_STRUCT_ST_MTIM_NSEC.
+	(DIFFUTILS_PREREQUISITES): New macro.  Call it.
+	(REGEX_MALLOC): Remove; no longer needed.
+	(AM_GNU_GETTEXT_VERSION): Now 0.14.15.
+	(AM_GNU_GETTEXT): Call.
+	(LIB_CLOCK_GETTIME): Remove; bootstrap now does that.
+	(AC_FUNC_SETMODE_DOS): Remove.
+	(AC_CONFIG_FILES): Remove m4/Makefile.
+	* doc/diff.texi: Use @- at end of lines that should end in white space,
+	so that Emacs doesn't remove the white space.
+	(diff Options): "diff -NUM" is a pure extension to POSIX, so support
+	it unconditionally.
+	* lib/Makefile.am (noinst_HEADERS): Remove quotesys.h.
+	(lib_SOURCES): Remove quotesys.c.
+	(DISTCLEANFILES): Remove.
+	(EXTRA_DIST): Remove setmode.h, waitpid.c.
+	* lib/cmpbuf.c (block_read): Reword to avoid gcc -W warning.
+	* lib/setmode.c, lib/setmode.h: Remove.
+	* m4/setmode.m4, m4/gnu-source.m4, m4/Makefile.am.in: Remove.
+	* m4/jm-glibc-io.m4: Remove.
+	* src/cmp.c: Don't include <setmode.h>.
+	(specify_ignore_initial): Reword to avoid gcc -W warnings.
+	(main): Use freopen instead of setmode, since freopen is in POSIX.
+	* src/context.c: Revert most 2004-09-01 changes.  Then:
+	(TIMESPEC_NS): Remove.  All uses replaced by
+	get_stat_mtime_ns.
+	Include stat-time.h, strftime.h.
+	(nstrtime): Remove decl.
+	* src/diff.c: Revert most 2004-09-01 changes.  Then:
+	Don't include <posixver.h>, <quotesys.h>, <setmode.h>.
+	Include <sh-quote.h>, <stat-time.h>, <timespec.h>.
+	All uses of quotesys replaced by sh-quote.
+	(main, compare_files):
+	Use freopen instead of setmode, since freopen is in POSIX.
+	(main): Don't complain about "diff -NUM'.
+	(main, set_mtime_to_now):
+	Adjust to stat-time.h macros when accessing nanoseconds.
+	* src/diff3.c: Include sh-quote.h rather than quotesys.  All uses
+	changed.
+	* src/dir.c (dir_read): excluded_filename renamed to
+	excluded_file_name.
+	* src/io.c: Don't include <setmode.h>.
+	(sip, read_files): Remove binary file stuff, leaving a FIXME behind.
+	A DOS expert needs to look at this.
+	* src/diff.c: Include sh-quote.h rather than quotesys.h.
+	All uses changed.
+	* src/system.h: Include verify.h.
+	(verify): Remove.  All uses changed to verify.h version.
+	Include <intprops.h>.
+	(TYPE_SIGNED, TYPE_MINIMUM, TYPE_MAXIMUM): Remove.  Now uses
+	intprops.h versions.
+	(O_BINARY): New defns, taken from coreutils.
+	* src/util.c: Include sh-quote.h rather than quotesys.h.
+	All uses changed.
+
+2004-09-01  Paul Eggert  <eggert@cs.ucla.edu>
+
+	* src/diff.c (recursive, new_file, unidirectional_new_file):
+	(report_identical_files):
+	Move into struct diffopt.  All uses changed.
+	(exclude_options, compare_files, specify_style, check_stdout):
+	New arg OPT.  All uses changed.
+	(GDIFF_MAIN): Remove.  All uses removed.
+	(function_regexp_list, ignore_regexp_list): No longer static; now
+	locals in 'main'.
+	(main): Set opt.function_regexp, opt.ignore_regexp if using regexps;
+	all other code now tests these pointers rather than inspecting fastmap
+	internals.
+	New local OPT to hold former statics; initialize it.
+	(init_regexp_list): New function, used by main.
+	(summarize_regexp_list): Now returns struct re_pattern_buffer *, and
+	assumes reglist->regexps is not NULL.  All uses changed.
+
+	* src/context.c (find_function_last_search): Move into struct diffopt.
+	All uses changed.
+	(pr_context_label, pr_context_header,
+	print_context_script, find_function, find_hunk, mark_ignorable,
+	pr_context_hunk, pr_unidiff_hunk): New arg OPT.  All uses changed.
+	(print_context_number_range,
+	print_unidiff_number_range): New arg OUT.  All uses changed.
+
 2004-07-19  Stepan Kasal  <kasal@ucw.cz>
 
 	* src/ed.c (print_ed_hunk): Optimize the case where an insert's
 	last line is a single-dot line.
+
+2004-06-30  Paul Eggert  <eggert@cs.ucla.edu>
+
+	* lib/setmode.c:
+	Don't include <stdbool.h>, since setmode.h now does this.
+	Include setmode.h first, to catch interface errors.
+	Assume HAVE_SETMODE_DOS is defined.
+
+	* lib/setmode.h: Include stdbool.h.
+
+2004-04-26  Paul Eggert  <eggert@cs.ucla.edu>
+
+	* bootstrap: Don't remove po/en.po.
 
 2004-04-13  Paul Eggert  <eggert@twinsun.com>
 
@@ -48,7 +158,7 @@
 	the above.
 	(AC_CONFIG_FILES): Remove lib/posix/Makefile.
 	(AC_CONFIG_COMMANDS): Remove.
-	
+
 	* doc/diff.texi (dircategory): Change to "Text creation and
 	manipulation" from "GNU packages".
 	(Translations): New node.
@@ -3862,22 +3972,12 @@ Thu Nov  3 16:30:24 1988  Randall Smith  (randy at gluteus.ai.mit.edu)
 	the sake of System V (too simple not to do).
 
 
-Copyright (C) 1988, 1989, 1990, 1991, 1992, 1993, 1994, 1997, 1998, 1999,
-2000, 2001, 2002 Free Software Foundation, Inc.
+	-----
 
-This file is part of GNU Diffutils.
+	Copyright (C) 1988, 1989, 1990, 1991, 1992, 1993, 1994, 1997,
+	1998, 1999, 2000, 2001, 2002, 2004, 2006 Free Software Foundation,
+	Inc.
 
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
-any later version.
-
-This program is distributed in the hope that they will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; see the file COPYING.  If not, write to
-the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-Boston, MA 02111-1307, USA.
+	Copying and distribution of this file, with or without
+	modification, are permitted provided the copyright notice and this
+	notice are preserved.

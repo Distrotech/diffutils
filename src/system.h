@@ -1,7 +1,7 @@
 /* System dependent declarations.
 
    Copyright (C) 1988, 1989, 1992, 1993, 1994, 1995, 1998, 2001, 2002,
-   2004 Free Software Foundation, Inc.
+   2004, 2006 Free Software Foundation, Inc.
 
    This file is part of GNU DIFF.
 
@@ -37,26 +37,7 @@
 # define volatile
 #endif
 
-/* Verify a requirement at compile-time (unlike assert, which is runtime).  */
-#define verify(name, assertion) struct name { char a[(assertion) ? 1 : -1]; }
-
-
-/* Determine whether an integer type is signed, and its bounds.
-   This code assumes two's (or one's!) complement with no holes.  */
-
-/* The extra casts work around common compiler bugs,
-   e.g. Cray C 5.0.3.0 when t == time_t.  */
-#ifndef TYPE_SIGNED
-# define TYPE_SIGNED(t) (! ((t) 0 < (t) -1))
-#endif
-#ifndef TYPE_MINIMUM
-# define TYPE_MINIMUM(t) ((t) (TYPE_SIGNED (t) \
-			       ? ~ (t) 0 << (sizeof (t) * CHAR_BIT - 1) \
-			       : (t) 0))
-#endif
-#ifndef TYPE_MAXIMUM
-# define TYPE_MAXIMUM(t) ((t) (~ (t) 0 - TYPE_MINIMUM (t)))
-#endif
+#include <verify.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -117,6 +98,22 @@
 #endif
 #ifndef S_IWUSR
 # define S_IWUSR 0200
+#endif
+
+/* For systems that distinguish between text and binary I/O.
+   O_BINARY is usually declared in fcntl.h  */
+#if !defined O_BINARY && defined _O_BINARY
+  /* For MSC-compatible compilers.  */
+# define O_BINARY _O_BINARY
+#endif
+
+#ifdef __BEOS__
+  /* BeOS 5 has O_BINARY, but it has no effect.  */
+# undef O_BINARY
+#endif
+
+#ifndef O_BINARY
+# define O_BINARY 0
 #endif
 
 #if HAVE_SYS_WAIT_H
@@ -240,6 +237,8 @@ int strcasecmp (char const *, char const *);
 # define vfork fork
 #endif
 
+#include <intprops.h>
+
 /* Type used for fast comparison of several bytes at a time.  */
 
 #ifndef word
@@ -251,9 +250,9 @@ int strcasecmp (char const *, char const *);
 
 typedef ptrdiff_t lin;
 #define LIN_MAX PTRDIFF_MAX
-verify (lin_is_signed, TYPE_SIGNED (lin));
-verify (lin_is_wide_enough, sizeof (ptrdiff_t) <= sizeof (lin));
-verify (lin_is_printable_as_long_int, sizeof (lin) <= sizeof (long int));
+verify (TYPE_SIGNED (lin));
+verify (sizeof (ptrdiff_t) <= sizeof (lin));
+verify (sizeof (lin) <= sizeof (long int));
 
 /* This section contains POSIX-compliant defaults for macros
    that are meant to be overridden by hand in config.h as needed.  */

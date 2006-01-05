@@ -1,7 +1,7 @@
 /* Support routines for GNU DIFF.
 
    Copyright (C) 1988, 1989, 1992, 1993, 1994, 1995, 1998, 2001, 2002,
-   2004 Free Software Foundation, Inc.
+   2004, 2006 Free Software Foundation, Inc.
 
    This file is part of GNU DIFF.
 
@@ -23,7 +23,7 @@
 #include "diff.h"
 #include <dirname.h>
 #include <error.h>
-#include <quotesys.h>
+#include <sh-quote.h>
 #include <xalloc.h>
 
 char const pr_program[] = PR_PROGRAM;
@@ -226,11 +226,11 @@ begin_output (void)
 	  }
 #else
 	char *command = xmalloc (sizeof pr_program - 1 + 7
-				 + quote_system_arg ((char *) 0, name) + 1);
+				 + shell_quote_length (name) + 1);
 	char *p;
 	sprintf (command, "%s -f -h ", pr_program);
 	p = command + sizeof pr_program - 1 + 7;
-	p += quote_system_arg (p, name);
+	p = shell_quote_copy (name);
 	*p = 0;
 	errno = 0;
 	outfile = popen (command, "w");

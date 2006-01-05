@@ -1,3 +1,16 @@
+User-visible changes since 2.8.7 (in "version" 2.8.7-cvs):
+
+* Bring back support for `diff -NUM', where NUM is a number,
+  even when conforming to POSIX 1003.1-2001.  This change reverts to
+  the behavior of GNU diff 2.7 and earlier.  This is a change only
+  when conforming to POSIX 1003.1-2001; there is no effect when
+  conforming to older POSIX versions.
+
+  This change is in response to decisions taken in the January 2005
+  Austin Group standardization meeting.  For more details, please see
+  "Utility Syntax Guidelines" in the Minutes of the January 2005
+  Meeting <http://www.opengroup.org/austin/docs/austin_239.html>.
+
 Version 2.8.7 contains no user-visible changes.
 
 User-visible changes in version 2.8.6:

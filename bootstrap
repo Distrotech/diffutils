@@ -2,7 +2,7 @@
 
 # Bootstrap this package from CVS.
 
-# Copyright (C) 2003, 2004 Free Software Foundation, Inc.
+# Copyright (C) 2003, 2004, 2005, 2006 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -16,12 +16,18 @@
 
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
-# 02111-1307, USA.
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301, USA.
 
 # Written by Paul Eggert.
 
 package=diffutils
+
+# Ensure file names are sorted consistently across platforms;
+# e.g., m4/ulonglong_gl.m4 should follow m4/ulonglong.m4.
+# Also, ensure diagnostics are in English, e.g., "wget --help" below.
+LC_ALL=C
+export LC_ALL
 
 # Parse options.
 
@@ -29,14 +35,12 @@ for option
 do
   case $option in
   --help)
-    echo "$0: usage: $0 [--gnulib-srcdir=DIR] [--cvs-auth=AUTH-METHOD] [--cvs-user=USERNAME] [--skip-po]"
+    echo "$0: usage: $0 [--gnulib-srcdir=DIR] [--cvs-user=USERNAME] [--skip-po]"
     exit;;
   --gnulib-srcdir=*)
-    GNULIB_SRCDIR=`expr "$1" : '--gnulib-srcdir=\(.*\)'`;;
-  --cvs-auth=*)
-    CVS_AUTH=`expr "$1" : '--cvs-auth=\(.*\)'`;;
+    GNULIB_SRCDIR=`expr "$option" : '--gnulib-srcdir=\(.*\)'`;;
   --cvs-user=*)
-    CVS_USER=`expr "$1" : '--cvs-user=\(.*\)'`;;
+    CVS_USER=`expr "$option" : '--cvs-user=\(.*\)'`;;
   --skip-po)
     SKIP_PO=t;;
   *)
@@ -47,11 +51,10 @@ done
 
 echo "$0: Bootstrapping CVS $package..."
 
-build_cvs_prefix() {
-  CVS_PREFIX=:${1}:
-  if [ "${2}" != - ]; then
-    CVS_PREFIX=${CVS_PREFIX}${2}@
-  fi
+cleanup_gnulib() {
+  status=$?
+  rm -fr gnulib
+  exit $status
 }
 
 # Get gnulib files.
@@ -61,26 +64,26 @@ case ${GNULIB_SRCDIR--} in
   if [ ! -d gnulib ]; then
     echo "$0: getting gnulib files..."
 
-    trap exit 1 2 13 15
-    trap 'rm -fr gnulib; exit 1' 0
-
-    case "${CVS_AUTH--}" in
-    -)       : ${CVS_RSH:?}
-             CVS_PREFIX="";;
-    pserver) build_cvs_prefix $CVS_AUTH ${CVS_USER:-anoncvs};;
-    gserver|server)
-             build_cvs_prefix $CVS_AUTH ${CVS_USER--};;
-    ext)     : ${CVS_RSH:?}
-             build_cvs_prefix $CVS_AUTH ${CVS_USER--};;
-    *)       echo "$0: Unknown CVS access method" >&2
-             exit 1;;
+    case ${CVS_AUTH-pserver} in
+    pserver)
+      CVS_PREFIX=':pserver:anonymous@';;
+    ssh)
+      CVS_PREFIX="$CVS_USER${CVS_USER+@}";;
+    *)
+      echo "$0: $CVS_AUTH: Unknown CVS access method" >&2
+      exit 1;;
     esac
-    if [ "${CVS_AUTH--}" = "pserver" ]; then
-      cvs -d ${CVS_PREFIX}subversions.gnu.org:/cvsroot/gnulib login || exit
-    fi
-    cvs -q -d ${CVS_PREFIX}subversions.gnu.org:/cvsroot/gnulib co gnulib || exit
 
-    trap 0
+    case $CVS_RSH in
+    '') export CVS_RSH=ssh;;
+    esac
+
+    trap cleanup_gnulib 1 2 13 15
+
+    cvs -z3 -q -d ${CVS_PREFIX}cvs.savannah.gnu.org:/cvsroot/gnulib co gnulib ||
+      cleanup_gnulib
+
+    trap - 1 2 13 15
   fi
   GNULIB_SRCDIR=gnulib
 esac
@@ -97,16 +100,21 @@ exitfail
 file-type
 fnmatch-gnu
 getopt
+gettext
+gettime
 hard-locale
 inttostr
 mkstemp
-posixver
 regex
+sh-quote
+stat-time
 strcase
 strftime
 strtoumax
 unlocked-io
+verify
 version-etc
+version-etc-fsf
 xalloc
 xstrtoumax
 '
@@ -126,7 +134,9 @@ gnulib_files=`
   (for gnulib_module in $gnulib_modules; do
      $GNULIB_SRCDIR/gnulib-tool --extract-filelist $gnulib_module
    done) | sort -u
-`
+`'
+  doc/fdl.texi
+'
 
 gnulib_dirs=`echo "$gnulib_files" | sed 's,/[^/]*$,,' | sort -u`
 mkdir -p $gnulib_dirs || exit
@@ -136,6 +146,14 @@ for gnulib_file in $gnulib_files; do
 
   case $gnulib_file in
   m4/onceonly_2_57.m4) dest=m4/onceonly.m4;;
+  # These will be overwritten by autopoint, which still uses
+  # old jm_.* macro names, so we have to keep both copies.
+  # m4/gettext.m4 isn't mentioned here, since it's patched below.
+  m4/glibc21.m4 | m4/inttypes_h.m4 | m4/lib-ld.m4 | \
+  m4/lib-prefix.m4 | m4/longlong.m4 | \
+  m4/po.m4 | m4/stdint_h.m4 | m4/uintmax_t.m4 | \
+  m4/ulonglong.m4)
+    dest=`expr $gnulib_file : '\(.*\).m4'`_gl.m4;;
   esac
 
   rm -f $dest &&
@@ -148,20 +166,23 @@ done
 
 case $SKIP_PO in
 '')
-  echo "$0: getting translations into po..."
+  case `wget --help` in
+  *'--no-cache'*)
+    no_cache='--no-cache';;
+  *'--cache=on/off'*)
+    no_cache='--cache=off';;
+  *)
+    no_cache='';;
+  esac
+
+  echo "$0: getting translations into po (please ignore the robots.txt ERROR 404)..."
   (cd po &&
-   rm -f dummy `ls | sed -n '/\.gmo$/p; /^en\.po$d/; /\.po/p'` &&
-   wget -nv -nd -r -l 1 -A .po -C off \
-     http://www2.iro.umontreal.ca/~gnutra/po/maint/$package/ &&
+   rm -f dummy `ls | sed -n '/\.gmo$/p; /\.po/p'` &&
+   wget -nv -nd -r -l 1 -A .po $no_cache \
+     http://www.iro.umontreal.ca/translation/maint/$package/ &&
    ls *.po | sed 's/\.po$//' >LINGUAS
   ) || exit;;
 esac
-
-
-# Reconfigure, getting other files.
-
-echo "$0: autoreconf --verbose --install --force ..."
-autoreconf --verbose --install --force || exit
 
 
 # Generate autoconf and automake snippets.
@@ -176,5 +197,48 @@ autoreconf --verbose --install --force || exit
  $GNULIB_SRCDIR/gnulib-tool --extract-automake-snippet $gnulib_modules
 ) >lib/gnulib.mk || exit
 
+
+# Reconfigure, getting other files.
+
+echo "$0: autoreconf --verbose --install --force ..."
+autoreconf --verbose --install --force || exit
+
+
+# We don't need intl, so remove it.
+# Remove aclocal.m4 too, so that it gets rebuilt.
+intl_files_to_remove='
+  aclocal.m4
+  intl
+  m4/gettext.m4
+  m4/glibc2.m4
+  m4/glibc21.m4
+  m4/intdiv0.m4
+  m4/intmax.m4
+  m4/inttypes_h.m4
+  m4/inttypes.m4
+  m4/inttypes-pri.m4
+  m4/isc-posix.m4
+  m4/lcmessage.m4
+  m4/lib-ld.m4
+  m4/lib-prefix.m4
+  m4/longdouble.m4
+  m4/longlong.m4
+  m4/po.m4
+  m4/printf-posix.m4
+  m4/signed.m4
+  m4/size_max.m4
+  m4/stdint_h.m4
+  m4/uintmax_t.m4
+  m4/ulonglong.m4
+  m4/wchar_t.m4
+  m4/wint_t.m4
+  m4/xsize.m4
+'
+echo $0: rm -fr $intl_files_to_remove ...
+rm -fr $intl_files_to_remove || exit
+
+# Put bug-reporting address into po/Makevars.
+echo "$0: sed '/^MSGID_BUGS_ADDRESS *=/s/=.*/= bug-bison@gnu.org/' po/Makevars.template >po/Makevars ..."
+sed '/^MSGID_BUGS_ADDRESS *=/s/=.*/= bug-bison@gnu.org/' po/Makevars.template >po/Makevars
 
 echo "$0: done.  Now you can run './configure'."

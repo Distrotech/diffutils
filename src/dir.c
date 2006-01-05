@@ -1,7 +1,7 @@
 /* Read, sort and compare two directories.  Used for GNU DIFF.
 
    Copyright (C) 1988, 1989, 1992, 1993, 1994, 1995, 1998, 2001, 2002,
-   2004 Free Software Foundation, Inc.
+   2004, 2006 Free Software Foundation, Inc.
 
    This file is part of GNU DIFF.
 
@@ -99,7 +99,7 @@ dir_read (struct file_data const *dir, struct dirdata *dirdata)
 	      && (d_name[1] == 0 || (d_name[1] == '.' && d_name[2] == 0)))
 	    continue;
 
-	  if (excluded_filename (excluded, d_name))
+	  if (excluded_file_name (excluded, d_name))
 	    continue;
 
 	  while (data_alloc < data_used + d_size)

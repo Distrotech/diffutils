@@ -1,6 +1,6 @@
 # Main Automakefile for GNU diffutils.
 
-# Copyright (C) 2001, 2002, 2004 Free Software Foundation, Inc.
+# Copyright (C) 2001, 2002, 2004, 2006 Free Software Foundation, Inc.
 
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -18,6 +18,6 @@
 ## 02111-1307, USA.
 
 EXTRA_DIST = bootstrap exgettext
-SUBDIRS = doc lib m4 ms src man po
+SUBDIRS = lib ms src doc man po
 
 ACLOCAL_AMFLAGS = -I m4

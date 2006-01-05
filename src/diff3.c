@@ -1,7 +1,7 @@
 /* diff3 - compare three files line by line
 
    Copyright (C) 1988, 1989, 1992, 1993, 1994, 1995, 1996, 1998, 2001,
-   2002, 2004 Free Software Foundation, Inc.
+   2002, 2004, 2006 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -31,7 +31,7 @@
 #include <file-type.h>
 #include <getopt.h>
 #include <inttostr.h>
-#include <quotesys.h>
+#include <sh-quote.h>
 #include <version-etc.h>
 #include <xalloc.h>
 
@@ -1192,14 +1192,14 @@ read_diff (char const *filea,
 
   FILE *fpipe;
   char const args[] = " --horizon-lines=100 -- ";
-  char *command = xmalloc (quote_system_arg (0, diff_program)
+  char *command = xmalloc (shell_quote_length (diff_program)
 			   + sizeof "-a"
 			   + sizeof "--strip-trailing-cr"
 			   + sizeof args - 1
-			   + quote_system_arg (0, filea) + 1
-			   + quote_system_arg (0, fileb) + 1);
+			   + shell_quote_length (filea) + 1
+			   + shell_quote_length (fileb) + 1);
   char *p = command;
-  p += quote_system_arg (p, diff_program);
+  p = shell_quote_copy (p, diff_program);
   if (text)
     {
       strcpy (p, " -a");
@@ -1212,9 +1212,9 @@ read_diff (char const *filea,
     }
   strcpy (p, args);
   p += sizeof args - 1;
-  p += quote_system_arg (p, filea);
+  p = shell_quote_copy (p, filea);
   *p++ = ' ';
-  p += quote_system_arg (p, fileb);
+  p = shell_quote_copy (p, fileb);
   *p = 0;
   errno = 0;
   fpipe = popen (command, "r");

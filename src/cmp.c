@@ -1,7 +1,7 @@
 /* cmp - compare two files byte by byte
 
    Copyright (C) 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1998, 2001,
-   2002, 2004 Free Software Foundation, Inc.
+   2002, 2004, 2006 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -32,7 +32,6 @@
 #include <getopt.h>
 #include <hard-locale.h>
 #include <inttostr.h>
-#include <setmode.h>
 #include <unlocked-io.h>
 #include <version-etc.h>
 #include <xalloc.h>
@@ -126,15 +125,14 @@ static void
 specify_ignore_initial (int f, char **argptr, char delimiter)
 {
   uintmax_t val;
-  off_t o;
   char const *arg = *argptr;
   strtol_error e = xstrtoumax (arg, argptr, 0, &val, valid_suffixes);
   if (! (e == LONGINT_OK
 	 || (e == LONGINT_INVALID_SUFFIX_CHAR && **argptr == delimiter))
-      || (o = val) < 0 || o != val || val == UINTMAX_MAX)
+      || TYPE_MAXIMUM (off_t) < val)
     try_help ("invalid --ignore-initial value `%s'", arg);
-  if (ignore_initial[f] < o)
-    ignore_initial[f] = o;
+  if (ignore_initial[f] < val)
+    ignore_initial[f] = val;
 }
 
 /* Specify the output format.  */
@@ -284,9 +282,15 @@ main (int argc, char **argv)
 	  && file_name_cmp (file[0], file[1]) == 0)
 	return EXIT_SUCCESS;
 
-      file_desc[f1] = (strcmp (file[f1], "-") == 0
-		       ? STDIN_FILENO
-		       : open (file[f1], O_RDONLY, 0));
+      if (strcmp (file[f1], "-") == 0)
+	{
+	  file_desc[f1] = STDIN_FILENO;
+	  if (O_BINARY && ! isatty (STDIN_FILENO))
+	    freopen (NULL, "rb", stdin);
+	}
+      else
+	file_desc[f1] = open (file[f1], O_RDONLY | O_BINARY, 0);
+
       if (file_desc[f1] < 0 || fstat (file_desc[f1], stat_buf + f1) != 0)
 	{
 	  if (file_desc[f1] < 0 && comparison_type == type_status)
@@ -294,8 +298,6 @@ main (int argc, char **argv)
 	  else
 	    error (EXIT_TROUBLE, errno, "%s", file[f1]);
 	}
-
-      set_binary_mode (file_desc[f1], true);
     }
 
   /* If the files are links to the same inode and have the same file position,
