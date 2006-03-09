@@ -318,12 +318,7 @@ main (int argc, char **argv)
       if (fstat (STDOUT_FILENO, &outstat) == 0
 	  && stat (NULL_DEVICE, &nullstat) == 0
 	  && 0 < same_file (&outstat, &nullstat))
-	comparison_type =
-	  ((fstat (STDERR_FILENO, &outstat) == 0
-	    ? 0 < same_file (&outstat, &nullstat)
-	    : errno == EBADF)
-	   ? type_status
-	   : type_no_stdout);
+	comparison_type = type_no_stdout;
     }
 
   /* If only a return code is needed,
