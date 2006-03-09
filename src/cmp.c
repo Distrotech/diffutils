@@ -78,6 +78,7 @@ static enum comparison_type
   {
     type_first_diff,	/* Print the first difference.  */
     type_all_diffs,	/* Print all differences.  */
+    type_no_stdout,	/* Do not output to stdout; only stderr.  */
     type_status		/* Exit status only.  */
   } comparison_type;
 
@@ -317,7 +318,12 @@ main (int argc, char **argv)
       if (fstat (STDOUT_FILENO, &outstat) == 0
 	  && stat (NULL_DEVICE, &nullstat) == 0
 	  && 0 < same_file (&outstat, &nullstat))
-	comparison_type = type_status;
+	comparison_type =
+	  ((fstat (STDERR_FILENO, &outstat) == 0
+	    ? 0 < same_file (&outstat, &nullstat)
+	    : errno == EBADF)
+	   ? type_status
+	   : type_no_stdout);
     }
 
   /* If only a return code is needed,
@@ -356,7 +362,7 @@ main (int argc, char **argv)
   for (f = 0; f < 2; f++)
     if (close (file_desc[f]) != 0)
       error (EXIT_TROUBLE, errno, "%s", file[f]);
-  if (exit_status != 0  &&  comparison_type != type_status)
+  if (exit_status != EXIT_SUCCESS && comparison_type < type_no_stdout)
     check_stdout ();
   exit (exit_status);
   return exit_status;
@@ -535,6 +541,9 @@ cmp (void)
 		}
 	      while (first_diff < smaller);
 	      ret = EXIT_FAILURE;
+	      break;
+
+	    case type_no_stdout:
 	      break;
 	    }
 	}

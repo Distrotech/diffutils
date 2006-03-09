@@ -1,3 +1,10 @@
+2006-03-09  Paul Eggert  <eggert@cs.ucla.edu>
+
+	* src/cmp.c (type_no_stdout): New constant.
+	(main): Use it to avoid bug when the "EOF on foo" message is
+	generated and stdout is /dev/null.
+	Problem reported by Vincent Lefevre (Debian bug 356083).
+
 2006-01-04  Paul Eggert  <eggert@cs.ucla.edu>
 
 	* README-alpha: Describe CVS access better, using the README-alpha
