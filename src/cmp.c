@@ -309,7 +309,8 @@ main (int argc, char **argv)
       && file_position (0) == file_position (1))
     return EXIT_SUCCESS;
 
-  /* If output is redirected to the null device, we may assume `-s'.  */
+  /* If output is redirected to the null device, we can avoid some of
+     the work.  */
 
   if (comparison_type != type_status)
     {
