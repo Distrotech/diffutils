@@ -384,7 +384,7 @@ cmp (void)
   char *buf1 = (char *) buffer1;
   int ret = EXIT_SUCCESS;
   int f;
-  int offset_width;
+  int offset_width IF_LINT (= 0);
 
   if (comparison_type == type_all_diffs)
     {

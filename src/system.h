@@ -22,11 +22,12 @@
 
 #include <config.h>
 
-/* Don't bother to support K&R C compilers any more; it's not worth
-   the trouble.  These macros prevent some library modules from being
-   compiled in K&R C mode.  */
-#define PARAMS(Args) Args
-#define PROTOTYPES 1
+/* Use this to suppress gcc's `...may be used before initialized' warnings. */
+#ifdef lint
+# define IF_LINT(Code) Code
+#else
+# define IF_LINT(Code) /* empty */
+#endif
 
 /* Define `__attribute__' and `volatile' first
    so that they're used consistently in all system includes.  */

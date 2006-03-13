@@ -1,7 +1,7 @@
 /* Analyze file differences for GNU DIFF.
 
    Copyright (C) 1988, 1989, 1992, 1993, 1994, 1995, 1998, 2001, 2002,
-   2004 Free Software Foundation, Inc.
+   2004, 2006 Free Software Foundation, Inc.
 
    This file is part of GNU DIFF.
 
@@ -257,10 +257,10 @@ diag (lin xoff, lin xlim, lin yoff, lin ylim, bool find_minimal,
 	 give up and report halfway between our best results so far.  */
       if (c >= too_expensive)
 	{
-	  lin fxybest, fxbest;
-	  lin bxybest, bxbest;
-
-	  fxbest = bxbest = 0;  /* Pacify `gcc -Wall'.  */
+	  lin fxybest;
+	  lin bxybest;
+	  lin fxbest IF_LINT (= 0);
+	  lin bxbest IF_LINT (= 0);
 
 	  /* Find forward diagonal that maximizes X + Y.  */
 	  fxybest = -1;
@@ -348,7 +348,7 @@ compareseq (lin xoff, lin xlim, lin yoff, lin ylim, bool find_minimal)
       files[0].changed[files[0].realindexes[xoff++]] = 1;
   else
     {
-      struct partition part;
+      struct partition part IF_LINT (= {0});
 
       /* Find a point of correspondence in the middle of the files.  */
       diag (xoff, xlim, yoff, ylim, find_minimal, &part);

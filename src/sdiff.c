@@ -903,10 +903,9 @@ edit (struct line_filter *left, char const *lname, lin lline, lin llen,
 {
   for (;;)
     {
-      int cmd0, cmd1;
+      int cmd0 IF_LINT (= 0);
+      int cmd1 IF_LINT (= 0);
       bool gotcmd = false;
-
-      cmd1 = 0; /* Pacify `gcc -W'.  */
 
       while (! gotcmd)
 	{

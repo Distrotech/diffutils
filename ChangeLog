@@ -1,3 +1,13 @@
+2006-03-13  Paul Eggert  <eggert@cs.ucla.edu>
+
+	* src/system.h (PARAMS, PROTOTYPES): Remove; no longer needed.
+	(IF_LINT): New macro, to pacify GCC.
+	* src/analyze.c (diag, compareseq): Use IF_LINT.
+	* src/cmp.c (cmp): Likewise.
+	* src/diff3.c (process_diff): Likewise.  Also, prefer NULL to 0.
+	* src/ifdef.c (do_printf_spec, scan_char_literal): Likewise.
+	* src/sdiff.c (edit): Likewise.
+
 2006-03-09  Paul Eggert  <eggert@cs.ucla.edu>
 
 	* src/cmp.c (type_no_stdout): New constant.

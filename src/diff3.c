@@ -926,15 +926,15 @@ process_diff (char const *filea,
   char *scan_diff;
   enum diff_type dt;
   lin i;
-  struct diff_block *block_list, **block_list_end, *bptr;
+  struct diff_block *block_list;
+  struct diff_block **block_list_end = &block_list;
+  struct diff_block *bptr IF_LINT (= NULL);
   size_t too_many_lines = (PTRDIFF_MAX
 			   / MIN (sizeof *bptr->lines[1],
 				  sizeof *bptr->lengths[1]));
 
   diff_limit = read_diff (filea, fileb, &diff_contents);
   scan_diff = diff_contents;
-  block_list_end = &block_list;
-  bptr = 0; /* Pacify `gcc -W'.  */
 
   while (scan_diff < diff_limit)
     {
@@ -1018,7 +1018,7 @@ process_diff (char const *filea,
       block_list_end = &bptr->next;
     }
 
-  *block_list_end = 0;
+  *block_list_end = NULL;
   *last_block = bptr;
   return block_list;
 }

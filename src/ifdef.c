@@ -1,7 +1,7 @@
 /* #ifdef-format output routines for GNU DIFF.
 
-   Copyright (C) 1989, 1991, 1992, 1993, 1994, 2001, 2002, 2004 Free
-   Software Foundation, Inc.
+   Copyright (C) 1989, 1991, 1992, 1993, 1994, 2001, 2002, 2004, 2006
+   Free Software Foundation, Inc.
 
    This file is part of GNU DIFF.
 
@@ -329,7 +329,7 @@ do_printf_spec (FILE *out, char const *spec,
 	return 0;
       else
 	{
-	  char value;
+	  char value IF_LINT (= 0);
 	  f = scan_char_literal (f, &value);
 	  if (!f)
 	    return 0;
@@ -389,7 +389,7 @@ do_printf_spec (FILE *out, char const *spec,
 /* Scan the character literal represented in the string LIT; LIT points just
    after the initial apostrophe.  Put the literal's value into *VALPTR.
    Yield the address of the first character after the closing apostrophe,
-   or zero if the literal is ill-formed.  */
+   or a null pointer if the literal is ill-formed.  */
 static char const *
 scan_char_literal (char const *lit, char *valptr)
 {
@@ -402,7 +402,7 @@ scan_char_literal (char const *lit, char *valptr)
     {
       case 0:
       case '\'':
-	return 0;
+	return NULL;
 
       case '\\':
 	value = 0;
@@ -410,18 +410,18 @@ scan_char_literal (char const *lit, char *valptr)
 	  {
 	    unsigned int digit = c - '0';
 	    if (8 <= digit)
-	      return 0;
+	      return NULL;
 	    value = 8 * value + digit;
 	  }
 	digits = p - lit - 2;
 	if (! (1 <= digits && digits <= 3))
-	  return 0;
+	  return NULL;
 	break;
 
       default:
 	value = c;
 	if (*p++ != '\'')
-	  return 0;
+	  return NULL;
 	break;
     }
 
