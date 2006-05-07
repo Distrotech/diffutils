@@ -1406,7 +1406,7 @@ output_diff3 (FILE *outputfile, struct diff3_block *diff,
 	      line = 0;
 	      do
 		{
-		  fprintf (outputfile, line_prefix);
+		  fputs (line_prefix, outputfile);
 		  cp = D_RELNUM (ptr, realfile, line);
 		  length = D_RELLEN (ptr, realfile, line);
 		  fwrite (cp, sizeof (char), length, outputfile);
@@ -1438,7 +1438,7 @@ dotlines (FILE *outputfile, struct diff3_block *b, int filenum)
       if (line[0] == '.')
 	{
 	  leading_dot = true;
-	  fprintf (outputfile, ".");
+	  fputc ('.', outputfile);
 	}
       fwrite (line, sizeof (char),
 	      D_RELLEN (b, filenum, i), outputfile);
@@ -1455,7 +1455,7 @@ dotlines (FILE *outputfile, struct diff3_block *b, int filenum)
 static void
 undotlines (FILE *outputfile, bool leading_dot, long int start, lin num)
 {
-  fprintf (outputfile, ".\n");
+  fputs (".\n", outputfile);
   if (leading_dot)
     {
       if (num == 1)
@@ -1534,7 +1534,7 @@ output_diff3_edscript (FILE *outputfile, struct diff3_block *diff,
 		  leading_dot = dotlines (outputfile, b, mapping[FILE1]);
 		}
 	      /* Append lines from FILE2.  */
-	      fprintf (outputfile, "=======\n");
+	      fputs ("=======\n", outputfile);
 	      leading_dot |= dotlines (outputfile, b, mapping[FILE2]);
 	    }
 	  fprintf (outputfile, ">>>>>>> %s\n", file2);
@@ -1552,7 +1552,7 @@ output_diff3_edscript (FILE *outputfile, struct diff3_block *diff,
 	    {
 	      /* Prepend lines from FILE1.  */
 	      leading_dot = dotlines (outputfile, b, mapping[FILE1]);
-	      fprintf (outputfile, "=======\n");
+	      fputs ("=======\n", outputfile);
 	    }
 	  undotlines (outputfile, leading_dot, low0 + 1,
 		      D_NUMLINES (b, mapping[FILE1]));
@@ -1585,7 +1585,8 @@ output_diff3_edscript (FILE *outputfile, struct diff3_block *diff,
 		      low0, D_NUMLINES (b, mapping[FILE2]));
 	}
     }
-  if (finalwrite) fprintf (outputfile, "w\nq\n");
+  if (finalwrite)
+    fputs ("w\nq\n", outputfile);
   return conflicts_found;
 }
 
@@ -1676,7 +1677,7 @@ output_diff3_merge (FILE *infile, FILE *outputfile, struct diff3_block *diff,
 			D_RELLEN (b, mapping[FILE1], i), outputfile);
 	    }
 
-	  fprintf (outputfile, "=======\n");
+	  fputs ("=======\n", outputfile);
 	}
 
       /* Put in lines from FILE2.  */

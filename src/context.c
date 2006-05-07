@@ -183,14 +183,14 @@ pr_context_hunk (struct change *hunk)
   begin_output ();
   out = outfile;
 
-  fprintf (out, "***************");
+  fputs ("***************", out);
 
   if (function)
     print_context_function (out, function);
 
-  fprintf (out, "\n*** ");
+  fputs ("\n*** ", out);
   print_context_number_range (&files[0], first0, last0);
-  fprintf (out, " ****\n");
+  fputs (" ****\n", out);
 
   if (changes & OLD)
     {
@@ -217,9 +217,9 @@ pr_context_hunk (struct change *hunk)
 	}
     }
 
-  fprintf (out, "--- ");
+  fputs ("--- ", out);
   print_context_number_range (&files[1], first1, last1);
-  fprintf (out, " ----\n");
+  fputs (" ----\n", out);
 
   if (changes & NEW)
     {
@@ -313,11 +313,11 @@ pr_unidiff_hunk (struct change *hunk)
   begin_output ();
   out = outfile;
 
-  fprintf (out, "@@ -");
+  fputs ("@@ -", out);
   print_unidiff_number_range (&files[0], first0, last0);
-  fprintf (out, " +");
+  fputs (" +", out);
   print_unidiff_number_range (&files[1], first1, last1);
-  fprintf (out, " @@");
+  fputs (" @@", out);
 
   if (function)
     print_context_function (out, function);

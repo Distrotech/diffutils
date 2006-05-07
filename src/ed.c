@@ -1,7 +1,7 @@
 /* Output routines for ed-script format.
 
-   Copyright (C) 1988, 1989, 1991, 1992, 1993, 1995, 1998, 2001, 2004
-   Free Software Foundation, Inc.
+   Copyright (C) 1988, 1989, 1991, 1992, 1993, 1995, 1998, 2001, 2004,
+   2006 Free Software Foundation, Inc.
 
    This file is part of GNU DIFF.
 
@@ -55,7 +55,8 @@ print_ed_hunk (struct change *hunk)
 
   /* Print out the line number header for this hunk */
   print_number_range (',', &files[0], f0, l0);
-  fprintf (outfile, "%c\n", change_letter[changes]);
+  fputc (change_letter[changes], outfile);
+  fputc ('\n', outfile);
 
   /* Print new/changed lines from second file, if needed */
   if (changes != OLD)
@@ -67,7 +68,7 @@ print_ed_hunk (struct change *hunk)
 	{
 	  if (!insert_mode)
 	    {
-	      fprintf (outfile, "a\n");
+	      fputs ("a\n", outfile);
 	      insert_mode = true;
 	    }
 	  if (files[1].linbuf[i][0] == '.' && files[1].linbuf[i][1] == '\n')
@@ -75,7 +76,7 @@ print_ed_hunk (struct change *hunk)
 	      /* The file's line is just a dot, and it would exit
 		 insert mode.  Precede the dot with another dot, exit
 		 insert mode and remove the extra dot.  */
-	      fprintf (outfile, "..\n.\ns/.//\n");
+	      fputs ("..\n.\ns/.//\n", outfile);
 	      insert_mode = false;
 	    }
 	  else
@@ -83,7 +84,7 @@ print_ed_hunk (struct change *hunk)
 	}
 
       if (insert_mode)
-	fprintf (outfile, ".\n");
+	fputs (".\n", outfile);
     }
 }
 
@@ -111,9 +112,9 @@ pr_forward_ed_hunk (struct change *hunk)
 
   begin_output ();
 
-  fprintf (outfile, "%c", change_letter[changes]);
+  fputc (change_letter[changes], outfile);
   print_number_range (' ', files, f0, l0);
-  fprintf (outfile, "\n");
+  fputc ('\n', outfile);
 
   /* If deletion only, print just the number range.  */
 
@@ -126,7 +127,7 @@ pr_forward_ed_hunk (struct change *hunk)
   for (i = f1; i <= l1; i++)
     print_1_line ("", &files[1].linbuf[i]);
 
-  fprintf (outfile, ".\n");
+  fputs (".\n", outfile);
 }
 
 /* Print in a format somewhat like ed commands
@@ -158,19 +159,16 @@ print_rcs_hunk (struct change *hunk)
 
   if (changes & OLD)
     {
-      fprintf (outfile, "d");
       /* For deletion, print just the starting line number from file 0
 	 and the number of lines deleted.  */
-      fprintf (outfile, "%ld %ld\n", tf0, tf0 <= tl0 ? tl0 - tf0 + 1 : 1);
+      fprintf (outfile, "d%ld %ld\n", tf0, tf0 <= tl0 ? tl0 - tf0 + 1 : 1);
     }
 
   if (changes & NEW)
     {
-      fprintf (outfile, "a");
-
       /* Take last-line-number from file 0 and # lines from file 1.  */
       translate_range (&files[1], f1, l1, &tf1, &tl1);
-      fprintf (outfile, "%ld %ld\n", tl0, tf1 <= tl1 ? tl1 - tf1 + 1 : 1);
+      fprintf (outfile, "a%ld %ld\n", tl0, tf1 <= tl1 ? tl1 - tf1 + 1 : 1);
 
       /* Print the inserted lines.  */
       for (i = f1; i <= l1; i++)

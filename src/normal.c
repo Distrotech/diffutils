@@ -1,7 +1,7 @@
 /* Normal-format output routines for GNU DIFF.
 
-   Copyright (C) 1988, 1989, 1993, 1995, 1998, 2001 Free Software
-   Foundation, Inc.
+   Copyright (C) 1988, 1989, 1993, 1995, 1998, 2001, 2006 Free
+   Software Foundation, Inc.
 
    This file is part of GNU DIFF.
 
@@ -52,9 +52,9 @@ print_normal_hunk (struct change *hunk)
 
   /* Print out the line number header for this hunk */
   print_number_range (',', &files[0], first0, last0);
-  fprintf (outfile, "%c", change_letter[changes]);
+  fputc (change_letter[changes], outfile);
   print_number_range (',', &files[1], first1, last1);
-  fprintf (outfile, "\n");
+  fputc ('\n', outfile);
 
   /* Print the lines that the first file has.  */
   if (changes & OLD)
@@ -62,7 +62,7 @@ print_normal_hunk (struct change *hunk)
       print_1_line ("<", &files[0].linbuf[i]);
 
   if (changes == CHANGED)
-    fprintf (outfile, "---\n");
+    fputs ("---\n", outfile);
 
   /* Print the lines that the second file has.  */
   if (changes & NEW)

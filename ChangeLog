@@ -1,3 +1,17 @@
+2006-05-07  Paul Eggert  <eggert@cs.ucla.edu>
+
+	* src/context.c (pr_context_hunk, pr_unidiff_hunk):
+	Prefer fputs or fputc to fprintf, since it's a tad more efficient
+	with unlocked-IO on glibc.  Long ago we avoided fputs to
+	work around an ancient SunOS bug, but that's no longer relevant.
+	* src/diff3.c (output_diff3, dotlines, undotlines):
+	(output_diff3_edscript, output_diff3_merge): Likewise.
+	This also avoids a gcc -Wformat-security warning reported
+	by Jim Meyering.
+	* src/ed.c (print_ed_hunk, print_forward_ed_hunk, print_rcs_hunk):
+	Likewise.
+	* src/normal.c (print_normal_hunk): Likewise.
+
 2006-05-06  Paul Eggert  <eggert@cs.ucla.edu>
 
 	* src/io.c (find_identical_ends): Fix huge performance bug that I
