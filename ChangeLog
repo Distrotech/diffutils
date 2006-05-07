@@ -1,3 +1,14 @@
+2006-05-06  Paul Eggert  <eggert@cs.ucla.edu>
+
+	* src/io.c (find_identical_ends): Fix huge performance bug that I
+	introduced in the 2001-11-25 change: the code to remove the
+	identical suffix also looked at the trailing sentinel, which meant
+	the common suffix length was always incorrectly calculated to be
+	zero.  Problem and fix reported by Daniel Hipschman.  Instead of
+	his fix, revert to the pre-2001 code.
+
+	* doc/diff.texi: Switch from GFDL 1.1 to 1.2.
+
 2006-03-13  Paul Eggert  <eggert@cs.ucla.edu>
 
 	* src/system.h (PARAMS, PROTOTYPES): Remove; no longer needed.
