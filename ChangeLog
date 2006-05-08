@@ -1,8 +1,9 @@
 2006-05-07  Jim Meyering  <jim@meyering.net>  (tiny change)
 
-	* src/cmp.c (cmp): Fix bug introduced in 2006-03-09 change.
-	For example, "cmp <(echo b) <(echo a) > /dev/null" incorrectly
-	succeeded.
+	Fix bug introduced in 2006-03-09 change:
+	cmp always exits successfully, when stdout is redirected to /dev/null.
+	* src/cmp.c (cmp): When there's a difference, arrange to return nonzero
+	also when comparison_type is the new (from 2006-03-09) type_no_stdout.
 
 2006-05-07  Paul Eggert  <eggert@cs.ucla.edu>
 
