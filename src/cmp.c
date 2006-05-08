@@ -536,10 +536,10 @@ cmp (void)
 		  first_diff++;
 		}
 	      while (first_diff < smaller);
-	      ret = EXIT_FAILURE;
-	      break;
 
+	      /* Fall through.  */
 	    case type_no_stdout:
+	      ret = EXIT_FAILURE;
 	      break;
 	    }
 	}

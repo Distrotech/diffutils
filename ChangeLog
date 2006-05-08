@@ -1,5 +1,9 @@
 2006-05-07  Paul Eggert  <eggert@cs.ucla.edu>
 
+	* src/cmp.c (cmp): Fix bug introduced in 2006-03-09 change.
+	For example, "cmp <(echo b) <(echo a) > /dev/null" incorrectly
+	succeeded.  Problem reported by Jim Meyering.
+
 	* src/context.c (pr_context_hunk, pr_unidiff_hunk):
 	Prefer fputs or fputc to fprintf, since it's a tad more efficient
 	with unlocked-IO on glibc.  Long ago we avoided fputs to
