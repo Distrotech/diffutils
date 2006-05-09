@@ -382,7 +382,7 @@ cmp (void)
   word *buffer1 = buffer[1];
   char *buf0 = (char *) buffer0;
   char *buf1 = (char *) buffer1;
-  int ret = EXIT_SUCCESS;
+  int differing = 0;
   int f;
   int offset_width IF_LINT (= 0);
 
@@ -536,17 +536,18 @@ cmp (void)
 		  first_diff++;
 		}
 	      while (first_diff < smaller);
+	      differing = -1;
+	      break;
 
-	      /* Fall through.  */
 	    case type_no_stdout:
-	      ret = EXIT_FAILURE;
+	      differing = 1;
 	      break;
 	    }
 	}
 
       if (read0 != read1)
 	{
-	  if (comparison_type != type_status)
+	  if (differing <= 0 && comparison_type != type_status)
 	    {
 	      /* See POSIX 1003.1-2001 for this format.  */
 	      fprintf (stderr, _("cmp: EOF on %s\n"), file[read1 < read0]);
@@ -555,9 +556,9 @@ cmp (void)
 	  return EXIT_FAILURE;
 	}
     }
-  while (read0 == buf_size);
+  while (differing <= 0 && read0 == buf_size);
 
-  return ret;
+  return differing == 0 ? EXIT_SUCCESS : EXIT_FAILURE;
 }
 
 /* Compare two blocks of memory P0 and P1 until they differ,

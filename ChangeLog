@@ -1,3 +1,10 @@
+2006-05-09  Paul Eggert  <eggert@cs.ucla.edu>
+
+	* src/cmp.c (cmp): The previous fix wasn't quite right either, as
+	it mishandled 'cmp A B >/dev/null' when A is shorter than B and
+	differs before A's end-of-file, by outputting a bogus EOF message.
+	Also, it was inefficient if A and B were large.
+
 2006-05-07  Jim Meyering  <jim@meyering.net>  (tiny change)
 
 	Fix bug introduced in 2006-03-09 change:
