@@ -3518,6 +3518,7 @@ second.
 @itemx --verbose
 Output the (decimal) byte numbers and (octal) values of all differing bytes,
 instead of the default standard output.
+Also, output the @acronym{EOF} message if one file is shorter than the other.
 
 @item -n @var{count}
 @itemx --bytes=@var{count}
