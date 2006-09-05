@@ -1,5 +1,8 @@
 User-visible changes since 2.8.7 (in "version" 2.8.7-cvs):
 
+* When reporting an unchanged empty line, diff -u now outputs an
+  empty line instead of a line consisting of a single space character.
+
 * Bring back support for `diff -NUM', where NUM is a number,
   even when conforming to POSIX 1003.1-2001.  This change reverts to
   the behavior of GNU diff 2.7 and earlier.  This is a change only

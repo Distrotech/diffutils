@@ -1,8 +1,9 @@
 2006-09-05  Paul Eggert  <eggert@cs.ucla.edu>
 
-	* doc/diff.texi (Detailed Unified): Don't output trailing white
-	space unless the input data has it.
-	* src/context.c (pr_unidiff_hunk): Likewise.
+	* NEWS: diff -u no longer outputs trailing white space unless the
+	input data has it.  Suggested by Jim Meyering.
+	* doc/diff.texi (Detailed Unified): Document this.
+	* src/context.c (pr_unidiff_hunk): Implement this.
 
 	Modernize bootstrap procedure to match current gnulib.
 	* bootstrap: Sync with coreutils bootstrap, except check that
