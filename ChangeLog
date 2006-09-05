@@ -1,3 +1,59 @@
+2006-09-05  Paul Eggert  <eggert@cs.ucla.edu>
+
+	* doc/diff.texi (Detailed Unified): Don't output trailing white
+	space unless the input data has it.
+	* src/context.c (pr_unidiff_hunk): Likewise.
+
+	Modernize bootstrap procedure to match current gnulib.
+	* bootstrap: Sync with coreutils bootstrap, except check that
+	the directory build-aux exists before trying to copy to it.
+	* bootstrap.conf: New file.
+	(gnulib_modules): Add config-h, dup2, extensions, fcntl, fdl,
+	stat-macros, unistd.
+	* configure.ac: Invoke gl_EARLY and gl_INIT rather than
+	GNULIB_AUTOCONF_SNIPPET.
+	(AC_CONFIG_HEADER): Rename config.h to lib/config.h.
+	(AC_CHECK_HEADERS_ONCE): Don't check for fcntl.h, locale.h,
+	sys/file.h, unistd.h.  We now use the fcntl and unistd modules,
+	and locale.h can be assumed for any C89 compiler.
+	(DIFFUTILS_PREREQUISITES): Remove.  No longer needed now that
+	we use the stdint module.
+	(AC_CHECK_FUNCS_ONCE): Remove dup2, which is no longer needed
+	now that we use the dup2 module.
+	(AM_GNU_GETTEXT): Use need-formatstring-macros, and ...
+	(AM_GNU_GETTEXT_VERSION): specify version 0.15 instead of 0.14.5,
+	to be consistent with coreutils.
+	* lib/Makefile.am (noinst_LIBRARIES):
+	(lib_SOURCES, libdiffutils_a_LIBADD):
+	(libdiffutils_a_DEPENDENCIES, BUILT_SOURCES, EXTRA_DIST):
+	(MOSTLYCLEANFILES): Remove; now computed automatically.
+	(noinst_HEADERS, libdiffutils_a_SOURCES): Just append
+	our special files now.
+	* lib/cmpbuf.c: Include config.h unconditionally, since we
+	no longer define HAVE_CONFIG_H.
+	* lib/prepargs.c: Likewise.
+	* src/Makefile.am (LDADD): Use $(LIBINTL), not @LIBINTL@.
+	(diff_LDADD): Use $(LIB_CLOCK_GETTIME), not @LIB_CLOCK_GETTIME@.
+	* src/dir.c (dir_read): Use _D_EXACT_NAMLEN, not NAMELEN.
+	* src/system.h (volatile): Remove, since we assume C89 or better.
+	Include stat-macros.h.
+	(S_IRWXU, S_IRWXG, S_IRWXO, S_IRUSR, S_IWUSR):
+	Remove, since we now use stat-macros.h.
+	(SEEK_SET, SEEK_CUR): Remove, since we assume C89 or better.
+	Include unistd.h unconditionally, since we use unistd.
+	Likewise for fcntl.h.
+	(dup2): Remove, since we now use dup2.
+	(O_RDONLY, O_RWDR, O_BINARY): Remove, since we now use
+	fcntl.
+	Include dirent.h unconditionally.
+	(NAMLEN): Remove, replacing with....
+	(_D_EXACT_NAMLEN): New macro.
+	Include inttypes.h unconditionally.
+	(PTRDIFF_MAX, SIZE_MAX, UINTMAX_MAX, strtoumax): Remove, since
+	we now use inttypes.
+	Include locale.h unconditionally.
+	(setlocale): Remove, since we now assume locale.h.
+
 2006-09-04  Jim Meyering  <jim@meyering.net>
 
 	* src/context.c (print_context_function): Do not print

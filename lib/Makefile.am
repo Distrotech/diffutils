@@ -17,18 +17,7 @@
 ## Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 ## 02110-1301, USA.
 
-noinst_LIBRARIES = libdiffutils.a
-
-noinst_HEADERS = cmpbuf.h prepargs.h
-
-libdiffutils_a_SOURCES = $(lib_SOURCES)
-lib_SOURCES = cmpbuf.c prepargs.c
-
-libdiffutils_a_LIBADD = @ALLOCA@ @LIBOBJS@
-libdiffutils_a_DEPENDENCIES = $(libdiffutils_a_LIBADD)
-
-BUILT_SOURCES =
-EXTRA_DIST =
-MOSTLYCLEANFILES =
-
 include gnulib.mk
+
+noinst_HEADERS += cmpbuf.h prepargs.h
+libdiffutils_a_SOURCES += cmpbuf.c prepargs.c

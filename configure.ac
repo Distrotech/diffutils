@@ -26,7 +26,7 @@ AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_MACRO_DIR([m4])
 
 AM_INIT_AUTOMAKE([gnits])
-AC_CONFIG_HEADER([config.h:config.hin])
+AC_CONFIG_HEADER([lib/config.h:lib/config.hin])
 
 gl_USE_SYSTEM_EXTENSIONS
 AC_PROG_AWK
@@ -34,8 +34,9 @@ AC_PROG_CC
 AM_PROG_CC_STDC
 AM_MISSING_PROG([HELP2MAN], [help2man])
 AC_PROG_RANLIB
-
+gl_EARLY
 AC_SYS_LARGEFILE
+gl_INIT
 
 AC_C_INLINE
 AC_C_VARARRAYS
@@ -46,26 +47,18 @@ AC_DEFINE([DEFAULT_EDITOR_PROGRAM], ["ed"],
 AC_PATH_PROG([PR_PROGRAM], [pr], [""])
 AC_DEFINE_UNQUOTED([PR_PROGRAM], ["$PR_PROGRAM"], [Name of "pr" program.])
 
-AC_CHECK_HEADERS_ONCE([fcntl.h locale.h sys/file.h unistd.h])
 AC_CHECK_MEMBERS([struct stat.st_blksize])
 AC_CHECK_MEMBERS([struct stat.st_rdev])
 AC_HEADER_DIRENT
 AC_HEADER_SYS_WAIT
 AC_TYPE_PID_T
 
-AC_DEFUN([DIFFUTILS_PREREQUISITES], [
-  AC_REQUIRE([gl_AC_TYPE_INTMAX_T])
-  AC_REQUIRE([gl_AC_TYPE_UINTMAX_T])
-])
-DIFFUTILS_PREREQUISITES
-
-AC_CHECK_FUNCS_ONCE([dup2 sigaction sigprocmask strcasecoll stricoll])
+AC_CHECK_FUNCS_ONCE([sigaction sigprocmask strcasecoll stricoll])
 AC_FUNC_CLOSEDIR_VOID
 AC_FUNC_FORK
 
-GNULIB_AUTOCONF_SNIPPET
-AM_GNU_GETTEXT([external], [need-ngettext])
-AM_GNU_GETTEXT_VERSION([0.14.5])
+AM_GNU_GETTEXT([external], [need-formatstring-macros])
+AM_GNU_GETTEXT_VERSION([0.15])
 XGETTEXT="AWK='$AWK' \$(SHELL) \$(top_srcdir)/exgettext $XGETTEXT"
 
 AC_CONFIG_FILES([Makefile doc/Makefile \

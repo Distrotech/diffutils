@@ -1,6 +1,6 @@
 # Automakefile for GNU diffutils programs.
 
-# Copyright (C) 2001, 2002 Free Software Foundation, Inc.
+# Copyright (C) 2001, 2002, 2006 Free Software Foundation, Inc.
 
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -25,8 +25,8 @@ localedir = $(datadir)/locale
 
 AM_CPPFLAGS = -I../lib -I$(top_srcdir)/lib
 
-LDADD = ../lib/libdiffutils.a @LIBINTL@
-diff_LDADD = $(LDADD) @LIB_CLOCK_GETTIME@
+LDADD = ../lib/libdiffutils.a $(LIBINTL)
+diff_LDADD = $(LDADD) $(LIB_CLOCK_GETTIME)
 
 cmp_SOURCES = cmp.c
 diff3_SOURCES = diff3.c

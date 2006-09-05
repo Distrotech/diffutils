@@ -34,36 +34,23 @@
 #if __GNUC__ < 2 || (__GNUC__ == 2 && __GNUC_MINOR__ < 6) || __STRICT_ANSI__
 # define __attribute__(x)
 #endif
-#if defined const && !defined volatile
-# define volatile
-#endif
 
 #include <verify.h>
 
 #include <sys/types.h>
+
 #include <sys/stat.h>
+#include "stat-macros.h"
 
-#ifndef S_IRWXU
-# define S_IRWXU 0700
-#endif
-#ifndef S_IRWXG
-# define S_IRWXG 0070
-#endif
-#ifndef S_IRWXO
-# define S_IRWXO 0007
-#endif
-
-#if HAVE_UNISTD_H
-# include <unistd.h>
+#ifndef STAT_BLOCKSIZE
+# if HAVE_STRUCT_STAT_ST_BLKSIZE
+#  define STAT_BLOCKSIZE(s) ((s).st_blksize)
+# else
+#  define STAT_BLOCKSIZE(s) (8 * 1024)
+# endif
 #endif
 
-#ifndef SEEK_SET
-# define SEEK_SET 0
-#endif
-#ifndef SEEK_CUR
-# define SEEK_CUR 1
-#endif
-
+#include <unistd.h>
 #ifndef STDIN_FILENO
 # define STDIN_FILENO 0
 #endif
@@ -74,48 +61,8 @@
 # define STDERR_FILENO 2
 #endif
 
+#include <fcntl.h>
 #include <time.h>
-
-#if HAVE_FCNTL_H
-# include <fcntl.h>
-#else
-# if HAVE_SYS_FILE_H
-#  include <sys/file.h>
-# endif
-#endif
-
-#if !HAVE_DUP2
-# define dup2(f, t) (close (t), fcntl (f, F_DUPFD, t))
-#endif
-
-#ifndef O_RDONLY
-# define O_RDONLY 0
-#endif
-#ifndef O_RDWR
-# define O_RDWR 2
-#endif
-#ifndef S_IRUSR
-# define S_IRUSR 0400
-#endif
-#ifndef S_IWUSR
-# define S_IWUSR 0200
-#endif
-
-/* For systems that distinguish between text and binary I/O.
-   O_BINARY is usually declared in fcntl.h  */
-#if !defined O_BINARY && defined _O_BINARY
-  /* For MSC-compatible compilers.  */
-# define O_BINARY _O_BINARY
-#endif
-
-#ifdef __BEOS__
-  /* BeOS 5 has O_BINARY, but it has no effect.  */
-# undef O_BINARY
-#endif
-
-#ifndef O_BINARY
-# define O_BINARY 0
-#endif
 
 #if HAVE_SYS_WAIT_H
 # include <sys/wait.h>
@@ -127,53 +74,18 @@
 # define WIFEXITED(stat_val) (((stat_val) & 255) == 0)
 #endif
 
-#ifndef STAT_BLOCKSIZE
-# if HAVE_STRUCT_STAT_ST_BLKSIZE
-#  define STAT_BLOCKSIZE(s) ((s).st_blksize)
-# else
-#  define STAT_BLOCKSIZE(s) (8 * 1024)
-# endif
-#endif
-
-#if HAVE_DIRENT_H
-# include <dirent.h>
-# define NAMLEN(dirent) strlen ((dirent)->d_name)
-#else
-# define dirent direct
-# define NAMLEN(dirent) ((dirent)->d_namlen)
-# if HAVE_SYS_NDIR_H
-#  include <sys/ndir.h>
-# endif
-# if HAVE_SYS_DIR_H
-#  include <sys/dir.h>
-# endif
-# if HAVE_NDIR_H
-#  include <ndir.h>
-# endif
+#include <dirent.h>
+#ifndef _D_EXACT_NAMLEN
+# define _D_EXACT_NAMLEN(dp) strlen ((dp)->d_name)
 #endif
 
 #include <stdlib.h>
 #define EXIT_TROUBLE 2
 
 #include <limits.h>
-
-#if HAVE_INTTYPES_H
-# include <inttypes.h>
-#endif
-#ifndef PTRDIFF_MAX
-# define PTRDIFF_MAX TYPE_MAXIMUM (ptrdiff_t)
-#endif
-#ifndef SIZE_MAX
-# define SIZE_MAX TYPE_MAXIMUM (size_t)
-#endif
-#ifndef UINTMAX_MAX
-# define UINTMAX_MAX TYPE_MAXIMUM (uintmax_t)
-#endif
-#if ! HAVE_STRTOUMAX  && ! defined strtoumax
-uintmax_t strtoumax (char const *, char **, int);
-#endif
-
+#include <locale.h>
 #include <stddef.h>
+#include <inttypes.h>
 
 #include <string.h>
 #if ! HAVE_STRCASECOLL
@@ -185,12 +97,6 @@ uintmax_t strtoumax (char const *, char **, int);
 #endif
 #if ! (HAVE_STRCASECMP || defined strcasecmp)
 int strcasecmp (char const *, char const *);
-#endif
-
-#if HAVE_LOCALE_H
-# include <locale.h>
-#else
-# define setlocale(category, locale)
 #endif
 
 #include <gettext.h>

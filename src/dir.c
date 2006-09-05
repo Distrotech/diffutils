@@ -92,7 +92,7 @@ dir_read (struct file_data const *dir, struct dirdata *dirdata)
       while ((errno = 0, (next = readdir (reading)) != 0))
 	{
 	  char *d_name = next->d_name;
-	  size_t d_size = NAMLEN (next) + 1;
+	  size_t d_size = _D_EXACT_NAMLEN (next) + 1;
 
 	  /* Ignore "." and "..".  */
 	  if (d_name[0] == '.'
