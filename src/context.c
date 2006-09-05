@@ -137,6 +137,8 @@ print_context_function (FILE *out, char const *function)
   putc (' ', out);
   for (i = 0; i < 40 && function[i] != '\n'; i++)
     continue;
+  while (0 < i && isspace ((unsigned char) function[i - 1]))
+    i--;
   fwrite (function, sizeof (char), i, out);
 }
 
