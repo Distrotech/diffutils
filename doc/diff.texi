@@ -836,7 +836,8 @@ line numbers look like @samp{@var{start},@var{count}}.  Otherwise only
 its end line number appears.  An empty hunk is considered to end at
 the line that precedes the hunk.
 
-The lines common to both files begin with a space character.  The lines
+Lines common to both files begin with a space character, except that
+the space is omitted if its line is empty.  Lines
 that actually differ between the two files have one of the following
 indicator characters in the left print column:
 

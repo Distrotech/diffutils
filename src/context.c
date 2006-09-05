@@ -337,8 +337,10 @@ pr_unidiff_hunk (struct change *hunk)
 
       if (!next || i < next->line0)
 	{
-	  putc (initial_tab ? '\t' : ' ', out);
-	  print_1_line (NULL, &files[0].linbuf[i++]);
+	  char const *const *line = &files[0].linbuf[i++];
+	  if (**line != '\n')
+	    putc (initial_tab ? '\t' : ' ', out);
+	  print_1_line (NULL, line);
 	  j++;
 	}
       else
