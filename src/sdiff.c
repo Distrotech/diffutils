@@ -112,7 +112,9 @@ static int const sigs[] = {
 #  define SIG_SETMASK (! SIG_BLOCK)
 # endif
 # define sigprocmask(how, n, o) \
-    ((how) == SIG_BLOCK ? *(o) = sigblock (*(n)) : sigsetmask (*(n)))
+    ((how) == SIG_BLOCK \
+     ? *(sigset_t *) (o) = sigblock (*(n)) \
+     : sigsetmask (*(n)))
 #endif
 
 static bool diraccess (char const *);

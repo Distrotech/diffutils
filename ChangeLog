@@ -1,3 +1,9 @@
+2006-11-04  Paul Eggert  <eggert@cs.ucla.edu>
+
+	* src/sdiff.c (sigprocmask) [! HAVE_SIGPROCMASK]: Cast 2nd arg to
+	sigset_t *, since it might be a literal 0.  Problem reported by
+	Paul Edwards for MVS 3.8.
+
 2006-09-05  Paul Eggert  <eggert@cs.ucla.edu>
 
 	* NEWS: diff -u no longer outputs trailing white space unless the
