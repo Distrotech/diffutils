@@ -119,7 +119,7 @@ static int const sigs[] = {
 # endif
 # define sigprocmask(how, n, o) \
     ((how) == SIG_BLOCK \
-     ? *(sigset_t *) (o) = sigblock (*(n)) \
+     ? ((o) ? (*(sigset_t *) (o) = sigblock (*(n))) : sigblock (*(n))) \
      : sigsetmask (*(n)))
 #endif
 

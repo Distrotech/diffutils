@@ -9,6 +9,7 @@
 	Put SIGINT last; all uses changed.
 	(handler_index_of_SIGPIPE): Omit if SIGPIPE is not defined.
 	(sigblock, sigsetmask) [!HAVE_SIGBLOCK]: New macros.
+	(sigprocmask): Don't dump core if O is null.
 
 2006-11-04  Paul Eggert  <eggert@cs.ucla.edu>
 
