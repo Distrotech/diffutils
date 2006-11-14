@@ -81,11 +81,13 @@ static int const sigs[] = {
 #ifdef SIGXFSZ
        SIGXFSZ,
 #endif
-       SIGINT,
-       SIGPIPE
+#ifdef SIGPIPE
+       SIGPIPE,
+# define handler_index_of_SIGPIPE (NUM_SIGS - 2)
+#endif
+       SIGINT
+#define handler_index_of_SIGINT (NUM_SIGS - 1)
 };
-#define handler_index_of_SIGINT (NUM_SIGS - 2)
-#define handler_index_of_SIGPIPE (NUM_SIGS - 1)
 
 #if HAVE_SIGACTION
   /* Prefer `sigaction' if available, since `signal' can lose signals.  */
@@ -110,6 +112,10 @@ static int const sigs[] = {
 # endif
 # ifndef SIG_SETMASK
 #  define SIG_SETMASK (! SIG_BLOCK)
+# endif
+# if ! HAVE_SIGBLOCK
+#  define sigblock(mask) (mask)
+#  define sigsetmask(mask) (mask)
 # endif
 # define sigprocmask(how, n, o) \
     ((how) == SIG_BLOCK \

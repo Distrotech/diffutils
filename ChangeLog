@@ -1,3 +1,15 @@
+2006-11-14  Paul Eggert  <eggert@cs.ucla.edu>
+
+	Don't assume SIGPIPE exists, and that sigblock and sigsetmask
+	exist if sigprocmask does not.  Problem reported by Paul Edwards
+	for MVS 3.8.
+	* configure.ac (sigblock): Check whether this function is
+	available, if sigprocmask is not.
+	* src/sdiff.c (sigs): Omit SIGPIPE if it's not defined.
+	Put SIGINT last; all uses changed.
+	(handler_index_of_SIGPIPE): Omit if SIGPIPE is not defined.
+	(sigblock, sigsetmask) [!HAVE_SIGBLOCK]: New macros.
+
 2006-11-04  Paul Eggert  <eggert@cs.ucla.edu>
 
 	* src/sdiff.c (sigprocmask) [! HAVE_SIGPROCMASK]: Cast 2nd arg to
