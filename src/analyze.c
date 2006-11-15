@@ -711,7 +711,7 @@ build_reverse_script (struct file_data const filevec[])
   lin len0 = filevec[0].buffered_lines;
   lin len1 = filevec[1].buffered_lines;
 
-  /* Note that changedN[len0] does exist, and is 0.  */
+  /* Note that changedN[lenN] does exist, and is 0.  */
 
   lin i0 = 0, i1 = 0;
 

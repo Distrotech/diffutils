@@ -1,3 +1,8 @@
+2006-11-15  Paul Eggert  <eggert@cs.ucla.edu>
+
+	* src/analyze.c (build_reverse_script): Fix typo in comment.
+	Problem and fix reported by Daniel Hipschman.
+
 2006-11-14  Paul Eggert  <eggert@cs.ucla.edu>
 
 	Don't assume SIGPIPE exists, and that sigblock and sigsetmask
