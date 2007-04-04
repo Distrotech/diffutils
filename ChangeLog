@@ -1,5 +1,7 @@
 2007-04-04  Paul Eggert  <eggert@cs.ucla.edu>
 
+	* TODO: Mention possible sdiff improvement.
+
 	* bootstrap: Sync from gnulib.
 	* src/cmp.c: Don't include exit.h; no longer needed.
 	* src/diff.c: Likewise.

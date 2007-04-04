@@ -1,1 +1,4 @@
 Add --include option (opposite of --exclude).
+
+Look into sdiff improvement here:
+http://www.pkix.net/~chuck/sdiff2.diff
