@@ -1,3 +1,14 @@
+2007-04-04  Paul Eggert  <eggert@cs.ucla.edu>
+
+	* bootstrap: Sync from gnulib.
+	* src/cmp.c: Don't include exit.h; no longer needed.
+	* src/diff.c: Likewise.
+	* src/sdiff.c: Likewise.
+	* src/dir.c: Don't include strcase.h; no longer needed.
+	* README-alpha: Remove, replacing with:
+	* README-hacking: New file, taken from coreutils with some changes.
+	The rename is required by the change to 'bootstrap'.
+
 2006-11-15  Paul Eggert  <eggert@cs.ucla.edu>
 
 	* src/analyze.c (build_reverse_script): Fix typo in comment.

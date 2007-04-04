@@ -1,0 +1,69 @@
+-*- outline -*-
+
+These notes intend to help people working on the checked-out sources.
+These requirements do not apply when building from a distribution tarball.
+
+* Requirements
+
+We've opted to keep only the highest-level sources in the GIT repository.
+This eases our maintenance burden, (fewer merges etc.), but imposes more
+requirements on anyone wishing to build from the just-checked-out sources.
+For example, you have to use the latest stable versions of the maintainer
+tools we depend upon, including:
+
+- Automake <http://www.gnu.org/software/automake/>
+- Autoconf <http://www.gnu.org/software/autoconf/>
+- Gettext <http://www.gnu.org/software/gettext/>
+- Gzip <http://www.gnu.org/software/gzip/>
+- M4 <http://www.gnu.org/software/m4/>
+- Tar <http://www.gnu.org/software/tar/>
+- Wget <http://www.gnu.org/software/wget/>
+
+Valgrind <http://valgrind.org/> is also highly recommended, if
+Valgrind supports your architecture.
+
+Only building the initial full source tree will be a bit painful.
+Later, a plain `cvs update -dP && make' should be sufficient.
+
+* First checkout
+
+Obviously, if you are reading these notes, you did manage to check out
+this package from CVS.  The next step is to get other files needed to
+build, which are extracted from other source packages:
+
+	$ ./bootstrap
+
+And there you are!  Just
+
+	$ ./configure
+	$ make
+	$ make check
+
+At this point, there should be no difference between your local copy,
+and the master:
+
+	$ cvs diff -pu
+
+should output no difference.
+
+Enjoy!
+
+-----
+
+Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007 Free Software
+Foundation, Inc.
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2, or (at your option)
+any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+02110-1301, USA.

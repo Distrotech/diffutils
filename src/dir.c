@@ -1,7 +1,7 @@
 /* Read, sort and compare two directories.  Used for GNU DIFF.
 
    Copyright (C) 1988, 1989, 1992, 1993, 1994, 1995, 1998, 2001, 2002,
-   2004, 2006 Free Software Foundation, Inc.
+   2004, 2006, 2007 Free Software Foundation, Inc.
 
    This file is part of GNU DIFF.
 
@@ -24,7 +24,6 @@
 #include <error.h>
 #include <exclude.h>
 #include <setjmp.h>
-#include <strcase.h>
 #include <xalloc.h>
 
 /* Read the directory named by DIR and store into DIRDATA a sorted vector
