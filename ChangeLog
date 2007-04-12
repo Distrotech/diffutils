@@ -1,3 +1,8 @@
+2007-04-11  Paul Eggert  <eggert@cs.ucla.edu>
+
+	* doc/diff.texi (Detailed diff3 Normal): "range is a singleton" ->
+	"there is only one line", for clarity.  Suggested by Jerry Peek.
+
 2007-04-04  Paul Eggert  <eggert@cs.ucla.edu>
 
 	* TODO: Mention possible sdiff improvement.

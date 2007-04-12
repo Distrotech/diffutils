@@ -2073,7 +2073,7 @@ file and contains no lines from that file.
 @item @var{file}:@var{r}c
 This hunk contains the lines in the range @var{r} of file @var{file}.
 The range @var{r} is a comma-separated pair of line numbers, or just one
-number if the range is a singleton.  To edit this file to yield the
+number if there is only one line.  To edit this file to yield the
 other files, one must change the specified lines to be the lines taken
 from the other files.  For example, @samp{2:11,13c} means that the hunk
 contains lines 11 through 13 from the second file.
