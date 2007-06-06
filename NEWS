@@ -14,6 +14,8 @@ User-visible changes since 2.8.7 (in "version" 2.8.7-cvs):
   "Utility Syntax Guidelines" in the Minutes of the January 2005
   Meeting <http://www.opengroup.org/austin/docs/austin_239.html>.
 
+* sdiff now understands '1' and '2' as synonyms for 'l' and 'r'.
+
 Version 2.8.7 contains no user-visible changes.
 
 User-visible changes in version 2.8.6:

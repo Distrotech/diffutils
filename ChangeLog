@@ -1,3 +1,10 @@
+2007-06-06  Paul Eggert  <eggert@cs.ucla.edu>
+
+	* NEWS:  Mention new sdiff aliases 1 and 2 for l and r.
+	* doc/diff.texi (Merge Commands): Likewise.
+	* src/sdiff.c (give_help): Give help for them.
+	(edit): Support them.
+
 2007-04-11  Paul Eggert  <eggert@cs.ucla.edu>
 
 	* doc/diff.texi (Detailed diff3 Normal): "range is a singleton" ->
