@@ -1,3 +1,10 @@
+2007-06-18  Paul Eggert  <eggert@cs.ucla.edu>
+
+	* src/context.c (print_context_label): Don't assume that time_t
+	fits in long int, since it doesn't in FreeBSD/arm.  Problem
+	reported by Xin Li in
+	<http://lists.gnu.org/archive/html/bug-gnu-utils/2007-06/msg00091.html>.
+
 2007-06-06  Paul Eggert  <eggert@cs.ucla.edu>
 
 	* NEWS:  Mention new sdiff aliases 1 and 2 for l and r.

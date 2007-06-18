@@ -54,9 +54,23 @@ print_context_label (char const *mark,
       int nsec = get_stat_mtime_ns (&inf->stat);
       if (! (tm && nstrftime (buf, sizeof buf, time_format, tm, 0, nsec)))
 	{
-	  long int sec = inf->stat.st_mtime;
-	  verify (sizeof inf->stat.st_mtime <= sizeof sec);
-	  sprintf (buf, "%ld.%.9d", sec, nsec);
+	  verify ((time_t) 1.5 == 1);
+	  if (LONG_MIN <= TYPE_MINIMUM (time_t)
+	      && TYPE_MAXIMUM (time_t) <= LONG_MAX)
+	    {
+	      long int sec = inf->stat.st_mtime;
+	      sprintf (buf, "%ld.%.9d", sec, nsec);
+	    }
+	  else if (TYPE_MAXIMUM (time_t) <= INTMAX_MAX)
+	    {
+	      intmax_t sec = inf->stat.st_mtime;
+	      sprintf (buf, "%"PRIdMAX".%.9d", sec, nsec);
+	    }
+	  else
+	    {
+	      uintmax_t sec = inf->stat.st_mtime;
+	      sprintf (buf, "%"PRIuMAX".%.9d", sec, nsec);
+	    }
 	}
       fprintf (outfile, "%s %s\t%s\n", mark, inf->name, buf);
     }
