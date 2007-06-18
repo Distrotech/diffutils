@@ -1,5 +1,6 @@
 2007-06-18  Paul Eggert  <eggert@cs.ucla.edu>
 
+	* bootstrap.conf (gnulib_modules): Add inttypes.
 	* src/context.c (print_context_label): Don't assume that time_t
 	fits in long int, since it doesn't in FreeBSD/arm.  Problem
 	reported by Xin Li in
