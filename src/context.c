@@ -54,7 +54,7 @@ print_context_label (char const *mark,
       int nsec = get_stat_mtime_ns (&inf->stat);
       if (! (tm && nstrftime (buf, sizeof buf, time_format, tm, 0, nsec)))
 	{
-	  verify ((time_t) 1.5 == 1);
+	  verify (TYPE_IS_INTEGER (time_t));
 	  if (LONG_MIN <= TYPE_MINIMUM (time_t)
 	      && TYPE_MAXIMUM (time_t) <= LONG_MAX)
 	    {
