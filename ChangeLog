@@ -1,3 +1,9 @@
+2007-07-19  Paul Eggert  <eggert@cs.ucla.edu>
+
+	* src/ifdef.c: Fix typo: "GNU DIFF General Public License" should be
+	"GNU General Public License".  Reported by Erich Guenther.
+	* src/side.c: Likewise.
+
 2007-06-18  Paul Eggert  <eggert@cs.ucla.edu>
 
 	* bootstrap.conf (gnulib_modules): Add inttypes.
