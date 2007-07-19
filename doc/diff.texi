@@ -309,7 +309,7 @@ Here lyeth muche rychnesse in lytell space. -- John Heywood   $
 The @option{-w} or @option{--ignore-all-space} option is stronger still.
 It ignores differences even if one line has white space where
 the other line has none.  @dfn{White space} characters include
-tab, newline, vertical tab, form feed, carriage return, and space;
+tab, vertical tab, form feed, carriage return, and space;
 some locales may define additional characters to be white space.
 With this option, @command{diff} considers the
 following two lines to be equivalent, where @samp{$} denotes the line
@@ -319,6 +319,12 @@ end and @samp{^M} denotes a carriage return:
 Here lyeth  muche  rychnesse in lytell space.--  John Heywood$
   He relyeth much erychnes  seinly tells pace.  --John Heywood   ^M$
 @end example
+
+For many other programs newline is also a white space character, but
+@command{diff} is a line-oriented program and a newline character
+always ends a line.  Hence the @option{-w} or
+@option{--ignore-all-space} option does not ignore newline-related
+changes; it ignores only other white space changes.
 
 @node Blank Lines
 @section Suppressing Differences Whose Lines Are All Blank

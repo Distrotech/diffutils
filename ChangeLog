@@ -1,5 +1,9 @@
 2007-07-19  Paul Eggert  <eggert@cs.ucla.edu>
 
+	* doc/diff.texi (White Space): Note that newline always ends a line,
+	so -w doesn't ignore newline-related changes.  Problem reported by
+	David Kastrup.
+
 	* COPYING: New file.
 	* AUTHORS: Update from GPLv2 to GPLv3.
 	* Makefile.am: Likewise.
