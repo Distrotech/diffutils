@@ -1,5 +1,43 @@
 2007-07-19  Paul Eggert  <eggert@cs.ucla.edu>
 
+	* COPYING: New file.
+	* AUTHORS: Update from GPLv2 to GPLv3.
+	* Makefile.am: Likewise.
+	* NEWS: Likewise.
+	* README: Likewise.
+	* README-hacking: Likewise.
+	* bootstrap: Likewise.
+	* bootstrap.conf: Likewise.
+	* configure.ac: Likewise.
+	* exgettext: Likewise.
+	* doc/Makefile.am: Likewise.
+	* lib/Makefile.am: Likewise.
+	* lib/cmpbuf.c: Likewise.
+	* lib/cmpbuf.h: Likewise.
+	* lib/prepargs.c: Likewise.
+	* m4/vararrays.m4: Likewise.
+	* man/Makefile.am: Likewise.
+	* ms/Makefile.am: Likewise.
+	* ms/README: Likewise.
+	* ms/config.bat: Likewise.
+	* ms/config.sed: Likewise.
+	* ms/config.site: Likewise.
+	* po/POTFILES.in: Likewise.
+	* src/Makefile.am: Likewise.
+	* src/analyze.c: Likewise.
+	* src/cmp.c: Likewise.
+	* src/context.c: Likewise.
+	* src/diff.c: Likewise.
+	* src/diff.h: Likewise.
+	* src/diff3.c: Likewise.
+	* src/dir.c: Likewise.
+	* src/ed.c: Likewise.
+	* src/io.c: Likewise.
+	* src/normal.c: Likewise.
+	* src/sdiff.c: Likewise.
+	* src/system.h: Likewise.
+	* src/util.c: Likewise.
+
 	* src/ifdef.c: Fix typo: "GNU DIFF General Public License" should be
 	"GNU General Public License".  Reported by Erich Guenther.
 	* src/side.c: Likewise.
