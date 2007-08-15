@@ -749,8 +749,9 @@ zalloc (size_t size)
 char *
 dir_file_pathname (char const *dir, char const *file)
 {
-  char const *base = base_name (dir);
-  bool omit_slash = !*base || base[strlen (base) - 1] == '/';
+  char const *base = last_component (dir);
+  size_t baselen = base_len (base);
+  bool omit_slash = baselen == 0 || base[baselen - 1] == '/';
   return concat (dir, "/" + omit_slash, file);
 }
 

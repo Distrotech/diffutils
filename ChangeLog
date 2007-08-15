@@ -1,3 +1,10 @@
+2007-08-15  Paul Eggert  <eggert@cs.ucla.edu>
+
+	* src/diff.c (compare_files): Use last_component rather than base_name,
+	adjusting to gnulib API change.  This avoids a memory leak.
+	* src/sdiff.c (expand_name): Likewise.
+	* src/util.c (dir_file_pathname): Likewise.
+
 2007-07-19  Paul Eggert  <eggert@cs.ucla.edu>
 
 	* doc/diff.texi (White Space): Note that newline always ends a line,

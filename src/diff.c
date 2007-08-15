@@ -1143,7 +1143,7 @@ compare_files (struct comparison const *parent,
       char const *fnm = cmp.file[fnm_arg].name;
       char const *dir = cmp.file[dir_arg].name;
       char const *filename = cmp.file[dir_arg].name = free0
-	= dir_file_pathname (dir, base_name (fnm));
+	= dir_file_pathname (dir, last_component (fnm));
 
       if (strcmp (fnm, "-") == 0)
 	fatal ("cannot compare `-' to a directory");

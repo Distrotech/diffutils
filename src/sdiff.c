@@ -341,13 +341,14 @@ expand_name (char *name, bool is_dir, char const *other_name)
   else
     {
       /* Yield NAME/BASE, where BASE is OTHER_NAME's basename.  */
-      char const *base = base_name (other_name);
-      size_t namelen = strlen (name), baselen = strlen (base);
-      bool insert_slash = *base_name (name) && name[namelen - 1] != '/';
+      char const *base = last_component (other_name);
+      size_t namelen = strlen (name), baselen = base_len (base);
+      bool insert_slash = *last_component (name) && name[namelen - 1] != '/';
       char *r = xmalloc (namelen + insert_slash + baselen + 1);
       memcpy (r, name, namelen);
       r[namelen] = '/';
-      memcpy (r + namelen + insert_slash, base, baselen + 1);
+      memcpy (r + namelen + insert_slash, base, baselen);
+      r[namelen + insert_slash + baselen] = '\0';
       return r;
     }
 }
