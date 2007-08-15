@@ -5,6 +5,8 @@
 	* src/sdiff.c (expand_name): Likewise.
 	* src/util.c (dir_file_pathname): Likewise.
 
+	* doc/diff.texi (Copying This Manual): Adjust to new fdl.texi layout.
+
 2007-07-19  Paul Eggert  <eggert@cs.ucla.edu>
 
 	* doc/diff.texi (White Space): Note that newline always ends a line,
