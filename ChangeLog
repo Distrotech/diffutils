@@ -1,3 +1,7 @@
+2007-08-17  Paul Eggert  <eggert@cs.ucla.edu>
+
+	* bootstrap: Import from gnulib.
+
 2007-08-15  Paul Eggert  <eggert@cs.ucla.edu>
 
 	* src/diff.c (compare_files): Use last_component rather than base_name,
