@@ -1,5 +1,15 @@
 2007-08-17  Paul Eggert  <eggert@cs.ucla.edu>
 
+	Break out diffseq.h into a separate file, so that gettext can use
+	this code.  Idea from Bruno Haible.
+	* bootstrap.conf (gnulib_modules): Add diffseq.
+	* src/analyze.c (xvec, yvec, fdiag, bdiag, too_expensive, SNAKE_LIMIT):
+	(struct partition, diag, compareseq): Remove; now in diffseq.h.
+	(ELEMENT, EQUAL, OFFSET, EXTRA_CONTEXT_FIELDS, NOTE_DELETE, NOTE_INSERT):
+	(USE_HEURISTIC): New macros.
+	Include "diffseq.h".
+	(diff_2_files): Rewrite to use new diffseq.h interface.
+
 	* bootstrap: Import from gnulib.
 
 2007-08-15  Paul Eggert  <eggert@cs.ucla.edu>
