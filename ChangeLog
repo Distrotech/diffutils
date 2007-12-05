@@ -1,3 +1,7 @@
+2007-12-04  Paul Eggert  <eggert@cs.ucla.edu>
+
+	* bootstrap: Import from gnulib.
+
 2007-08-17  Paul Eggert  <eggert@cs.ucla.edu>
 
 	Break out diffseq.h into a separate file, so that gettext can use
