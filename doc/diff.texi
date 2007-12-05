@@ -842,8 +842,7 @@ line numbers look like @samp{@var{start},@var{count}}.  Otherwise only
 its end line number appears.  An empty hunk is considered to end at
 the line that precedes the hunk.
 
-Lines common to both files begin with a space character, except that
-the space is omitted if its line is empty.  Lines
+The lines common to both files begin with a space character.  The lines
 that actually differ between the two files have one of the following
 indicator characters in the left print column:
 
@@ -1854,8 +1853,9 @@ specified patterns.
 These adjustments can be applied to any output format.
 
 @menu
-* Tabs::       Preserving the alignment of tab stops.
-* Pagination:: Page numbering and time-stamping @command{diff} output.
+* Tabs::            Preserving the alignment of tab stops.
+* Trailing Blanks:: Suppressing blanks before empty output lines.
+* Pagination::      Page numbering and time-stamping @command{diff} output.
 @end menu
 
 @node Tabs
@@ -1889,6 +1889,29 @@ of the screen or the paper.  It also does not work with the unified
 output format, which does not have a space character after the change
 type indicator character.  Select this method with the @option{-T} or
 @option{--initial-tab} option.
+
+@node Trailing Blanks
+@section Omitting trailing blanks
+@cindex trailing blanks
+When outputting lines in normal or context format, or outputting an
+unchanged line in unified format, @command{diff} normally outputs a
+blank just before each line.  If the line is empty, the output of
+@command{diff} therefore contains trailing blanks even though the
+input does not contain them.  For example, when outputting an
+unchanged empty line in context format, @command{diff} normally
+outputs a line with two leading spaces.
+
+Some text editors and email agents routinely delete trailing blanks,
+so it can be a problem to deal with diff output files that contain
+them.  You can avoid this problem with the
+@option{--suppress-blank-empty} option.  It causes @command{diff} to
+omit trailing blanks at the end of output lines in normal, context,
+and unified format, unless the trailing blanks were already present in
+the input.  This changes the output format slightly, so that output
+lines are guaranteed to never end in a blank unless an input line ends
+in a blank.  This format is less likely to be munged by text editors
+or by transmission via email.  It is accepted by @acronym{GNU}
+@command{patch} as well.
 
 @node Pagination
 @section Paginating @command{diff} Output
@@ -3877,6 +3900,11 @@ normal.  @xref{Tabs}.
 @item --tabsize=@var{columns}
 Assume that tab stops are set every @var{columns} (default 8) print
 columns.  @xref{Tabs}.
+
+@item --suppress-blank-empty
+Suppress any blanks before newlines when printing the representation
+of an empty line, when outputting normal, context, or unified format.
+@xref{Trailing Blanks}.
 
 @item --to-file=@var{file}
 Compare each operand to @var{file}; @var{file} may be a directory.

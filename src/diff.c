@@ -110,6 +110,7 @@ enum
   NORMAL_OPTION,
   SDIFF_MERGE_ASSIST_OPTION,
   STRIP_TRAILING_CR_OPTION,
+  SUPPRESS_BLANK_EMPTY_OPTION,
   SUPPRESS_COMMON_LINES_OPTION,
   TABSIZE_OPTION,
   TO_FILE_OPTION,
@@ -187,6 +188,7 @@ static struct option const longopts[] =
   {"speed-large-files", 0, 0, 'H'},
   {"starting-file", 1, 0, 'S'},
   {"strip-trailing-cr", 0, 0, STRIP_TRAILING_CR_OPTION},
+  {"suppress-blank-empty", 0, 0, SUPPRESS_BLANK_EMPTY_OPTION},
   {"suppress-common-lines", 0, 0, SUPPRESS_COMMON_LINES_OPTION},
   {"tabsize", 1, 0, TABSIZE_OPTION},
   {"text", 0, 0, 'a'},
@@ -565,6 +567,10 @@ main (int argc, char **argv)
 	  strip_trailing_cr = true;
 	  break;
 
+	case SUPPRESS_BLANK_EMPTY_OPTION:
+	  suppress_blank_empty = true;
+	  break;
+
 	case SUPPRESS_COMMON_LINES_OPTION:
 	  suppress_common_lines = true;
 	  break;
@@ -886,6 +892,7 @@ static char const * const option_help_msgid[] = {
   N_("-t  --expand-tabs  Expand tabs to spaces in output."),
   N_("-T  --initial-tab  Make tabs line up by prepending a tab."),
   N_("--tabsize=NUM  Tab stops are every NUM (default 8) print columns."),
+  N_("--suppress-blank-empty  Suppress space or tab before empty output lines."),
   "",
   N_("-r  --recursive  Recursively compare any subdirectories found."),
   N_("-N  --new-file  Treat absent files as empty."),

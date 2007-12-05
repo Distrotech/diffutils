@@ -1,5 +1,16 @@
 2007-12-04  Paul Eggert  <eggert@cs.ucla.edu>
 
+	* NEWS: New diff option --suppress-blank-empty (no longer -u default).
+	* doc/diff.texi (Detailed Unified): Trailing spaces are no longer
+	omitted.
+	(Trailing Blanks): New section.
+	(diff Options) Mention new option.
+	* src/diff.h (suppress_blank_entry): New decl.
+	* src/context.c (pr_unidiff_hunk): Support --suppress-blank-empty.
+	* src/util.c (print_1_line): Likewise.
+	* src/diff.c (longopts, main, option_help_msgid): Likewise.
+	(SUPPRESS_BLANK_EMPTY_OPTION): New constant.
+
 	* configure.ac: Invoke gl_USE_SYSTEM_EXTENSIONS after gl_EARLY,
 	since gnulib now requires this order.
 

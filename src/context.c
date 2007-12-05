@@ -350,7 +350,7 @@ pr_unidiff_hunk (struct change *hunk)
       if (!next || i < next->line0)
 	{
 	  char const *const *line = &files[0].linbuf[i++];
-	  if (**line != '\n')
+	  if (! (suppress_blank_empty && **line == '\n'))
 	    putc (initial_tab ? '\t' : ' ', out);
 	  print_1_line (NULL, line);
 	  j++;
@@ -362,10 +362,11 @@ pr_unidiff_hunk (struct change *hunk)
 	  k = next->deleted;
 	  while (k--)
 	    {
+	      char const * const *line = &files[0].linbuf[i++];
 	      putc ('-', out);
-	      if (initial_tab)
+	      if (initial_tab && ! (suppress_blank_empty && **line == '\n'))
 		putc ('\t', out);
-	      print_1_line (NULL, &files[0].linbuf[i++]);
+	      print_1_line (NULL, line);
 	    }
 
 	  /* Then output the inserted part. */
@@ -373,10 +374,11 @@ pr_unidiff_hunk (struct change *hunk)
 	  k = next->inserted;
 	  while (k--)
 	    {
+	      char const * const *line = &files[1].linbuf[j++];
 	      putc ('+', out);
-	      if (initial_tab)
+	      if (initial_tab && ! (suppress_blank_empty && **line == '\n'))
 		putc ('\t', out);
-	      print_1_line (NULL, &files[1].linbuf[j++]);
+	      print_1_line (NULL, line);
 	    }
 
 	  /* We're done with this hunk, so on to the next! */

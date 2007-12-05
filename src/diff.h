@@ -150,6 +150,9 @@ XTERN size_t tabsize;
    without changing the characters in it (-T).  */
 XTERN bool initial_tab;
 
+/* Do not output an initial space or tab before the text of an empty line.  */
+XTERN bool suppress_blank_empty;
+
 /* Remove trailing carriage returns from input.  */
 XTERN bool strip_trailing_cr;
 

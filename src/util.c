@@ -506,7 +506,8 @@ print_script (struct change *script,
 
 /* Print the text of a single line LINE,
    flagging it with the characters in LINE_FLAG (which say whether
-   the line is inserted, deleted, changed, etc.).  */
+   the line is inserted, deleted, changed, etc.).  LINE_FLAG must not
+   end in a blank, unless it is a single blank.  */
 
 void
 print_1_line (char const *line_flag, char const *const *line)
@@ -517,12 +518,25 @@ print_1_line (char const *line_flag, char const *const *line)
 
   /* If -T was specified, use a Tab between the line-flag and the text.
      Otherwise use a Space (as Unix diff does).
-     Print neither space nor tab if line-flags are empty.  */
+     Print neither space nor tab if line-flags are empty.
+     But omit trailing blanks if requested.  */
 
   if (line_flag && *line_flag)
     {
-      flag_format = initial_tab ? "%s\t" : "%s ";
-      fprintf (out, flag_format, line_flag);
+      char const *flag_format_1 = flag_format = initial_tab ? "%s\t" : "%s ";
+      char const *line_flag_1 = line_flag;
+
+      if (suppress_blank_empty && **line == '\n')
+	{
+	  flag_format_1 = "%s";
+
+	  /* This hack to omit trailing blanks takes advantage of the
+	     fact that the only way that LINE_FLAG can end in a blank
+	     is when LINE_FLAG consists of a single blank.  */
+	  line_flag_1 += *line_flag_1 == ' ';
+	}
+
+      fprintf (out, flag_format_1, line_flag_1);
     }
 
   output_1_line (base, limit, flag_format, line_flag);
