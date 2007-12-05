@@ -1,5 +1,8 @@
 2007-12-04  Paul Eggert  <eggert@cs.ucla.edu>
 
+	* configure.ac: Invoke gl_USE_SYSTEM_EXTENSIONS after gl_EARLY,
+	since gnulib now requires this order.
+
 	* bootstrap: Import from gnulib.
 
 2007-08-17  Paul Eggert  <eggert@cs.ucla.edu>
