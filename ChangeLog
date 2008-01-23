@@ -1,3 +1,15 @@
+2008-01-23  Paul Eggert  <eggert@cs.ucla.edu>
+
+	Don't mishandle multibyte characters in side-by-side format.
+	Problem reported by Erik Karlsson in
+	<http://lists.gnu.org/archive/html/bug-gnu-utils/2008-01/msg00030.html>.
+	* bootstrap.conf (gnulib_modules): Add wcwidth.
+	* src/side.c: Include <wchar.h>.
+	(print_half_line): Compute number of bytes and print widths of
+	multibyte characters.  Inspired by an alternative solution from
+	Bruno Haible in
+	<http://lists.gnu.org/archive/html/bug-gnu-utils/2008-01/msg00032.html>.
+
 2007-12-04  Paul Eggert  <eggert@cs.ucla.edu>
 
 	* NEWS: New diff option --suppress-blank-empty (no longer -u default).
