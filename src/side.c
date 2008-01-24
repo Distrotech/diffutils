@@ -24,6 +24,13 @@
 
 #include <wchar.h>
 
+#if !HAVE_MBRTOWC
+/* Disable multibyte processing entirely.  */
+# undef mbstate_t
+# define mbstate_t int
+# define mbrtowc(pwc, s, n, ps) ((*(pwc) = *(s)) != 0)
+#endif
+
 static void print_sdiff_common_lines (lin, lin);
 static void print_sdiff_hunk (struct change *);
 
