@@ -80,7 +80,7 @@ print_half_line (char const *const *line, size_t indent, size_t out_bound)
   while (text_pointer < text_limit)
     {
       char const *tp0 = text_pointer;
-      register unsigned char c = *text_pointer++;
+      register char c = *text_pointer++;
 
       switch (c)
 	{
