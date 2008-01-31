@@ -1,3 +1,7 @@
+2008-01-30  Paul Eggert  <eggert@cs.ucla.edu>
+
+	* doc/diff.texi: Update Back-Cover text to reflect new GNU wording.
+
 2008-01-24  Paul Eggert  <eggert@cs.ucla.edu>
 
 	* src/side.c [!HAVE_MBRTOWC]: Supply defns for mbstate_t and mbrtowc.
