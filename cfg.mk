@@ -36,7 +36,6 @@ local-checks-to-skip =		\
   sc_error_message_uppercase	\
   sc_m4_quote_check		\
   sc_program_name		\
-  sc_prohibit_HAVE_MBRTOWC	\
   sc_space_tab
 
 # Tools used to bootstrap this package, used for "announcement".
