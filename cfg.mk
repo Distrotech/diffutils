@@ -37,8 +37,7 @@ local-checks-to-skip =		\
   sc_m4_quote_check		\
   sc_program_name		\
   sc_prohibit_HAVE_MBRTOWC	\
-  sc_space_tab			\
-  sc_unmarked_diagnostics
+  sc_space_tab
 
 # Tools used to bootstrap this package, used for "announcement".
 bootstrap-tools = autoconf,automake,gnulib

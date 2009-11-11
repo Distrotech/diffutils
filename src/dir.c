@@ -205,7 +205,7 @@ diff_dirs (struct comparison const *cmp,
   if ((cmp->file[0].desc == -1 || dir_loop (cmp, 0))
       && (cmp->file[1].desc == -1 || dir_loop (cmp, 1)))
     {
-      error (0, 0, "%s: recursive directory loop",
+      error (0, 0, _("%s: recursive directory loop"),
 	     cmp->file[cmp->file[0].desc == -1].name);
       return EXIT_TROUBLE;
     }
