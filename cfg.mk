@@ -37,8 +37,6 @@ local-checks-to-skip =		\
   sc_m4_quote_check		\
   sc_program_name		\
   sc_prohibit_HAVE_MBRTOWC	\
-  sc_require_config_h		\
-  sc_require_config_h_first	\
   sc_space_tab			\
   sc_unmarked_diagnostics
 
@@ -49,3 +47,7 @@ bootstrap-tools = autoconf,automake,gnulib
 export VERBOSE = yes
 
 old_NEWS_hash = 3858c8843f15220aae3332950af98018
+
+# Tell maint.mk's syntax-check rules that diff gets config.h directly or
+# via diff.h or system.h.
+config_h_header = (<config\.h>|"(diff|system)\.h")
