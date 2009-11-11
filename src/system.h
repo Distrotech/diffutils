@@ -1,7 +1,7 @@
 /* System dependent declarations.
 
-   Copyright (C) 1988, 1989, 1992, 1993, 1994, 1995, 1998, 2001, 2002,
-   2004, 2006 Free Software Foundation, Inc.
+   Copyright (C) 1988-1989, 1992-1995, 1998, 2001-2002, 2004, 2006, 2009
+   Free Software Foundation, Inc.
 
    This file is part of GNU DIFF.
 
