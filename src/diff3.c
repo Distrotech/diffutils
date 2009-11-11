@@ -29,6 +29,7 @@
 #include <file-type.h>
 #include <getopt.h>
 #include <inttostr.h>
+#include <progname.h>
 #include <sh-quote.h>
 #include <version-etc.h>
 #include <xalloc.h>
@@ -158,8 +159,6 @@ static bool finalwrite;
 /* If nonzero, output a merged file.  */
 static bool merge;
 
-char *program_name;
-
 static char *read_diff (char const *, char const *, char **);
 static char *scan_diff_line (char *, char **, size_t *, char *, char);
 static enum diff_type process_diff_control (char **, struct diff_block *);
@@ -226,7 +225,7 @@ main (int argc, char **argv)
 
   exit_failure = 2;
   initialize_main (&argc, &argv);
-  program_name = argv[0];
+  set_program_name (argv[0]);
   setlocale (LC_ALL, "");
   bindtextdomain (PACKAGE, LOCALEDIR);
   textdomain (PACKAGE);

@@ -199,9 +199,6 @@ XTERN struct exclude *excluded;
    slower) but will find a guaranteed minimal set of changes.  */
 XTERN bool minimal;
 
-/* Name of program the user invoked (for error messages).  */
-XTERN char *program_name;
-
 /* The strftime format to use for time strings.  */
 XTERN char const *time_format;
 

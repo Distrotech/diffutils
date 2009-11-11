@@ -31,6 +31,7 @@
 #include <getopt.h>
 #include <hard-locale.h>
 #include <prepargs.h>
+#include <progname.h>
 #include <sh-quote.h>
 #include <stat-time.h>
 #include <timespec.h>
@@ -202,11 +203,6 @@ static struct option const longopts[] =
   {0, 0, 0, 0}
 };
 
-/* Program name.  */
-char *program_name;
-
-
-
 /* Return a string containing the command options with which diff was invoked.
    Spaces appear between what were separate ARGV-elements.
    There is a space at the beginning but none at the end.
@@ -266,7 +262,7 @@ main (int argc, char **argv)
   /* Do our initializations.  */
   exit_failure = 2;
   initialize_main (&argc, &argv);
-  program_name = argv[0];
+  set_program_name (argv[0]);
   setlocale (LC_ALL, "");
   bindtextdomain (PACKAGE, LOCALEDIR);
   textdomain (PACKAGE);

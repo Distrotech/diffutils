@@ -29,6 +29,7 @@
 #include <getopt.h>
 #include <hard-locale.h>
 #include <inttostr.h>
+#include <progname.h>
 #include <unlocked-io.h>
 #include <version-etc.h>
 #include <xalloc.h>
@@ -45,9 +46,6 @@ static off_t file_position (int);
 static size_t block_compare (word const *, word const *);
 static size_t block_compare_and_count (word const *, word const *, off_t *);
 static void sprintc (char *, unsigned char);
-
-/* Name under which this program was invoked.  */
-char *program_name;
 
 /* Filenames of the compared files.  */
 static char const *file[2];
@@ -192,7 +190,7 @@ main (int argc, char **argv)
 
   exit_failure = EXIT_TROUBLE;
   initialize_main (&argc, &argv);
-  program_name = argv[0];
+  set_program_name (argv[0]);
   setlocale (LC_ALL, "");
   bindtextdomain (PACKAGE, LOCALEDIR);
   textdomain (PACKAGE);

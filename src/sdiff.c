@@ -30,14 +30,13 @@
 #include <exitfail.h>
 #include <file-type.h>
 #include <getopt.h>
+#include <progname.h>
 #include <sh-quote.h>
 #include <version-etc.h>
 #include <xalloc.h>
 
 /* Size of chunks read from files which must be parsed into lines.  */
 #define SDIFF_BUFSIZE ((size_t) 65536)
-
-char *program_name;
 
 static char const *editor_program = DEFAULT_EDITOR_PROGRAM;
 static char const **diffargv;
@@ -459,7 +458,7 @@ main (int argc, char *argv[])
 
   exit_failure = EXIT_TROUBLE;
   initialize_main (&argc, &argv);
-  program_name = argv[0];
+  set_program_name (argv[0]);
   setlocale (LC_ALL, "");
   bindtextdomain (PACKAGE, LOCALEDIR);
   textdomain (PACKAGE);
