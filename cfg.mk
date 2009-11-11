@@ -32,7 +32,6 @@ gpg_key_ID = B9AB9A16
 
 # Tests not to run as part of "make distcheck".
 local-checks-to-skip =		\
-  sc_cast_of_x_alloc_return_value	\
   sc_error_message_period	\
   sc_error_message_uppercase	\
   sc_file_system		\

@@ -80,7 +80,7 @@ prepend_default_options (char const *options, int *pargc, char ***pargv)
       int prepended = prepend_args (options, buf, (char **) 0);
       int argc = *pargc;
       char * const *argv = *pargv;
-      char **pp = (char **) xmalloc ((prepended + argc + 1) * sizeof *pp);
+      char **pp = xmalloc ((prepended + argc + 1) * sizeof *pp);
       *pargc = prepended + argc;
       *pargv = pp;
       *pp++ = *argv++;
