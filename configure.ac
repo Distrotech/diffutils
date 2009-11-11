@@ -16,14 +16,19 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-AC_PREREQ(2.59)
+AC_PREREQ(2.61)
 
-AC_INIT([GNU diffutils], [2.8.7-cvs], [bug-gnu-utils@gnu.org])
+AC_INIT([GNU diffutils],
+        m4_esyscmd([build-aux/git-version-gen .tarball-version]),
+        [bug-gnu-utils@gnu.org])
+
 AC_CONFIG_SRCDIR([src/diff.c])
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_MACRO_DIR([m4])
 
-AM_INIT_AUTOMAKE([gnits])
+AM_INIT_AUTOMAKE([1.11 dist-xz color-tests parallel-tests])
+AM_SILENT_RULES([yes]) # make --enable-silent-rules the default.
+
 AC_CONFIG_HEADER([lib/config.h:lib/config.hin])
 
 AC_PROG_AWK
