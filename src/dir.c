@@ -263,10 +263,8 @@ diff_dirs (struct comparison const *cmp,
 
   for (i = 0; i < 2; i++)
     {
-      if (dirdata[i].names)
-	free (dirdata[i].names);
-      if (dirdata[i].data)
-	free (dirdata[i].data);
+      free (dirdata[i].names);
+      free (dirdata[i].data);
     }
 
   return val;

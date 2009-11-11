@@ -1314,10 +1314,8 @@ compare_files (struct comparison const *parent,
 	pfatal_with_name (_("standard output"));
     }
 
-  if (free0)
-    free (free0);
-  if (free1)
-    free (free1);
+  free (free0);
+  free (free1);
 
   return status;
 }
