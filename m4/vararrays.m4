@@ -1,6 +1,6 @@
 # Check for variable-length arrays.
 
-#serial 1
+#serial 2
 
 # From Paul Eggert
 
@@ -29,7 +29,7 @@ AC_DEFUN([AC_C_VARARRAYS],
        ac_cv_c_vararrays=yes,
        ac_cv_c_vararrays=no)])
   if test $ac_cv_c_vararrays = yes; then
-    AC_DEFINE(HAVE_C_VARARRAYS, 1,
+    AC_DEFINE([HAVE_C_VARARRAYS], [1],
       [Define to 1 if C supports variable-length arrays.])
   fi
 ])
