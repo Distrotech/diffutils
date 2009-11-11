@@ -196,11 +196,11 @@ verify (sizeof (lin) <= sizeof (long int));
 /* Do struct stat *S, *T have the same file attributes?
 
    POSIX says that two files are identical if st_ino and st_dev are
-   the same, but many filesystems incorrectly assign the same (device,
+   the same, but many file systems incorrectly assign the same (device,
    inode) pair to two distinct files, including:
 
-   - GNU/Linux NFS servers that export all local filesystems as a
-     single NFS filesystem, if a local device number (st_dev) exceeds
+   - GNU/Linux NFS servers that export all local file systems as a
+     single NFS file system, if a local device number (st_dev) exceeds
      255, or if a local inode number (st_ino) exceeds 16777215.
 
    - Network Appliance NFS servers in snapshot directories; see
@@ -213,7 +213,7 @@ verify (sizeof (lin) <= sizeof (long int));
    inspect all attributes, only attributes useful in checking for this
    bug.
 
-   It's possible for two distinct files on a buggy filesystem to have
+   It's possible for two distinct files on a buggy file system to have
    the same attributes, but it's not worth slowing down all
    implementations (or complicating the configuration) to cater to
    these rare cases in buggy implementations.  */

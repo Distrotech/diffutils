@@ -46,7 +46,7 @@
 /CONFIG_FILES=/ s|po/Makefile\.in|&:po/Makefile.in-in|2
 
 # We always use _deps instead of .deps, because the latter is an
-# invalid name on 8+3 MS-DOS filesystem.  This makes the generated
+# invalid name on 8+3 MS-DOS file system.  This makes the generated
 # Makefiles good for every DJGPP installation, not only the one
 # where the package was configured (which could happen to be a
 # Windows box, where leading dots in file names are allowed).
