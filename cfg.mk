@@ -35,8 +35,7 @@ local-checks-to-skip =		\
   sc_error_message_period	\
   sc_error_message_uppercase	\
   sc_m4_quote_check		\
-  sc_program_name		\
-  sc_space_tab
+  sc_program_name
 
 # Tools used to bootstrap this package, used for "announcement".
 bootstrap-tools = autoconf,automake,gnulib

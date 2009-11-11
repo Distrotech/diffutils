@@ -18,7 +18,7 @@
 # Written by Eli Zaretskii.
 
 
-/(echo[ 	]*':t/ a\
+/(echo[	 ]*':t/ a\
 # DJGPP specific Makefile changes.\
   /^aliaspath *	*=/s,:,";",g;t t\
   /TEXINPUTS=/s,:,";",g;t t\
@@ -56,7 +56,7 @@ s,\.deps,_deps,g
 # and compiling across partitions.
 # The given srcdir value is always translated from the
 # "x:" syntax into "/dev/x" syntax while we run configure.
-/^[ 	]*-srcdir=\*.*$/ a\
+/^[	 ]*-srcdir=\*.*$/ a\
     ac_optarg=`echo "$ac_optarg" | sed "s,^\\([A-Za-z]\\):,/dev/\\1,"`
 /set X `ls -Lt \$srcdir/ i\
    if `echo $srcdir | grep "^/dev/" - > /dev/null`; then\
