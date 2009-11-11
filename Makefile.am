@@ -20,3 +20,18 @@ EXTRA_DIST = bootstrap exgettext ChangeLog-2008
 SUBDIRS = lib ms src doc man po
 
 ACLOCAL_AMFLAGS = -I m4
+
+# Arrange so that .tarball-version appears only in the distribution
+# tarball, and never in a checked-out repository.
+dist-hook: gen-ChangeLog
+	$(AM_V_GEN)echo $(VERSION) > $(distdir)/.tarball-version
+
+gen_start_date = '2009-11-11 15:00'
+.PHONY: gen-ChangeLog
+gen-ChangeLog:
+	$(AM_V_GEN)if test -d .git; then				\
+	  $(top_srcdir)/build-aux/gitlog-to-changelog			\
+	    --since=$(gen_start_date) > $(distdir)/cl-t;		\
+	  rm -f $(distdir)/ChangeLog;					\
+	  mv $(distdir)/cl-t $(distdir)/ChangeLog;			\
+	fi
