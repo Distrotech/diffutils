@@ -35,7 +35,6 @@ local-checks-to-skip =		\
   sc_error_message_period	\
   sc_error_message_uppercase	\
   sc_m4_quote_check		\
-  sc_po_check			\
   sc_program_name		\
   sc_prohibit_HAVE_MBRTOWC	\
   sc_require_config_h		\
