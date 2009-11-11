@@ -38,7 +38,6 @@ local-checks-to-skip =		\
   sc_po_check			\
   sc_program_name		\
   sc_prohibit_HAVE_MBRTOWC	\
-  sc_prohibit_strcmp		\
   sc_require_config_h		\
   sc_require_config_h_first	\
   sc_space_tab			\

@@ -272,7 +272,7 @@ main (int argc, char **argv)
     {
       /* If file[1] is "-", treat it first; this avoids a misdiagnostic if
 	 stdin is closed and opening file[0] yields file descriptor 0.  */
-      int f1 = f ^ (strcmp (file[1], "-") == 0);
+      int f1 = f ^ (STREQ (file[1], "-"));
 
       /* Two files with the same name and offset are identical.
 	 But wait until we open the file once, for proper diagnostics.  */
@@ -280,7 +280,7 @@ main (int argc, char **argv)
 	  && file_name_cmp (file[0], file[1]) == 0)
 	return EXIT_SUCCESS;
 
-      if (strcmp (file[f1], "-") == 0)
+      if (STREQ (file[f1], "-"))
 	{
 	  file_desc[f1] = STDIN_FILENO;
 	  if (O_BINARY && ! isatty (STDIN_FILENO))

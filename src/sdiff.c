@@ -334,7 +334,7 @@ ck_fflush (FILE *f)
 static char const *
 expand_name (char *name, bool is_dir, char const *other_name)
 {
-  if (strcmp (name, "-") == 0)
+  if (STREQ (name, "-"))
     fatal ("cannot interactively merge standard input");
   if (! is_dir)
     return name;

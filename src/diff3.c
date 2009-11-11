@@ -338,13 +338,13 @@ main (int argc, char **argv)
 
   common = 2 - (edscript | merge);
 
-  if (strcmp (file[common], "-") == 0)
+  if (STREQ (file[common], "-"))
     {
       /* Sigh.  We've got standard input as the common file.  We can't
 	 call diff twice on stdin.  Use the other arg as the common
 	 file instead.  */
       common = 3 - common;
-      if (strcmp (file[0], "-") == 0 || strcmp (file[common], "-") == 0)
+      if (STREQ (file[0], "-") || STREQ (file[common], "-"))
 	fatal ("`-' specified for more than one input file");
     }
 

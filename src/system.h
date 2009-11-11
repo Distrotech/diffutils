@@ -228,3 +228,5 @@ verify (sizeof (lin) <= sizeof (long int));
     && (s)->st_mtime == (t)->st_mtime \
     && (s)->st_ctime == (t)->st_ctime)
 #endif
+
+#define STREQ(a, b) (strcmp (a, b) == 0)

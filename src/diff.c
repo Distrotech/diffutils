@@ -700,7 +700,7 @@ main (int argc, char **argv)
   no_diff_means_no_output =
     (output_style == OUTPUT_IFDEF ?
       (!*group_format[UNCHANGED]
-       || (strcmp (group_format[UNCHANGED], "%=") == 0
+       || (STREQ (group_format[UNCHANGED], "%=")
 	   && !*line_format[UNCHANGED]))
      : (output_style != OUTPUT_SDIFF) | suppress_common_lines);
 
@@ -1077,7 +1077,7 @@ compare_files (struct comparison const *parent,
 	      cmp.file[f].desc = cmp.file[0].desc;
 	      cmp.file[f].stat = cmp.file[0].stat;
 	    }
-	  else if (strcmp (cmp.file[f].name, "-") == 0)
+	  else if (STREQ (cmp.file[f].name, "-"))
 	    {
 	      cmp.file[f].desc = STDIN_FILENO;
 	      if (binary && ! isatty (STDIN_FILENO))
@@ -1152,7 +1152,7 @@ compare_files (struct comparison const *parent,
       char const *filename = cmp.file[dir_arg].name = free0
 	= dir_file_pathname (dir, last_component (fnm));
 
-      if (strcmp (fnm, "-") == 0)
+      if (STREQ (fnm, "-"))
 	fatal ("cannot compare `-' to a directory");
 
       if (stat (filename, &cmp.file[dir_arg].stat) != 0)
