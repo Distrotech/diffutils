@@ -44,7 +44,6 @@ local-checks-to-skip =		\
   sc_require_config_h		\
   sc_require_config_h_first	\
   sc_space_tab			\
-  sc_the_the			\
   sc_unmarked_diagnostics
 
 # Tools used to bootstrap this package, used for "announcement".
@@ -53,4 +52,4 @@ bootstrap-tools = autoconf,automake,gnulib
 # Now that we have better tests, make this the default.
 export VERBOSE = yes
 
-old_NEWS_hash = d41d8cd98f00b204e9800998ecf8427e
+old_NEWS_hash = 3858c8843f15220aae3332950af98018
