@@ -64,7 +64,7 @@ AC_FUNC_CLOSEDIR_VOID
 AC_FUNC_FORK
 
 AM_GNU_GETTEXT([external], [need-ngettext])
-AM_GNU_GETTEXT_VERSION([0.15])
+AM_GNU_GETTEXT_VERSION([0.17])
 XGETTEXT="AWK='$AWK' \$(SHELL) \$(top_srcdir)/exgettext $XGETTEXT"
 
 AC_CONFIG_FILES([Makefile doc/Makefile \
