@@ -67,7 +67,14 @@ AM_GNU_GETTEXT([external], [need-ngettext])
 AM_GNU_GETTEXT_VERSION([0.17])
 XGETTEXT="AWK='$AWK' \$(SHELL) \$(top_srcdir)/exgettext $XGETTEXT"
 
-AC_CONFIG_FILES([Makefile doc/Makefile \
-		 lib/Makefile man/Makefile \
-		 ms/Makefile po/Makefile.in src/Makefile])
+AC_CONFIG_FILES([
+  Makefile doc/Makefile
+  lib/Makefile
+  src/Makefile
+  tests/Makefile
+  gnulib-tests/Makefile
+  man/Makefile
+  po/Makefile.in
+  ms/Makefile
+])
 AC_OUTPUT

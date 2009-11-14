@@ -41,6 +41,7 @@ Makefile
 Makefile.in
 autom4te.cache
 build-aux
+gnulib-tests/*.log
 man/*.1
 po/*.gmo
 po/*.po
@@ -49,3 +50,4 @@ src/diff
 src/diff3
 src/paths.h
 src/sdiff
+tests/*.log
