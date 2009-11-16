@@ -12,6 +12,7 @@
 /doc/diff.info
 /doc/stamp-vti
 /doc/version.texi
+/gnulib-tests
 /gnulib-tests/.gitignore
 /gnulib-tests/locale/
 /gnulib-tests/uniwidth/
