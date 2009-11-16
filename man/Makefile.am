@@ -26,7 +26,7 @@ sdiff.1: $S/sdiff.c
 
 # Depend on configure.ac to get version number changes.
 $(dist_man1_MANS): $(top_srcdir)/configure.ac
-	base=`expr $@ : '\(.*\).1'` && \
+	$(AM_V_GEN)base=`expr $@ : '\(.*\).1'` && \
 	  (echo '[NAME]' && sed 's@/\* *@@; s/-/\\-/; q' $S/$$base.c) | \
 	  $(HELP2MAN) -i - -S '$(PACKAGE) $(VERSION)' ../src/$$base | \
 	  sed 's/^\.B info .*/.B info diff/' >$@
