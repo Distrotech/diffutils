@@ -37,6 +37,6 @@ MOSTLYCLEANFILES = paths.h paths.ht
 
 cmp.$(OBJEXT) diff3.$(OBJEXT) diff.$(OBJEXT) sdiff.$(OBJEXT): paths.h
 paths.h:
-	(echo '#define DEFAULT_DIFF_PROGRAM "$(bindir)/'`echo diff|sed '$(transform)'`'"' && \
+	(echo '#define DEFAULT_DIFF_PROGRAM "'`echo diff|sed '$(transform)'`'"' && \
 	 echo '#define LOCALEDIR "$(localedir)"') >$@t
 	mv $@t $@

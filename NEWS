@@ -19,6 +19,11 @@ GNU diffutils NEWS                                    -*- outline -*-
 
   sdiff now understands '1' and '2' as synonyms for 'l' and 'r'.
 
+** Changes in behavior
+
+  sdiff and diff3 now invoke diff, not $(bindir)/diff
+
+
 * Noteworthy changes in release 2.8.7 (2004-04-13) [stable]
 
   Version 2.8.7 contains no user-visible changes.
