@@ -34,6 +34,12 @@
 #include <version-etc.h>
 #include <xalloc.h>
 
+/* The official name of this program (e.g., no `g' prefix).  */
+#define PROGRAM_NAME "diff3"
+
+#define AUTHORS \
+  proper_name ("Randy Smith")
+
 /* Internal data structures and macros for the diff3 program; includes
    data structures for both diff3 diffs and normal diffs.  */
 
@@ -273,8 +279,8 @@ main (int argc, char **argv)
 	  strip_trailing_cr = true;
 	  break;
 	case 'v':
-	  version_etc (stdout, "diff3", PACKAGE_NAME, PACKAGE_VERSION,
-		       "Randy Smith", (char *) 0);
+	  version_etc (stdout, PROGRAM_NAME, PACKAGE_NAME, PACKAGE_VERSION,
+		       AUTHORS, (char *) NULL);
 	  check_stdout ();
 	  return EXIT_SUCCESS;
 	case DIFF_PROGRAM_OPTION:

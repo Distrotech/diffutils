@@ -38,6 +38,16 @@
 #include <version-etc.h>
 #include <xalloc.h>
 
+/* The official name of this program (e.g., no `g' prefix).  */
+#define PROGRAM_NAME "diff"
+
+#define AUTHORS \
+  proper_name ("Paul Eggert"), \
+  proper_name ("Mike Haertel"), \
+  proper_name ("David Hayes"), \
+  proper_name ("Richard Stallman"), \
+  proper_name ("Len Tower")
+
 #ifndef GUTTER_WIDTH_MINIMUM
 # define GUTTER_WIDTH_MINIMUM 3
 #endif
@@ -467,9 +477,8 @@ main (int argc, char **argv)
 	  break;
 
 	case 'v':
-	  version_etc (stdout, "diff", PACKAGE_NAME, PACKAGE_VERSION,
-		       "Paul Eggert", "Mike Haertel", "David Hayes",
-		       "Richard Stallman", "Len Tower", (char *) NULL);
+	  version_etc (stdout, PROGRAM_NAME, PACKAGE_NAME, PACKAGE_VERSION,
+		       AUTHORS, (char *) NULL);
 	  check_stdout ();
 	  return EXIT_SUCCESS;
 

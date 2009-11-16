@@ -35,6 +35,12 @@
 #include <version-etc.h>
 #include <xalloc.h>
 
+/* The official name of this program (e.g., no `g' prefix).  */
+#define PROGRAM_NAME "sdiff"
+
+#define AUTHORS \
+  proper_name ("Thomas Lord")
+
 /* Size of chunks read from files which must be parsed into lines.  */
 #define SDIFF_BUFSIZE ((size_t) 65536)
 
@@ -526,8 +532,8 @@ main (int argc, char *argv[])
 	  break;
 
 	case 'v':
-	  version_etc (stdout, "sdiff", PACKAGE_NAME, PACKAGE_VERSION,
-		       "Thomas Lord", (char *) 0);
+	  version_etc (stdout, PROGRAM_NAME, PACKAGE_NAME, PACKAGE_VERSION,
+		       AUTHORS, (char *) NULL);
 	  check_stdout ();
 	  return EXIT_SUCCESS;
 

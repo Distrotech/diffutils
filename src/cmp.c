@@ -35,6 +35,13 @@
 #include <xalloc.h>
 #include <xstrtol.h>
 
+/* The official name of this program (e.g., no `g' prefix).  */
+#define PROGRAM_NAME "cmp"
+
+#define AUTHORS \
+  proper_name_utf8 ("Torbjorn Granlund", "Torbj\303\266rn Granlund"), \
+  proper_name ("David MacKenzie")
+
 #if defined LC_MESSAGES && ENABLE_NLS
 # define hard_locale_LC_MESSAGES hard_locale (LC_MESSAGES)
 #else
@@ -234,11 +241,8 @@ main (int argc, char **argv)
 	break;
 
       case 'v':
-	/* TRANSLATORS: Please translate the second "o" in "Torbjorn
-	   Granlund" to an o-with-umlaut (U+00F6, LATIN SMALL LETTER O
-	   WITH DIAERESIS) if possible.  */
-	version_etc (stdout, "cmp", PACKAGE_NAME, PACKAGE_VERSION,
-		     _("Torbjorn Granlund"), "David MacKenzie", (char *) 0);
+	version_etc (stdout, PROGRAM_NAME, PACKAGE_NAME, PACKAGE_VERSION,
+		     AUTHORS, (char *) NULL);
 	check_stdout ();
 	return EXIT_SUCCESS;
 
