@@ -223,10 +223,10 @@ usage (void)
       printf ("  %s\n", _(*p));
     else
       putchar ('\n');
-  printf ("\n%s\n%s\n\n%s\n",
+  printf ("\n%s\n%s\n",
 	  _("If a FILE is `-', read standard input."),
-	  _("Exit status is 0 if inputs are the same, 1 if different, 2 if trouble."),
-	  _("Report bugs to <bug-gnu-utils@gnu.org>."));
+	  _("Exit status is 0 if inputs are the same, 1 if different, 2 if trouble."));
+  emit_bug_reporting_address ();
 }
 
 /* Clean up after a signal or other failure.  This function is

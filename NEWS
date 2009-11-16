@@ -23,6 +23,12 @@ GNU diffutils NEWS                                    -*- outline -*-
 
   sdiff and diff3 now invoke diff, not $(bindir)/diff
 
+** Administrivia
+
+  New discussion and bug-reporting address: bug-diffutils@gnu.org
+
+  updated gnulib support
+
 
 * Noteworthy changes in release 2.8.7 (2004-04-13) [stable]
 

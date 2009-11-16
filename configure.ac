@@ -20,7 +20,7 @@ AC_PREREQ(2.61)
 
 AC_INIT([GNU diffutils],
         m4_esyscmd([build-aux/git-version-gen .tarball-version]),
-        [bug-gnu-utils@gnu.org])
+        [bug-diffutils@gnu.org])
 
 AC_CONFIG_SRCDIR([src/diff.c])
 AC_CONFIG_AUX_DIR([build-aux])

@@ -172,14 +172,14 @@ usage (void)
   printf ("%s\n\n", _("Compare two files byte by byte."));
   for (p = option_help_msgid;  *p;  p++)
     printf ("  %s\n", _(*p));
-  printf ("\n%s\n%s\n\n%s\n%s\n\n%s\n",
+  printf ("\n%s\n%s\n\n%s\n%s\n",
 	  _("SKIP1 and SKIP2 are the number of bytes to skip in each file."),
 	  _("SKIP values may be followed by the following multiplicative suffixes:\n\
 kB 1000, K 1024, MB 1,000,000, M 1,048,576,\n\
 GB 1,000,000,000, G 1,073,741,824, and so on for T, P, E, Z, Y."),
 	  _("If a FILE is `-' or missing, read standard input."),
-	  _("Exit status is 0 if inputs are the same, 1 if different, 2 if trouble."),
-	  _("Report bugs to <bug-gnu-utils@gnu.org>."));
+	  _("Exit status is 0 if inputs are the same, 1 if different, 2 if trouble."));
+  emit_bug_reporting_address ();
 }
 
 int

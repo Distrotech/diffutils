@@ -911,8 +911,6 @@ static char const * const option_help_msgid[] = {
   N_("If --from-file or --to-file is given, there are no restrictions on FILES."),
   N_("If a FILE is `-', read standard input."),
   N_("Exit status is 0 if inputs are the same, 1 if different, 2 if trouble."),
-  "",
-  N_("Report bugs to <bug-gnu-utils@gnu.org>."),
   0
 };
 
@@ -941,6 +939,7 @@ usage (void)
 	  printf ("  %s\n" + 2 * (*msg != ' ' && *msg != '-'), msg);
 	}
     }
+  emit_bug_reporting_address ();
 }
 
 /* Set VAR to VALUE, reporting an OPTION error if this is a

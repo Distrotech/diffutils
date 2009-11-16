@@ -453,10 +453,10 @@ usage (void)
       printf ("  %s\n", _(*p));
     else
       putchar ('\n');
-  printf ("\n%s\n%s\n\n%s\n",
+  printf ("\n%s\n%s\n",
 	  _("If a FILE is `-', read standard input."),
-	  _("Exit status is 0 if successful, 1 if conflicts, 2 if trouble."),
-	  _("Report bugs to <bug-gnu-utils@gnu.org>."));
+	  _("Exit status is 0 if successful, 1 if conflicts, 2 if trouble."));
+  emit_bug_reporting_address ();
 }
 
 /* Combine the two diffs together into one.
