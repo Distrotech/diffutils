@@ -89,6 +89,12 @@ int strcasecmp (char const *, char const *);
 #endif
 
 #include <gettext.h>
+#if ! ENABLE_NLS
+# undef textdomain
+# define textdomain(Domainname) /* empty */
+# undef bindtextdomain
+# define bindtextdomain(Domainname, Dirname) /* empty */
+#endif
 
 #define _(msgid) gettext (msgid)
 #define N_(msgid) msgid
