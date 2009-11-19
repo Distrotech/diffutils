@@ -33,6 +33,7 @@
 #include <sh-quote.h>
 #include <version-etc.h>
 #include <xalloc.h>
+#include <xfreopen.h>
 
 /* The official name of this program (e.g., no `g' prefix).  */
 #define PROGRAM_NAME "diff3"
@@ -229,7 +230,7 @@ main (int argc, char **argv)
   char **file;
   struct stat statb;
 
-  exit_failure = 2;
+  exit_failure = EXIT_TROUBLE;
   initialize_main (&argc, &argv);
   set_program_name (argv[0]);
   setlocale (LC_ALL, "");
@@ -387,8 +388,7 @@ main (int argc, char **argv)
 			       tag_strings[0], tag_strings[1], tag_strings[2]);
   else if (merge)
     {
-      if (! freopen (file[rev_mapping[FILE0]], "r", stdin))
-	perror_with_exit (file[rev_mapping[FILE0]]);
+      xfreopen (file[rev_mapping[FILE0]], "r", stdin);
       conflicts_found
 	= output_diff3_merge (stdin, stdout, diff3, mapping, rev_mapping,
 			      tag_strings[0], tag_strings[1], tag_strings[2]);

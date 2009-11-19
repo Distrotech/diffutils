@@ -38,6 +38,7 @@
 #include <timespec.h>
 #include <version-etc.h>
 #include <xalloc.h>
+#include <xfreopen.h>
 
 /* The official name of this program (e.g., no `g' prefix).  */
 #define PROGRAM_NAME "diff"
@@ -271,7 +272,7 @@ main (int argc, char **argv)
   char *numend;
 
   /* Do our initializations.  */
-  exit_failure = 2;
+  exit_failure = EXIT_TROUBLE;
   initialize_main (&argc, &argv);
   set_program_name (argv[0]);
   setlocale (LC_ALL, "");
@@ -517,7 +518,7 @@ main (int argc, char **argv)
 #if O_BINARY
 	  binary = true;
 	  if (! isatty (STDOUT_FILENO))
-	    freopen (NULL, "wb", stdout);
+	    xfreopen (NULL, "wb", stdout);
 #endif
 	  break;
 
@@ -1086,7 +1087,7 @@ compare_files (struct comparison const *parent,
 	    {
 	      cmp.file[f].desc = STDIN_FILENO;
 	      if (binary && ! isatty (STDIN_FILENO))
-		freopen (NULL, "rb", stdin);
+		xfreopen (NULL, "rb", stdin);
 	      if (fstat (STDIN_FILENO, &cmp.file[f].stat) != 0)
 		cmp.file[f].desc = ERRNO_ENCODE (errno);
 	      else
