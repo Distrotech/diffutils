@@ -20,6 +20,7 @@ EXTRA_DIST = bootstrap exgettext ChangeLog-2008
 SUBDIRS = lib src tests doc man po ms gnulib-tests
 
 ACLOCAL_AMFLAGS = -I m4
+AM_CFLAGS = $(WARN_CFLAGS) $(WERROR_CFLAGS)
 
 # Arrange so that .tarball-version appears only in the distribution
 # tarball, and never in a checked-out repository.
