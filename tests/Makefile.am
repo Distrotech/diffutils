@@ -49,6 +49,6 @@ TESTS_ENVIRONMENT =				\
 built_programs =							\
   echo 'spy:;@echo $$(PROGRAMS)'					\
     | MAKEFLAGS= $(MAKE) -s -C $(builddir)/../src -f Makefile -f - spy	\
-    | fmt -1 | sort -u
+    | fmt -1 | sed 's,$(EXEEXT)$$,,' | sort -u
 
 VERBOSE = yes

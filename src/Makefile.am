@@ -48,6 +48,6 @@ cmp.$(OBJEXT) diff3.$(OBJEXT) diff.$(OBJEXT) sdiff.$(OBJEXT): paths.h
 
 gdiff = `echo diff|sed '$(transform)'`
 BUILT_SOURCES = paths.h
-paths.h:
+paths.h: Makefile.am
 	$(AM_V_GEN)(echo '#define DEFAULT_DIFF_PROGRAM "'$(gdiff)'"' && \
 	  echo '#define LOCALEDIR "$(localedir)"') >$@t && mv $@t $@
