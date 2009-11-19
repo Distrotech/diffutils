@@ -20,6 +20,7 @@
 
 #define GDIFF_MAIN
 #include "diff.h"
+#include <assert.h>
 #include "paths.h"
 #include <c-stack.h>
 #include <dirname.h>
@@ -1221,8 +1222,11 @@ compare_files (struct comparison const *parent,
 	    status = diff_dirs (&cmp, compare_files);
 	  else
 	    {
-	      char const *dir
-		= parent->file[cmp.file[0].desc == NONEXISTENT].name;
+	      char const *dir;
+
+	      /* PARENT must be non-NULL here.  */
+	      assert (parent);
+	      dir = parent->file[cmp.file[0].desc == NONEXISTENT].name;
 
 	      /* See POSIX 1003.1-2001 for this format.  */
 	      message ("Only in %s: %s\n", dir, name0);
