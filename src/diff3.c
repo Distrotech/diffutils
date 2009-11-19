@@ -638,7 +638,6 @@ make_3way_diff (struct diff_block *thread0, struct diff_block *thread1)
 	  if (high_water_mark < D_HIGHLINE (other_diff, FC))
 	    {
 	      high_water_thread ^= 1;
-	      high_water_diff = other_diff;
 	      high_water_mark = D_HIGHLINE (other_diff, FC);
 	    }
 
