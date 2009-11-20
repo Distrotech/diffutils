@@ -40,23 +40,7 @@
 
 #include <sys/types.h>
 #include "cmpbuf.h"
-
-/* Determine whether an integer type is signed, and its bounds.
-   This code assumes two's (or one's!) complement with no holes.  */
-
-/* The extra casts work around common compiler bugs,
-   e.g. Cray C 5.0.3.0 when t == time_t.  */
-#ifndef TYPE_SIGNED
-# define TYPE_SIGNED(t) (! ((t) 0 < (t) -1))
-#endif
-#ifndef TYPE_MINIMUM
-# define TYPE_MINIMUM(t) ((t) (TYPE_SIGNED (t) \
-			       ? ~ (t) 0 << (sizeof (t) * CHAR_BIT - 1) \
-			       : (t) 0))
-#endif
-#ifndef TYPE_MAXIMUM
-# define TYPE_MAXIMUM(t) ((t) (~ (t) 0 - TYPE_MINIMUM (t)))
-#endif
+#include "intprops.h"
 
 #ifndef PTRDIFF_MAX
 # define PTRDIFF_MAX TYPE_MAXIMUM (ptrdiff_t)
