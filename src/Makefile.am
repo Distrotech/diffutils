@@ -23,8 +23,18 @@ localedir = $(datadir)/locale
 
 AM_CPPFLAGS = -I../lib -I$(top_srcdir)/lib
 
-LDADD = ../lib/libdiffutils.a $(LIBINTL) $(LIBSIGSEGV)
-diff_LDADD = $(LDADD) $(LIB_CLOCK_GETTIME)
+LDADD = \
+  ../lib/libdiffutils.a \
+  $(LIBCSTACK) \
+  $(LIBINTL) \
+  $(LIBSIGSEGV) \
+  $(LIB_CLOCK_GETTIME) \
+  $(LIB_NANOSLEEP)
+
+diff_LDADD = $(LDADD)
+cmp_LDADD = $(LDADD) $(LIBICONV)
+sdiff_LDADD = $(LDADD)
+diff3_LDADD = $(LDADD)
 
 cmp_SOURCES = cmp.c
 diff3_SOURCES = diff3.c
