@@ -1,5 +1,6 @@
 TESTS = \
-  help-version
+  help-version	\
+  label-vs-func
 
 EXTRA_DIST = \
   $(TESTS) init.sh t-local.sh
