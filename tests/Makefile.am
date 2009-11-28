@@ -2,7 +2,7 @@ TESTS = \
   help-version
 
 EXTRA_DIST = \
-  $(TESTS) test-lib.sh t-local.sh
+  $(TESTS) init.sh t-local.sh
 
 # Note that the first lines are statements.  They ensure that environment
 # variables that can perturb tests are unset or set to expected values.
