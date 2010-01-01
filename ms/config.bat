@@ -2,7 +2,7 @@
 
 echo Configuring GNU Diffutils for DJGPP v2.x...
 
-Rem Copyright (C) 2001, 2009 Free Software Foundation, Inc.
+Rem Copyright (C) 2001, 2009-2010 Free Software Foundation, Inc.
 
 Rem This program is free software: you can redistribute it and/or modify
 Rem it under the terms of the GNU General Public License as published by

@@ -1,6 +1,6 @@
 /* sdiff - side-by-side merge of file differences
 
-   Copyright (C) 1992-1996, 1998, 2001-2002, 2004, 2006-2007, 2009 Free
+   Copyright (C) 1992-1996, 1998, 2001-2002, 2004, 2006-2007, 2009-2010 Free
    Software Foundation, Inc.
 
    This file is part of GNU DIFF.

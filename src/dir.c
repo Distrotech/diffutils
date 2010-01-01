@@ -1,7 +1,7 @@
 /* Read, sort and compare two directories.  Used for GNU DIFF.
 
    Copyright (C) 1988-1989, 1992-1995, 1998, 2001-2002, 2004, 2006-2007,
-   2009 Free Software Foundation, Inc.
+   2009-2010 Free Software Foundation, Inc.
 
    This file is part of GNU DIFF.
 
