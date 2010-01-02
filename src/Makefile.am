@@ -28,11 +28,12 @@ LDADD = \
   ../lib/libdiffutils.a \
   $(LIBCSTACK) \
   $(LIBINTL) \
+  $(LIBICONV) \
   $(LIBSIGSEGV) \
   $(LIB_CLOCK_GETTIME)
 
 diff_LDADD = $(LDADD)
-cmp_LDADD = $(LDADD) $(LIBICONV)
+cmp_LDADD = $(LDADD)
 sdiff_LDADD = $(LDADD)
 diff3_LDADD = $(LDADD)
 
