@@ -33,3 +33,7 @@ old_NEWS_hash = 3858c8843f15220aae3332950af98018
 # Tell maint.mk's syntax-check rules that diff gets config.h directly or
 # via diff.h or system.h.
 config_h_header = (<config\.h>|"(diff|system)\.h")
+
+update-copyright-env = \
+  UPDATE_COPYRIGHT_USE_INTERVALS=1 \
+  UPDATE_COPYRIGHT_MAX_LINE_LENGTH=79
