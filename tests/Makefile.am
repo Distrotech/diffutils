@@ -1,4 +1,5 @@
 TESTS = \
+  basic \
   help-version	\
   label-vs-func
 
