@@ -37,3 +37,5 @@ config_h_header = (<config\.h>|"(diff|system)\.h")
 update-copyright-env = \
   UPDATE_COPYRIGHT_USE_INTERVALS=1 \
   UPDATE_COPYRIGHT_MAX_LINE_LENGTH=79
+
+include $(srcdir)/dist-check.mk

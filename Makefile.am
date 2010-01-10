@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+ALL_RECURSIVE_TARGETS =
+
 EXTRA_DIST = bootstrap exgettext ChangeLog-2008
 SUBDIRS = lib src tests doc man po ms gnulib-tests
 
@@ -35,3 +37,7 @@ gen-ChangeLog:
 	  rm -f $(distdir)/ChangeLog;					\
 	  mv $(distdir)/cl-t $(distdir)/ChangeLog;			\
 	fi
+
+ALL_RECURSIVE_TARGETS += distcheck-hook
+distcheck-hook:
+	$(MAKE) my-distcheck
