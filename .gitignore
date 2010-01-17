@@ -3,6 +3,8 @@
 *.o
 *~
 .deps
+.dirstamp
+.gdb-history
 /GNUmakefile
 /INSTALL
 /aclocal.m4
@@ -10,6 +12,8 @@
 /config.log
 /config.status
 /configure
+/diffutils-*.tar.gz
+/diffutils-*.tar.xz
 /doc/.gitignore
 /doc/diff.info
 /doc/stamp-vti
@@ -40,11 +44,15 @@
 /po/stamp-po
 ABOUT-NLS
 ChangeLog
+ID
 Makefile
 Makefile.in
+TAGS
 autom4te.cache
 build-aux
 gnulib-tests/*.log
+lib/arg-nonnull.h
+lib/link-warning.h
 man/*.1
 po/*.gmo
 po/*.po
