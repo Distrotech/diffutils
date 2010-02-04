@@ -39,3 +39,25 @@ update-copyright-env = \
   UPDATE_COPYRIGHT_MAX_LINE_LENGTH=79
 
 include $(srcdir)/dist-check.mk
+
+_cf_state_dir ?= .config-state
+_date_time := $(shell date +%F.%T)
+config-compare:
+	diff -u					\
+	  -I'define VERSION '			\
+	  -I'define PACKAGE_VERSION '		\
+	  -I'define PACKAGE_STRING '		\
+	  $(_cf_state_dir)/latest lib/config.h
+	diff -u					\
+	  -I'$(PACKAGE_NAME)'			\
+	  -I'[SD]\["VERSION"\]'			\
+	  -I'[SD]\["PACKAGE_VERSION"\]'		\
+	  -I'D\["PACKAGE_STRING"\]'		\
+	  $(_cf_state_dir)/latest config.status
+
+config-save:
+	$(MAKE) --quiet config-compare > /dev/null 2>&1 \
+	  && { echo no change; exit 1; } || :
+	mkdir -p $(_cf_state_dir)/$(_date_time)
+	ln -nsf $(date_time) $(_cf_state_dir)/latest
+	cp lib/config.h config.status $(_cf_state_dir)/latest
