@@ -1086,7 +1086,7 @@ compare_files (struct comparison const *parent,
 	  else if (STREQ (cmp.file[f].name, "-"))
 	    {
 	      cmp.file[f].desc = STDIN_FILENO;
-	      if (binary && ! isatty (STDIN_FILENO))
+	      if (O_BINARY && binary && ! isatty (STDIN_FILENO))
 		xfreopen (NULL, "rb", stdin);
 	      if (fstat (STDIN_FILENO, &cmp.file[f].stat) != 0)
 		cmp.file[f].desc = ERRNO_ENCODE (errno);
