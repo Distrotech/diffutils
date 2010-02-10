@@ -633,7 +633,7 @@ diff_2_files (struct comparison *cmp)
 	changes = briefly_report (changes, cmp->file);
       else
 	{
-	  if (changes | !no_diff_means_no_output)
+	  if (changes || !no_diff_means_no_output)
 	    {
 	      /* Record info for starting up output,
 		 to be used if and when we have some output to print.  */
