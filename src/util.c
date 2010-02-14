@@ -228,7 +228,7 @@ begin_output (void)
 	char *p;
 	sprintf (command, "%s -f -h ", pr_program);
 	p = command + sizeof pr_program - 1 + 7;
-	p = shell_quote_copy (name);
+	p = shell_quote_copy (p, name);
 	*p = 0;
 	errno = 0;
 	outfile = popen (command, "w");

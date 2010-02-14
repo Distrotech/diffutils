@@ -629,7 +629,7 @@ main (int argc, char *argv[])
 	command = p = xmalloc (cmdsize);
 	for (i = 0;  diffargv[i];  i++)
 	  {
-	    p = shell_quote_copy (diffargv[i]);
+	    p = shell_quote_copy (p, diffargv[i]);
 	    *p++ = ' ';
 	  }
 	p[-1] = 0;
