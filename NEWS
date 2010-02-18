@@ -2,6 +2,13 @@ GNU diffutils NEWS                                    -*- outline -*-
 
 * Noteworthy changes in release ?.? (????-??-??) [?]
 
+** Changes in behavior
+
+  diff once again reports a difference with the diagnostic
+  "Binary files A and B differ" when at least one of the files
+  appears to be binary.  From 2.8.4 through diffutils-2.9, it printed
+  "Files A and B differ".
+
 
 * Noteworthy changes in release 2.9 (2010-02-11) [stable]
 
