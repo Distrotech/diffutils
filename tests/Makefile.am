@@ -1,5 +1,6 @@
 TESTS = \
   basic \
+  binary \
   help-version	\
   label-vs-func	\
   stdin
