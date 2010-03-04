@@ -4,6 +4,13 @@ GNU diffutils NEWS                                    -*- outline -*-
 
 ** Changes in behavior
 
+  In context-style diffs, diff prints a portion of a preceding "function"
+  line for each hunk, with --show-function-line=RE (-F) or
+  --show-c-function (-p).  Now, it trims leading blanks from such lines
+  before extracting a prefix.  This is useful especially when a function
+  line is so far indented that the name itself would be truncated or not
+  included in the limited-width substring that diff appends.
+
   diff once again reports a difference with the diagnostic
   "Binary files A and B differ" when at least one of the files
   appears to be binary.  From 2.8.4 through diffutils-2.9, it printed

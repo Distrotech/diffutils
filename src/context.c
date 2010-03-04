@@ -145,13 +145,15 @@ print_context_number_range (struct file_data const *file, lin a, lin b)
 static void
 print_context_function (FILE *out, char const *function)
 {
-  int i;
+  int i, j;
   putc (' ', out);
-  for (i = 0; i < 40 && function[i] != '\n'; i++)
+  for (i = 0; isspace ((unsigned char)function[i]) && function[i] != '\n'; i++)
     continue;
-  while (0 < i && isspace ((unsigned char) function[i - 1]))
-    i--;
-  fwrite (function, sizeof (char), i, out);
+  for (j = i; j < i + 40 && function[j] != '\n'; j++)
+    continue;
+  while (i < j && isspace ((unsigned char) function[j - 1]))
+    j--;
+  fwrite (function + i, sizeof (char), j - i, out);
 }
 
 /* Print a portion of an edit script in context format.
