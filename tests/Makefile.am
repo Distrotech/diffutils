@@ -2,6 +2,7 @@ TESTS = \
   basic \
   binary \
   help-version	\
+  function-line-vs-leading-space \
   label-vs-func	\
   stdin
 
