@@ -19,6 +19,7 @@
    along with this program.  If not, see <http://www.gnu.org/licenses/>.  */
 
 #include "diff.h"
+#include "c-ctype.h"
 #include <inttostr.h>
 #include <stat-time.h>
 #include <strftime.h>
@@ -147,11 +148,11 @@ print_context_function (FILE *out, char const *function)
 {
   int i, j;
   putc (' ', out);
-  for (i = 0; isspace ((unsigned char)function[i]) && function[i] != '\n'; i++)
+  for (i = 0; c_isspace ((unsigned char) function[i]) && function[i] != '\n'; i++)
     continue;
   for (j = i; j < i + 40 && function[j] != '\n'; j++)
     continue;
-  while (i < j && isspace ((unsigned char) function[j - 1]))
+  while (i < j && c_isspace ((unsigned char) function[j - 1]))
     j--;
   fwrite (function + i, sizeof (char), j - i, out);
 }
