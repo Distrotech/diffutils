@@ -27,8 +27,10 @@
 /lib/config.h
 /lib/config.hin
 /lib/configmake.h
+/lib/c++defs.h
 /lib/stamp-h1
 /lib/uniwidth
+/lib/warn-on-use.h
 /m4/.gitignore
 /maint.mk
 /po/*.pot
