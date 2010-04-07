@@ -76,7 +76,7 @@ sc_cross_check_PATH_usage_in_tests:
 	@if grep -l 'VERSION mismatch' $(_hv_file) >/dev/null		\
 	    && grep -lE '$(_hv_regex)' $(_hv_file) >/dev/null; then	\
 	  good=$$(grep -E '$(_hv_regex)' < $(_hv_file));		\
-	  grep -LF "$$good"						\
+	  grep -LFx "$$good"						\
 		$$(grep -lE '$(_hv_regex)' $$($(VC_LIST_EXCEPT)))	\
 	      | grep . &&						\
 	    { echo "$(ME): the above files use path_prepend_ inconsistently" \
