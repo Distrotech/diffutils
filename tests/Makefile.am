@@ -33,6 +33,7 @@ TESTS_ENVIRONMENT =				\
     fi;						\
   };						\
   export					\
+  VERSION='$(VERSION)'				\
   abs_top_builddir='$(abs_top_builddir)'	\
   abs_top_srcdir='$(abs_top_srcdir)'		\
   abs_srcdir='$(abs_srcdir)'			\
