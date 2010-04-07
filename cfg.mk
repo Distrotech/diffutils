@@ -62,3 +62,23 @@ config-save:
 	mkdir -p $(_cf_state_dir)/$(_date_time)
 	ln -nsf $(date_time) $(_cf_state_dir)/latest
 	cp lib/config.h config.status $(_cf_state_dir)/latest
+
+# If tests/help-version exists and seems to be new enough, assume that its
+# use of init.sh and path_prepend_ is correct, and ensure that every other
+# use of init.sh is identical.
+# This is useful because help-version cross-checks prog --version
+# with $(VERSION), which verifies that its path_prepend_ invocation
+# sets PATH correctly.  This is an inexpensive way to ensure that
+# the other init.sh-using tests also get it right.
+_hv_file = $(srcdir)/tests/help-version
+_hv_regex = ^ *\. [^ ]*/init\.sh
+sc_cross_check_PATH_usage_in_tests:
+	@if grep -l 'VERSION mismatch' $(_hv_file) >/dev/null		\
+	    && grep -lE '$(_hv_regex)' $(_hv_file) >/dev/null; then	\
+	  good=$$(grep -E '$(_hv_regex)' < $(_hv_file));		\
+	  grep -LF "$$good"						\
+		$$(grep -lE '$(_hv_regex)' $$($(VC_LIST_EXCEPT)))	\
+	      | grep . &&						\
+	    { echo "$(ME): the above files use path_prepend_ inconsistently" \
+		1>&2; exit 1; } || :;					\
+	fi
