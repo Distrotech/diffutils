@@ -17,7 +17,7 @@
 
 ALL_RECURSIVE_TARGETS =
 
-EXTRA_DIST = bootstrap exgettext ChangeLog-2008
+EXTRA_DIST = bootstrap exgettext ChangeLog-2008 cfg.mk dist-check.mk
 SUBDIRS = lib src tests doc man po ms gnulib-tests
 
 ACLOCAL_AMFLAGS = -I m4

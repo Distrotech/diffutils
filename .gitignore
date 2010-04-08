@@ -23,11 +23,11 @@
 /gnulib-tests/locale/
 /gnulib-tests/uniwidth/
 /lib/.gitignore
+/lib/c++defs.h
 /lib/charset.alias
 /lib/config.h
 /lib/config.hin
 /lib/configmake.h
-/lib/c++defs.h
 /lib/stamp-h1
 /lib/uniwidth
 /lib/warn-on-use.h
