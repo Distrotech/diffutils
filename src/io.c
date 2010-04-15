@@ -220,6 +220,7 @@ find_and_hash_each_line (struct file_data *current)
   bool same_length_diff_contents_compare_anyway =
     diff_length_compare_anyway | ignore_case;
 
+  bool missing_newline_fixup = false;
   while (p < suffix_begin)
     {
       char const *ip = p;
@@ -376,6 +377,7 @@ find_and_hash_each_line (struct file_data *current)
 	  && current->missing_newline
 	  && ROBUST_OUTPUT_STYLE (output_style))
 	{
+	  missing_newline_fixup = true;
 	  /* This line is incomplete.  If this is significant,
 	     put the line into buckets[-1].  */
 	  if (ignore_white_space < IGNORE_SPACE_CHANGE)
@@ -471,7 +473,14 @@ find_and_hash_each_line (struct file_data *current)
       linbuf[line] = p;
 
       if (p == bufend)
-	break;
+	{
+	  /* If we've added a newline sentinel and did not adjust "bufend"
+	     above, then linbuf[line] is now pointing at the sentinel, yet
+	     should instead be pointing to the preceding byte.  */
+	  if (!missing_newline_fixup && current->missing_newline)
+	    --linbuf[line];
+	  break;
+	}
 
       if (context <= i && no_diff_means_no_output)
 	break;

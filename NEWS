@@ -2,6 +2,13 @@ GNU diffutils NEWS                                    -*- outline -*-
 
 * Noteworthy changes in release ?.? (????-??-??) [?]
 
+** Bug fixes
+
+  diff once again prints the required "\ No newline at end of file" line
+  when at least one input lacks a newline-at-EOF and the final hunk plus
+  context-length aligns exactly with the end of the newline-lacking file.
+  [bug introduced between 2.8.7 and 2.9]
+
 ** Changes in behavior
 
   In context-style diffs, diff prints a portion of a preceding "function"
