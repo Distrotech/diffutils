@@ -4,6 +4,7 @@ TESTS = \
   help-version	\
   function-line-vs-leading-space \
   label-vs-func	\
+  no-newline-at-eof \
   stdin
 
 EXTRA_DIST = \
