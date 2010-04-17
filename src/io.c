@@ -220,7 +220,6 @@ find_and_hash_each_line (struct file_data *current)
   bool same_length_diff_contents_compare_anyway =
     diff_length_compare_anyway | ignore_case;
 
-  bool missing_newline_fixup = false;
   while (p < suffix_begin)
     {
       char const *ip = p;
@@ -377,15 +376,13 @@ find_and_hash_each_line (struct file_data *current)
 	  && current->missing_newline
 	  && ROBUST_OUTPUT_STYLE (output_style))
 	{
-	  missing_newline_fixup = true;
-	  /* This line is incomplete.  If this is significant,
-	     put the line into buckets[-1].  */
+	  /* The last line is incomplete and we do not silently
+	     complete lines.  If the line cannot compare equal to any
+	     complete line, put it into buckets[-1] so that it can
+	     compare equal only to the other file's incomplete line
+	     (if one exists).  */
 	  if (ignore_white_space < IGNORE_SPACE_CHANGE)
 	    bucket = &buckets[-1];
-
-	  /* Omit the inserted newline when computing linbuf later.  */
-	  p--;
-	  bufend = suffix_begin = p;
 	}
 
       for (i = *bucket;  ;  i = eqs[i].next)
@@ -474,11 +471,10 @@ find_and_hash_each_line (struct file_data *current)
 
       if (p == bufend)
 	{
-	  /* If we've added a newline sentinel and did not adjust "bufend"
-	     above, then linbuf[line] is now pointing at the sentinel, yet
-	     should instead be pointing to the preceding byte.  */
-	  if (!missing_newline_fixup && current->missing_newline)
-	    --linbuf[line];
+	  /* If the last line is incomplete and we do not silently
+	     complete lines, don't count its appended newline.  */
+	  if (current->missing_newline && ROBUST_OUTPUT_STYLE (output_style))
+	    linbuf[line]--;
 	  break;
 	}
 

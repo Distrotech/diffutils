@@ -6,24 +6,28 @@
 : ${srcdir=.}
 . "$srcdir/init.sh"; path_prepend_ ../src
 
-printf '\n1'      > a || framework_failure_
-printf '\n0\n\n1' > b || framework_failure_
+printf '\n1\n2\n3'      > a || framework_failure_
+printf '\n0\n\n1\n2\n3' > b || framework_failure_
 cat <<EOF > exp || framework_failure_
-@@ -1,2 +1,4 @@
+@@ -1,4 +1,6 @@
 
 +0
 +
  1
+ 2
+ 3
 \ No newline at end of file
 EOF
 
 cat <<EOF > exp2 || framework_failure_
-@@ -1,2 +1,4 @@
+@@ -1,4 +1,6 @@
 
--1
 +0
 +
-+1
+ 1
+ 2
+-3
++3
 \ No newline at end of file
 EOF
 
@@ -32,7 +36,7 @@ fail=0
 # So we don't have to record trailing blanks in expected output above.
 opt=--suppress-blank-empty
 
-diff $opt -U2 a b > out 2> err
+diff $opt -u a b > out 2> err
 test $? = 1 || fail=1
 
 sed -n '/^@@/,$p' out > k && mv k out || fail=1
