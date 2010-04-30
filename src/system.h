@@ -53,9 +53,7 @@
 #include <fcntl.h>
 #include <time.h>
 
-#if HAVE_SYS_WAIT_H
-# include <sys/wait.h>
-#endif
+#include <sys/wait.h>
 #ifndef WEXITSTATUS
 # define WEXITSTATUS(stat_val) ((unsigned int) (stat_val) >> 8)
 #endif
