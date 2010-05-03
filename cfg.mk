@@ -29,7 +29,7 @@ bootstrap-tools = autoconf,automake,gnulib
 # Now that we have better tests, make this the default.
 export VERBOSE = yes
 
-old_NEWS_hash = 5ce999f299bd2e9f44cbfef49015b45f
+old_NEWS_hash = e94e58f12fe046969201ab9de3166237
 
 # Tell maint.mk's syntax-check rules that diff gets config.h directly or
 # via diff.h or system.h.
