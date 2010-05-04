@@ -56,6 +56,7 @@ Once all the builds and tests have passed,
 
 * Announce it on Savannah first, so you can include the preferable
   savannah.org announcement link in the email message.
+
   From here:
     https://savannah.gnu.org/projects/diffutils/
   click on the "submit news", then write something like the following:
@@ -71,12 +72,7 @@ Once all the builds and tests have passed,
   Then go here to approve it:
     https://savannah.gnu.org/news/approve.php?group=diffutils
 
-* Send the gpg-signed announcement mail, e.g.,
-
-    To: info-gnu@gnu.org
-    Cc: coordinator@translationproject.org, bug-diffutils@gnu.org
-    Subject: diffutils-X.Y released [stable]
-    Mail-Followup-To: bug-diffutils@gnu.org
+* Send the announcement email message.
 
 * After each non-alpha release, update the on-line manual accessible via
 
