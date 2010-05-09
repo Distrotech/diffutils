@@ -102,29 +102,6 @@ static int const sigs[] = {
 # define signal_handler(sig, handler) signal (sig, handler)
 #endif
 
-#if ! HAVE_SIGPROCMASK
-# define sigset_t int
-# define sigemptyset(s) (*(s) = 0)
-# ifndef sigmask
-#  define sigmask(sig) (1 << ((sig) - 1))
-# endif
-# define sigaddset(s, sig) (*(s) |= sigmask (sig))
-# ifndef SIG_BLOCK
-#  define SIG_BLOCK 0
-# endif
-# ifndef SIG_SETMASK
-#  define SIG_SETMASK (! SIG_BLOCK)
-# endif
-# if ! HAVE_SIGBLOCK
-#  define sigblock(mask) (mask)
-#  define sigsetmask(mask) (mask)
-# endif
-# define sigprocmask(how, n, o) \
-    ((how) == SIG_BLOCK \
-     ? ((o) ? (*(sigset_t *) (o) = sigblock (*(n))) : sigblock (*(n))) \
-     : sigsetmask (*(n)))
-#endif
-
 static bool diraccess (char const *);
 static int temporary_file (void);
 
