@@ -166,14 +166,16 @@ compare_names (char const *name1, char const *name2)
 	  : file_name_cmp (name1, name2));
 }
 
-/* A wrapper for compare_names suitable as an argument for qsort.  */
+/* Compare names FILE1 and FILE2 when sorting a directory.
+   Prefer filtered comparison, breaking ties with file_name_cmp.  */
 
 static int
 compare_names_for_qsort (void const *file1, void const *file2)
 {
   char const *const *f1 = file1;
   char const *const *f2 = file2;
-  return compare_names (*f1, *f2);
+  int diff = compare_names (*f1, *f2);
+  return diff ? diff : file_name_cmp (*f1, *f2);
 }
 
 /* Compare the contents of two directories named in CMP.
@@ -253,6 +255,41 @@ diff_dirs (struct comparison const *cmp,
 	     pretend the "next name" in that dir is very large.  */
 	  int nameorder = (!*names[0] ? 1 : !*names[1] ? -1
 			   : compare_names (*names[0], *names[1]));
+
+	  /* Prefer a file_name_cmp match if available.  This algorithm is
+	     O(N**2), where N is the number of names in a directory
+	     that compare_names says are all equal, but in practice N
+	     is so small it's not worth tuning.  */
+	  if (nameorder == 0)
+	    {
+	      int raw_order = file_name_cmp (*names[0], *names[1]);
+	      if (raw_order != 0)
+		{
+		  int greater_side = raw_order < 0;
+		  int lesser_side = 1 - greater_side;
+		  char const **lesser = names[lesser_side];
+		  char const *greater_name = *names[greater_side];
+		  char const **p;
+
+		  for (p = lesser + 1;
+		       *p && compare_names (*p, greater_name) == 0;
+		       p++)
+		    {
+		      int cmp = file_name_cmp (*p, greater_name);
+		      if (0 <= cmp)
+			{
+			  if (cmp == 0)
+			    {
+			      memmove (lesser + 1, lesser,
+				       (char *) p - (char *) lesser);
+			      *lesser = greater_name;
+			    }
+			  break;
+			}
+		    }
+		}
+	    }
+
 	  int v1 = (*handle_file) (cmp,
 				   0 < nameorder ? 0 : *names[0]++,
 				   nameorder < 0 ? 0 : *names[1]++);

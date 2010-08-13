@@ -2,6 +2,11 @@ GNU diffutils NEWS                                    -*- outline -*-
 
 * Noteworthy changes in release ?.? (????-??-??) [?]
 
+** Bug fixes
+
+  diff no longer reports spurious differences merely because two entries
+  in the same directory have names that compare equal in the current
+  locale, or compare equal because --ignore-file-name-case was given.
 
 * Noteworthy changes in release 3.0 (2010-05-03) [stable]
 

@@ -1,6 +1,7 @@
 TESTS = \
   basic \
   binary \
+  colliding-file-names \
   help-version	\
   function-line-vs-leading-space \
   label-vs-func	\

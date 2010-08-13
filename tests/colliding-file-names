@@ -1,0 +1,20 @@
+#!/bin/sh
+# Check that diff responds well if a directory has multiple file names
+# that compare equal.
+
+: ${srcdir=.}
+. "$srcdir/init.sh"; path_prepend_ ../src
+
+mkdir d1 d2 || fail=1
+
+for i in abc abC aBc aBC Abc AbC ABc ABC; do
+ echo $i >d1/$i || fail=1
+done
+
+for i in ABC ABc AbC Abc aBC aBc abC abc; do
+ echo $i >d2/$i || fail=1
+done
+
+diff -r --ignore-file-name-case d1 d2 || fail=1
+
+Exit $fail
