@@ -349,7 +349,6 @@ void print_sdiff_script (struct change *);
 extern char const change_letter[4];
 extern char const pr_program[];
 char *concat (char const *, char const *, char const *);
-char *dir_file_pathname (char const *, char const *);
 bool lines_differ (char const *, char const *);
 lin translate_line_number (struct file_data const *, lin);
 struct change *find_change (struct change *);

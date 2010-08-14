@@ -27,6 +27,7 @@
 #include <error.h>
 #include <exclude.h>
 #include <exitfail.h>
+#include <filenamecat.h>
 #include <file-type.h>
 #include <fnmatch.h>
 #include <getopt.h>
@@ -1067,9 +1068,9 @@ compare_files (struct comparison const *parent,
   else
     {
       cmp.file[0].name = free0
-	= dir_file_pathname (parent->file[0].name, name0);
+	= file_name_concat (parent->file[0].name, name0, NULL);
       cmp.file[1].name = free1
-	= dir_file_pathname (parent->file[1].name, name1);
+	= file_name_concat (parent->file[1].name, name1, NULL);
     }
 
   /* Stat the files.  */
@@ -1156,7 +1157,7 @@ compare_files (struct comparison const *parent,
       char const *fnm = cmp.file[fnm_arg].name;
       char const *dir = cmp.file[dir_arg].name;
       char const *filename = cmp.file[dir_arg].name = free0
-	= dir_file_pathname (dir, last_component (fnm));
+	= file_name_concat (dir, last_component (fnm), NULL);
 
       if (STREQ (fnm, "-"))
 	fatal ("cannot compare `-' to a directory");

@@ -1,7 +1,8 @@
-TESTS = \
+jESTS = \
   basic \
   binary \
   colliding-file-names \
+  excess-slash \
   help-version	\
   function-line-vs-leading-space \
   label-vs-func	\
