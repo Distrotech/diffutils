@@ -275,10 +275,10 @@ diff_dirs (struct comparison const *cmp,
 		       *p && compare_names (*p, greater_name) == 0;
 		       p++)
 		    {
-		      int cmp = file_name_cmp (*p, greater_name);
-		      if (0 <= cmp)
+		      int c = file_name_cmp (*p, greater_name);
+		      if (0 <= c)
 			{
-			  if (cmp == 0)
+			  if (c == 0)
 			    {
 			      memmove (lesser + 1, lesser,
 				       (char *) p - (char *) lesser);
