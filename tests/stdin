@@ -1,8 +1,7 @@
 #!/bin/sh
 # Ensure that "-" means "standard input".
 
-: ${srcdir=.}
-. "$srcdir/init.sh"; path_prepend_ ../src
+. "${srcdir=.}/init.sh"; path_prepend_ ../src
 
 fail=0
 

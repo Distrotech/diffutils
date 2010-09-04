@@ -2,8 +2,7 @@
 # Check that diff responds well if a directory has multiple file names
 # that compare equal.
 
-: ${srcdir=.}
-. "$srcdir/init.sh"; path_prepend_ ../src
+. "${srcdir=.}/init.sh"; path_prepend_ ../src
 
 mkdir d1 d2 || fail=1
 

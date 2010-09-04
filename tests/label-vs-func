@@ -1,8 +1,7 @@
 #!/bin/sh
 # Show how diff's -p option can mistakenly match a label: in column 1.
 
-: ${srcdir=.}
-. "$srcdir/init.sh"; path_prepend_ ../src
+. "${srcdir=.}/init.sh"; path_prepend_ ../src
 
 fail=0
 cat <<EOF > exp || fail=1

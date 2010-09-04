@@ -3,8 +3,7 @@
 # Before the April 2010 fix, the "\ No newline at end of file"
 # line would not be printed.
 
-: ${srcdir=.}
-. "$srcdir/init.sh"; path_prepend_ ../src
+. "${srcdir=.}/init.sh"; path_prepend_ ../src
 
 printf '\n1'      > a || framework_failure_
 printf '\n0\n\n1' > b || framework_failure_
