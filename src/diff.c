@@ -959,7 +959,7 @@ usage (void)
 static void
 specify_value (char const **var, char const *value, char const *option)
 {
-  if (*var && strcmp (*var, value) != 0)
+  if (*var && ! STREQ (*var, value))
     {
       error (0, 0, _("conflicting %s option value `%s'"), option, value);
       try_help (NULL, NULL);

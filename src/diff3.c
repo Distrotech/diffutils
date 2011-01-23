@@ -362,7 +362,7 @@ main (int argc, char **argv)
     rev_mapping[mapping[i]] = i;
 
   for (i = 0; i < 3; i++)
-    if (strcmp (file[i], "-") != 0)
+    if (! STREQ (file[i], "-"))
       {
 	if (stat (file[i], &statb) < 0)
 	  perror_with_exit (file[i]);
