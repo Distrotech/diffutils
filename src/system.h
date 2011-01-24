@@ -115,15 +115,6 @@ int strcasecmp (char const *, char const *);
 #define MAX(a, b) ((a) >= (b) ? (a) : (b))
 
 #include <stdbool.h>
-
-#if HAVE_VFORK_H
-# include <vfork.h>
-#endif
-
-#if ! HAVE_WORKING_VFORK
-# define vfork fork
-#endif
-
 #include <intprops.h>
 #include "propername.h"
 

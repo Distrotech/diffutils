@@ -1144,7 +1144,7 @@ read_diff (char const *filea,
   int werrno = 0;
   struct stat pipestat;
 
-#if HAVE_WORKING_FORK || HAVE_WORKING_VFORK
+#if HAVE_WORKING_FORK
 
   char const *argv[9];
   char const **ap;
@@ -1166,7 +1166,7 @@ read_diff (char const *filea,
   if (pipe (fds) != 0)
     perror_with_exit ("pipe");
 
-  pid = vfork ();
+  pid = fork ();
   if (pid == 0)
     {
       /* Child */
@@ -1255,7 +1255,7 @@ read_diff (char const *filea,
 
   *output_placement = diff_result;
 
-#if ! (HAVE_WORKING_FORK || HAVE_WORKING_VFORK)
+#if ! HAVE_WORKING_FORK
 
   wstatus = pclose (fpipe);
   if (wstatus == -1)

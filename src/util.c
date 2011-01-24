@@ -162,7 +162,7 @@ setup_output (char const *name0, char const *name1, bool recursive)
   outfile = 0;
 }
 
-#if HAVE_WORKING_FORK || HAVE_WORKING_VFORK
+#if HAVE_WORKING_FORK
 static pid_t pr_pid;
 #endif
 
@@ -192,13 +192,13 @@ begin_output (void)
 
       /* Make OUTFILE a pipe to a subsidiary `pr'.  */
       {
-#if HAVE_WORKING_FORK || HAVE_WORKING_VFORK
+#if HAVE_WORKING_FORK
 	int pipes[2];
 
 	if (pipe (pipes) != 0)
 	  pfatal_with_name ("pipe");
 
-	pr_pid = vfork ();
+	pr_pid = fork ();
 	if (pr_pid < 0)
 	  pfatal_with_name ("fork");
 
@@ -282,7 +282,7 @@ finish_output (void)
       int werrno = 0;
       if (ferror (outfile))
 	fatal ("write failed");
-#if ! (HAVE_WORKING_FORK || HAVE_WORKING_VFORK)
+#if ! HAVE_WORKING_FORK
       wstatus = pclose (outfile);
       if (wstatus == -1)
 	werrno = errno;
