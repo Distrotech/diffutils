@@ -1,4 +1,6 @@
-jESTS = \
+# tests for GNU diff
+
+TESTS = \
   basic \
   binary \
   colliding-file-names \
