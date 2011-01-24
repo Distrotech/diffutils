@@ -55,7 +55,7 @@ fail=0
 diff -u -F '^[[:space:]]*\(function\|procedure\)' in in2 > out 2> err
 test $? = 1 || fail=1
 
-tail -n+3 out > k && mv k out || fail=1
+sed -n '3,$p' out > k && mv k out || fail=1
 
 compare out exp || fail=1
 
