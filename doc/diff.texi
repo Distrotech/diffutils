@@ -283,18 +283,18 @@ It is also possible to find @samp{a} as the common line.  @command{diff}
 does not always find an optimal matching between the files; it takes
 shortcuts to run faster.  But its output is usually close to the
 shortest possible.  You can adjust this tradeoff with the
-@option{-d} or @option{--minimal} option (@pxref{diff Performance}).
+@option{--minimal} (@option{-d}) option (@pxref{diff Performance}).
 
 @node White Space
 @section Suppressing Differences in Blank and Tab Spacing
 @cindex blank and tab difference suppression
 @cindex tab and blank difference suppression
 
-The @option{-E} or @option{--ignore-tab-expansion} option ignores the
+The @option{--ignore-tab-expansion} (@option{-E}) option ignores the
 distinction between tabs and spaces on input.  A tab is considered to be
 equivalent to the number of spaces to the next tab stop (@pxref{Tabs}).
 
-The @option{-b} or @option{--ignore-space-change} option is stronger.
+The @option{--ignore-space-change} (@option{-b}) option is stronger.
 It ignores white space at line end, and considers all other sequences of
 one or more white space characters within a line to be equivalent.  With this
 option, @command{diff} considers the following two lines to be equivalent,
@@ -305,7 +305,7 @@ Here lyeth  muche rychnesse  in lytell space.   -- John Heywood$
 Here lyeth muche rychnesse in lytell space. -- John Heywood   $
 @end example
 
-The @option{-w} or @option{--ignore-all-space} option is stronger still.
+The @option{--ignore-all-space} (@option{-w}) option is stronger still.
 It ignores differences even if one line has white space where
 the other line has none.  @dfn{White space} characters include
 tab, vertical tab, form feed, carriage return, and space;
@@ -329,7 +329,7 @@ changes; it ignores only other white space changes.
 @section Suppressing Differences Whose Lines Are All Blank
 @cindex blank line difference suppression
 
-The @option{-B} or @option{--ignore-blank-lines} option ignores changes
+The @option{--ignore-blank-lines} (@option{-B}) option ignores changes
 that consist entirely of blank lines.  With this option, for example, a
 file containing
 @example
@@ -349,8 +349,8 @@ is considered identical to a file containing
 @end example
 
 Normally this option affects only lines that are completely empty, but
-if you also specify the @option{-b} or @option{--ignore-space-change}
-option, or the @option{-w} or @option{--ignore-all-space} option,
+if you also specify the @option{--ignore-space-change} (@option{-b})
+option, or the @option{--ignore-all-space} (@option{-w}) option,
 lines are also affected if they look empty but contain white space.
 In other words, @option{-B} is equivalent to @samp{-I '^$'} by
 default, but it is equivalent to @option{-I '^[[:space:]]*$'} if
@@ -361,8 +361,8 @@ default, but it is equivalent to @option{-I '^[[:space:]]*$'} if
 @cindex regular expression suppression
 
 To ignore insertions and deletions of lines that match a
-@command{grep}-style regular expression, use the @option{-I
-@var{regexp}} or @option{--ignore-matching-lines=@var{regexp}} option.
+@command{grep}-style regular expression, use the
+@option{--ignore-matching-lines=@var{regexp}} (@option{-I @var{regexp}}) option.
 You should escape
 regular expressions that contain shell metacharacters to prevent the
 shell from expanding them.  For example, @samp{diff -I '^[[:digit:]]'} ignores
@@ -396,8 +396,8 @@ stuFf} to all be the same.  To request this, use the @option{-i} or
 When you only want to find out whether files are different, and you
 don't care what the differences are, you can use the summary output
 format.  In this format, instead of showing the differences between the
-files, @command{diff} simply reports whether files differ.  The @option{-q}
-or @option{--brief} option selects this output format.
+files, @command{diff} simply reports whether files differ.  The
+@option{--brief} (@option{-q}) option selects this output format.
 
 This format is especially useful when comparing the contents of two
 directories.  It is also much faster than doing the normal line by line
@@ -442,21 +442,21 @@ non-text files.  Or you might be comparing documents that are in a
 format used by a word processing system that uses null characters to
 indicate special formatting.  You can force @command{diff} to consider all
 files to be text files, and compare them line by line, by using the
-@option{-a} or @option{--text} option.  If the files you compare using this
+@option{--text} (@option{-a}) option.  If the files you compare using this
 option do not in fact contain text, they will probably contain few
 newline characters, and the @command{diff} output will consist of hunks
 showing differences between long lines of whatever characters the files
 contain.
 
 You can also force @command{diff} to report only whether files differ
-(but not how).  Use the @option{-q} or @option{--brief} option for
+(but not how).  Use the @option{--brief} (@option{-q}) option for
 this.
 
 Normally, differing binary files count as trouble because the
 resulting @command{diff} output does not capture all the differences.
 This trouble causes @command{diff} to exit with status 2.  However,
-this trouble cannot occur with the @option{-a} or @option{--text}
-option, or with the @option{-q} or @option{--brief} option, as these
+this trouble cannot occur with the @option{--text} (@option{-a})
+option, or with the @option{--brief} (@option{-q}) option, as these
 options both cause @command{diff} to generate a form of output that
 represents differences as requested.
 
@@ -482,7 +482,7 @@ This option affects how lines are read, which in turn affects how they
 are compared and output.
 
 If you want to compare two files byte by byte, you can use the
-@command{cmp} program with the @option{-l} or @option{--verbose}
+@command{cmp} program with the @option{--verbose} (@option{-l})
 option to show the values of each differing byte in the two files.
 With @acronym{GNU} @command{cmp}, you can also use the @option{-b} or
 @option{--print-bytes} option to show the @acronym{ASCII} representation of
@@ -603,8 +603,9 @@ The context output format shows several lines of context around the
 lines that differ.  It is the standard format for distributing updates
 to source code.
 
-To select this output format, use the @option{-C @var{lines}},
-@option{--context@r{[}=@var{lines}@r{]}}, or @option{-c} option.  The
+To select this output format, use the
+@option{--context@r{[}=@var{lines}@r{]}} (@option{-C @var{lines}})
+or @option{-c} option.  The
 argument @var{lines} that some of these options take is the number of
 lines of context to show.  If you do not specify @var{lines}, it
 defaults to three.  For proper operation, @command{patch} typically needs
@@ -759,10 +760,11 @@ lines of @var{to-file} are omitted.
 
 The unified output format is a variation on the context format that is
 more compact because it omits redundant context lines.  To select this
-output format, use the @option{-U @var{lines}},
-@option{--unified@r{[}=@var{lines}@r{]}}, or @option{-u}
-option.  The argument @var{lines} is the number of lines of context to
-show.  When it is not given, it defaults to three.
+output format, use the
+@option{--unified@r{[}=@var{lines}@r{]}} (@option{-U @var{lines}}),
+or @option{-u} option.
+The argument @var{lines} is the number of lines of context to show.
+When it is not given, it defaults to three.
 
 At present, only @acronym{GNU} @command{diff} can produce this format and
 only @acronym{GNU} @command{patch} can automatically apply diffs in this
@@ -877,8 +879,9 @@ determined by a regular expression.
 @cindex regular expression matching headings
 
 To show in which sections differences occur for files that are not
-source code for C or similar languages, use the @option{-F @var{regexp}}
-or @option{--show-function-line=@var{regexp}} option.  @command{diff}
+source code for C or similar languages, use the
+@option{--show-function-line=@var{regexp}} (@option{-F @var{regexp}}) option.
+@command{diff}
 considers lines that match the @command{grep}-style regular expression
 @var{regexp} to be the beginning
 of a section of the file.  Here are suggested regular expressions for
@@ -899,7 +902,7 @@ use it, you must select the context format (@pxref{Context Format}) or
 unified format (@pxref{Unified Format}).  In other output formats it
 has no effect.
 
-The @option{-F} or @option{--show-function-line} option finds the nearest
+The @option{--show-function-line} (@option{-F}) option finds the nearest
 unchanged line that precedes each hunk of differences and matches the
 given regular expression.  Then it adds that line to the end of the
 line of asterisks in the context format, or to the @samp{@@@@} line in
@@ -916,14 +919,14 @@ means that you can use @option{-p} and @option{-F} together, if you wish.
 @cindex function headings, C
 
 To show in which functions differences occur for C and similar
-languages, you can use the @option{-p} or @option{--show-c-function} option.
+languages, you can use the @option{--show-c-function} (@option{-p}) option.
 This option automatically defaults to the context output format
 (@pxref{Context Format}), with the default number of lines of context.
 You can override that number with @option{-C @var{lines}} elsewhere in the
 command line.  You can override both the format and the number with
 @option{-U @var{lines}} elsewhere in the command line.
 
-The @option{-p} or @option{--show-c-function} option is equivalent to
+The @option{--show-c-function} (@option{-p}) option is equivalent to
 @option{-F '^[[:alpha:]$_]'} if the unified format is specified, otherwise
 @option{-c -F '^[[:alpha:]$_]'} (@pxref{Specified Headings}).  @acronym{GNU}
 @command{diff} provides this option for the sake of convenience.
@@ -1016,11 +1019,11 @@ differences.  @xref{Interactive Merging}, for more information on merging files.
 @subsection Controlling Side by Side Format
 @cindex side by side format
 
-The @option{-y} or @option{--side-by-side} option selects side by side
+The @option{--side-by-side} (@option{-y}) option selects side by side
 format.  Because side by side output lines contain two input lines, the
 output is wider than usual: normally 130 print columns, which can fit
 onto a traditional printer line.  You can set the width of the output
-with the @option{-W @var{columns}} or @option{--width=@var{columns}}
+with the @option{--width=@var{columns}} (@option{-W @var{columns}})
 option.  The output is split into two halves of equal width, separated by a
 small gutter to mark differences; the right half is aligned to a tab
 stop so that tabs line up.  Input lines that are too long to fit in half
@@ -1165,7 +1168,7 @@ to produce @var{to-file}.
 to change the first file into the second file.  Long ago, this was the
 only output mode that was suitable for editing one file into another
 automatically; today, with @command{patch}, it is almost obsolete.  Use the
-@option{-e} or @option{--ed} option to select this output format.
+@option{--ed} (@option{-e}) option to select this output format.
 
 Like the normal format (@pxref{Normal}), this output format does not
 show any context; unlike the normal format, it does not include the
@@ -1276,7 +1279,7 @@ compatibility with older versions of @command{diff}.  Use the @option{-f} or
 The @acronym{RCS} output format is designed specifically for use by
 the Revision Control System, which is a set of free programs used for
 organizing different versions and systems of files.  Use the
-@option{-n} or @option{--rcs} option to select this output format.  It
+@option{--rcs} (@option{-n}) option to select this output format.  It
 is like the forward @command{ed} format (@pxref{Forward ed}), but it
 can represent arbitrary changes to the contents of a file because it
 avoids the forward @command{ed} format's problems with lines
@@ -1776,7 +1779,7 @@ directories, it compares each file that is contained in both
 directories, examining file names in alphabetical order as specified by
 the @env{LC_COLLATE} locale category.  Normally
 @command{diff} is silent about pairs of files that contain no differences,
-but if you use the @option{-s} or @option{--report-identical-files} option,
+but if you use the @option{--report-identical-files} (@option{-s}) option,
 it reports pairs of identical files.  Normally @command{diff} reports
 subdirectories common to both directories without comparing
 subdirectories' files, but if you use the @option{-r} or
@@ -1790,7 +1793,7 @@ can make @command{diff} act as though the file existed but was empty in the
 other directory, so that it outputs the entire contents of the file that
 actually exists.  (It is output as either an insertion or a
 deletion, depending on whether it is in the first or the second
-directory given.)  To do this, use the @option{-N} or @option{--new-file}
+directory given.)  To do this, use the @option{--new-file} (@option{-N})
 option.
 
 If the older directory contains one or more large files that are not in
@@ -1803,8 +1806,9 @@ the user applying the patch to remove the files that were deleted before
 applying the patch.  @xref{Making Patches}, for more discussion of
 making patches for distribution.
 
-To ignore some files while comparing directories, use the @option{-x
-@var{pattern}} or @option{--exclude=@var{pattern}} option.  This option
+To ignore some files while comparing directories, use the
+@option{--exclude=@var{pattern}} (@option{-x @var{pattern}}) option.
+This option
 ignores any files or subdirectories whose base names match the shell
 pattern @var{pattern}.  Unlike in the shell, a period at the start of
 the base of a file name matches a wildcard at the start of a pattern.
@@ -1817,13 +1821,13 @@ using the options @option{-x 'RCS' -x '*,v'} ignores any file or
 subdirectory whose base name is @samp{RCS} or ends with @samp{,v}.
 
 If you need to give this option many times, you can instead put the
-patterns in a file, one pattern per line, and use the @option{-X
-@var{file}} or @option{--exclude-from=@var{file}} option.  Trailing
-white space and empty lines are ignored in the pattern file.
+patterns in a file, one pattern per line, and use the
+@option{--exclude-from=@var{file}} (@option{-X @var{file}}) option.
+Trailing white space and empty lines are ignored in the pattern file.
 
 If you have been comparing two directories and stopped partway through,
 later you might want to continue where you left off.  You can do this by
-using the @option{-S @var{file}} or @option{--starting-file=@var{file}}
+using the @option{--starting-file=@var{file}} (@option{-S @var{file}})
 option.  This compares only the file @var{file} and all alphabetically
 later files in the topmost directory level.
 
@@ -1838,9 +1842,8 @@ the contents of the file @file{TAO} in the other.  The
 @option{--ignore-file-name-case} option, reverting to the default
 behavior.
 
-If an @option{-x @var{pattern}} or @option{--exclude=@var{pattern}}
-option, or an @option{-X @var{file}} or
-@option{--exclude-from=@var{file}} option,
+If an @option{--exclude=@var{pattern}} (@option{-x @var{pattern}}) option,
+or an @option{--exclude-from=@var{file}} (@option{-X @var{file}}) option,
 is specified while the @option{--ignore-file-name-case} option is in
 effect, case is ignored when excluding file names matching the
 specified patterns.
@@ -1871,7 +1874,7 @@ to make tab-aligned columns line up correctly.
 
 The first way is to have @command{diff} convert all tabs into the correct
 number of spaces before outputting them; select this method with the
-@option{-t} or @option{--expand-tabs} option.  To use this form of output with
+@option{--expand-tabs} (@option{-t}) option.  To use this form of output with
 @command{patch}, you must give @command{patch} the @option{-l} or
 @option{--ignore-white-space} option (@pxref{Changed White Space}, for more
 information).  @command{diff} normally assumes that tab stops are set
@@ -1917,7 +1920,7 @@ or by transmission via email.  It is accepted by @acronym{GNU}
 @cindex paginating @command{diff} output
 
 It can be convenient to have long output page-numbered and time-stamped.
-The @option{-l} or @option{--paginate} option does this by sending the
+The @option{--paginate} (@option{-l}) option does this by sending the
 @command{diff} output through the @command{pr} program.  Here is what the page
 header might look like for @samp{diff -lc lao tzu}:
 
@@ -1956,7 +1959,7 @@ changed always comes up with a near-minimal set of differences.
 Usually it is good enough for practical purposes.  If the
 @command{diff} output is large, you might want @command{diff} to use a
 modified algorithm that sometimes produces a smaller set of
-differences.  The @option{-d} or @option{--minimal} option does this;
+differences.  The @option{--minimal} (@option{-d}) option does this;
 however, it can also cause @command{diff} to run more slowly than
 usual, so it is not the default behavior.
 
@@ -2084,7 +2087,7 @@ lines each preceded by one or two commands identifying where the lines
 came from.
 
 Normally, two spaces precede each copy of an input line to distinguish
-it from the commands.  But with the @option{-T} or @option{--initial-tab}
+it from the commands.  But with the @option{--initial-tab} (@option{-T})
 option, @command{diff3} uses a tab instead of two spaces; this lines up
 tabs correctly.  @xref{Tabs}, for more information.
 
@@ -2216,17 +2219,18 @@ output directly; this bypasses some problems with @command{ed}.
 @cindex unmerged change
 
 You can select all unmerged changes from @var{older} to @var{yours} for merging
-into @var{mine} with the @option{-e} or @option{--ed} option.  You can
-select only the nonoverlapping unmerged changes with @option{-3} or
-@option{--easy-only}, and you can select only the overlapping changes with
-@option{-x} or @option{--overlap-only}.
+into @var{mine} with the @option{--ed} (@option{-e}) option.  You can
+select only the nonoverlapping unmerged changes with
+@option{--easy-only} (@option{-3}),
+and you can select only the overlapping changes with
+@option{--overlap-only} (@option{-x}).
 
 The @option{-e}, @option{-3} and @option{-x} options select only
 @dfn{unmerged changes}, i.e.@: changes where @var{mine} and @var{yours}
 differ; they ignore changes from @var{older} to @var{yours} where
 @var{mine} and @var{yours} are identical, because they assume that such
 changes have already been merged.  If this assumption is not a safe
-one, you can use the @option{-A} or @option{--show-all} option
+one, you can use the @option{--show-all} (@option{-A}) option
 (@pxref{Marking Conflicts}).
 
 Here is the output of the command @command{diff3} with each of these three
@@ -2290,7 +2294,7 @@ marked as follows:
 >>>>>>> @var{C}
 @end example
 
-The @option{-A} or @option{--show-all} option acts like the @option{-e}
+The @option{--show-all} (@option{-A}) option acts like the @option{-e}
 option, except that it brackets conflicts, and it outputs all changes
 from @var{older} to @var{yours}, not just the unmerged changes.  Thus,
 given the sample input files (@pxref{Sample diff3 Input}), @samp{diff3
@@ -2319,8 +2323,8 @@ The door of all subtleties!
 >>>>>>> tao
 @end example
 
-The @option{-E} or @option{--show-overlap} option outputs less information
-than the @option{-A} or @option{--show-all} option, because it outputs only
+The @option{--show-overlap} (@option{-E}) option outputs less information
+than the @option{--show-all} (@option{-A}) option, because it outputs only
 unmerged changes, and it never outputs the contents of the second
 file.  Thus the @option{-E} option acts like the @option{-e} option,
 except that it brackets the first and third files from three-way
@@ -2351,7 +2355,7 @@ from files named @samp{A}, @samp{B} and @samp{C}.
 @section Generating the Merged Output Directly
 @cindex merged @command{diff3} format
 
-With the @option{-m} or @option{--merge} option, @command{diff3} outputs the
+With the @option{--merge} (@option{-m}) option, @command{diff3} outputs the
 merged file directly.  This is more efficient than using @command{ed} to
 generate it, and works even with non-text files that @command{ed} would
 reject.  If you specify @option{-m} without an @command{ed} script option,
@@ -2425,7 +2429,7 @@ The @option{-i} option requires one of the @command{ed} script options
 
 With @command{sdiff}, you can merge two files interactively based on a
 side-by-side @option{-y} format comparison (@pxref{Side by Side}).  Use
-@option{-o @var{file}} or @option{--output=@var{file}} to specify where to
+@option{--output=@var{file}} (@option{-o @var{file}}) to specify where to
 put the merged text.  @xref{Invoking sdiff}, for more details on the
 options to @command{sdiff}.
 
@@ -2466,8 +2470,8 @@ to @option{--suppress-common-lines}.  The meaning of the @command{sdiff}
 @command{diff}: with @command{sdiff}, @option{-w @var{columns}} is
 equivalent to @option{--width=@var{columns}}, and @option{-W} is
 equivalent to @option{--ignore-all-space}.  @command{sdiff} without the
-@option{-o} option is equivalent to @command{diff} with the @option{-y}
-or @option{--side-by-side} option (@pxref{Side by Side}).
+@option{-o} option is equivalent to @command{diff} with the
+@option{--side-by-side} (@option{-y}) option (@pxref{Side by Side}).
 
 @node Merge Commands
 @section Merge Commands
@@ -2616,7 +2620,7 @@ system.  Patch currently supports @acronym{RCS}, ClearCase and
 the default version in the revision control system.
 
 @vindex PATCH_GET
-The @option{-g @var{num}} or @option{--get=@var{num}} option affects access
+The @option{--get=@var{num}} (@option{-g @var{num}}) option affects access
 to files under supported revision control systems.  If @var{num} is
 positive, @command{patch} gets the file without asking the user; if
 zero, @command{patch} neither asks the user nor gets the file; and if
@@ -2676,7 +2680,7 @@ still match a line in the input file.
 
 Sometimes people run @command{diff} with the new file first instead of
 second.  This creates a diff that is ``reversed''.  To apply such
-patches, give @command{patch} the @option{-R} or @option{--reverse} option.
+patches, give @command{patch} the @option{--reverse} (@option{-R}) option.
 @command{patch} then attempts to swap each hunk around before applying it.
 Rejects come out in the swapped format.
 
@@ -2720,7 +2724,7 @@ more, it makes another scan, ignoring the first two and last two lines
 of context are ignored.  It continues similarly if the maximum fuzz
 factor is larger.
 
-The @option{-F @var{lines}} or @option{--fuzz=@var{lines}} option sets the
+The @option{--fuzz=@var{lines}} (@option{-F @var{lines}}) option sets the
 maximum fuzz factor to @var{lines}.  This option only applies to context
 and unified diffs; it ignores up to @var{lines} lines while looking for
 the place to install a hunk.  Note that a larger fuzz factor increases
@@ -2790,14 +2794,14 @@ you are satisfied with the proposed patch you can apply it by invoking
 
 Sometimes when comparing two directories, a file may exist in one
 directory but not the other.  If you give @command{diff} the
-@option{-N} or @option{--new-file} option, or if you supply an old or
+@option{--new-file} (@option{-N}) option, or if you supply an old or
 new file that is named @file{/dev/null} or is empty and is dated the
 Epoch (1970-01-01 00:00:00 UTC), @command{diff} outputs a patch that
 adds or deletes the contents of this file.  When given such a patch,
 @command{patch} normally creates a new file or removes the old file.
 However, when conforming to @acronym{POSIX} (@pxref{patch and POSIX}),
 @command{patch} does not remove the old file, but leaves it empty.
-The @option{-E} or @option{--remove-empty-files} option causes
+The @option{--remove-empty-files} (@option{-E}) option causes
 @command{patch} to remove output files that are empty after applying a
 patch, even if the patch does not appear to be one that removed the
 file.
@@ -2818,25 +2822,25 @@ date.  For example, if @file{syntax.c} depends on @file{syntax.y}, and
 @file{syntax.c} will normally appear to be out of date with respect to
 @file{syntax.y} even though its contents are actually up to date.
 
-The @option{-Z} or @option{--set-utc} option causes @command{patch} to
+The @option{--set-utc} (@option{-Z}) option causes @command{patch} to
 set a patched file's modification and access times to the time stamps
 given in context diff headers.  If the context diff headers do not
 specify a time zone, they are assumed to use Coordinated Universal
 Time (@acronym{UTC}, often known as @acronym{GMT}).
 
-The @option{-T} or @option{--set-time} option acts like @option{-Z} or
+The @option{--set-time} (@option{-T}) option acts like @option{-Z} or
 @option{--set-utc}, except that it assumes that the context diff
 headers' time stamps use local time instead of @acronym{UTC}.  This option
 is not recommended, because patches using local time cannot easily be
 used by people in other time zones, and because local time stamps are
 ambiguous when local clocks move backwards during daylight-saving time
 adjustments.  If the context diff headers specify a time zone, this
-option is equivalent to @option{-Z} or @option{--set-utc}.
+option is equivalent to @option{--set-utc} (@option{-Z}).
 
 @command{patch} normally refrains from setting a file's time stamps if
 the file's original last-modified time stamp does not match the time
 given in the diff header, of if the file's contents do not exactly
-match the patch.  However, if the @option{-f} or @option{--force}
+match the patch.  However, if the @option{--force} (@option{-f})
 option is given, the file's time stamps are set regardless.
 
 Due to the limitations of the current @command{diff} format,
@@ -2925,7 +2929,7 @@ to @acronym{POSIX}.
 @cindex directories and patch
 @cindex patching directories
 
-The @option{-d @var{directory}} or @option{--directory=@var{directory}}
+The @option{--directory=@var{directory}} (@option{-d @var{directory}})
 option to @command{patch} makes directory @var{directory} the current
 directory for interpreting both file names in the patch file, and file
 names given as arguments to other options (such as @option{-B} and
@@ -2940,7 +2944,7 @@ containing the patch like this:
 Sometimes the file names given in a patch contain leading directories,
 but you keep your files in a directory different from the one given in
 the patch.  In those cases, you can use the
-@option{-p@var{number}} or @option{--strip=@var{number}}
+@option{--strip=@var{number}} (@option{-p@var{number}})
 option to set the file name strip count to @var{number}.  The strip
 count tells @command{patch} how many slashes, along with the directory
 names between them, to strip from the front of file names.  A sequence
@@ -2969,7 +2973,7 @@ original data might not be recovered if you undo the patch with
 to @acronym{POSIX}, @command{patch} does not create backup files by
 default.  @xref{patch and POSIX}.
 
-The @option{-b} or @option{--backup} option causes @command{patch} to
+The @option{--backup} (@option{-b}) option causes @command{patch} to
 make a backup file regardless of whether the patch matches the
 original input.  The @option{--backup-if-mismatch} option causes
 @command{patch} to create backup files for mismatches files; this is
@@ -3043,10 +3047,10 @@ Always make simple backups.
 @end table
 
 You can also tell @command{patch} to prepend a prefix, such as a
-directory name, to produce backup file names.  The @option{-B
-@var{prefix}} or @option{--prefix=@var{prefix}} option makes backup
-files by prepending @var{prefix} to them.  The @option{-Y
-@var{prefix}} or @option{--basename-prefix=@var{prefix}} prepends
+directory name, to produce backup file names.  The
+@option{--prefix=@var{prefix}} (@option{-B @var{prefix}}) option makes backup
+files by prepending @var{prefix} to them.  The
+@option{--basename-prefix=@var{prefix}} (@option{-Y @var{prefix}}) prepends
 @var{prefix} to the last file name component of backup file names
 instead; for example, @option{-Y ~} causes the backup name for
 @file{dir/file.c} to be @file{dir/~file.c}.  If you use either of
@@ -3119,7 +3123,7 @@ option.
 @cindex keyboard input to @command{patch}
 
 There are two ways you can prevent @command{patch} from asking you any
-questions.  The @option{-f} or @option{--force} option assumes that you know
+questions.  The @option{--force} (@option{-f}) option assumes that you know
 what you are doing.  It causes @command{patch} to do the following:
 
 @itemize @bullet
@@ -3135,7 +3139,7 @@ Assume that patches are not reversed even if they look like they are.
 @end itemize
 
 @noindent
-The @option{-t} or @option{--batch} option is similar to @option{-f}, in that
+The @option{--batch} (@option{-t}) option is similar to @option{-f}, in that
 it suppresses questions, but it makes somewhat different assumptions:
 
 @itemize @bullet
@@ -3250,7 +3254,7 @@ patches containing @file{//} in file names.
 
 @item
 In traditional @command{patch}, backups were enabled by default.  This
-behavior is now enabled with the @option{-b} or @option{--backup}
+behavior is now enabled with the @option{--backup} (@option{-b})
 option.
 
 Conversely, in @acronym{POSIX} @command{patch}, backups are never made,
@@ -3673,7 +3677,7 @@ The non-directory file must not be @file{-}.
 If two file names are given and both are directories,
 @command{diff} compares corresponding files in both directories, in
 alphabetical order; this comparison is not recursive unless the
-@option{-r} or @option{--recursive} option is given.  @command{diff} never
+@option{--recursive} (@option{-r}) option is given.  @command{diff} never
 compares the actual contents of a directory as if it were a file.  The
 file that is fully specified may not be standard input, because standard
 input is nameless and the notion of ``file with the same name'' does not
@@ -3692,7 +3696,7 @@ they begin with @samp{-}.
 An exit status of 0 means no differences were found, 1 means some
 differences were found, and 2 means trouble.  Normally, differing
 binary files count as trouble, but this can be altered by using the
-@option{-a} or @option{--text} option, or the @option{-q} or
+@option{--text} (@option{-a}) option, or the @option{-q} or
 @option{--brief} option.
 
 @menu
@@ -3745,7 +3749,7 @@ context.
 For compatibility @command{diff} also supports an obsolete option
 syntax @option{-@var{lines}} that has effect when combined with
 @option{-c}, @option{-p}, or @option{-u}.  New scripts should use
-@option{-C @var{lines}} or @option{-U @var{lines}} instead.
+@option{-U @var{lines}} (@option{-C @var{lines}}) instead.
 
 @item --changed-group-format=@var{format}
 Use @var{format} to output a line group containing differing lines from
@@ -4331,9 +4335,9 @@ and @var{to-file} may not begin with @samp{-}.  However, @option{--} as an
 argument by itself treats the remaining arguments as file names even if
 they begin with @samp{-}.  You may not use @file{-} as an input file.
 
-@command{sdiff} without @option{-o} (or @option{--output}) produces a
-side-by-side difference.  This usage is obsolete; use the @option{-y}
-or @option{--side-by-side} option of @command{diff} instead.
+@command{sdiff} without @option{--output} (@option{-o}) produces a
+side-by-side difference.  This usage is obsolete; use the
+@option{--side-by-side} (@option{-y}) option of @command{diff} instead.
 
 An exit status of 0 means no differences were found, 1 means some
 differences were found, and 2 means trouble.
