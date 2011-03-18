@@ -860,7 +860,7 @@ static char const * const option_help_msgid[] = {
   "",
   N_("-c  -C NUM  --context[=NUM]  Output NUM (default 3) lines of copied context.\n\
 -u  -U NUM  --unified[=NUM]  Output NUM (default 3) lines of unified context.\n\
-  --label LABEL  Use LABEL instead of file name.\n\
+  -L LABEL  --label=LABEL  Use LABEL instead of file name.\n\
   -p  --show-c-function  Show which C function each change is in.\n\
   -F RE  --show-function-line=RE  Show the most recent line matching RE."),
   N_("-q  --brief  Output only whether files differ."),
