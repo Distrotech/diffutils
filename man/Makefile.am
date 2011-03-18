@@ -18,9 +18,11 @@
 dist_man1_MANS = cmp.1 diff.1 diff3.1 sdiff.1
 MAINTAINERCLEANFILES = $(dist_man1_MANS)
 
+EXTRA_DIST = diff.x
+
 S = $(top_srcdir)/src
 cmp.1: $S/cmp.c
-diff.1: $S/diff.c
+diff.1: $S/diff.c diff.x
 diff3.1: $S/diff3.c
 sdiff.1: $S/sdiff.c
 
@@ -28,5 +30,6 @@ sdiff.1: $S/sdiff.c
 $(dist_man1_MANS): $(top_srcdir)/configure.ac
 	$(AM_V_GEN)base=`expr $@ : '\(.*\).1'` && \
 	  (echo '[NAME]' && sed 's@/\* *@@; s/-/\\-/; q' $S/$$base.c) | \
-	  $(HELP2MAN) -i - -S '$(PACKAGE) $(VERSION)' ../src/$$base | \
-	  sed 's/^\.B info .*/.B info diff/' >$@
+	  $(HELP2MAN) -i - -i $(srcdir)/$$base.x -S '$(PACKAGE) $(VERSION)' \
+                ../src/$$base \
+            | sed 's/^\.B info .*/.B info diff/' >$@
