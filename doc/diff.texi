@@ -3814,7 +3814,8 @@ Ignore case when comparing file names during recursive comparison.
 @itemx --paginate
 Pass the output through @command{pr} to paginate it.  @xref{Pagination}.
 
-@item --label=@var{label}
+@item -L @var{label}
+@itemx --label=@var{label}
 Use @var{label} instead of the file name in the context format
 (@pxref{Context Format}) and unified format (@pxref{Unified Format})
 headers.  @xref{RCS}.
