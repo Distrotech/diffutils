@@ -64,3 +64,5 @@ config-save:
 	mkdir -p $(_cf_state_dir)/$(_date_time)
 	ln -nsf $(_date_time) $(_cf_state_dir)/latest
 	cp lib/config.h config.status $(_cf_state_dir)/latest
+
+exclude_file_name_regexp--sc_space_tab = ^gl/lib/.*\.c\.diff$$
