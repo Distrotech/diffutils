@@ -62,5 +62,5 @@ config-save:
 	$(MAKE) --quiet config-compare > /dev/null 2>&1 \
 	  && { echo no change; exit 1; } || :
 	mkdir -p $(_cf_state_dir)/$(_date_time)
-	ln -nsf $(date_time) $(_cf_state_dir)/latest
+	ln -nsf $(_date_time) $(_cf_state_dir)/latest
 	cp lib/config.h config.status $(_cf_state_dir)/latest
