@@ -5,8 +5,10 @@
 .deps
 .dirstamp
 .gdb-history
+/ABOUT-NLS
 /GNUmakefile
 /INSTALL
+/README-release
 /aclocal.m4
 /config.cache
 /config.log
