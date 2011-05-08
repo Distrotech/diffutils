@@ -17,8 +17,6 @@
 
 bin_PROGRAMS = cmp diff diff3 sdiff
 
-noinst_HEADERS = system.h
-
 localedir = $(datadir)/locale
 
 AM_CPPFLAGS = -I../lib -I$(top_srcdir)/lib
@@ -41,8 +39,9 @@ cmp_SOURCES = cmp.c
 diff3_SOURCES = diff3.c
 sdiff_SOURCES = sdiff.c
 diff_SOURCES = \
-  analyze.c context.c diff.c diff.h dir.c ed.c ifdef.c io.c \
+  analyze.c context.c diff.c dir.c ed.c ifdef.c io.c \
   normal.c side.c util.c
+noinst_HEADERS = diff.h system.h
 
 MOSTLYCLEANFILES = paths.h paths.ht
 
