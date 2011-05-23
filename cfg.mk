@@ -39,7 +39,7 @@ update-copyright-env = \
   UPDATE_COPYRIGHT_USE_INTERVALS=1 \
   UPDATE_COPYRIGHT_MAX_LINE_LENGTH=79
 
-include $(srcdir)/dist-check.mk
+-include $(srcdir)/dist-check.mk
 
 gendocs_options_ = -s $(srcdir)/diff.texi
 
@@ -66,3 +66,6 @@ config-save:
 	cp lib/config.h config.status $(_cf_state_dir)/latest
 
 exclude_file_name_regexp--sc_space_tab = ^gl/lib/.*\.c\.diff$$
+
+# Tell gnulib's tight_scope rule that we mark externs with XTERN
+export _gl_TS_extern = extern|XTERN
