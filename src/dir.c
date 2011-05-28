@@ -161,9 +161,7 @@ compare_names (char const *name1, char const *name2)
       return r;
     }
 
-  return (ignore_file_name_case
-	  ? strcasecmp (name1, name2)
-	  : file_name_cmp (name1, name2));
+  return file_name_cmp (name1, name2);
 }
 
 /* Compare names FILE1 and FILE2 when sorting a directory.
