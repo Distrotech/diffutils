@@ -166,30 +166,30 @@ check_stdout (void)
 }
 
 static char const * const option_help_msgid[] = {
-  N_("-o FILE  --output=FILE  Operate interactively, sending output to FILE."),
+  N_("-o, --output=FILE            operate interactively, sending output to FILE"),
   "",
-  N_("-i  --ignore-case  Consider upper- and lower-case to be the same."),
-  N_("-E  --ignore-tab-expansion  Ignore changes due to tab expansion."),
-  N_("-b  --ignore-space-change  Ignore changes in the amount of white space."),
-  N_("-W  --ignore-all-space  Ignore all white space."),
-  N_("-B  --ignore-blank-lines  Ignore changes whose lines are all blank."),
-  N_("-I RE  --ignore-matching-lines=RE  Ignore changes whose lines all match RE."),
-  N_("--strip-trailing-cr  Strip trailing carriage return on input."),
-  N_("-a  --text  Treat all files as text."),
+  N_("-i, --ignore-case            consider upper- and lower-case to be the same"),
+  N_("-E, --ignore-tab-expansion   ignore changes due to tab expansion"),
+  N_("-b, --ignore-space-change    ignore changes in the amount of white space"),
+  N_("-W, --ignore-all-space       ignore all white space"),
+  N_("-B, --ignore-blank-lines     ignore changes whose lines are all blank"),
+  N_("-I, --ignore-matching-lines=RE  ignore changes whose lines all match RE"),
+  N_("    --strip-trailing-cr      strip trailing carriage return on input"),
+  N_("-a, --text                   treat all files as text"),
   "",
-  N_("-w NUM  --width=NUM  Output at most NUM (default 130) print columns."),
-  N_("-l  --left-column  Output only the left column of common lines."),
-  N_("-s  --suppress-common-lines  Do not output common lines."),
+  N_("-w, --width=NUM              output at most NUM (default 130) print columns"),
+  N_("-l, --left-column            output only the left column of common lines"),
+  N_("-s, --suppress-common-lines  do not output common lines"),
   "",
-  N_("-t  --expand-tabs  Expand tabs to spaces in output."),
-  N_("--tabsize=NUM  Tab stops are every NUM (default 8) print columns."),
+  N_("-t, --expand-tabs            expand tabs to spaces in output"),
+  N_("    --tabsize=NUM            tab stops at every NUM (default 8) print columns"),
   "",
-  N_("-d  --minimal  Try hard to find a smaller set of changes."),
-  N_("-H  --speed-large-files  Assume large files and many scattered small changes."),
-  N_("--diff-program=PROGRAM  Use PROGRAM to compare files."),
+  N_("-d, --minimal                try hard to find a smaller set of changes"),
+  N_("-H, --speed-large-files      assume large files, many scattered small changes"),
+  N_("    --diff-program=PROGRAM   use PROGRAM to compare files"),
   "",
-  N_("-v  --version  Output version info."),
-  N_("--help  Output this help."),
+  N_("    --help                   display this help and exit"),
+  N_("-v, --version                output version information and exit"),
   0
 };
 
@@ -199,7 +199,12 @@ usage (void)
   char const * const *p;
 
   printf (_("Usage: %s [OPTION]... FILE1 FILE2\n"), program_name);
-  printf ("%s\n\n", _("Side-by-side merge of file differences."));
+  printf ("%s\n\n",
+          _("Side-by-side merge of differences between FILE1 and FILE2."));
+
+  fputs (_("\
+Mandatory arguments to long options are mandatory for short options too.\n\
+"), stdout);
   for (p = option_help_msgid;  *p;  p++)
     if (**p)
       printf ("  %s\n", _(*p));
