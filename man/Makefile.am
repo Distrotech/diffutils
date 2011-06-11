@@ -31,5 +31,4 @@ $(dist_man1_MANS): $(top_srcdir)/configure.ac
 	$(AM_V_GEN)base=`expr $@ : '\(.*\).1'` && \
 	  (echo '[NAME]' && sed 's@/\* *@@; s/-/\\-/; q' $S/$$base.c) | \
 	  $(HELP2MAN) -i - -i $(srcdir)/$$base.x -S '$(PACKAGE) $(VERSION)' \
-                ../src/$$base \
-            | sed 's/^\.B info .*/.B info diff/' >$@
+                ../src/$$base > $@-t && mv $@-t $@

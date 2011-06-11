@@ -1,6 +1,6 @@
 \input texinfo @c -*-texinfo-*-
 @comment %**start of header
-@setfilename diff.info
+@setfilename diffutils.info
 @include version.texi
 @settitle Comparing and Merging Files
 @syncodeindex vr cp
@@ -36,16 +36,16 @@ supports it in developing GNU and promoting software freedom.''
 @c first dircategory.  Put this one first, as it is more useful in practice.
 @dircategory Individual utilities
 @direntry
-* cmp: (diff)Invoking cmp.                      Compare 2 files byte by byte.
-* diff: (diff)Invoking diff.                    Compare 2 files line by line.
-* diff3: (diff)Invoking diff3.                  Compare 3 files line by line.
-* patch: (diff)Invoking patch.                  Apply a patch to a file.
-* sdiff: (diff)Invoking sdiff.                  Merge 2 files side-by-side.
+* cmp: (diffutils)Invoking cmp.                 Compare 2 files byte by byte.
+* diff: (diffutils)Invoking diff.               Compare 2 files line by line.
+* diff3: (diffutils)Invoking diff3.             Compare 3 files line by line.
+* patch: (diffutils)Invoking patch.             Apply a patch to a file.
+* sdiff: (diffutils)Invoking sdiff.             Merge 2 files side-by-side.
 @end direntry
 
 @dircategory Text creation and manipulation
 @direntry
-* Diff: (diff).                 Comparing and merging files.
+* Diffutils: (diffutils).       Comparing and merging files.
 @end direntry
 
 @titlepage

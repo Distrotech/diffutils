@@ -8,10 +8,10 @@ Please see the file COPYING for copying conditions.
 
 Please see the file doc/version.texi for version information.
 
-Please see the file doc/diff.texi (or doc/diff.info) for documentation
-that can be printed with TeX, or read with the `info' program or with
-Emacs's `M-x info'.  Brief man pages are in man/*, but they are no
-substitute for the documentation.
+Please see the file doc/diffutils.texi (or doc/diffutils.info) for
+documentation that can be printed with TeX, or read with the `info'
+program or with Emacs's `M-x info'.  Brief man pages are in man/*,
+but they are no substitute for the documentation.
 
 Please see the file ABOUT-NLS for notes about translations.
 

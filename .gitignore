@@ -17,7 +17,7 @@
 /diffutils-*.tar.gz
 /diffutils-*.tar.xz
 /doc/.gitignore
-/doc/diff.info
+/doc/diffutils.info
 /doc/stamp-vti
 /doc/version.texi
 /gnulib-tests

@@ -17,7 +17,7 @@
 
 AM_MAKEINFOFLAGS = --no-split
 
-info_TEXINFOS = diff.texi
-diff_TEXINFOS = fdl.texi
+info_TEXINFOS = diffutils.texi
+diffutils_TEXINFOS = fdl.texi
 
 EXTRA_DIST = diagmeet.note

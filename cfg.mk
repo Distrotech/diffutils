@@ -41,8 +41,6 @@ update-copyright-env = \
 
 -include $(srcdir)/dist-check.mk
 
-gendocs_options_ = -s $(srcdir)/diff.texi
-
 _cf_state_dir ?= .config-state
 _date_time := $(shell date +%F.%T)
 config-compare:
