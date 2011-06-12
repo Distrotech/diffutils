@@ -18,13 +18,13 @@
 dist_man1_MANS = cmp.1 diff.1 diff3.1 sdiff.1
 MAINTAINERCLEANFILES = $(dist_man1_MANS)
 
-EXTRA_DIST = diff.x
+EXTRA_DIST = $(dist_man1_MANS:%.1=%.x)
 
 S = $(top_srcdir)/src
-cmp.1: $S/cmp.c
+cmp.1: $S/cmp.c cmp.x
 diff.1: $S/diff.c diff.x
-diff3.1: $S/diff3.c
-sdiff.1: $S/sdiff.c
+diff3.1: $S/diff3.c diff3.x
+sdiff.1: $S/sdiff.c sdiff.x
 
 # Depend on configure.ac to get version number changes.
 $(dist_man1_MANS): $(top_srcdir)/configure.ac
