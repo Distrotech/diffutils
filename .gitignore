@@ -65,4 +65,5 @@ src/diff
 src/diff3
 src/paths.h
 src/sdiff
+src/version.[ch]
 tests/*.log

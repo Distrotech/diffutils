@@ -117,6 +117,7 @@ int strcasecmp (char const *, char const *);
 #include <stdbool.h>
 #include <intprops.h>
 #include "propername.h"
+#include "version.h"
 
 /* Type used for fast comparison of several bytes at a time.  */
 

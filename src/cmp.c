@@ -248,7 +248,7 @@ main (int argc, char **argv)
 	break;
 
       case 'v':
-	version_etc (stdout, PROGRAM_NAME, PACKAGE_NAME, PACKAGE_VERSION,
+	version_etc (stdout, PROGRAM_NAME, PACKAGE_NAME, Version,
 		     AUTHORS, (char *) NULL);
 	check_stdout ();
 	return EXIT_SUCCESS;
