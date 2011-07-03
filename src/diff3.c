@@ -28,7 +28,6 @@
 #include <exitfail.h>
 #include <file-type.h>
 #include <getopt.h>
-#include <inttostr.h>
 #include <progname.h>
 #include <sh-quote.h>
 #include <version-etc.h>

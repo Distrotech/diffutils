@@ -20,7 +20,6 @@
 
 #include "diff.h"
 #include "c-ctype.h"
-#include <inttostr.h>
 #include <stat-time.h>
 #include <strftime.h>
 
