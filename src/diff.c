@@ -880,7 +880,7 @@ static char const * const option_help_msgid[] = {
   "",
   N_("-i, --ignore-case               ignore case differences in file contents"),
   N_("-E, --ignore-tab-expansion      ignore changes due to tab expansion"),
-  N_("-b  --ignore-space-change       ignore changes in the amount of white space"),
+  N_("-b, --ignore-space-change       ignore changes in the amount of white space"),
   N_("-w, --ignore-all-space          ignore all white space"),
   N_("-B, --ignore-blank-lines        ignore changes whose lines are all blank"),
   N_("-I, --ignore-matching-lines=RE  ignore changes whose lines all match RE"),
