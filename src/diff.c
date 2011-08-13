@@ -1170,7 +1170,7 @@ compare_files (struct comparison const *parent,
       char const *fnm = cmp.file[fnm_arg].name;
       char const *dir = cmp.file[dir_arg].name;
       char const *filename = cmp.file[dir_arg].name = free0
-	= file_name_concat (dir, last_component (fnm), NULL);
+	= find_dir_file_pathname (dir, last_component (fnm));
 
       if (STREQ (fnm, "-"))
 	fatal ("cannot compare `-' to a directory");

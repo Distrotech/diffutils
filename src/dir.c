@@ -21,6 +21,7 @@
 #include "diff.h"
 #include <error.h>
 #include <exclude.h>
+#include <filenamecat.h>
 #include <setjmp.h>
 #include <xalloc.h>
 
@@ -315,4 +316,49 @@ dir_loop (struct comparison const *cmp, int i)
     if (0 < same_file (&p->file[i].stat, &cmp->file[i].stat))
       return true;
   return false;
+}
+
+/* Find a matching filename in a directory.  */
+
+char *
+find_dir_file_pathname (char const *dir, char const *file)
+{
+  char *val;
+  char const *match = file;
+  struct dirdata dirdata;
+  dirdata.names = NULL;
+  dirdata.data = NULL;
+
+  if (ignore_file_name_case)
+    {
+      struct file_data filedata;
+      filedata.name = dir;
+      filedata.desc = 0;
+
+      if (dir_read (&filedata, &dirdata))
+	{
+	  locale_specific_sorting = true;
+	  if (setjmp (failed_locale_specific_sorting))
+	    match = file; /* longjmp may mess up MATCH.  */
+	  else
+	    {
+	      for (char const **p = dirdata.names; *p; p++)
+		if (compare_names (*p, file) == 0)
+		  {
+		    if (file_name_cmp (*p, file) == 0)
+		      {
+			match = *p;
+			break;
+		      }
+		    if (match == file)
+		      match = *p;
+		  }
+	    }
+	}
+    }
+
+  val = file_name_concat (dir, match, NULL);
+  free (dirdata.names);
+  free (dirdata.data);
+  return val;
 }

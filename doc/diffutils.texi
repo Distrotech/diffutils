@@ -3802,7 +3802,10 @@ Ignore changes that just insert or delete lines that match @var{regexp}.
 @xref{Specified Lines}.
 
 @item --ignore-file-name-case
-Ignore case when comparing file names during recursive comparison.
+Ignore case when comparing file names.  For example, recursive
+comparison of @file{d} to @file{e} might compare the contents of
+@file{d/Init} and @file{e/inIt}.  At the top level, @samp{diff d inIt}
+might compare the contents of @file{d/Init} and @file{inIt}.
 @xref{Comparing Directories}.
 
 @item -l
