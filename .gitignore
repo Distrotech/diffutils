@@ -31,7 +31,9 @@
 /lib/config.hin
 /lib/configmake.h
 /lib/stamp-h1
+/lib/unistr
 /lib/uniwidth
+/lib/unused-parameter.h
 /lib/warn-on-use.h
 /m4/.gitignore
 /maint.mk
