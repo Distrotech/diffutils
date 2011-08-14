@@ -106,6 +106,14 @@ enum DIFF_white_space
   /* Ignore changes due to tab expansion (-E).  */
   IGNORE_TAB_EXPANSION,
 
+  /* Ignore changes in trailing horizontal white space (-Z).  */
+  IGNORE_TRAILING_SPACE,
+
+  /* IGNORE_TAB_EXPANSION and IGNORE_TRAILING_SPACE are a special case
+     because they are independent and can be ORed together, yielding
+     IGNORE_TAB_EXPANSION_AND_TRAILING_SPACE.  */
+  IGNORE_TAB_EXPANSION_AND_TRAILING_SPACE,
+
   /* Ignore changes in horizontal white space (-b).  */
   IGNORE_SPACE_CHANGE,
 

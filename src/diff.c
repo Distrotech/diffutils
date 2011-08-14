@@ -107,7 +107,7 @@ static bool unidirectional_new_file;
 static bool report_identical_files;
 
 static char const shortopts[] =
-"0123456789abBcC:dD:eEfF:hHiI:lL:nNpPqrsS:tTuU:vwW:x:X:y";
+"0123456789abBcC:dD:eEfF:hHiI:lL:nNpPqrsS:tTuU:vwW:x:X:yZ";
 
 /* Values for long options that do not have single-letter equivalents.  */
 enum
@@ -178,6 +178,7 @@ static struct option const longopts[] =
   {"ignore-matching-lines", 1, 0, 'I'},
   {"ignore-space-change", 0, 0, 'b'},
   {"ignore-tab-expansion", 0, 0, 'E'},
+  {"ignore-trailing-space", 0, 0, 'Z'},
   {"inhibit-hunk-merge", 0, 0, INHIBIT_HUNK_MERGE_OPTION},
   {"initial-tab", 0, 0, 'T'},
   {"label", 1, 0, 'L'},
@@ -320,6 +321,11 @@ main (int argc, char **argv)
 	    ignore_white_space = IGNORE_SPACE_CHANGE;
 	  break;
 
+	case 'Z':
+	  if (ignore_white_space < IGNORE_SPACE_CHANGE)
+	    ignore_white_space |= IGNORE_TRAILING_SPACE;
+	  break;
+
 	case 'B':
 	  ignore_blank_lines = true;
 	  break;
@@ -381,8 +387,8 @@ main (int argc, char **argv)
 	  break;
 
 	case 'E':
-	  if (ignore_white_space < IGNORE_TAB_EXPANSION)
-	    ignore_white_space = IGNORE_TAB_EXPANSION;
+	  if (ignore_white_space < IGNORE_SPACE_CHANGE)
+	    ignore_white_space |= IGNORE_TAB_EXPANSION;
 	  break;
 
 	case 'f':
@@ -880,6 +886,7 @@ static char const * const option_help_msgid[] = {
   "",
   N_("-i, --ignore-case               ignore case differences in file contents"),
   N_("-E, --ignore-tab-expansion      ignore changes due to tab expansion"),
+  N_("-Z, --ignore-trailing-space     ignore white space at line end"),
   N_("-b, --ignore-space-change       ignore changes in the amount of white space"),
   N_("-w, --ignore-all-space          ignore all white space"),
   N_("-B, --ignore-blank-lines        ignore changes whose lines are all blank"),

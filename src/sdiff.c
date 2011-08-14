@@ -132,6 +132,7 @@ static struct option const longopts[] =
   {"ignore-matching-lines", 1, 0, 'I'},
   {"ignore-space-change", 0, 0, 'b'},
   {"ignore-tab-expansion", 0, 0, 'E'},
+  {"ignore-trailing-space", 0, 0, 'Z'},
   {"left-column", 0, 0, 'l'},
   {"minimal", 0, 0, 'd'},
   {"output", 1, 0, 'o'},
@@ -170,6 +171,7 @@ static char const * const option_help_msgid[] = {
   "",
   N_("-i, --ignore-case            consider upper- and lower-case to be the same"),
   N_("-E, --ignore-tab-expansion   ignore changes due to tab expansion"),
+  N_("-Z, --ignore-trailing-space  ignore white space at line end"),
   N_("-b, --ignore-space-change    ignore changes in the amount of white space"),
   N_("-W, --ignore-all-space       ignore all white space"),
   N_("-B, --ignore-blank-lines     ignore changes whose lines are all blank"),
@@ -458,7 +460,7 @@ main (int argc, char *argv[])
   diffarg (DEFAULT_DIFF_PROGRAM);
 
   /* parse command line args */
-  while ((opt = getopt_long (argc, argv, "abBdEHiI:lo:stvw:W", longopts, 0))
+  while ((opt = getopt_long (argc, argv, "abBdEHiI:lo:stvw:WZ", longopts, 0))
 	 != -1)
     {
       switch (opt)
@@ -525,6 +527,10 @@ main (int argc, char *argv[])
 
 	case 'W':
 	  diffarg ("-w");
+	  break;
+
+	case 'Z':
+	  diffarg ("-Z");
 	  break;
 
 	case DIFF_PROGRAM_OPTION:

@@ -395,6 +395,33 @@ lines_differ (char const *s1, char const *s2)
 
 	      break;
 
+	    case IGNORE_TRAILING_SPACE:
+	    case IGNORE_TAB_EXPANSION_AND_TRAILING_SPACE:
+	      if (isspace (c1) && isspace (c2))
+		{
+		  unsigned char c;
+		  if (c1 != '\n')
+		    {
+		      char const *p = t1;
+		      while ((c = *p) != '\n' && isspace (c))
+			++p;
+		      if (c != '\n')
+			break;
+		    }
+		  if (c2 != '\n')
+		    {
+		      char const *p = t2;
+		      while ((c = *p) != '\n' && isspace (c))
+			++p;
+		      if (c != '\n')
+			break;
+		    }
+		  /* Both lines have nothing but whitespace left.  */
+		  return false;
+		}
+	      if (ignore_white_space == IGNORE_TRAILING_SPACE)
+		break;
+	      /* Fall through.  */
 	    case IGNORE_TAB_EXPANSION:
 	      if ((c1 == ' ' && c2 == '\t')
 		  || (c1 == '\t' && c2 == ' '))
@@ -674,8 +701,11 @@ analyze_hunk (struct change *hunk,
   size_t trivial_length = ignore_blank_lines - 1;
     /* If 0, ignore zero-length lines;
        if SIZE_MAX, do not ignore lines just because of their length.  */
+
+  bool skip_white_space =
+    ignore_blank_lines && IGNORE_TRAILING_SPACE <= ignore_white_space;
   bool skip_leading_white_space =
-    (ignore_blank_lines && IGNORE_SPACE_CHANGE <= ignore_white_space);
+    skip_white_space && IGNORE_SPACE_CHANGE <= ignore_white_space;
 
   char const * const *linbuf0 = files[0].linbuf;  /* Help the compiler.  */
   char const * const *linbuf1 = files[1].linbuf;
@@ -699,9 +729,14 @@ analyze_hunk (struct change *hunk,
 	  char const *newline = linbuf0[i + 1] - 1;
 	  size_t len = newline - line;
 	  char const *p = line;
-	  if (skip_leading_white_space)
-	    while (isspace ((unsigned char) *p) && *p != '\n')
-	      p++;
+	  if (skip_white_space)
+	    for (; *p != '\n'; p++)
+	      if (! isspace ((unsigned char) *p))
+		{
+		  if (! skip_leading_white_space)
+		    p = line;
+		  break;
+		}
 	  if (newline - p != trivial_length
 	      && (! ignore_regexp.fastmap
 		  || re_search (&ignore_regexp, line, len, 0, len, 0) < 0))
@@ -714,9 +749,14 @@ analyze_hunk (struct change *hunk,
 	  char const *newline = linbuf1[i + 1] - 1;
 	  size_t len = newline - line;
 	  char const *p = line;
-	  if (skip_leading_white_space)
-	    while (isspace ((unsigned char) *p) && *p != '\n')
-	      p++;
+	  if (skip_white_space)
+	    for (; *p != '\n'; p++)
+	      if (! isspace ((unsigned char) *p))
+		{
+		  if (! skip_leading_white_space)
+		    p = line;
+		  break;
+		}
 	  if (newline - p != trivial_length
 	      && (! ignore_regexp.fastmap
 		  || re_search (&ignore_regexp, line, len, 0, len, 0) < 0))

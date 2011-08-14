@@ -289,7 +289,11 @@ The @option{--ignore-tab-expansion} (@option{-E}) option ignores the
 distinction between tabs and spaces on input.  A tab is considered to be
 equivalent to the number of spaces to the next tab stop (@pxref{Tabs}).
 
-The @option{--ignore-space-change} (@option{-b}) option is stronger.
+The @option{--ignore-trailing-space} (@option{-Z}) option ignores white
+space at line end.
+
+The @option{--ignore-space-change} (@option{-b}) option is stronger than
+@option{-E} and @option{-Z} combined.
 It ignores white space at line end, and considers all other sequences of
 one or more white space characters within a line to be equivalent.  With this
 option, @command{diff} considers the following two lines to be equivalent,
@@ -344,12 +348,11 @@ is considered identical to a file containing
 @end example
 
 Normally this option affects only lines that are completely empty, but
-if you also specify the @option{--ignore-space-change} (@option{-b})
-option, or the @option{--ignore-all-space} (@option{-w}) option,
+if you also specify an option that ignores trailing spaces,
 lines are also affected if they look empty but contain white space.
 In other words, @option{-B} is equivalent to @samp{-I '^$'} by
 default, but it is equivalent to @option{-I '^[[:space:]]*$'} if
-@option{-b} or @option{-w} is also specified.
+@option{-b}, @option{-w} or @option{-Z} is also specified.
 
 @node Specified Lines
 @section Suppressing Differences Whose Lines All Match a Regular Expression
@@ -2446,12 +2449,12 @@ The following @command{sdiff} options have the same meaning as for
 
 @example
 -a -b -d -i -t -v
--B -E -I @var{regexp}
+-B -E -I @var{regexp} -Z
 
 --expand-tabs
 --ignore-blank-lines  --ignore-case
 --ignore-matching-lines=@var{regexp}  --ignore-space-change
---ignore-tab-expansion
+--ignore-tab-expansion  --ignore-trailing-space
 --left-column  --minimal  --speed-large-files
 --strip-trailing-cr  --suppress-common-lines
 --tabsize=@var{columns}  --text  --version  --width=@var{columns}
@@ -3966,6 +3969,10 @@ match any pattern contained in @var{file}.  @xref{Comparing Directories}.
 @item -y
 @itemx --side-by-side
 Use the side by side output format.  @xref{Side by Side Format}.
+
+@item -Z
+@itemx --ignore-trailing-space
+Ignore white space at line end.  @xref{White Space}.
 @end table
 
 @node Invoking diff3
@@ -4446,6 +4453,10 @@ option is @option{-W} in @command{diff}, @option{-w} in @command{sdiff}.
 Ignore white space when comparing lines.  @xref{White Space}.
 Note that for historical reasons, this option is @option{-w} in @command{diff},
 @option{-W} in @command{sdiff}.
+
+@item -Z
+@itemx --ignore-trailing-space
+Ignore white space at line end.  @xref{White Space}.
 @end table
 
 @node Standards conformance

@@ -255,36 +255,53 @@ find_and_hash_each_line (struct file_data *current)
 	    break;
 
 	  case IGNORE_TAB_EXPANSION:
+	  case IGNORE_TAB_EXPANSION_AND_TRAILING_SPACE:
+	  case IGNORE_TRAILING_SPACE:
 	    {
 	      size_t column = 0;
 	      while ((c = *p++) != '\n')
 		{
-		  size_t repetitions = 1;
-
-		  switch (c)
+		  if (ignore_white_space & IGNORE_TRAILING_SPACE
+		      && isspace (c))
 		    {
-		    case '\b':
-		      column -= 0 < column;
-		      break;
-
-		    case '\t':
-		      c = ' ';
-		      repetitions = tabsize - column % tabsize;
-		      column = (column + repetitions < column
-				? 0
-				: column + repetitions);
-		      break;
-
-		    case '\r':
-		      column = 0;
-		      break;
-
-		    default:
-		      c = tolower (c);
-		      column++;
-		      break;
+		      char const *p1 = p;
+		      unsigned char c1;
+		      do
+			if ((c1 = *p1++) == '\n')
+			  {
+			    p = p1;
+			    goto hashing_done;
+			  }
+		      while (isspace (c1));
 		    }
 
+		  size_t repetitions = 1;
+
+		  if (ignore_white_space & IGNORE_TAB_EXPANSION)
+		    switch (c)
+		      {
+		      case '\b':
+			column -= 0 < column;
+			break;
+
+		      case '\t':
+			c = ' ';
+			repetitions = tabsize - column % tabsize;
+			column = (column + repetitions < column
+				  ? 0
+				  : column + repetitions);
+			break;
+
+		      case '\r':
+			column = 0;
+			break;
+
+		      default:
+			column++;
+			break;
+		      }
+
+		  c = tolower (c);
 		  do
 		    h = HASH (h, c);
 		  while (--repetitions != 0);
@@ -325,34 +342,51 @@ find_and_hash_each_line (struct file_data *current)
 	    break;
 
 	  case IGNORE_TAB_EXPANSION:
+	  case IGNORE_TAB_EXPANSION_AND_TRAILING_SPACE:
+	  case IGNORE_TRAILING_SPACE:
 	    {
 	      size_t column = 0;
 	      while ((c = *p++) != '\n')
 		{
 		  size_t repetitions = 1;
 
-		  switch (c)
+		  if (ignore_white_space & IGNORE_TRAILING_SPACE
+		      && isspace (c))
 		    {
-		    case '\b':
-		      column -= 0 < column;
-		      break;
-
-		    case '\t':
-		      c = ' ';
-		      repetitions = tabsize - column % tabsize;
-		      column = (column + repetitions < column
-				? 0
-				: column + repetitions);
-		      break;
-
-		    case '\r':
-		      column = 0;
-		      break;
-
-		    default:
-		      column++;
-		      break;
+		      char const *p1 = p;
+		      unsigned char c1;
+		      do
+			if ((c1 = *p1++) == '\n')
+			  {
+			    p = p1;
+			    goto hashing_done;
+			  }
+		      while (isspace (c1));
 		    }
+
+		  if (ignore_white_space & IGNORE_TAB_EXPANSION)
+		    switch (c)
+		      {
+		      case '\b':
+			column -= 0 < column;
+			break;
+
+		      case '\t':
+			c = ' ';
+			repetitions = tabsize - column % tabsize;
+			column = (column + repetitions < column
+				  ? 0
+				  : column + repetitions);
+			break;
+
+		      case '\r':
+			column = 0;
+			break;
+
+		      default:
+			column++;
+			break;
+		      }
 
 		  do
 		    h = HASH (h, c);
@@ -381,7 +415,7 @@ find_and_hash_each_line (struct file_data *current)
 	     complete line, put it into buckets[-1] so that it can
 	     compare equal only to the other file's incomplete line
 	     (if one exists).  */
-	  if (ignore_white_space < IGNORE_SPACE_CHANGE)
+	  if (ignore_white_space < IGNORE_TRAILING_SPACE)
 	    bucket = &buckets[-1];
 	}
 

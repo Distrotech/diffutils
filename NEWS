@@ -7,6 +7,10 @@ GNU diffutils NEWS                                    -*- outline -*-
   --ignore-file-name-case now applies at the top level too.
   For example, "diff dir inIt" might compare "dir/Init" to "inIt".
 
+** New features
+
+  diff and sdiff have a new option --ignore-trailing-space (-Z).
+
 * Noteworthy changes in release 3.1 (2011-08-10) [stable]
 
 ** Bug fixes
