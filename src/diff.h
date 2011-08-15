@@ -335,7 +335,7 @@ extern void print_context_script (struct change *, bool);
 extern int diff_dirs (struct comparison const *,
                       int (*) (struct comparison const *,
                                char const *, char const *));
-char *find_dir_file_pathname (char const *, char const *);
+extern char *find_dir_file_pathname (char const *, char const *);
 
 /* ed.c */
 extern void print_ed_script (struct change *);
