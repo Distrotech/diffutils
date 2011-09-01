@@ -11,6 +11,12 @@ GNU diffutils NEWS                                    -*- outline -*-
 
   diff and sdiff have a new option --ignore-trailing-space (-Z).
 
+** Packaging
+
+  The texinfo documentation no longer specifies "front-cover" or "back-cover"
+  texts, so that it may now be included in Debian's "main" section.
+
+
 * Noteworthy changes in release 3.1 (2011-08-10) [stable]
 
 ** Bug fixes
