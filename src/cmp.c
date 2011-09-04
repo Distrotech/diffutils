@@ -33,7 +33,7 @@
 #include <unlocked-io.h>
 #include <version-etc.h>
 #include <xalloc.h>
-#include <xfreopen.h>
+#include <binary-io.h>
 #include <xstrtol.h>
 
 /* The official name of this program (e.g., no `g' prefix).  */
@@ -293,7 +293,7 @@ main (int argc, char **argv)
 	{
 	  file_desc[f1] = STDIN_FILENO;
 	  if (O_BINARY && ! isatty (STDIN_FILENO))
-	    xfreopen (NULL, "rb", stdin);
+	    SET_BINARY (STDIN_FILENO);
 	}
       else
 	file_desc[f1] = open (file[f1], O_RDONLY | O_BINARY, 0);

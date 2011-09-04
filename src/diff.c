@@ -39,7 +39,7 @@
 #include <timespec.h>
 #include <version-etc.h>
 #include <xalloc.h>
-#include <xfreopen.h>
+#include <binary-io.h>
 
 /* The official name of this program (e.g., no `g' prefix).  */
 #define PROGRAM_NAME "diff"
@@ -525,7 +525,7 @@ main (int argc, char **argv)
 #if O_BINARY
 	  binary = true;
 	  if (! isatty (STDOUT_FILENO))
-	    xfreopen (NULL, "wb", stdout);
+	    SET_BINARY (STDOUT_FILENO);
 #endif
 	  break;
 
@@ -1108,7 +1108,7 @@ compare_files (struct comparison const *parent,
 	    {
 	      cmp.file[f].desc = STDIN_FILENO;
 	      if (O_BINARY && binary && ! isatty (STDIN_FILENO))
-		xfreopen (NULL, "rb", stdin);
+		SET_BINARY (STDIN_FILENO);
 	      if (fstat (STDIN_FILENO, &cmp.file[f].stat) != 0)
 		cmp.file[f].desc = ERRNO_ENCODE (errno);
 	      else
