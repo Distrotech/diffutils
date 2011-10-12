@@ -21,7 +21,6 @@ EXTRA_DIST = \
 TESTS_ENVIRONMENT =				\
   tmp__=$$TMPDIR; test -d "$$tmp__" || tmp__=.;	\
   TMPDIR=$$tmp__; export TMPDIR;		\
-  exec 9>&2;					\
   export					\
   VERSION='$(VERSION)'				\
   abs_top_builddir='$(abs_top_builddir)'	\
@@ -40,7 +39,7 @@ TESTS_ENVIRONMENT =				\
   PREFERABLY_POSIX_SHELL='$(PREFERABLY_POSIX_SHELL)' \
   REPLACE_GETCWD=$(REPLACE_GETCWD)		\
   PATH='$(abs_top_builddir)/src$(PATH_SEPARATOR)'"$$PATH" \
-  ;
+  ; 9>&2
 
 LOG_COMPILER= $(SHELL)
 
