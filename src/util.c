@@ -477,13 +477,13 @@ lines_differ (char const *s1, char const *s2)
 /* Find the consecutive changes at the start of the script START.
    Return the last link before the first gap.  */
 
-struct change *
+struct change * _GL_ATTRIBUTE_CONST
 find_change (struct change *start)
 {
   return start;
 }
 
-struct change *
+struct change * _GL_ATTRIBUTE_CONST
 find_reverse_change (struct change *start)
 {
   return start;
@@ -635,7 +635,7 @@ char const change_letter[] = { 0, 'd', 'a', 'c' };
    Internal line numbers count from 0 starting after the prefix.
    Actual line numbers count from 1 within the entire file.  */
 
-lin
+lin _GL_ATTRIBUTE_PURE
 translate_line_number (struct file_data const *file, lin i)
 {
   return i + file->prefix_lines + 1;

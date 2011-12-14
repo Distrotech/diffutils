@@ -16,4 +16,4 @@
    along with this program.  If not, see <http://www.gnu.org/licenses/>.  */
 
 size_t block_read (int, char *, size_t);
-size_t buffer_lcm (size_t, size_t, size_t);
+size_t buffer_lcm (size_t, size_t, size_t) _GL_ATTRIBUTE_CONST;

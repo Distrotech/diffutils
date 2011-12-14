@@ -51,7 +51,7 @@
 
 static int cmp (void);
 static off_t file_position (int);
-static size_t block_compare (word const *, word const *);
+static size_t block_compare (word const *, word const *) _GL_ATTRIBUTE_PURE;
 static size_t block_compare_and_count (word const *, word const *, off_t *);
 static void sprintc (char *, unsigned char);
 

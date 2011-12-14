@@ -394,7 +394,7 @@ pr_unidiff_hunk (struct change *hunk)
    2*CONTEXT unchanged lines appear, and return a pointer
    to the `struct change' for the last change before those lines.  */
 
-static struct change *
+static struct change * _GL_ATTRIBUTE_PURE
 find_hunk (struct change *start)
 {
   struct change *prev;

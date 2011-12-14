@@ -1045,7 +1045,7 @@ process_diff (char const *filea,
 
 /* Skip tabs and spaces, and return the first character after them.  */
 
-static char *
+static char * _GL_ATTRIBUTE_PURE
 skipwhite (char *s)
 {
   while (*s == ' ' || *s == '\t')
