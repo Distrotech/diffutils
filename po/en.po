@@ -1,5 +1,5 @@
 # English messages for GNU diffutils
-# Copyright 1998, 2001-2003, 2009-2011 Free Software Foundation, Inc.
+# Copyright 1998, 2001-2003, 2009-2012 Free Software Foundation, Inc.
 # Paul Eggert <eggert@twinsun.com>, 1998
 #
 msgid ""
