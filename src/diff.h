@@ -135,6 +135,10 @@ XTERN bool ignore_case;
 /* Ignore differences in case of letters in file names.  */
 XTERN bool ignore_file_name_case;
 
+/* Act on symbolic links themselves rather than on their target
+   (--no-dereference).  */
+XTERN bool no_dereference_symlinks;
+
 /* File labels for `-c' output headers (--label).  */
 XTERN char *file_label[2];
 

@@ -39,6 +39,7 @@
 #include <timespec.h>
 #include <version-etc.h>
 #include <xalloc.h>
+#include <xreadlink.h>
 #include <binary-io.h>
 
 /* The official name of this program (e.g., no `g' prefix).  */
@@ -120,6 +121,7 @@ enum
   INHIBIT_HUNK_MERGE_OPTION,
   LEFT_COLUMN_OPTION,
   LINE_FORMAT_OPTION,
+  NO_DEREFERENCE_OPTION,
   NO_IGNORE_FILE_NAME_CASE_OPTION,
   NORMAL_OPTION,
   SDIFF_MERGE_ASSIST_OPTION,
@@ -188,6 +190,7 @@ static struct option const longopts[] =
   {"new-file", 0, 0, 'N'},
   {"new-group-format", 1, 0, NEW_GROUP_FORMAT_OPTION},
   {"new-line-format", 1, 0, NEW_LINE_FORMAT_OPTION},
+  {"no-dereference", 0, 0, NO_DEREFERENCE_OPTION},
   {"no-ignore-file-name-case", 0, 0, NO_IGNORE_FILE_NAME_CASE_OPTION},
   {"normal", 0, 0, NORMAL_OPTION},
   {"old-group-format", 1, 0, OLD_GROUP_FORMAT_OPTION},
@@ -564,6 +567,10 @@ main (int argc, char **argv)
 	    specify_value (&line_format[i], optarg, "--line-format");
 	  break;
 
+	case NO_DEREFERENCE_OPTION:
+	  no_dereference_symlinks = true;
+	  break;
+
 	case NO_IGNORE_FILE_NAME_CASE_OPTION:
 	  ignore_file_name_case = false;
 	  break;
@@ -872,6 +879,7 @@ static char const * const option_help_msgid[] = {
   N_("-l, --paginate                pass output through `pr' to paginate it"),
   "",
   N_("-r, --recursive                 recursively compare any subdirectories found"),
+  N_("    --no-dereference            don't follow symbolic links"),
   N_("-N, --new-file                  treat absent files as empty"),
   N_("    --unidirectional-new-file   treat absent first files as empty"),
   N_("    --ignore-file-name-case     ignore case when comparing file names"),
@@ -1128,7 +1136,10 @@ compare_files (struct comparison const *parent,
 		  set_mtime_to_now (&cmp.file[f].stat);
 		}
 	    }
-	  else if (stat (cmp.file[f].name, &cmp.file[f].stat) != 0)
+	  else if ((no_dereference_symlinks
+		    ? lstat (cmp.file[f].name, &cmp.file[f].stat)
+		    : stat (cmp.file[f].name, &cmp.file[f].stat))
+		   != 0)
 	    cmp.file[f].desc = ERRNO_ENCODE (errno);
 	}
     }
@@ -1182,7 +1193,10 @@ compare_files (struct comparison const *parent,
       if (STREQ (fnm, "-"))
 	fatal ("cannot compare `-' to a directory");
 
-      if (stat (filename, &cmp.file[dir_arg].stat) != 0)
+      if ((no_dereference_symlinks
+	   ? lstat (filename, &cmp.file[dir_arg].stat)
+	   : stat (filename, &cmp.file[dir_arg].stat))
+	  != 0)
 	{
 	  perror_with_name (filename);
 	  status = EXIT_TROUBLE;
@@ -1229,8 +1243,10 @@ compare_files (struct comparison const *parent,
     }
   else if ((DIR_P (0) | DIR_P (1))
 	   || (parent
-	       && (! S_ISREG (cmp.file[0].stat.st_mode)
-		   || ! S_ISREG (cmp.file[1].stat.st_mode))))
+	       && !((S_ISREG (cmp.file[0].stat.st_mode)
+		     || S_ISLNK (cmp.file[0].stat.st_mode))
+		    && (S_ISREG (cmp.file[1].stat.st_mode)
+			|| S_ISLNK  (cmp.file[1].stat.st_mode)))))
     {
       if (cmp.file[0].desc == NONEXISTENT || cmp.file[1].desc == NONEXISTENT)
 	{
@@ -1261,6 +1277,56 @@ compare_files (struct comparison const *parent,
 	  /* We have two files that are not to be compared.  */
 
 	  /* See POSIX 1003.1-2001 for this format.  */
+	  message5 ("File %s is a %s while file %s is a %s\n",
+		    file_label[0] ? file_label[0] : cmp.file[0].name,
+		    file_type (&cmp.file[0].stat),
+		    file_label[1] ? file_label[1] : cmp.file[1].name,
+		    file_type (&cmp.file[1].stat));
+
+	  /* This is a difference.  */
+	  status = EXIT_FAILURE;
+	}
+    }
+  else if (S_ISLNK (cmp.file[0].stat.st_mode)
+	   || S_ISLNK (cmp.file[1].stat.st_mode))
+    {
+      /* We get here only if we use lstat(), not stat().  */
+      assert (no_dereference_symlinks);
+
+      if (S_ISLNK (cmp.file[0].stat.st_mode)
+	  && S_ISLNK (cmp.file[1].stat.st_mode))
+	{
+	  /* Compare the values of the symbolic links.  */
+	  char *link_value[2] = { NULL, NULL };
+
+	  for (f = 0; f < 2; f++)
+	    {
+	      link_value[f] = xreadlink (cmp.file[f].name);
+	      if (link_value[f] == NULL)
+		{
+		  perror_with_name (cmp.file[f].name);
+		  status = EXIT_TROUBLE;
+		  break;
+		}
+	    }
+	  if (status == EXIT_SUCCESS)
+	    {
+	      if (strcmp (link_value[0], link_value[1]) != 0)
+		{
+		  message ("Symbolic links %s and %s differ\n",
+			   cmp.file[0].name, cmp.file[1].name);
+		  /* This is a difference.  */
+		  status = EXIT_FAILURE;
+		}
+	    }
+	  for (f = 0; f < 2; f++)
+	    free (link_value[f]);
+	}
+      else
+	{
+	  /* We have two files that are not to be compared, because
+	     one of them is a symbolic link and the other one is not.  */
+
 	  message5 ("File %s is a %s while file %s is a %s\n",
 		    file_label[0] ? file_label[0] : cmp.file[0].name,
 		    file_type (&cmp.file[0].stat),

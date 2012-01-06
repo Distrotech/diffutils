@@ -8,6 +8,7 @@ TESTS = \
   help-version	\
   function-line-vs-leading-space \
   label-vs-func	\
+  no-dereference \
   no-newline-at-eof \
   stdin
 
