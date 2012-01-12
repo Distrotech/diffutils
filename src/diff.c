@@ -1311,7 +1311,7 @@ compare_files (struct comparison const *parent,
 	    }
 	  if (status == EXIT_SUCCESS)
 	    {
-	      if (strcmp (link_value[0], link_value[1]) != 0)
+	      if ( ! STREQ (link_value[0], link_value[1]))
 		{
 		  message ("Symbolic links %s and %s differ\n",
 			   cmp.file[0].name, cmp.file[1].name);
