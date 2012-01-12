@@ -15,6 +15,17 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+AM_CFLAGS =
+BUILT_SOURCES =
+CLEANFILES =
+EXTRA_DIST =
+MOSTLYCLEANDIRS =
+MOSTLYCLEANFILES =
+MAINTAINERCLEANFILES =
+SUFFIXES =
+noinst_LIBRARIES =
+noinst_HEADERS =
+
 include gnulib.mk
 
 noinst_HEADERS += cmpbuf.h prepargs.h
