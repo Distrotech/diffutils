@@ -134,7 +134,7 @@ if not errorlevel 1 mv -f %XSRC%/m4/Makefile.am.in %XSRC%/m4/Makefile.am-in
 
 Rem This is required because DOS/Windows are case-insensitive
 Rem to file names, and "make install" will do nothing if Make
-Rem finds a file called `install'.
+Rem finds a file called 'install'.
 if exist INSTALL ren INSTALL INSTALL.txt
 
 Rem Set HOME to a sane default so configure stops complaining.

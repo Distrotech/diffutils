@@ -132,7 +132,7 @@ format_group (register FILE *out, char const *format, char endchar,
 	    break;
 
 	  case '(':
-	    /* Print if-then-else format e.g. `%(n=1?thenpart:elsepart)'.  */
+	    /* Print if-then-else format e.g. '%(n=1?thenpart:elsepart)'.  */
 	    {
 	      int i;
 	      uintmax_t value[2];

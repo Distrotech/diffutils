@@ -85,7 +85,7 @@ dir_read (struct file_data const *dir, struct dirdata *dirdata)
       dirdata->data = data = xmalloc (data_alloc);
 
       /* Read the directory entries, and insert the subfiles
-	 into the `data' table.  */
+	 into the 'data' table.  */
 
       while ((errno = 0, (next = readdir (reading)) != 0))
 	{
@@ -126,7 +126,7 @@ dir_read (struct file_data const *dir, struct dirdata *dirdata)
 #endif
     }
 
-  /* Create the `names' table from the `data' table.  */
+  /* Create the 'names' table from the 'data' table.  */
   if (PTRDIFF_MAX / sizeof *names - 1 <= nnames)
     xalloc_die ();
   dirdata->names = names = xmalloc ((nnames + 1) * sizeof *names);
@@ -155,7 +155,7 @@ compare_names (char const *name1, char const *name2)
 	r = strcoll (name1, name2);
       if (errno)
 	{
-	  error (0, errno, _("cannot compare file names `%s' and `%s'"),
+	  error (0, errno, _("cannot compare file names '%s' and '%s'"),
 		 name1, name2);
 	  longjmp (failed_locale_specific_sorting, 1);
 	}
@@ -235,7 +235,7 @@ diff_dirs (struct comparison const *cmp,
 	qsort (names[i], dirdata[i].nnames, sizeof *dirdata[i].names,
 	       compare_names_for_qsort);
 
-      /* If `-S name' was given, and this is the topmost level of comparison,
+      /* If '-S name' was given, and this is the topmost level of comparison,
 	 ignore all file names less than the specified starting name.  */
 
       if (starting_file && ! cmp->parent)

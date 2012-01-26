@@ -20,14 +20,14 @@
 
 #include <config.h>
 
-/* Use this to suppress gcc's `...may be used before initialized' warnings. */
+/* Use this to suppress gcc's "...may be used before initialized" warnings. */
 #ifdef lint
 # define IF_LINT(Code) Code
 #else
 # define IF_LINT(Code) /* empty */
 #endif
 
-/* Define `__attribute__' and `volatile' first
+/* Define '__attribute__' and 'volatile' first
    so that they're used consistently in all system includes.  */
 #if __GNUC__ < 2 || (__GNUC__ == 2 && __GNUC_MINOR__ < 6) || __STRICT_ANSI__
 # define __attribute__(x)
@@ -99,7 +99,7 @@ int strcasecmp (char const *, char const *);
    - It's typically faster.
    POSIX 1003.1-2001 says that only '0' through '9' are digits.
    Prefer ISDIGIT to isdigit unless it's important to use the locale's
-   definition of `digit' even when the host does not conform to POSIX.  */
+   definition of 'digit' even when the host does not conform to POSIX.  */
 #define ISDIGIT(c) ((unsigned int) (c) - '0' <= 9)
 
 #include <errno.h>

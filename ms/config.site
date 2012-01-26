@@ -73,6 +73,6 @@ MAKEINFO=${MAKEINFO='makeinfo'}
 # Force the test for 'ln -s' to report 'cp -pf'.
 ac_cv_prog_LN_S='cp -pf'
 
-# We have `fork', but it always fails.  Don't trust Autoconf to be
+# We have 'fork', but it always fails.  Don't trust Autoconf to be
 # smart enough to detect that...
 ac_cv_func_fork=no

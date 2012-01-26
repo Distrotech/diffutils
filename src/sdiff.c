@@ -35,7 +35,7 @@
 #include <version-etc.h>
 #include <xalloc.h>
 
-/* The official name of this program (e.g., no `g' prefix).  */
+/* The official name of this program (e.g., no 'g' prefix).  */
 #define PROGRAM_NAME "sdiff"
 
 #define AUTHORS \
@@ -91,7 +91,7 @@ static int const sigs[] = {
 };
 
 #if HAVE_SIGACTION
-  /* Prefer `sigaction' if available, since `signal' can lose signals.  */
+  /* Prefer 'sigaction' if available, since 'signal' can lose signals.  */
   static struct sigaction initial_action[NUM_SIGS];
 # define initial_handler(i) (initial_action[i].sa_handler)
   static void signal_handler (int, void (*) (int));
@@ -152,7 +152,7 @@ try_help (char const *reason_msgid, char const *operand)
 {
   if (reason_msgid)
     error (0, 0, _(reason_msgid), operand);
-  error (EXIT_TROUBLE, 0, _("Try `%s --help' for more information."),
+  error (EXIT_TROUBLE, 0, _("Try '%s --help' for more information."),
 	 program_name);
   abort ();
 }
@@ -213,7 +213,7 @@ Mandatory arguments to long options are mandatory for short options too.\n\
     else
       putchar ('\n');
   printf ("\n%s\n%s\n",
-	  _("If a FILE is `-', read standard input."),
+	  _("If a FILE is '-', read standard input."),
 	  _("Exit status is 0 if inputs are the same, 1 if different, 2 if trouble."));
   emit_bug_reporting_address ();
 }
@@ -269,12 +269,12 @@ check_child_status (int werrno, int wstatus, int max_ok_status,
     {
       error (0, werrno,
 	     _(status == 126
-	       ? "subsidiary program `%s' could not be invoked"
+	       ? "subsidiary program '%s' could not be invoked"
 	       : status == 127
-	       ? "subsidiary program `%s' not found"
+	       ? "subsidiary program '%s' not found"
 	       : status == INT_MAX
-	       ? "subsidiary program `%s' failed"
-	       : "subsidiary program `%s' failed (exit status %d)"),
+	       ? "subsidiary program '%s' failed"
+	       : "subsidiary program '%s' failed (exit status %d)"),
 	     subsidiary_program, status);
       exiterr ();
     }
@@ -559,9 +559,9 @@ main (int argc, char *argv[])
   if (argc - optind != 2)
     {
       if (argc - optind < 2)
-	try_help ("missing operand after `%s'", argv[argc - 1]);
+	try_help ("missing operand after '%s'", argv[argc - 1]);
       else
-	try_help ("extra operand `%s'", argv[optind + 2]);
+	try_help ("extra operand '%s'", argv[optind + 2]);
     }
 
   if (! output)
@@ -706,7 +706,7 @@ main (int argc, char *argv[])
 	exit (WEXITSTATUS (wstatus));
       }
     }
-  return EXIT_SUCCESS;			/* Fool `-Wall'.  */
+  return EXIT_SUCCESS;			/* Fool '-Wall'.  */
 }
 
 static void

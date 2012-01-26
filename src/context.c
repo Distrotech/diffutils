@@ -158,7 +158,7 @@ print_context_function (FILE *out, char const *function)
 
 /* Print a portion of an edit script in context format.
    HUNK is the beginning of the portion to be printed.
-   The end is marked by a `link' that has been nulled out.
+   The end is marked by a 'link' that has been nulled out.
 
    Prints out lines from both files, and precedes each
    line with the appropriate flag-character.  */
@@ -288,7 +288,7 @@ print_unidiff_number_range (struct file_data const *file, lin a, lin b)
 
 /* Print a portion of an edit script in unidiff format.
    HUNK is the beginning of the portion to be printed.
-   The end is marked by a `link' that has been nulled out.
+   The end is marked by a 'link' that has been nulled out.
 
    Prints out lines from both files, and precedes each
    line with the appropriate flag-character.  */
@@ -392,7 +392,7 @@ pr_unidiff_hunk (struct change *hunk)
 
 /* Scan a (forward-ordered) edit script for the first place that more than
    2*CONTEXT unchanged lines appear, and return a pointer
-   to the `struct change' for the last change before those lines.  */
+   to the 'struct change' for the last change before those lines.  */
 
 static struct change * _GL_ATTRIBUTE_PURE
 find_hunk (struct change *start)
@@ -430,7 +430,7 @@ find_hunk (struct change *start)
   return prev;
 }
 
-/* Set the `ignore' flag properly in each change in SCRIPT.
+/* Set the 'ignore' flag properly in each change in SCRIPT.
    It should be 1 if all the lines inserted or deleted in that change
    are ignorable lines.  */
 
@@ -458,7 +458,7 @@ mark_ignorable (struct change *script)
 }
 
 /* Find the last function-header line in LINBUF prior to line number LINENUM.
-   This is a line containing a match for the regexp in `function_regexp'.
+   This is a line containing a match for the regexp in 'function_regexp'.
    Return the address of the text, or NULL if no function-header is found.  */
 
 static char const *

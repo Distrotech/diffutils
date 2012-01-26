@@ -3190,7 +3190,7 @@ characters.
 @c locale.
 @c @item locale
 @c @c Use @t instead of @samp to avoid duplicate quoting in some output styles.
-@c Like @samp{clocale}, but quote @t{`like this'} instead of @t{"like
+@c Like @samp{clocale}, but quote @t{'like this'} instead of @t{"like
 @c this"} in the default C locale.  This looks nicer on many displays.
 @end table
 

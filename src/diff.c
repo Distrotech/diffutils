@@ -42,7 +42,7 @@
 #include <xreadlink.h>
 #include <binary-io.h>
 
-/* The official name of this program (e.g., no `g' prefix).  */
+/* The official name of this program (e.g., no 'g' prefix).  */
 #define PROGRAM_NAME "diff"
 
 #define AUTHORS \
@@ -59,9 +59,9 @@
 struct regexp_list
 {
   char *regexps;	/* chars representing disjunction of the regexps */
-  size_t len;		/* chars used in `regexps' */
-  size_t size;		/* size malloc'ed for `regexps'; 0 if not malloc'ed */
-  bool multiple_regexps;/* Does `regexps' represent a disjunction?  */
+  size_t len;		/* chars used in 'regexps' */
+  size_t size;		/* size malloc'ed for 'regexps'; 0 if not malloc'ed */
+  bool multiple_regexps;/* Does 'regexps' represent a disjunction?  */
   struct re_pattern_buffer *buf;
 };
 
@@ -94,13 +94,13 @@ enum { binary = true };
 
 /* When comparing directories, if a file appears only in one
    directory, treat it as present but empty in the other (-N).
-   Then `patch' would create the file with appropriate contents.  */
+   Then 'patch' would create the file with appropriate contents.  */
 static bool new_file;
 
 /* When comparing directories, if a file appears only in the second
    directory of the two, treat it as present but empty in the other
    (--unidirectional-new-file).
-   Then `patch' would create the file with appropriate contents.  */
+   Then 'patch' would create the file with appropriate contents.  */
 static bool unidirectional_new_file;
 
 /* Report files compared that are the same (-s).
@@ -340,7 +340,7 @@ main (int argc, char **argv)
 	      {
 		numval = strtoumax (optarg, &numend, 10);
 		if (*numend)
-		  try_help ("invalid context length `%s'", optarg);
+		  try_help ("invalid context length '%s'", optarg);
 		if (LIN_MAX < numval)
 		  numval = LIN_MAX;
 	      }
@@ -515,7 +515,7 @@ main (int argc, char **argv)
 	case 'W':
 	  numval = strtoumax (optarg, &numend, 10);
 	  if (! (0 < numval && numval <= SIZE_MAX) || *numend)
-	    try_help ("invalid width `%s'", optarg);
+	    try_help ("invalid width '%s'", optarg);
 	  if (width != numval)
 	    {
 	      if (width)
@@ -544,7 +544,7 @@ main (int argc, char **argv)
 	case HORIZON_LINES_OPTION:
 	  numval = strtoumax (optarg, &numend, 10);
 	  if (*numend)
-	    try_help ("invalid horizon length `%s'", optarg);
+	    try_help ("invalid horizon length '%s'", optarg);
 	  horizon_lines = MAX (horizon_lines, MIN (numval, LIN_MAX));
 	  break;
 
@@ -599,7 +599,7 @@ main (int argc, char **argv)
 	case TABSIZE_OPTION:
 	  numval = strtoumax (optarg, &numend, 10);
 	  if (! (0 < numval && numval <= SIZE_MAX) || *numend)
-	    try_help ("invalid tabsize `%s'", optarg);
+	    try_help ("invalid tabsize '%s'", optarg);
 	  if (tabsize != numval)
 	    {
 	      if (tabsize)
@@ -758,9 +758,9 @@ main (int argc, char **argv)
 	  if (argc - optind != 2)
 	    {
 	      if (argc - optind < 2)
-		try_help ("missing operand after `%s'", argv[argc - 1]);
+		try_help ("missing operand after '%s'", argv[argc - 1]);
 	      else
-		try_help ("extra operand `%s'", argv[optind + 2]);
+		try_help ("extra operand '%s'", argv[optind + 2]);
 	    }
 
 	  exit_status = compare_files (NULL, argv[optind], argv[optind + 1]);
@@ -840,7 +840,7 @@ try_help (char const *reason_msgid, char const *operand)
 {
   if (reason_msgid)
     error (0, 0, _(reason_msgid), operand);
-  error (EXIT_TROUBLE, 0, _("Try `%s --help' for more information."),
+  error (EXIT_TROUBLE, 0, _("Try '%s --help' for more information."),
 	 program_name);
   abort ();
 }
@@ -876,7 +876,7 @@ static char const * const option_help_msgid[] = {
   N_("-T, --initial-tab             make tabs line up by prepending a tab"),
   N_("    --tabsize=NUM             tab stops every NUM (default 8) print columns"),
   N_("    --suppress-blank-empty    suppress space or tab before empty output lines"),
-  N_("-l, --paginate                pass output through `pr' to paginate it"),
+  N_("-l, --paginate                pass output through 'pr' to paginate it"),
   "",
   N_("-r, --recursive                 recursively compare any subdirectories found"),
   N_("    --no-dereference            don't follow symbolic links"),
@@ -906,13 +906,13 @@ static char const * const option_help_msgid[] = {
   N_("    --binary                    read and write data in binary mode"),
 #endif
   "",
-  N_("-D, --ifdef=NAME                output merged file with `#ifdef NAME' diffs"),
+  N_("-D, --ifdef=NAME                output merged file with '#ifdef NAME' diffs"),
   N_("    --GTYPE-group-format=GFMT   format GTYPE input groups with GFMT"),
   N_("    --line-format=LFMT          format all input lines with LFMT"),
   N_("    --LTYPE-line-format=LFMT    format LTYPE input lines with LFMT"),
   N_("  These format options provide fine-grained control over the output\n"
      "    of diff, generalizing -D/--ifdef."),
-  N_("  LTYPE is `old', `new', or `unchanged'.  GTYPE is LTYPE or `changed'."),
+  N_("  LTYPE is 'old', 'new', or 'unchanged'.  GTYPE is LTYPE or 'changed'."),
   N_("  GFMT (only) may contain:\n\
     %<  lines from FILE1\n\
     %>  lines from FILE2\n\
@@ -942,9 +942,9 @@ static char const * const option_help_msgid[] = {
   N_("    --help               display this help and exit"),
   N_("-v, --version            output version information and exit"),
   "",
-  N_("FILES are `FILE1 FILE2' or `DIR1 DIR2' or `DIR FILE...' or `FILE... DIR'."),
+  N_("FILES are 'FILE1 FILE2' or 'DIR1 DIR2' or 'DIR FILE...' or 'FILE... DIR'."),
   N_("If --from-file or --to-file is given, there are no restrictions on FILE(s)."),
-  N_("If a FILE is `-', read standard input."),
+  N_("If a FILE is '-', read standard input."),
   N_("Exit status is 0 if inputs are the same, 1 if different, 2 if trouble."),
   0
 };
@@ -989,7 +989,7 @@ specify_value (char const **var, char const *value, char const *option)
 {
   if (*var && ! STREQ (*var, value))
     {
-      error (0, 0, _("conflicting %s option value `%s'"), option, value);
+      error (0, 0, _("conflicting %s option value '%s'"), option, value);
       try_help (NULL, NULL);
     }
   *var = value;
@@ -1191,7 +1191,7 @@ compare_files (struct comparison const *parent,
 	= find_dir_file_pathname (dir, last_component (fnm));
 
       if (STREQ (fnm, "-"))
-	fatal ("cannot compare `-' to a directory");
+	fatal ("cannot compare '-' to a directory");
 
       if ((no_dereference_symlinks
 	   ? lstat (filename, &cmp.file[dir_arg].stat)

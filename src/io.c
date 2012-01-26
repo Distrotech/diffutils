@@ -57,10 +57,10 @@ static size_t nbuckets;
    The number of an equivalence class is its index in this array.  */
 static struct equivclass *equivs;
 
-/* Index of first free element in the array `equivs'.  */
+/* Index of first free element in the array 'equivs'.  */
 static lin equivs_index;
 
-/* Number of elements allocated in the array `equivs'.  */
+/* Number of elements allocated in the array 'equivs'.  */
 static lin equivs_alloc;
 
 /* Read a block of data into a file buffer, checking for EOF and error.  */

@@ -61,7 +61,7 @@ enum output_style
   /* Output the differences in a unified context diff format (-u).  */
   OUTPUT_UNIFIED,
 
-  /* Output the differences as commands suitable for `ed' (-e).  */
+  /* Output the differences as commands suitable for 'ed' (-e).  */
   OUTPUT_ED,
 
   /* Output the diff as a forward ed script (-f).  */
@@ -139,7 +139,7 @@ XTERN bool ignore_file_name_case;
    (--no-dereference).  */
 XTERN bool no_dereference_symlinks;
 
-/* File labels for `-c' output headers (--label).  */
+/* File labels for '-c' output headers (--label).  */
 XTERN char *file_label[2];
 
 /* Regexp to identify function-header lines (-F).  */
@@ -215,8 +215,8 @@ XTERN bool minimal;
 /* The strftime format to use for time strings.  */
 XTERN char const *time_format;
 
-/* The result of comparison is an "edit script": a chain of `struct change'.
-   Each `struct change' represents one place where some lines are deleted
+/* The result of comparison is an "edit script": a chain of 'struct change'.
+   Each 'struct change' represents one place where some lines are deleted
    and some are inserted.
 
    LINE0 and LINE1 are the first affected lines in the two files (origin 0).

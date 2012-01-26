@@ -34,7 +34,7 @@
 #include <xalloc.h>
 #include <xfreopen.h>
 
-/* The official name of this program (e.g., no `g' prefix).  */
+/* The official name of this program (e.g., no 'g' prefix).  */
 #define PROGRAM_NAME "diff3"
 
 #define AUTHORS \
@@ -158,7 +158,7 @@ static bool overlap_only;
 /* If nonzero, show information for DIFF_2ND diffs.  */
 static bool show_2nd;
 
-/* If nonzero, include `:wq' at the end of the script
+/* If nonzero, include ':wq' at the end of the script
    to write out the file being edited.   */
 static bool finalwrite;
 
@@ -315,9 +315,9 @@ main (int argc, char **argv)
   if (argc - optind != 3)
     {
       if (argc - optind < 3)
-	try_help ("missing operand after `%s'", argv[argc - 1]);
+	try_help ("missing operand after '%s'", argv[argc - 1]);
       else
-	try_help ("extra operand `%s'", argv[optind + 3]);
+	try_help ("extra operand '%s'", argv[optind + 3]);
     }
 
   file = &argv[optind];
@@ -350,7 +350,7 @@ main (int argc, char **argv)
 	 file instead.  */
       common = 3 - common;
       if (STREQ (file[0], "-") || STREQ (file[common], "-"))
-	fatal ("`-' specified for more than one input file");
+	fatal ("'-' specified for more than one input file");
     }
 
   mapping[0] = 0;
@@ -411,7 +411,7 @@ try_help (char const *reason_msgid, char const *operand)
   if (reason_msgid)
     error (0, 0, _(reason_msgid), operand);
   error (EXIT_TROUBLE, 0,
-	 _("Try `%s --help' for more information."), program_name);
+	 _("Try '%s --help' for more information."), program_name);
   abort ();
 }
 
@@ -433,7 +433,7 @@ static char const * const option_help_msgid[] = {
   N_("-3, --easy-only             like -e, but incorporate only nonoverlapping changes"),
   N_("-x, --overlap-only          like -e, but incorporate only overlapping changes"),
   N_("-X                          like -x, but bracket conflicts"),
-  N_("-i                          append `w' and `q' commands to ed scripts"),
+  N_("-i                          append 'w' and 'q' commands to ed scripts"),
   "",
   N_("-m, --merge                 output actual merged file, according to\n"
      "                                -A if no other options are given"),
@@ -478,7 +478,7 @@ Finally, the -m (--merge) option causes diff3 to do the merge internally\n\
 and output the actual merged file.  For unusual input, this is more\n\
 robust than using ed.\n"), stdout);
   printf ("\n%s\n%s\n",
-	  _("If a FILE is `-', read standard input."),
+	  _("If a FILE is '-', read standard input."),
 	  _("Exit status is 0 if successful, 1 if conflicts, 2 if trouble."));
   emit_bug_reporting_address ();
 }
@@ -1293,12 +1293,12 @@ read_diff (char const *filea,
   if (EXIT_TROUBLE <= status)
     error (EXIT_TROUBLE, werrno,
 	   _(status == 126
-	     ? "subsidiary program `%s' could not be invoked"
+	     ? "subsidiary program '%s' could not be invoked"
 	     : status == 127
-	     ? "subsidiary program `%s' not found"
+	     ? "subsidiary program '%s' not found"
 	     : status == INT_MAX
-	     ? "subsidiary program `%s' failed"
-	     : "subsidiary program `%s' failed (exit status %d)"),
+	     ? "subsidiary program '%s' failed"
+	     : "subsidiary program '%s' failed (exit status %d)"),
 	   diff_program, status);
 
   return diff_result + total;
@@ -1493,7 +1493,7 @@ undotlines (FILE *outputfile, bool leading_dot, long int start, lin num)
    around the problems involved with changing line numbers in an ed
    script.
 
-   As in `output_diff3', the variable MAPPING maps from file number
+   As in 'output_diff3', the variable MAPPING maps from file number
    according to the argument list to file number according to the diff
    passed.  All files listed below are in terms of the argument list.
    REV_MAPPING is the inverse of MAPPING.

@@ -27,7 +27,7 @@
 char const pr_program[] = PR_PROGRAM;
 
 /* Queue up one-line messages to be printed at the end,
-   when -l is specified.  Each message is recorded with a `struct msg'.  */
+   when -l is specified.  Each message is recorded with a 'struct msg'.  */
 
 struct msg
 {
@@ -121,7 +121,7 @@ message5 (char const *format_msgid, char const *arg1, char const *arg2,
     }
 }
 
-/* Output all the messages that were saved up by calls to `message'.  */
+/* Output all the messages that were saved up by calls to 'message'.  */
 
 void
 print_message_queue (void)
@@ -146,8 +146,8 @@ print_message_queue (void)
    to set up OUTFILE, the stdio stream for the output to go to.
 
    Usually, OUTFILE is just stdout.  But when -l was specified
-   we fork off a `pr' and make OUTFILE a pipe to it.
-   `pr' then outputs to our stdout.  */
+   we fork off a 'pr' and make OUTFILE a pipe to it.
+   'pr' then outputs to our stdout.  */
 
 static char const *current_name0;
 static char const *current_name1;
@@ -190,7 +190,7 @@ begin_output (void)
       if (fflush (stdout) != 0)
 	pfatal_with_name (_("write failed"));
 
-      /* Make OUTFILE a pipe to a subsidiary `pr'.  */
+      /* Make OUTFILE a pipe to a subsidiary 'pr'.  */
       {
 #if HAVE_WORKING_FORK
 	int pipes[2];
@@ -241,7 +241,7 @@ begin_output (void)
   else
     {
 
-      /* If -l was not specified, output the diff straight to `stdout'.  */
+      /* If -l was not specified, output the diff straight to 'stdout'.  */
 
       outfile = stdout;
 
@@ -270,7 +270,7 @@ begin_output (void)
 }
 
 /* Call after the end of output of diffs for one file.
-   Close OUTFILE and get rid of the `pr' subfork.  */
+   Close OUTFILE and get rid of the 'pr' subfork.  */
 
 void
 finish_output (void)
@@ -298,12 +298,12 @@ finish_output (void)
       if (status)
 	error (EXIT_TROUBLE, werrno,
 	       _(status == 126
-		 ? "subsidiary program `%s' could not be invoked"
+		 ? "subsidiary program '%s' could not be invoked"
 		 : status == 127
-		 ? "subsidiary program `%s' not found"
+		 ? "subsidiary program '%s' not found"
 		 : status == INT_MAX
-		 ? "subsidiary program `%s' failed"
-		 : "subsidiary program `%s' failed (exit status %d)"),
+		 ? "subsidiary program '%s' failed"
+		 : "subsidiary program '%s' failed (exit status %d)"),
 	       pr_program, status);
     }
 
@@ -677,7 +677,7 @@ print_number_range (char sepchar, struct file_data *file, lin a, lin b)
 
 /* Look at a hunk of edit script and report the range of lines in each file
    that it applies to.  HUNK is the start of the hunk, which is a chain
-   of `struct change'.  The first and last line numbers of file 0 are stored in
+   of 'struct change'.  The first and last line numbers of file 0 are stored in
    *FIRST0 and *LAST0, and likewise for file 1 in *FIRST1 and *LAST1.
    Note that these are internal line numbers that count from 0.
 
