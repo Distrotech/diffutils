@@ -1784,20 +1784,23 @@ subdirectories' files, but if you use the @option{-r} or
 @option{--recursive} option, it compares every corresponding pair of files
 in the directory trees, as many levels deep as they go.
 
-For file names that are in only one of the directories, @command{diff}
-normally does not show the contents of the file that exists; it reports
-only that the file exists in that directory and not in the other.  You
-can make @command{diff} act as though the file existed but was empty in the
-other directory, so that it outputs the entire contents of the file that
+If only one file exists, @command{diff} normally does not show its
+contents; it merely reports that one file exists but the other does
+not.  You can make @command{diff} act as though the missing file is
+empty, so that it outputs the entire contents of the file that
 actually exists.  (It is output as either an insertion or a
-deletion, depending on whether it is in the first or the second
-directory given.)  To do this, use the @option{--new-file} (@option{-N})
-option.
+deletion, depending on whether the missing file is in the first or the
+second position.)  To do this, use the @option{--new-file}
+(@option{-N}) option.  This option affects command-line arguments as
+well as files found via directory traversal; for example, @samp{diff
+-N a b} treats @file{a} as empty if @file{a} does not exist but
+@file{b} does, and similarly @samp{diff -N - b} treats standard input
+as empty if it is closed but @file{b} exists.
 
-If the older directory contains one or more large files that are not in
+If the older directory contains large files that are not in
 the newer directory, you can make the patch smaller by using the
 @option{--unidirectional-new-file} option instead of @option{-N}.
-This option is like @option{-N} except that it only inserts the contents
+This option is like @option{-N} except that it inserts the contents only
 of files that appear in the second directory but not the first (that is,
 files that were added).  At the top of the patch, write instructions for
 the user applying the patch to remove the files that were deleted before
@@ -3843,9 +3846,8 @@ specifies the number of lines affected.  @xref{RCS}.
 
 @item -N
 @itemx --new-file
-In directory comparison, if a file is found in only one directory,
-treat it as present but empty in the other directory.  @xref{Comparing
-Directories}.
+If one file is missing, treat it as present but empty.
+@xref{Comparing Directories}.
 
 @item --new-group-format=@var{format}
 Use @var{format} to output a group of lines taken from just the second
@@ -3937,8 +3939,7 @@ Use @var{format} to output a line common to both files in if-then-else
 format.  @xref{Line Formats}.
 
 @item --unidirectional-new-file
-When comparing directories, if a file appears only in the second
-directory of the two, treat it as present but empty in the other.
+If a first file is missing, treat it as present but empty.
 @xref{Comparing Directories}.
 
 @item -U @var{lines}

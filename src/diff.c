@@ -92,15 +92,11 @@ static bool binary;
 enum { binary = true };
 #endif
 
-/* When comparing directories, if a file appears only in one
-   directory, treat it as present but empty in the other (-N).
-   Then 'patch' would create the file with appropriate contents.  */
+/* If one file is missing, treat it as present but empty (-N).  */
 static bool new_file;
 
-/* When comparing directories, if a file appears only in the second
-   directory of the two, treat it as present but empty in the other
-   (--unidirectional-new-file).
-   Then 'patch' would create the file with appropriate contents.  */
+/* If the first file is missing, treat it as present but empty
+   (--unidirectional-new-file).  */
 static bool unidirectional_new_file;
 
 /* Report files compared that are the same (-s).
@@ -1155,9 +1151,11 @@ compare_files (struct comparison const *parent,
 	    ? (S_ISREG (cmp.file[f].stat.st_mode)
 	       && ! (cmp.file[f].stat.st_mode & (S_IRWXU | S_IRWXG | S_IRWXO))
 	       && cmp.file[f].stat.st_size == 0)
-	    : (cmp.file[f].desc == ERRNO_ENCODE (ENOENT)
+	    : ((cmp.file[f].desc == ERRNO_ENCODE (ENOENT)
+		|| cmp.file[f].desc == ERRNO_ENCODE (EBADF))
 	       && ! parent
-	       && cmp.file[1 - f].desc == UNOPENED)))
+	       && (cmp.file[1 - f].desc == UNOPENED
+		   || cmp.file[1 - f].desc == STDIN_FILENO))))
       cmp.file[f].desc = NONEXISTENT;
 
   for (f = 0; f < 2; f++)
