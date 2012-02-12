@@ -1178,18 +1178,9 @@ temporary_file (void)
   char const *dir = tmpdir ? tmpdir : P_tmpdir;
   char *buf = xmalloc (strlen (dir) + 1 + 5 + 6 + 1);
   int fd;
-  int e;
-  sigset_t procmask;
-  sigset_t blocked;
   sprintf (buf, "%s/sdiffXXXXXX", dir);
-  sigemptyset (&blocked);
-  sigaddset (&blocked, SIGINT);
-  sigprocmask (SIG_BLOCK, &blocked, &procmask);
   fd = mkstemp (buf);
-  e = errno;
   if (0 <= fd)
     tmpname = buf;
-  sigprocmask (SIG_SETMASK, &procmask, 0);
-  errno = e;
   return fd;
 }
