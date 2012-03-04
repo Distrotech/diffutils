@@ -894,7 +894,7 @@ static char const * const option_help_msgid[] = {
   N_("-b, --ignore-space-change       ignore changes in the amount of white space"),
   N_("-w, --ignore-all-space          ignore all white space"),
   N_("-B, --ignore-blank-lines        ignore changes whose lines are all blank"),
-  N_("-I, --ignore-matching-lines=RE  ignore changes whose lines all match RE"),
+  N_("-I, --ignore-matching-lines=RE  ignore changes all whose lines match RE"),
   "",
   N_("-a, --text                      treat all files as text"),
   N_("    --strip-trailing-cr         strip trailing carriage return on input"),
