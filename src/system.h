@@ -151,7 +151,7 @@ verify (sizeof (lin) <= sizeof (long int));
 
 /* Do struct stat *S, *T describe the same special file?  */
 #ifndef same_special_file
-# if HAVE_ST_RDEV && defined S_ISBLK && defined S_ISCHR
+# if HAVE_STRUCT_STAT_ST_RDEV && defined S_ISBLK && defined S_ISCHR
 #  define same_special_file(s, t) \
      (((S_ISBLK ((s)->st_mode) && S_ISBLK ((t)->st_mode)) \
        || (S_ISCHR ((s)->st_mode) && S_ISCHR ((t)->st_mode))) \
