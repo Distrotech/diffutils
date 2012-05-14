@@ -10,6 +10,7 @@
 /INSTALL
 /README-release
 /aclocal.m4
+/build-aux
 /config.cache
 /config.log
 /config.status
