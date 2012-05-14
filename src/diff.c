@@ -524,7 +524,7 @@ main (int argc, char **argv)
 #if O_BINARY
 	  binary = true;
 	  if (! isatty (STDOUT_FILENO))
-	    SET_BINARY (STDOUT_FILENO);
+	    set_binary_mode (STDOUT_FILENO, O_BINARY);
 #endif
 	  break;
 
@@ -1111,8 +1111,8 @@ compare_files (struct comparison const *parent,
 	  else if (STREQ (cmp.file[f].name, "-"))
 	    {
 	      cmp.file[f].desc = STDIN_FILENO;
-	      if (O_BINARY && binary && ! isatty (STDIN_FILENO))
-		SET_BINARY (STDIN_FILENO);
+	      if (binary && ! isatty (STDIN_FILENO))
+		set_binary_mode (STDIN_FILENO, O_BINARY);
 	      if (fstat (STDIN_FILENO, &cmp.file[f].stat) != 0)
 		cmp.file[f].desc = ERRNO_ENCODE (errno);
 	      else

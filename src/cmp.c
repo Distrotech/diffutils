@@ -293,7 +293,7 @@ main (int argc, char **argv)
 	{
 	  file_desc[f1] = STDIN_FILENO;
 	  if (O_BINARY && ! isatty (STDIN_FILENO))
-	    SET_BINARY (STDIN_FILENO);
+	    set_binary_mode (STDIN_FILENO, O_BINARY);
 	}
       else
 	file_desc[f1] = open (file[f1], O_RDONLY | O_BINARY, 0);
