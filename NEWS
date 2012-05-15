@@ -7,6 +7,11 @@ GNU diffutils NEWS                                    -*- outline -*-
   --new-file (-N) and --unidirectional-new-file now allow comparisons to "-".
   A standard input that's closed acts like a nonexistent file.
 
+** Packaging
+
+  diffutils is now designed to build with Cygwin or MinGW rather than DJGPP.
+  The ms subdirectory has been removed.
+
 
 * Noteworthy changes in release 3.2 (2011-09-02) [stable]
 

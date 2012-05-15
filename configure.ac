@@ -168,6 +168,5 @@ AC_CONFIG_FILES([
   gnulib-tests/Makefile
   man/Makefile
   po/Makefile.in
-  ms/Makefile
 ])
 AC_OUTPUT
