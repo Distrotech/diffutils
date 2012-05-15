@@ -37,6 +37,7 @@
 /lib/unused-parameter.h
 /lib/warn-on-use.h
 /m4/.gitignore
+/m4/gnulib-cache.m4
 /maint.mk
 /po/*.pot
 /po/*.sed
