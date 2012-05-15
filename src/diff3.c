@@ -29,7 +29,7 @@
 #include <file-type.h>
 #include <getopt.h>
 #include <progname.h>
-#include <sh-quote.h>
+#include <system-quote.h>
 #include <version-etc.h>
 #include <xalloc.h>
 #include <xfreopen.h>
@@ -1161,13 +1161,15 @@ read_diff (char const *filea,
   int fd, wstatus, status;
   int werrno = 0;
   struct stat pipestat;
-
-#if HAVE_WORKING_FORK
-
   char const *argv[9];
   char const **ap;
+#if HAVE_WORKING_FORK
   int fds[2];
   pid_t pid;
+#else
+  FILE *fpipe;
+  char *command;
+#endif
 
   ap = argv;
   *ap++ = diff_program;
@@ -1180,6 +1182,8 @@ read_diff (char const *filea,
   *ap++ = filea;
   *ap++ = fileb;
   *ap = 0;
+
+#if HAVE_WORKING_FORK
 
   if (pipe (fds) != 0)
     perror_with_exit ("pipe");
@@ -1210,32 +1214,7 @@ read_diff (char const *filea,
 
 #else
 
-  FILE *fpipe;
-  char const args[] = " --horizon-lines=100 -- ";
-  char *command = xmalloc (shell_quote_length (diff_program)
-			   + sizeof "-a"
-			   + sizeof "--strip-trailing-cr"
-			   + sizeof args - 1
-			   + shell_quote_length (filea) + 1
-			   + shell_quote_length (fileb) + 1);
-  char *p = command;
-  p = shell_quote_copy (p, diff_program);
-  if (text)
-    {
-      strcpy (p, " -a");
-      p += 3;
-    }
-  if (strip_trailing_cr)
-    {
-      strcpy (p, " --strip-trailing-cr");
-      p += 20;
-    }
-  strcpy (p, args);
-  p += sizeof args - 1;
-  p = shell_quote_copy (p, filea);
-  *p++ = ' ';
-  p = shell_quote_copy (p, fileb);
-  *p = 0;
+  command = system_quote_argv (SCI_SYSTEM, (char **) argv);
   errno = 0;
   fpipe = popen (command, "r");
   if (!fpipe)

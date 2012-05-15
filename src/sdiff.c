@@ -31,7 +31,7 @@
 #include <file-type.h>
 #include <getopt.h>
 #include <progname.h>
-#include <sh-quote.h>
+#include <system-quote.h>
 #include <version-etc.h>
 #include <xalloc.h>
 
@@ -66,7 +66,6 @@ static void perror_fatal (char const *) __attribute__((noreturn));
 static void trapsigs (void);
 static void untrapsig (int);
 
-#define NUM_SIGS (sizeof sigs / sizeof *sigs)
 static int const sigs[] = {
 #ifdef SIGHUP
        SIGHUP,
@@ -87,8 +86,12 @@ static int const sigs[] = {
        SIGPIPE,
 #endif
        SIGINT
-#define handler_index_of_SIGINT (NUM_SIGS - 1)
 };
+enum
+  {
+    NUM_SIGS = sizeof sigs / sizeof *sigs,
+    handler_index_of_SIGINT = NUM_SIGS - 1
+  };
 
 #if HAVE_SIGACTION
   /* Prefer 'sigaction' if available, since 'signal' can lose signals.  */
@@ -607,19 +610,7 @@ main (int argc, char *argv[])
 
 #if ! HAVE_WORKING_FORK
       {
-	size_t cmdsize = 1;
-	char *p, *command;
-	int i;
-
-	for (i = 0;  diffargv[i];  i++)
-	  cmdsize += shell_quote_length (diffargv[i]) + 1;
-	command = p = xmalloc (cmdsize);
-	for (i = 0;  diffargv[i];  i++)
-	  {
-	    p = shell_quote_copy (p, diffargv[i]);
-	    *p++ = ' ';
-	  }
-	p[-1] = 0;
+	char *command = system_quote_argv (SCI_SYSTEM, (char **) diffargv);
 	errno = 0;
 	diffout = popen (command, "r");
 	if (! diffout)
@@ -1020,16 +1011,17 @@ edit (struct line_filter *left, char const *lname, lin lline, lin llen,
 	    {
 	      int wstatus;
 	      int werrno = 0;
+	      char const *argv[3];
+
 	      ignore_SIGINT = true;
 	      checksigs ();
+	      argv[0] = editor_program;
+	      argv[1] = tmpname;
+	      argv[2] = 0;
 
 	      {
 #if ! HAVE_WORKING_FORK
-		char *command =
-		  xmalloc (shell_quote_length (editor_program)
-			   + 1 + strlen (tmpname) + 1);
-		sprintf (shell_quote_copy (command, editor_program),
-			 " %s", tmpname);
+		char *command = system_quote_argv (SCI_SYSTEM, (char **) argv);
 		wstatus = system (command);
 		if (wstatus == -1)
 		  werrno = errno;
@@ -1040,13 +1032,6 @@ edit (struct line_filter *left, char const *lname, lin lline, lin llen,
 		pid = fork ();
 		if (pid == 0)
 		  {
-		    char const *argv[3];
-		    int i = 0;
-
-		    argv[i++] = editor_program;
-		    argv[i++] = tmpname;
-		    argv[i] = 0;
-
 		    execvp (editor_program, (char **) argv);
 		    _exit (errno == ENOENT ? 127 : 126);
 		  }

@@ -21,7 +21,7 @@
 #include "diff.h"
 #include <dirname.h>
 #include <error.h>
-#include <sh-quote.h>
+#include <system-quote.h>
 #include <xalloc.h>
 
 char const pr_program[] = PR_PROGRAM;
@@ -187,8 +187,15 @@ begin_output (void)
 
   if (paginate)
     {
+      char const *argv[4];
+
       if (fflush (stdout) != 0)
 	pfatal_with_name (_("write failed"));
+
+      argv[0] = pr_program;
+      argv[1] = "-h";
+      argv[2] = name;
+      argv[3] = 0;
 
       /* Make OUTFILE a pipe to a subsidiary 'pr'.  */
       {
@@ -212,7 +219,7 @@ begin_output (void)
 		close (pipes[0]);
 	      }
 
-	    execl (pr_program, pr_program, "-h", name, (char *) 0);
+	    execv (pr_program, (char **) argv);
 	    _exit (errno == ENOENT ? 127 : 126);
 	  }
 	else
@@ -223,13 +230,7 @@ begin_output (void)
 	      pfatal_with_name ("fdopen");
 	  }
 #else
-	char *command = xmalloc (sizeof pr_program - 1 + 7
-				 + shell_quote_length (name) + 1);
-	char *p;
-	sprintf (command, "%s -f -h ", pr_program);
-	p = command + sizeof pr_program - 1 + 7;
-	p = shell_quote_copy (p, name);
-	*p = 0;
+	char *command = system_quote_argv (SCI_SYSTEM, (char **) argv);
 	errno = 0;
 	outfile = popen (command, "w");
 	if (!outfile)
