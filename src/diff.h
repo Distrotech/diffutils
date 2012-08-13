@@ -332,7 +332,7 @@ XTERN FILE *outfile;
 extern int diff_2_files (struct comparison *);
 
 /* context.c */
-extern void print_context_header (struct file_data[], bool);
+extern void print_context_header (struct file_data[], char const * const *, bool);
 extern void print_context_script (struct change *, bool);
 
 /* dir.c */

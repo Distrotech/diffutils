@@ -40,6 +40,7 @@ static lin find_function_last_match;
 static void
 print_context_label (char const *mark,
 		     struct file_data *inf,
+		     char const *name,
 		     char const *label)
 {
   if (label)
@@ -70,24 +71,24 @@ print_context_label (char const *mark,
 	      sprintf (buf, "%"PRIuMAX".%.9d", sec, nsec);
 	    }
 	}
-      fprintf (outfile, "%s %s\t%s\n", mark, inf->name, buf);
+      fprintf (outfile, "%s %s\t%s\n", mark, name, buf);
     }
 }
 
 /* Print a header for a context diff, with the file names and dates.  */
 
 void
-print_context_header (struct file_data inf[], bool unidiff)
+print_context_header (struct file_data inf[], char const *const *names, bool unidiff)
 {
   if (unidiff)
     {
-      print_context_label ("---", &inf[0], file_label[0]);
-      print_context_label ("+++", &inf[1], file_label[1]);
+      print_context_label ("---", &inf[0], names[0], file_label[0]);
+      print_context_label ("+++", &inf[1], names[1], file_label[1]);
     }
   else
     {
-      print_context_label ("***", &inf[0], file_label[0]);
-      print_context_label ("---", &inf[1], file_label[1]);
+      print_context_label ("***", &inf[0], names[0], file_label[0]);
+      print_context_label ("---", &inf[1], names[1], file_label[1]);
     }
 }
 

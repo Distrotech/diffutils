@@ -166,24 +166,110 @@ setup_output (char const *name0, char const *name1, bool recursive)
 static pid_t pr_pid;
 #endif
 
+static char c_escape_char (char c)
+{
+  switch (c) {
+    case '\a': return 'a';
+    case '\b': return 'b';
+    case '\t': return 't';
+    case '\n': return 'n';
+    case '\v': return 'v';
+    case '\f': return 'f';
+    case '\r': return 'r';
+    case '"': return '"';
+    case '\\': return '\\';
+    default:
+      return c < 32;
+  }
+}
+
+static char *
+c_escape (char const *str)
+{
+  char const *s;
+  size_t plus = 0;
+  bool must_quote = false;
+
+  for (s = str; *s; s++)
+    {
+      char c = *s;
+
+      if (c == ' ')
+	{
+	  must_quote = true;
+	  continue;
+	}
+      switch (c_escape_char (*s))
+	{
+	  case 1:
+	    plus += 3;
+	    /* fall through */
+	  case 0:
+	    break;
+	  default:
+	    plus++;
+	    break;
+	}
+    }
+
+  if (must_quote || plus)
+    {
+      size_t s_len = s - str;
+      char *buffer = xmalloc (s_len + plus + 3);
+      char *b = buffer;
+
+      *b++ = '"';
+      for (s = str; *s; s++)
+	{
+	  char c = *s;
+	  char escape = c_escape_char (c);
+
+	  switch (escape)
+	    {
+	      case 0:
+		*b++ = c;
+		break;
+	      case 1:
+		*b++ = '\\';
+		*b++ = ((c >> 6) & 03) + '0';
+		*b++ = ((c >> 3) & 07) + '0';
+		*b++ = ((c >> 0) & 07) + '0';
+		break;
+	      default:
+		*b++ = '\\';
+		*b++ = escape;
+		break;
+	    }
+	}
+      *b++ = '"';
+      *b = 0;
+      return buffer;
+    }
+
+  return (char *) str;
+}
+
 void
 begin_output (void)
 {
+  char *names[2];
   char *name;
 
   if (outfile != 0)
     return;
 
+  names[0] = c_escape (current_name0);
+  names[1] = c_escape (current_name1);
+
   /* Construct the header of this piece of diff.  */
-  name = xmalloc (strlen (current_name0) + strlen (current_name1)
-		  + strlen (switch_string) + 7);
+  name = xmalloc (strlen (names[0]) + strlen (names[1]) + strlen (switch_string) + 7);
 
   /* POSIX 1003.1-2001 specifies this format.  But there are some bugs in
      the standard: it says that we must print only the last component
      of the pathnames, and it requires two spaces after "diff" if
      there are no options.  These requirements are silly and do not
      match historical practice.  */
-  sprintf (name, "diff%s %s %s", switch_string, current_name0, current_name1);
+  sprintf (name, "diff%s %s %s", switch_string, names[0], names[1]);
 
   if (paginate)
     {
@@ -258,16 +344,21 @@ begin_output (void)
   switch (output_style)
     {
     case OUTPUT_CONTEXT:
-      print_context_header (files, false);
+      print_context_header (files, (char const *const *)names, false);
       break;
 
     case OUTPUT_UNIFIED:
-      print_context_header (files, true);
+      print_context_header (files, (char const *const *)names, true);
       break;
 
     default:
       break;
     }
+
+  if (names[0] != current_name0)
+    free (names[0]);
+  if (names[1] != current_name1)
+    free (names[1]);
 }
 
 /* Call after the end of output of diffs for one file.

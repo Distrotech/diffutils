@@ -7,6 +7,11 @@ GNU diffutils NEWS                                    -*- outline -*-
   --new-file (-N) and --unidirectional-new-file now allow comparisons to "-".
   A standard input that's closed acts like a nonexistent file.
 
+  A file name containing spaces, double quotes, backslashes or control
+  characters is now encoded in a diff header as a double-quoted C string
+  literal.  The escape sequences \\, \", \a, \b, \f, \n, \r, \t, \v and
+  \ooo (a three-digit octal number between 0 and 255) are used.
+
 ** Packaging
 
   diffutils is now designed to build with Cygwin or MinGW rather than DJGPP.

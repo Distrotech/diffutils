@@ -11,7 +11,8 @@ TESTS = \
   new-file \
   no-dereference \
   no-newline-at-eof \
-  stdin
+  stdin \
+  filename-quoting
 
 EXTRA_DIST = \
   $(TESTS) init.sh t-local.sh
