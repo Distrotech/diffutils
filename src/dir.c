@@ -324,7 +324,7 @@ char *
 find_dir_file_pathname (char const *dir, char const *file)
 {
   char *val;
-  char const *match = file;
+  char const *volatile match = file;
   struct dirdata dirdata;
   dirdata.names = NULL;
   dirdata.data = NULL;
