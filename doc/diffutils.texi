@@ -821,7 +821,7 @@ The fractional seconds are omitted on hosts that do not support
 fractional time stamps.
 
 You can change the header's content with the
-@option{--label=@var{label}} option; see @xref{Alternate Names}.
+@option{--label=@var{label}} option. @xref{Alternate Names}.
 
 Next come one or more hunks of differences; each hunk shows one area
 where the files differ.  Unified format hunks look like this:
@@ -993,7 +993,7 @@ The corresponding lines differ, and only the second line is incomplete.
 @end table
 
 Normally, an output line is incomplete if and only if the lines that it
-contains are incomplete; @xref{Incomplete Lines}.  However, when an
+contains are incomplete.  @xref{Incomplete Lines}.  However, when an
 output line represents two differing lines, one might be incomplete
 while the other is not.  In this case, the output line is complete,
 but its the gutter is marked @samp{\} if the first line is incomplete,
@@ -1708,7 +1708,7 @@ might contain duplicate or otherwise incorrect code.
 
 The @command{patch} @option{-D @var{name}} option behaves like
 the @command{diff} @option{-D @var{name}} option, except it operates on
-a file and a diff to produce a merged file; @xref{patch Options}.
+a file and a diff to produce a merged file.  @xref{patch Options}.
 
 @node Incomplete Lines
 @chapter Incomplete Lines
@@ -1727,10 +1727,10 @@ line by a following line that starts with @samp{\}.  However, the
 @acronym{RCS} format (@pxref{RCS}) outputs the incomplete line as-is,
 without any trailing newline or following line.  The side by side
 format normally represents incomplete lines as-is, but in some cases
-uses a @samp{\} or @samp{/} gutter marker; @xref{Side by Side}.  The
+uses a @samp{\} or @samp{/} gutter marker.  @xref{Side by Side}.  The
 if-then-else line format preserves a line's incompleteness with
-@samp{%L}, and discards the newline with @samp{%l}; @xref{Line
-Formats}.  Finally, with the @command{ed} and forward @command{ed}
+@samp{%L}, and discards the newline with @samp{%l}.  @xref{Line Formats}.
+Finally, with the @command{ed} and forward @command{ed}
 output formats (@pxref{Output Formats}) @command{diff} cannot
 represent an incomplete line, so it pretends there was a newline and
 reports an error.
