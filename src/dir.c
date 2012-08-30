@@ -323,8 +323,13 @@ dir_loop (struct comparison const *cmp, int i)
 char *
 find_dir_file_pathname (char const *dir, char const *file)
 {
+  /* The 'IF_LINT (volatile)' works around what appears to be a bug in
+     gcc 4.8.0 20120825; see
+     <http://lists.gnu.org/archive/html/bug-diffutils/2012-08/msg00007.html>.
+     */
+  char const * IF_LINT (volatile) match = file;
+
   char *val;
-  char const *volatile match = file;
   struct dirdata dirdata;
   dirdata.names = NULL;
   dirdata.data = NULL;
