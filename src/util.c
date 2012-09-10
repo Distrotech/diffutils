@@ -23,6 +23,7 @@
 #include <error.h>
 #include <system-quote.h>
 #include <xalloc.h>
+#include "xvasprintf.h"
 
 char const pr_program[] = PR_PROGRAM;
 
@@ -262,14 +263,12 @@ begin_output (void)
   names[1] = c_escape (current_name1);
 
   /* Construct the header of this piece of diff.  */
-  name = xmalloc (strlen (names[0]) + strlen (names[1]) + strlen (switch_string) + 7);
-
   /* POSIX 1003.1-2001 specifies this format.  But there are some bugs in
      the standard: it says that we must print only the last component
      of the pathnames, and it requires two spaces after "diff" if
      there are no options.  These requirements are silly and do not
      match historical practice.  */
-  sprintf (name, "diff%s %s %s", switch_string, names[0], names[1]);
+  name = xasprintf ("diff%s %s %s", switch_string, names[0], names[1]);
 
   if (paginate)
     {
