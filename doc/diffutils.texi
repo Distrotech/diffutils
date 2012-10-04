@@ -3563,6 +3563,9 @@ second.
 @itemx --verbose
 Output the (decimal) byte numbers and (octal) values of all differing bytes,
 instead of the default standard output.
+Each output line contains a differing byte's number relative to the
+start of the input, followed by the differing byte values.
+Byte numbers start at 1.
 Also, output the @acronym{EOF} message if one file is shorter than the other.
 
 @item -n @var{count}
