@@ -48,7 +48,7 @@ LOG_COMPILER= $(SHELL)
 
 built_programs =							\
   echo 'spy:;@echo $$(PROGRAMS)'					\
-    | MAKEFLAGS= $(MAKE) -s -C $(builddir)/../src -f Makefile -f - spy	\
-    | fmt -1 | sed 's,$(EXEEXT)$$,,' | sort -u
+    | (cd ../src && MAKEFLAGS= $(MAKE) -s -f Makefile -f - spy)		\
+    | tr ' ' '\n' | sed '/^$$/d; s,$(EXEEXT)$$,,' | sort -u
 
 VERBOSE = yes
