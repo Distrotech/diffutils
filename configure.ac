@@ -161,7 +161,7 @@ test -f $srcdir/.tarball-version \
   || SRC_VERSION_C=../src/version.c
 
 AM_GNU_GETTEXT([external], [need-ngettext])
-AM_GNU_GETTEXT_VERSION([0.17])
+AM_GNU_GETTEXT_VERSION([0.18.2])
 XGETTEXT="AWK='$AWK' \$(SHELL) \$(top_srcdir)/exgettext $XGETTEXT"
 
 AC_CONFIG_FILES([
