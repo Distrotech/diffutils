@@ -2014,8 +2014,8 @@ their location in the input files.
 @menu
 * Sample diff3 Input::    Sample @command{diff3} input for examples.
 * Example diff3 Normal::  Sample output in the normal format.
-* diff3 Hunks::           The format of normal output format.
 * Detailed diff3 Normal:: A detailed description of normal output format.
+* diff3 Hunks::           The format of normal output format.
 @end menu
 
 @node Sample diff3 Input
