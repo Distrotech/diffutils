@@ -7,6 +7,12 @@ GNU diffutils NEWS                                    -*- outline -*-
 
 ** New features
 
+  diff accepts a new option, --no-dereference.  With this option, symbolic
+  links are treated specially: as a separate type of file that can compare
+  equal only to another symbolic link with the same value.  For example,
+  with --no-dereference, two symbolic links compare equal when they have
+  the same value, even when that value does not reference a readable file.
+
   --new-file (-N) and --unidirectional-new-file now allow comparisons to "-".
   A standard input that's closed acts like a nonexistent file.
 
