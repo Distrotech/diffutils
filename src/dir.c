@@ -45,7 +45,6 @@ static bool locale_specific_sorting;
 static jmp_buf failed_locale_specific_sorting;
 
 static bool dir_loop (struct comparison const *, int);
-static int compare_names_for_qsort (void const *, void const *);
 
 
 /* Read a directory and get its vector of names.  */
