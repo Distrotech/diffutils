@@ -140,28 +140,34 @@ dir_read (struct file_data const *dir, struct dirdata *dirdata)
   return true;
 }
 
+/* Compare strings in a locale-specific way, returning a value
+   compatible with strcmp.  */
+
+static int
+compare_collated (char const *name1, char const *name2)
+{
+  int r;
+  errno = 0;
+  if (ignore_file_name_case)
+    r = strcasecoll (name1, name2);
+  else
+    r = strcoll (name1, name2);
+  if (errno)
+    {
+      error (0, errno, _("cannot compare file names '%s' and '%s'"),
+	     name1, name2);
+      longjmp (failed_locale_specific_sorting, 1);
+    }
+  return r;
+}
+
 /* Compare file names, returning a value compatible with strcmp.  */
 
 static int
 compare_names (char const *name1, char const *name2)
 {
   if (locale_specific_sorting)
-    {
-      int r;
-      errno = 0;
-      if (ignore_file_name_case)
-	r = strcasecoll (name1, name2);
-      else
-	r = strcoll (name1, name2);
-      if (errno)
-	{
-	  error (0, errno, _("cannot compare file names '%s' and '%s'"),
-		 name1, name2);
-	  longjmp (failed_locale_specific_sorting, 1);
-	}
-      return r;
-    }
-
+    return compare_collated (name1, name2);
   return file_name_cmp (name1, name2);
 }
 
@@ -173,8 +179,15 @@ compare_names_for_qsort (void const *file1, void const *file2)
 {
   char const *const *f1 = file1;
   char const *const *f2 = file2;
-  int diff = compare_names (*f1, *f2);
-  return diff ? diff : file_name_cmp (*f1, *f2);
+  char const *name1 = *f1;
+  char const *name2 = *f2;
+  if (locale_specific_sorting)
+    {
+      int diff = compare_collated (name1, name2);
+      if (diff)
+	return diff;
+    }
+  return file_name_cmp (name1, name2);
 }
 
 /* Compare the contents of two directories named in CMP.
