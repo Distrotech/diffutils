@@ -2,6 +2,13 @@ GNU diffutils NEWS                                    -*- outline -*-
 
 * Noteworthy changes in release ?.? (????-??-??) [?]
 
+** Bug fixes
+
+  Unless the --ignore-file-name-case option is used, diff now
+  considers file names to be equal only if they are byte-for-byte
+  equivalent.  This fixes a bug where diff in an English locale might
+  consider two Asian file names to be the same merely because they
+  contain no English characters.
 
 * Noteworthy changes in release 3.3 (2013-03-24) [stable]
 

@@ -12,6 +12,7 @@ TESTS = \
   no-dereference \
   no-newline-at-eof \
   stdin \
+  strcoll-0-names \
   filename-quoting
 
 EXTRA_DIST = \

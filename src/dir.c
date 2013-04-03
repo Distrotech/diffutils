@@ -166,7 +166,11 @@ static int
 compare_names (char const *name1, char const *name2)
 {
   if (locale_specific_sorting)
-    return compare_collated (name1, name2);
+    {
+      int diff = compare_collated (name1, name2);
+      if (diff || ignore_file_name_case)
+	return diff;
+    }
   return file_name_cmp (name1, name2);
 }
 
@@ -271,7 +275,7 @@ diff_dirs (struct comparison const *cmp,
 	     O(N**2), where N is the number of names in a directory
 	     that compare_names says are all equal, but in practice N
 	     is so small it's not worth tuning.  */
-	  if (nameorder == 0)
+	  if (nameorder == 0 && ignore_file_name_case)
 	    {
 	      int raw_order = file_name_cmp (*names[0], *names[1]);
 	      if (raw_order != 0)
