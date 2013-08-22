@@ -379,8 +379,8 @@ lf_copy (struct line_filter *lf, lin lines, FILE *outfile)
 
   while (lines)
     {
-      lf->bufpos = (char *) memchr (lf->bufpos, '\n', lf->buflim - lf->bufpos);
-      if (! lf->bufpos)
+      lf->bufpos = rawmemchr (lf->bufpos, '\n');
+      if (lf->bufpos == lf->buflim)
 	{
 	  ck_fwrite (start, lf->buflim - start, outfile);
 	  if (! lf_refill (lf))
@@ -403,8 +403,8 @@ lf_skip (struct line_filter *lf, lin lines)
 {
   while (lines)
     {
-      lf->bufpos = (char *) memchr (lf->bufpos, '\n', lf->buflim - lf->bufpos);
-      if (! lf->bufpos)
+      lf->bufpos = rawmemchr (lf->bufpos, '\n');
+      if (lf->bufpos == lf->buflim)
 	{
 	  if (! lf_refill (lf))
 	    break;
@@ -424,7 +424,7 @@ lf_snarf (struct line_filter *lf, char *buffer, size_t bufsize)
   for (;;)
     {
       char *start = lf->bufpos;
-      char *next = (char *) memchr (start, '\n', lf->buflim + 1 - start);
+      char *next = rawmemchr (start, '\n');
       size_t s = next - start;
       if (bufsize <= s)
 	return 0;

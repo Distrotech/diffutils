@@ -52,7 +52,7 @@
 static int cmp (void);
 static off_t file_position (int);
 static size_t block_compare (word const *, word const *) _GL_ATTRIBUTE_PURE;
-static size_t block_compare_and_count (word const *, word const *, off_t *);
+static size_t count_newlines (char *, size_t);
 static void sprintc (char *, unsigned char);
 
 /* Filenames of the compared files.  */
@@ -448,20 +448,23 @@ cmp (void)
       if (read1 == SIZE_MAX)
 	error (EXIT_TROUBLE, errno, "%s", file[1]);
 
-      /* Insert sentinels for the block compare.  */
+      smaller = MIN (read0, read1);
 
-      buf0[read0] = ~buf1[read0];
-      buf1[read1] = ~buf0[read1];
+      /* Optimize the common case where the buffers are the same.  */
+      if (memcmp (buf0, buf1, smaller) == 0)
+	first_diff = smaller;
+      else
+	{
+	  /* Insert sentinels for the block compare.  */
+	  buf0[read0] = ~buf1[read0];
+	  buf1[read1] = ~buf0[read1];
 
-      /* If the line number should be written for differing files,
-	 compare the blocks and count the number of newlines
-	 simultaneously.  */
-      first_diff = (comparison_type == type_first_diff
-		    ? block_compare_and_count (buffer0, buffer1, &line_number)
-		    : block_compare (buffer0, buffer1));
+	  first_diff = block_compare (buffer0, buffer1);
+	}
 
       byte_number += first_diff;
-      smaller = MIN (read0, read1);
+      if (comparison_type == type_first_diff)
+	line_number += count_newlines (buf0, first_diff);
 
       if (first_diff < smaller)
 	{
@@ -567,54 +570,6 @@ cmp (void)
   return differing == 0 ? EXIT_SUCCESS : EXIT_FAILURE;
 }
 
-/* Compare two blocks of memory P0 and P1 until they differ,
-   and count the number of '\n' occurrences in the common
-   part of P0 and P1.
-   If the blocks are not guaranteed to be different, put sentinels at the ends
-   of the blocks before calling this function.
-
-   Return the offset of the first byte that differs.
-   Increment *COUNT by the count of '\n' occurrences.  */
-
-static size_t
-block_compare_and_count (word const *p0, word const *p1, off_t *count)
-{
-  word l;		/* One word from first buffer. */
-  word const *l0, *l1;	/* Pointers into each buffer. */
-  char const *c0, *c1;	/* Pointers for finding exact address. */
-  size_t cnt = 0;	/* Number of '\n' occurrences. */
-  word nnnn;		/* Newline, sizeof (word) times.  */
-  int i;
-
-  nnnn = 0;
-  for (i = 0; i < sizeof nnnn; i++)
-    nnnn = (nnnn << CHAR_BIT) | '\n';
-
-  /* Find the rough position of the first difference by reading words,
-     not bytes.  */
-
-  for (l0 = p0, l1 = p1;  (l = *l0) == *l1;  l0++, l1++)
-    {
-      l ^= nnnn;
-      for (i = 0; i < sizeof l; i++)
-	{
-	  unsigned char uc = l;
-	  cnt += ! uc;
-	  l >>= CHAR_BIT;
-	}
-    }
-
-  /* Find the exact differing position (endianness independent).  */
-
-  for (c0 = (char const *) l0, c1 = (char const *) l1;
-       *c0 == *c1;
-       c0++, c1++)
-    cnt += *c0 == '\n';
-
-  *count += cnt;
-  return c0 - (char const *) p0;
-}
-
 /* Compare two blocks of memory P0 and P1 until they differ.
    If the blocks are not guaranteed to be different, put sentinels at the ends
    of the blocks before calling this function.
@@ -641,6 +596,21 @@ block_compare (word const *p0, word const *p1)
     continue;
 
   return c0 - (char const *) p0;
+}
+
+/* Return the number of newlines in BUF, of size BUFSIZE,
+   where BUF[NBYTES] is available for use as a sentinel.  */
+
+static size_t
+count_newlines (char *buf, size_t bufsize)
+{
+  size_t count = 0;
+  char *p;
+  char *lim = buf + bufsize;
+  *lim = '\n';
+  for (p = buf; (p = rawmemchr (p, '\n')) != lim; p++)
+    count++;
+  return count;
 }
 
 /* Put into BUF the unsigned char C, making unprintable bytes
