@@ -123,6 +123,7 @@ if test "$gl_gcc_warnings" = yes; then
   nw="$nw -Wunused-macros"
   nw="$nw -Wmissing-prototypes"
   nw="$nw -Wold-style-definition"
+  nw="$nw -Wsuggest-attribute=pure"
   gl_MANYWARN_COMPLEMENT([GNULIB_WARN_CFLAGS], [$WARN_CFLAGS], [$nw])
   AC_SUBST([GNULIB_WARN_CFLAGS])
 fi
