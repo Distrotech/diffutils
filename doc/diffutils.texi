@@ -4675,8 +4675,8 @@ time stamps have the same content.  @xref{diff Performance}.
 If you think you have found a bug in @acronym{GNU} @command{cmp},
 @command{diff}, @command{diff3}, or @command{sdiff}, please report it
 by electronic mail to the
-@uref{http://mail.gnu.org/mailman/listinfo/bug-gnu-utils,GNU utilities
-bug report mailing list} @email{bug-gnu-utils@@gnu.org}.  Please send
+@uref{http://mail.gnu.org/mailman/listinfo/bug-diffutils,GNU utilities
+bug report mailing list} @email{bug-diffutils@@gnu.org}.  Please send
 bug reports for @acronym{GNU} @command{patch} to
 @email{bug-patch@@gnu.org}.  Send as precise a description of the
 problem as you can, including the output of the @option{--version}
