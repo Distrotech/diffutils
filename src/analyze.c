@@ -445,26 +445,16 @@ build_script (struct file_data const filevec[])
   return script;
 }
 
-/* If CHANGES, briefly report that two files differed.
-   Return 2 if trouble, CHANGES otherwise.  */
-static int
+/* If CHANGES, briefly report that two files differed.  */
+static void
 briefly_report (int changes, struct file_data const filevec[])
 {
   if (changes)
-    {
-      char const *label0 = file_label[0] ? file_label[0] : filevec[0].name;
-      char const *label1 = file_label[1] ? file_label[1] : filevec[1].name;
-
-      if (brief)
-	message ("Files %s and %s differ\n", label0, label1);
-      else
-	{
-	  message ("Binary files %s and %s differ\n", label0, label1);
-	  changes = 2;
-	}
-    }
-
-  return changes;
+    message ((brief
+	      ? _("Files %s and %s differ\n")
+	      : _("Binary files %s and %s differ\n")),
+	     file_label[0] ? file_label[0] : filevec[0].name,
+	     file_label[1] ? file_label[1] : filevec[1].name);
 }
 
 /* Report the differences of two files.  */
@@ -536,7 +526,7 @@ diff_2_files (struct comparison *cmp)
 	    }
 	}
 
-      changes = briefly_report (changes, cmp->file);
+      briefly_report (changes, cmp->file);
     }
   else
     {
@@ -635,7 +625,7 @@ diff_2_files (struct comparison *cmp)
 	changes = (script != 0);
 
       if (brief)
-	changes = briefly_report (changes, cmp->file);
+	briefly_report (changes, cmp->file);
       else
 	{
 	  if (changes || !no_diff_means_no_output)

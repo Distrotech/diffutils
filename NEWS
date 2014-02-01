@@ -4,6 +4,9 @@ GNU diffutils NEWS                                    -*- outline -*-
 
 ** Bug fixes
 
+  When binary files differ, diff now exits with status 1 as POSIX requires.
+  Formerly it exited with status 2.
+
   Unless the --ignore-file-name-case option is used, diff now
   considers file names to be equal only if they are byte-for-byte
   equivalent.  This fixes a bug where diff in an English locale might

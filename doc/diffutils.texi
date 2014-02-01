@@ -426,6 +426,8 @@ binary (a non-text file), it normally treats that pair of files much as
 if the summary output format had been selected (@pxref{Brief}), and
 reports only that the binary files are different.  This is because line
 by line comparisons are usually not meaningful for binary files.
+This does not count as trouble, even though the resulting output does
+not capture all the differences.
 
 @command{diff} determines whether a file is text or binary by checking the
 first few bytes in the file; the exact number of bytes is system
@@ -449,14 +451,6 @@ contain.
 You can also force @command{diff} to report only whether files differ
 (but not how).  Use the @option{--brief} (@option{-q}) option for
 this.
-
-Normally, differing binary files count as trouble because the
-resulting @command{diff} output does not capture all the differences.
-This trouble causes @command{diff} to exit with status 2.  However,
-this trouble cannot occur with the @option{--text} (@option{-a})
-option, or with the @option{--brief} (@option{-q}) option, as these
-options both cause @command{diff} to generate a form of output that
-represents differences as requested.
 
 In operating systems that distinguish between text and binary files,
 @command{diff} normally reads and writes all data as text.  Use the
@@ -3705,10 +3699,7 @@ argument by itself treats the remaining arguments as file names even if
 they begin with @samp{-}.
 
 An exit status of 0 means no differences were found, 1 means some
-differences were found, and 2 means trouble.  Normally, differing
-binary files count as trouble, but this can be altered by using the
-@option{--text} (@option{-a}) option, or the @option{-q} or
-@option{--brief} option.
+differences were found, and 2 means trouble.
 
 @menu
 * diff Options:: Summary of options to @command{diff}.
