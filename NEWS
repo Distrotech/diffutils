@@ -13,6 +13,13 @@ GNU diffutils NEWS                                    -*- outline -*-
   consider two Asian file names to be the same merely because they
   contain no English characters.
 
+** Performance changes
+
+  diff's default algorithm has been adjusted to output higher-quality
+  results at somewhat greater computational cost, as CPUs have gotten
+  faster since the algorithm was last tweaked in diffutils-2.6 (1993).
+
+
 * Noteworthy changes in release 3.3 (2013-03-24) [stable]
 
 ** New features

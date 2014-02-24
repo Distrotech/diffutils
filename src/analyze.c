@@ -532,7 +532,6 @@ diff_2_files (struct comparison *cmp)
     {
       struct context ctxt;
       lin diags;
-      lin too_expensive;
 
       /* Allocate vectors for the results of comparison:
 	 a flag for each line of each file, saying whether that line
@@ -564,18 +563,11 @@ diff_2_files (struct comparison *cmp)
 
       ctxt.heuristic = speed_large_files;
 
-      /* Set TOO_EXPENSIVE to be approximate square root of input size,
-	 bounded below by 256.  */
-      too_expensive = 1;
-      for (;  diags != 0;  diags >>= 2)
-	too_expensive <<= 1;
-      ctxt.too_expensive = MAX (256, too_expensive);
-
       files[0] = cmp->file[0];
       files[1] = cmp->file[1];
 
       compareseq (0, cmp->file[0].nondiscarded_lines,
-		  0, cmp->file[1].nondiscarded_lines, minimal, &ctxt);
+		  0, cmp->file[1].nondiscarded_lines, &ctxt);
 
       free (ctxt.fdiag - (cmp->file[1].nondiscarded_lines + 1));
 
