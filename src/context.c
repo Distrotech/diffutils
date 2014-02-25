@@ -403,10 +403,10 @@ find_hunk (struct change *start)
   lin thresh;
 
   /* Threshold distance is CONTEXT if the second change is ignorable,
-     2 * CONTEXT + 1 otherwise.  Watch out for integer overflow.  */
-  lin non_ignorable_threshold =
-    (LIN_MAX - 1) / 2 < context ? LIN_MAX : 2 * context + 1;
+     2 * CONTEXT + 1 otherwise.  Integer overflow can't happen, due
+     to CONTEXT_LIM.  */
   lin ignorable_threshold = context;
+  lin non_ignorable_threshold = 2 * context + 1;
 
   do
     {

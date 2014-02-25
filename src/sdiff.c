@@ -1099,12 +1099,14 @@ interact (struct line_filter *diff,
 	  uintmax_t val;
 	  lin llen, rlen, lenmax;
 	  errno = 0;
-	  llen = val = strtoumax (diff_help + 1, &numend, 10);
-	  if (llen < 0 || llen != val || errno || *numend != ',')
+	  val = strtoumax (diff_help + 1, &numend, 10);
+	  if (LIN_MAX < val || errno || *numend != ',')
 	    fatal (diff_help);
-	  rlen = val = strtoumax (numend + 1, &numend, 10);
-	  if (rlen < 0 || rlen != val || errno || *numend)
+	  llen = val;
+	  val = strtoumax (numend + 1, &numend, 10);
+	  if (LIN_MAX < val || errno || *numend)
 	    fatal (diff_help);
+	  rlen = val;
 
 	  lenmax = MAX (llen, rlen);
 

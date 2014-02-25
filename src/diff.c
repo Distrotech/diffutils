@@ -304,11 +304,12 @@ main (int argc, char **argv)
 	case '7':
 	case '8':
 	case '9':
-	  if (! ISDIGIT (prev))
-	    ocontext = c - '0';
-	  else if (LIN_MAX / 10 < ocontext
-		   || ((ocontext = 10 * ocontext + c - '0') < 0))
-	    ocontext = LIN_MAX;
+	  ocontext = (! ISDIGIT (prev)
+		      ? c - '0'
+		      : (ocontext - (c - '0' <= CONTEXT_MAX % 10)
+			 < CONTEXT_MAX / 10)
+		      ? 10 * ocontext + (c - '0')
+		      : CONTEXT_MAX);
 	  break;
 
 	case 'a':
@@ -337,8 +338,8 @@ main (int argc, char **argv)
 		numval = strtoumax (optarg, &numend, 10);
 		if (*numend)
 		  try_help ("invalid context length '%s'", optarg);
-		if (LIN_MAX < numval)
-		  numval = LIN_MAX;
+		if (CONTEXT_MAX < numval)
+		  numval = CONTEXT_MAX;
 	      }
 	    else
 	      numval = 3;

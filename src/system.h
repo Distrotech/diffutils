@@ -135,6 +135,11 @@ typedef ptrdiff_t lin;
 verify (TYPE_SIGNED (lin));
 verify (sizeof (ptrdiff_t) <= sizeof (lin));
 verify (sizeof (lin) <= sizeof (long int));
+
+/* Limit so that 2 * CONTEXT + 1 does not overflow.  */
+
+#define CONTEXT_MAX ((LIN_MAX - 1) / 2)
+
 
 /* This section contains POSIX-compliant defaults for macros
    that are meant to be overridden by hand in config.h as needed.  */
