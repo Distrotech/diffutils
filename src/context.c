@@ -402,9 +402,8 @@ find_hunk (struct change *start)
   lin top0, top1;
   lin thresh;
 
-  /* Threshold distance is 2 * CONTEXT + 1 between two non-ignorable
-     changes, but only CONTEXT if one is ignorable.  Watch out for
-     integer overflow, though.  */
+  /* Threshold distance is CONTEXT if the second change is ignorable,
+     2 * CONTEXT + 1 otherwise.  Watch out for integer overflow.  */
   lin non_ignorable_threshold =
     (LIN_MAX - 1) / 2 < context ? LIN_MAX : 2 * context + 1;
   lin ignorable_threshold = context;
@@ -416,7 +415,7 @@ find_hunk (struct change *start)
       top1 = start->line1 + start->inserted;
       prev = start;
       start = start->link;
-      thresh = (prev->ignore || (start && start->ignore)
+      thresh = (start && start->ignore
 		? ignorable_threshold
 		: non_ignorable_threshold);
       /* It is not supposed to matter which file we check in the end-test.

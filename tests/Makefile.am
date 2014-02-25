@@ -7,6 +7,7 @@ TESTS = \
   excess-slash \
   help-version	\
   function-line-vs-leading-space \
+  ignore-matching-lines \
   label-vs-func	\
   new-file \
   no-dereference \
