@@ -939,7 +939,7 @@ static char const * const option_help_msgid[] = {
   N_("    --help               display this help and exit"),
   N_("-v, --version            output version information and exit"),
   "",
-  N_("FILES are 'FILE1 FILE2' or 'DIR1 DIR2' or 'DIR FILE...' or 'FILE... DIR'."),
+  N_("FILES are 'FILE1 FILE2' or 'DIR1 DIR2' or 'DIR FILE' or 'FILE DIR'."),
   N_("If --from-file or --to-file is given, there are no restrictions on FILE(s)."),
   N_("If a FILE is '-', read standard input."),
   N_("Exit status is 0 if inputs are the same, 1 if different, 2 if trouble."),
