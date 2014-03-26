@@ -219,6 +219,11 @@ groups of lines that differ, and reports each group of differing lines.
 Its output is designed to make it easy to inspect two different sets of
 changes to the same file.
 
+These commands compare input files without necessarily reading them.
+For example, if @command{diff} is asked simply to report whether two
+files differ, and it discovers that the files have different sizes, it
+need not read them to do its job.
+
 @menu
 * Hunks::             Groups of differing lines.
 * White Space::       Suppressing differences in white space.
@@ -3672,8 +3677,7 @@ diff @var{options}@dots{} @var{files}@dots{}
 In the simplest case, two file names @var{from-file} and
 @var{to-file} are given, and @command{diff} compares the contents of
 @var{from-file} and @var{to-file}.  A file name of @file{-} stands for
-text read from the standard input.  As a special case, @samp{diff - -}
-compares a copy of standard input to itself.
+the standard input.
 
 If one file is a directory and the other is not, @command{diff} compares
 the file in the directory whose name is that of the non-directory.
