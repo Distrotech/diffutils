@@ -108,6 +108,13 @@ sip (struct file_data *current, bool skip_test)
 				     PTRDIFF_MAX - 2 * sizeof (word));
       current->buffer = xmalloc (current->bufsize);
 
+#ifdef __KLIBC__
+      /* Skip test if seek is not possible */
+      skip_test = skip_test
+		  || (lseek (current->desc, 0, SEEK_CUR) < 0
+		      && errno == ESPIPE);
+#endif
+
       if (! skip_test)
 	{
 	  /* Check first part of file to see if it's a binary file.  */
