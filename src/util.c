@@ -817,7 +817,8 @@ analyze_hunk (struct change *hunk,
       for (i = next->line0; i <= l0 && trivial; i++)
 	{
 	  char const *line = linbuf0[i];
-	  char const *newline = linbuf0[i + 1] - 1;
+	  char const *lastbyte = linbuf0[i + 1] - 1;
+	  char const *newline = lastbyte + (*lastbyte != '\n');
 	  size_t len = newline - line;
 	  char const *p = line;
 	  if (skip_white_space)
@@ -837,7 +838,8 @@ analyze_hunk (struct change *hunk,
       for (i = next->line1; i <= l1 && trivial; i++)
 	{
 	  char const *line = linbuf1[i];
-	  char const *newline = linbuf1[i + 1] - 1;
+	  char const *lastbyte = linbuf1[i + 1] - 1;
+	  char const *newline = lastbyte + (*lastbyte != '\n');
 	  size_t len = newline - line;
 	  char const *p = line;
 	  if (skip_white_space)

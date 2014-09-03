@@ -50,4 +50,10 @@ compare exp2 out || fail=1
 # expect empty stderr
 compare /dev/null err || fail=1
 
+# Test for Bug#18402.
+printf a > a
+printf b > b
+diff -B a b > out 2>err
+test $? = 1 || fail=1
+
 Exit $fail
