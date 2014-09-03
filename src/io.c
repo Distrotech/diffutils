@@ -538,6 +538,7 @@ find_identical_ends (struct file_data filevec[])
   lin i, lines;
   size_t n0, n1;
   lin alloc_lines0, alloc_lines1;
+  bool prefix_needed;
   lin buffered_prefix, prefix_count, prefix_mask;
   lin middle_guess, suffix_guess;
 
@@ -687,12 +688,13 @@ find_identical_ends (struct file_data filevec[])
   prefix_mask = prefix_count - 1;
   lines = 0;
   linbuf0 = xmalloc (alloc_lines0 * sizeof *linbuf0);
+  prefix_needed = ! (no_diff_means_no_output
+		     && filevec[0].prefix_end == p0
+		     && filevec[1].prefix_end == p1);
   p0 = buffer0;
 
   /* If the prefix is needed, find the prefix lines.  */
-  if (! (no_diff_means_no_output
-	 && filevec[0].prefix_end == p0
-	 && filevec[1].prefix_end == p1))
+  if (prefix_needed)
     {
       end0 = filevec[0].prefix_end;
       while (p0 != end0)
