@@ -595,7 +595,8 @@ main (int argc, char **argv)
 
 	case TABSIZE_OPTION:
 	  numval = strtoumax (optarg, &numend, 10);
-	  if (! (0 < numval && numval <= SIZE_MAX) || *numend)
+	  if (! (0 < numval && numval <= SIZE_MAX - GUTTER_WIDTH_MINIMUM)
+	      || *numend)
 	    try_help ("invalid tabsize '%s'", optarg);
 	  if (tabsize != numval)
 	    {
@@ -682,10 +683,14 @@ main (int argc, char **argv)
 		a half line plus a gutter is an integral number of tabs,
 		so that tabs in the right column line up.  */
 
-    intmax_t t = expand_tabs ? 1 : tabsize;
-    intmax_t w = width;
-    intmax_t off = (w + t + GUTTER_WIDTH_MINIMUM) / (2 * t)  *  t;
-    sdiff_half_width = MAX (0, MIN (off - GUTTER_WIDTH_MINIMUM, w - off)),
+    size_t t = expand_tabs ? 1 : tabsize;
+    size_t w = width;
+    size_t t_plus_g = t + GUTTER_WIDTH_MINIMUM;
+    size_t unaligned_off = (w >> 1) + (t_plus_g >> 1) + (w & t_plus_g & 1);
+    size_t off = unaligned_off - unaligned_off % t;
+    sdiff_half_width = (off <= GUTTER_WIDTH_MINIMUM || w <= off
+			? 0
+			: MIN (off - GUTTER_WIDTH_MINIMUM, w - off));
     sdiff_column2_offset = sdiff_half_width ? off : w;
   }
 

@@ -2,6 +2,7 @@
 
 TESTS = \
   basic \
+  bignum \
   binary \
   colliding-file-names \
   excess-slash \
