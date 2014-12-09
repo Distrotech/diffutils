@@ -29,6 +29,6 @@ sdiff.1: $S/sdiff.c sdiff.x
 $(dist_man1_MANS): $(SRC_VERSION_C) help2man
 	$(AM_V_GEN)base=`expr $@ : '\(.*\).1'`				\
 	  && (echo '[NAME]' && sed 's@/\* *@@; s/-/\\-/; q' $S/$$base.c) \
-	     | PATH=..$(PATH_SEPARATOR)$$PATH				\
+	     | PATH="..$(PATH_SEPARATOR)$$PATH"				\
 	       $(srcdir)/help2man -i - -i $(srcdir)/$$base.x		\
 		 -S '$(PACKAGE) $(VERSION)' $$base > $@-t && mv $@-t $@
