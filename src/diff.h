@@ -38,6 +38,19 @@ enum changes
   /* Both deletes and inserts: a hunk containing both old and new lines.  */
   CHANGED
 };
+
+/* When colors should be used in the output.  */
+enum colors_style
+{
+  /* Never output colors.  */
+  NEVER,
+
+  /* Output colors if the output is a terminal.  */
+  AUTO,
+
+  /* Always output colors.  */
+  ALWAYS,
+};
 
 /* Variables for command line options */
 
@@ -82,6 +95,9 @@ enum output_style
 #define ROBUST_OUTPUT_STYLE(S) ((S) != OUTPUT_ED && (S) != OUTPUT_FORWARD_ED)
 
 XTERN enum output_style output_style;
+
+/* Define the current color context used to print a line.  */
+XTERN enum colors_style colors_style;
 
 /* Nonzero if output cannot be generated for identical files.  */
 XTERN bool no_diff_means_no_output;
@@ -383,6 +399,7 @@ extern void output_1_line (char const *, char const *, char const *,
 extern void perror_with_name (char const *);
 extern void pfatal_with_name (char const *) __attribute__((noreturn));
 extern void print_1_line (char const *, char const * const *);
+extern void print_1_line_nl (char const *, char const * const *, bool);
 extern void print_message_queue (void);
 extern void print_number_range (char, struct file_data *, lin, lin);
 extern void print_script (struct change *, struct change * (*) (struct change *),
@@ -390,3 +407,14 @@ extern void print_script (struct change *, struct change * (*) (struct change *)
 extern void setup_output (char const *, char const *, bool);
 extern void translate_range (struct file_data const *, lin, lin,
                              long int *, long int *);
+
+enum color_context
+{
+  HEADER_CONTEXT,
+  ADD_CONTEXT,
+  DELETE_CONTEXT,
+  RESET_CONTEXT,
+  LINE_NUMBER_CONTEXT,
+};
+
+extern void set_color_context (enum color_context color_context);

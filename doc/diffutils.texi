@@ -3742,6 +3742,27 @@ Read and write data in binary mode.  @xref{Binary}.
 Use the context output format, showing three lines of context.
 @xref{Context Format}.
 
+@item --color [=@var{when}]
+@cindex color, distinguishing different context
+Specify whether to use color for distinguishing different contexts,
+like header, added or removed lines.  @var{when} may be omitted, or
+one of:
+@itemize @bullet
+@item none
+@vindex none @r{color option}
+Do not use color at all.  This is the default when no --color option
+is specified.
+@item auto
+@vindex auto @r{color option}
+@cindex terminal, using color iff
+Use color only if standard output is a terminal.
+@item always
+@vindex always @r{color option}
+Always use color.
+@end itemize
+Specifying @option{--color} and no @var{when} is equivalent to
+@option{--color=auto}.
+
 @item -C @var{lines}
 @itemx --context@r{[}=@var{lines}@r{]}
 Use the context output format, showing @var{lines} (an integer) lines of

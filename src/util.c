@@ -24,6 +24,22 @@
 #include <system-quote.h>
 #include <xalloc.h>
 #include "xvasprintf.h"
+#include <signal.h>
+
+/* Use SA_NOCLDSTOP as a proxy for whether the sigaction machinery is
+   present.  */
+#ifndef SA_NOCLDSTOP
+# define SA_NOCLDSTOP 0
+# define sigprocmask(How, Set, Oset) /* empty */
+# define sigset_t int
+# if ! HAVE_SIGINTERRUPT
+#  define siginterrupt(sig, flag) /* empty */
+# endif
+#endif
+
+#ifndef SA_RESTART
+# define SA_RESTART 0
+#endif
 
 char const pr_program[] = PR_PROGRAM;
 
@@ -143,16 +159,180 @@ print_message_queue (void)
     }
 }
 
+/* The set of signals that are caught.  */
+
+static sigset_t caught_signals;
+
+/* If nonzero, the value of the pending fatal signal.  */
+
+static sig_atomic_t volatile interrupt_signal;
+
+/* A count of the number of pending stop signals that have been received.  */
+
+static sig_atomic_t volatile stop_signal_count;
+
+/* An ordinary signal was received; arrange for the program to exit.  */
+
+static void
+sighandler (int sig)
+{
+  if (! SA_NOCLDSTOP)
+    signal (sig, SIG_IGN);
+  if (! interrupt_signal)
+    interrupt_signal = sig;
+}
+
+/* A SIGTSTP was received; arrange for the program to suspend itself.  */
+
+static void
+stophandler (int sig)
+{
+  if (! SA_NOCLDSTOP)
+    signal (sig, stophandler);
+  if (! interrupt_signal)
+    stop_signal_count++;
+}
+/* Process any pending signals.  If signals are caught, this function
+   should be called periodically.  Ideally there should never be an
+   unbounded amount of time when signals are not being processed.
+   Signal handling can restore the default colors, so callers must
+   immediately change colors after invoking this function.  */
+
+static void
+process_signals (void)
+{
+  while (interrupt_signal || stop_signal_count)
+    {
+      int sig;
+      int stops;
+      sigset_t oldset;
+
+      set_color_context (RESET_CONTEXT);
+      fflush (stdout);
+
+      sigprocmask (SIG_BLOCK, &caught_signals, &oldset);
+
+      /* Reload interrupt_signal and stop_signal_count, in case a new
+         signal was handled before sigprocmask took effect.  */
+      sig = interrupt_signal;
+      stops = stop_signal_count;
+
+      /* SIGTSTP is special, since the application can receive that signal
+         more than once.  In this case, don't set the signal handler to the
+         default.  Instead, just raise the uncatchable SIGSTOP.  */
+      if (stops)
+        {
+          stop_signal_count = stops - 1;
+          sig = SIGSTOP;
+        }
+      else
+        signal (sig, SIG_DFL);
+
+      /* Exit or suspend the program.  */
+      raise (sig);
+      sigprocmask (SIG_SETMASK, &oldset, NULL);
+
+      /* If execution reaches here, then the program has been
+         continued (after being suspended).  */
+    }
+}
+
+static void
+install_signal_handlers (void)
+{
+  /* The signals that are trapped, and the number of such signals.  */
+  static int const sig[] =
+    {
+      /* This one is handled specially.  */
+      SIGTSTP,
+
+      /* The usual suspects.  */
+      SIGALRM, SIGHUP, SIGINT, SIGPIPE, SIGQUIT, SIGTERM,
+#ifdef SIGPOLL
+      SIGPOLL,
+#endif
+#ifdef SIGPROF
+      SIGPROF,
+#endif
+#ifdef SIGVTALRM
+      SIGVTALRM,
+#endif
+#ifdef SIGXCPU
+      SIGXCPU,
+#endif
+#ifdef SIGXFSZ
+      SIGXFSZ,
+#endif
+    };
+  enum { nsigs = sizeof (sig) / sizeof *(sig) };
+
+#if ! SA_NOCLDSTOP
+  bool caught_sig[nsigs];
+#endif
+  {
+    int j;
+#if SA_NOCLDSTOP
+    struct sigaction act;
+
+    sigemptyset (&caught_signals);
+    for (j = 0; j < nsigs; j++)
+      {
+        sigaction (sig[j], NULL, &act);
+        if (act.sa_handler != SIG_IGN)
+          sigaddset (&caught_signals, sig[j]);
+      }
+
+    act.sa_mask = caught_signals;
+    act.sa_flags = SA_RESTART;
+
+    for (j = 0; j < nsigs; j++)
+      if (sigismember (&caught_signals, sig[j]))
+        {
+          act.sa_handler = sig[j] == SIGTSTP ? stophandler : sighandler;
+          sigaction (sig[j], &act, NULL);
+        }
+#else
+    for (j = 0; j < nsigs; j++)
+      {
+        caught_sig[j] = (signal (sig[j], SIG_IGN) != SIG_IGN);
+        if (caught_sig[j])
+          {
+            signal (sig[j], sig[j] == SIGTSTP ? stophandler : sighandler);
+            siginterrupt (sig[j], 0);
+          }
+      }
+#endif
+    }
+}
+
+static char const *current_name0;
+static char const *current_name1;
+static bool currently_recursive;
+static bool colors_enabled;
+
+static void
+check_color_output (bool is_pipe)
+{
+  bool output_is_tty;
+
+  if (! outfile || colors_style == NEVER)
+    return;
+
+  output_is_tty = !is_pipe && isatty (fileno (outfile));
+
+  colors_enabled = (colors_style == ALWAYS
+                    || (colors_style == AUTO && output_is_tty));
+
+  if (output_is_tty)
+    install_signal_handlers ();
+}
+
 /* Call before outputting the results of comparing files NAME0 and NAME1
    to set up OUTFILE, the stdio stream for the output to go to.
 
    Usually, OUTFILE is just stdout.  But when -l was specified
    we fork off a 'pr' and make OUTFILE a pipe to it.
    'pr' then outputs to our stdout.  */
-
-static char const *current_name0;
-static char const *current_name1;
-static bool currently_recursive;
 
 void
 setup_output (char const *name0, char const *name1, bool recursive)
@@ -313,6 +493,7 @@ begin_output (void)
 	    outfile = fdopen (pipes[1], "w");
 	    if (!outfile)
 	      pfatal_with_name ("fdopen");
+	    check_color_output (true);
 	  }
 #else
 	char *command = system_quote_argv (SCI_SYSTEM, (char **) argv);
@@ -320,6 +501,7 @@ begin_output (void)
 	outfile = popen (command, "w");
 	if (!outfile)
 	  pfatal_with_name (command);
+	check_color_output (true);
 	free (command);
 #endif
       }
@@ -330,6 +512,7 @@ begin_output (void)
       /* If -l was not specified, output the diff straight to 'stdout'.  */
 
       outfile = stdout;
+      check_color_output (false);
 
       /* If handling multiple files (because scanning a directory),
 	 print which files the following output is about.  */
@@ -630,6 +813,18 @@ print_script (struct change *script,
 void
 print_1_line (char const *line_flag, char const *const *line)
 {
+  print_1_line_nl (line_flag, line, false);
+}
+
+/* Print the text of a single line LINE,
+   flagging it with the characters in LINE_FLAG (which say whether
+   the line is inserted, deleted, changed, etc.).  LINE_FLAG must not
+   end in a blank, unless it is a single blank.  If SKIP_NL is set, then
+   the final '\n' is not printed.  */
+
+void
+print_1_line_nl (char const *line_flag, char const *const *line, bool skip_nl)
+{
   char const *base = line[0], *limit = line[1]; /* Help the compiler.  */
   FILE *out = outfile; /* Help the compiler some more.  */
   char const *flag_format = 0;
@@ -657,10 +852,13 @@ print_1_line (char const *line_flag, char const *const *line)
       fprintf (out, flag_format_1, line_flag_1);
     }
 
-  output_1_line (base, limit, flag_format, line_flag);
+  output_1_line (base, limit - (skip_nl && limit[-1] == '\n'), flag_format, line_flag);
 
   if ((!line_flag || line_flag[0]) && limit[-1] != '\n')
-    fprintf (out, "\n\\ %s\n", _("No newline at end of file"));
+    {
+      set_color_context (RESET_CONTEXT);
+      fprintf (out, "\n\\ %s\n", _("No newline at end of file"));
+    }
 }
 
 /* Output a line from BASE up to LIMIT.
@@ -672,8 +870,21 @@ void
 output_1_line (char const *base, char const *limit, char const *flag_format,
 	       char const *line_flag)
 {
+  const size_t MAX_CHUNK = 1024;
   if (!expand_tabs)
-    fwrite (base, sizeof (char), limit - base, outfile);
+    {
+      size_t left = limit - base;
+      while (left)
+        {
+          size_t to_write = MIN (left, MAX_CHUNK);
+          size_t written = fwrite (base, sizeof (char), to_write, outfile);
+          if (written < to_write)
+            return;
+          base += written;
+          left -= written;
+          process_signals ();
+        }
+    }
   else
     {
       register FILE *out = outfile;
@@ -681,39 +892,85 @@ output_1_line (char const *base, char const *limit, char const *flag_format,
       register char const *t = base;
       register size_t column = 0;
       size_t tab_size = tabsize;
+      size_t counter_proc_signals = 0;
 
       while (t < limit)
-	switch ((c = *t++))
-	  {
-	  case '\t':
-	    {
-	      size_t spaces = tab_size - column % tab_size;
-	      column += spaces;
-	      do
-		putc (' ', out);
-	      while (--spaces);
-	    }
-	    break;
+        {
+          counter_proc_signals++;
+          if (counter_proc_signals == MAX_CHUNK)
+            {
+              process_signals ();
+              counter_proc_signals = 0;
+            }
 
-	  case '\r':
-	    putc (c, out);
-	    if (flag_format && t < limit && *t != '\n')
-	      fprintf (out, flag_format, line_flag);
-	    column = 0;
-	    break;
+          switch ((c = *t++))
+            {
+            case '\t':
+              {
+                size_t spaces = tab_size - column % tab_size;
+                column += spaces;
+                do
+                  putc (' ', out);
+                while (--spaces);
+              }
+              break;
 
-	  case '\b':
-	    if (column == 0)
-	      continue;
-	    column--;
-	    putc (c, out);
-	    break;
+            case '\r':
+              putc (c, out);
+              if (flag_format && t < limit && *t != '\n')
+                fprintf (out, flag_format, line_flag);
+              column = 0;
+              break;
 
-	  default:
-	    column += isprint (c) != 0;
-	    putc (c, out);
-	    break;
-	  }
+            case '\b':
+              if (column == 0)
+                continue;
+              column--;
+              putc (c, out);
+              break;
+
+            default:
+              column += isprint (c) != 0;
+              putc (c, out);
+              break;
+            }
+        }
+    }
+}
+
+
+void
+set_color_context (enum color_context color_context)
+{
+  process_signals ();
+  if (colors_enabled)
+    {
+      switch (color_context)
+        {
+        case HEADER_CONTEXT:
+          fputs ("\x1B[1m", outfile);
+          break;
+
+        case LINE_NUMBER_CONTEXT:
+          fputs ("\x1B[36m", outfile);
+
+          break;
+
+        case ADD_CONTEXT:
+          fputs ("\x1B[32m", outfile);
+          break;
+
+        case DELETE_CONTEXT:
+          fputs ("\x1B[31m", outfile);
+          break;
+
+        case RESET_CONTEXT:
+          fputs ("\x1b[0m", outfile);
+          break;
+
+        default:
+          abort ();
+        }
     }
 }
 

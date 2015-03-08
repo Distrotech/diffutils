@@ -80,6 +80,7 @@ print_context_label (char const *mark,
 void
 print_context_header (struct file_data inf[], char const *const *names, bool unidiff)
 {
+  set_color_context (HEADER_CONTEXT);
   if (unidiff)
     {
       print_context_label ("---", &inf[0], names[0], file_label[0]);
@@ -90,6 +91,7 @@ print_context_header (struct file_data inf[], char const *const *names, bool uni
       print_context_label ("***", &inf[0], names[0], file_label[0]);
       print_context_label ("---", &inf[1], names[1], file_label[1]);
     }
+  set_color_context (RESET_CONTEXT);
 }
 
 /* Print an edit script in context format.  */
@@ -205,13 +207,20 @@ pr_context_hunk (struct change *hunk)
   if (function)
     print_context_function (out, function);
 
-  fputs ("\n*** ", out);
+  putc ('\n', out);
+  set_color_context (LINE_NUMBER_CONTEXT);
+  fputs ("*** ", out);
   print_context_number_range (&files[0], first0, last0);
-  fputs (" ****\n", out);
+  fputs (" ****", out);
+  set_color_context (RESET_CONTEXT);
+  putc ('\n', out);
 
   if (changes & OLD)
     {
       struct change *next = hunk;
+
+      if (first0 <= last0)
+        set_color_context (DELETE_CONTEXT);
 
       for (i = first0; i <= last0; i++)
 	{
@@ -225,22 +234,33 @@ pr_context_hunk (struct change *hunk)
 
 	  prefix = " ";
 	  if (next && next->line0 <= i)
-	    /* The change NEXT covers this line.
-	       If lines were inserted here in file 1, this is "changed".
-	       Otherwise it is "deleted".  */
-	    prefix = (next->inserted > 0 ? "!" : "-");
-
-	  print_1_line (prefix, &files[0].linbuf[i]);
+            {
+              /* The change NEXT covers this line.
+                 If lines were inserted here in file 1, this is "changed".
+                 Otherwise it is "deleted".  */
+              prefix = (next->inserted > 0 ? "!" : "-");
+            }
+	  print_1_line_nl (prefix, &files[0].linbuf[i], true);
+          if (i == last0)
+            set_color_context (RESET_CONTEXT);
+          if (files[0].linbuf[i + 1][-1] == '\n')
+            putc ('\n', out);
 	}
     }
 
+  set_color_context (LINE_NUMBER_CONTEXT);
   fputs ("--- ", out);
   print_context_number_range (&files[1], first1, last1);
-  fputs (" ----\n", out);
+  fputs (" ----", out);
+  set_color_context (RESET_CONTEXT);
+  putc ('\n', out);
 
   if (changes & NEW)
     {
       struct change *next = hunk;
+
+      if (first1 <= last1)
+        set_color_context (ADD_CONTEXT);
 
       for (i = first1; i <= last1; i++)
 	{
@@ -254,12 +274,17 @@ pr_context_hunk (struct change *hunk)
 
 	  prefix = " ";
 	  if (next && next->line1 <= i)
-	    /* The change NEXT covers this line.
-	       If lines were deleted here in file 0, this is "changed".
-	       Otherwise it is "inserted".  */
-	    prefix = (next->deleted > 0 ? "!" : "+");
-
-	  print_1_line (prefix, &files[1].linbuf[i]);
+            {
+              /* The change NEXT covers this line.
+                 If lines were deleted here in file 0, this is "changed".
+                 Otherwise it is "inserted".  */
+              prefix = (next->deleted > 0 ? "!" : "+");
+            }
+	  print_1_line_nl (prefix, &files[1].linbuf[i], true);
+          if (i == last1)
+            set_color_context (RESET_CONTEXT);
+          if (files[1].linbuf[i + 1][-1] == '\n')
+            putc ('\n', out);
 	}
     }
 }
@@ -330,11 +355,13 @@ pr_unidiff_hunk (struct change *hunk)
   begin_output ();
   out = outfile;
 
+  set_color_context (LINE_NUMBER_CONTEXT);
   fputs ("@@ -", out);
   print_unidiff_number_range (&files[0], first0, last0);
   fputs (" +", out);
   print_unidiff_number_range (&files[1], first1, last1);
   fputs (" @@", out);
+  set_color_context (RESET_CONTEXT);
 
   if (function)
     print_context_function (out, function);
@@ -363,25 +390,43 @@ pr_unidiff_hunk (struct change *hunk)
 	  /* For each difference, first output the deleted part. */
 
 	  k = next->deleted;
+          if (k)
+            set_color_context (DELETE_CONTEXT);
+
 	  while (k--)
 	    {
 	      char const * const *line = &files[0].linbuf[i++];
 	      putc ('-', out);
 	      if (initial_tab && ! (suppress_blank_empty && **line == '\n'))
 		putc ('\t', out);
-	      print_1_line (NULL, line);
+	      print_1_line_nl (NULL, line, true);
+
+              if (!k)
+                set_color_context (RESET_CONTEXT);
+
+              if (line[1][-1] == '\n')
+                putc ('\n', out);
 	    }
 
 	  /* Then output the inserted part. */
 
 	  k = next->inserted;
-	  while (k--)
+          if (k)
+            set_color_context (ADD_CONTEXT);
+
+          while (k--)
 	    {
 	      char const * const *line = &files[1].linbuf[j++];
 	      putc ('+', out);
 	      if (initial_tab && ! (suppress_blank_empty && **line == '\n'))
 		putc ('\t', out);
-	      print_1_line (NULL, line);
+	      print_1_line_nl (NULL, line, true);
+
+              if (!k)
+                set_color_context (RESET_CONTEXT);
+
+              if (line[1][-1] == '\n')
+                putc ('\n', out);
 	    }
 
 	  /* We're done with this hunk, so on to the next! */

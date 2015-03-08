@@ -70,6 +70,7 @@ static void add_regexp (struct regexp_list *, char const *);
 static void summarize_regexp_list (struct regexp_list *);
 static void specify_style (enum output_style);
 static void specify_value (char const **, char const *, char const *);
+static void specify_colors_style (char const *);
 static void try_help (char const *, char const *) __attribute__((noreturn));
 static void check_stdout (void);
 static void usage (void);
@@ -136,7 +137,9 @@ enum
   UNCHANGED_GROUP_FORMAT_OPTION,
   OLD_GROUP_FORMAT_OPTION,
   NEW_GROUP_FORMAT_OPTION,
-  CHANGED_GROUP_FORMAT_OPTION
+  CHANGED_GROUP_FORMAT_OPTION,
+
+  COLOR_OPTION,
 };
 
 static char const group_format_option[][sizeof "--unchanged-group-format"] =
@@ -159,6 +162,7 @@ static struct option const longopts[] =
   {"binary", 0, 0, BINARY_OPTION},
   {"brief", 0, 0, 'q'},
   {"changed-group-format", 1, 0, CHANGED_GROUP_FORMAT_OPTION},
+  {"color", 2, 0, COLOR_OPTION},
   {"context", 2, 0, 'C'},
   {"ed", 0, 0, 'e'},
   {"exclude", 1, 0, 'x'},
@@ -627,6 +631,10 @@ main (int argc, char **argv)
 	  specify_value (&group_format[c], optarg, group_format_option[c]);
 	  break;
 
+	case COLOR_OPTION:
+	  specify_colors_style (optarg);
+	  break;
+
 	default:
 	  try_help (NULL, NULL);
 	}
@@ -940,6 +948,8 @@ static char const * const option_help_msgid[] = {
   N_("-d, --minimal            try hard to find a smaller set of changes"),
   N_("    --horizon-lines=NUM  keep NUM lines of the common prefix and suffix"),
   N_("    --speed-large-files  assume large files and many scattered small changes"),
+  N_("    --color[=WHEN]       colorize the output; WHEN can be 'never', 'always',"),
+  N_("                           or 'auto' (the default)"),
   "",
   N_("    --help               display this help and exit"),
   N_("-v, --version            output version information and exit"),
@@ -1008,6 +1018,21 @@ specify_style (enum output_style style)
       output_style = style;
     }
 }
+
+/* Set the color mode.  */
+static void
+specify_colors_style (char const *value)
+{
+  if (value == NULL || STREQ (value, "auto"))
+    colors_style = AUTO;
+  else if (STREQ (value, "always"))
+    colors_style = ALWAYS;
+  else if (STREQ (value, "never"))
+    colors_style = NEVER;
+  else
+    try_help ("invalid color '%s'", value);
+}
+
 
 /* Set the last-modified time of *ST to be the current time.  */
 
