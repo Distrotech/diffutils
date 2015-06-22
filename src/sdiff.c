@@ -1,7 +1,7 @@
 /* sdiff - side-by-side merge of file differences
 
-   Copyright (C) 1992-1996, 1998, 2001-2002, 2004, 2006-2007, 2009-2013 Free
-   Software Foundation, Inc.
+   Copyright (C) 1992-1996, 1998, 2001-2002, 2004, 2006-2007, 2009-2013, 2015
+   Free Software Foundation, Inc.
 
    This file is part of GNU DIFF.
 
@@ -379,8 +379,8 @@ lf_copy (struct line_filter *lf, lin lines, FILE *outfile)
 
   while (lines)
     {
-      lf->bufpos = (char *) memchr (lf->bufpos, '\n', lf->buflim - lf->bufpos);
-      if (! lf->bufpos)
+      lf->bufpos = rawmemchr (lf->bufpos, '\n');
+      if (lf->bufpos == lf->buflim)
 	{
 	  ck_fwrite (start, lf->buflim - start, outfile);
 	  if (! lf_refill (lf))
@@ -403,8 +403,8 @@ lf_skip (struct line_filter *lf, lin lines)
 {
   while (lines)
     {
-      lf->bufpos = (char *) memchr (lf->bufpos, '\n', lf->buflim - lf->bufpos);
-      if (! lf->bufpos)
+      lf->bufpos = rawmemchr (lf->bufpos, '\n');
+      if (lf->bufpos == lf->buflim)
 	{
 	  if (! lf_refill (lf))
 	    break;
@@ -424,7 +424,7 @@ lf_snarf (struct line_filter *lf, char *buffer, size_t bufsize)
   for (;;)
     {
       char *start = lf->bufpos;
-      char *next = (char *) memchr (start, '\n', lf->buflim + 1 - start);
+      char *next = rawmemchr (start, '\n');
       size_t s = next - start;
       if (bufsize <= s)
 	return 0;
@@ -1099,12 +1099,14 @@ interact (struct line_filter *diff,
 	  uintmax_t val;
 	  lin llen, rlen, lenmax;
 	  errno = 0;
-	  llen = val = strtoumax (diff_help + 1, &numend, 10);
-	  if (llen < 0 || llen != val || errno || *numend != ',')
+	  val = strtoumax (diff_help + 1, &numend, 10);
+	  if (LIN_MAX < val || errno || *numend != ',')
 	    fatal (diff_help);
-	  rlen = val = strtoumax (numend + 1, &numend, 10);
-	  if (rlen < 0 || rlen != val || errno || *numend)
+	  llen = val;
+	  val = strtoumax (numend + 1, &numend, 10);
+	  if (LIN_MAX < val || errno || *numend)
 	    fatal (diff_help);
+	  rlen = val;
 
 	  lenmax = MAX (llen, rlen);
 

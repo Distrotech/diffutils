@@ -1,7 +1,7 @@
 /* diff - compare files line by line
 
    Copyright (C) 1988-1989, 1992-1994, 1996, 1998, 2001-2002, 2004, 2006-2007,
-   2009-2013 Free Software Foundation, Inc.
+   2009-2013, 2015 Free Software Foundation, Inc.
 
    This file is part of GNU DIFF.
 
@@ -304,11 +304,12 @@ main (int argc, char **argv)
 	case '7':
 	case '8':
 	case '9':
-	  if (! ISDIGIT (prev))
-	    ocontext = c - '0';
-	  else if (LIN_MAX / 10 < ocontext
-		   || ((ocontext = 10 * ocontext + c - '0') < 0))
-	    ocontext = LIN_MAX;
+	  ocontext = (! ISDIGIT (prev)
+		      ? c - '0'
+		      : (ocontext - (c - '0' <= CONTEXT_MAX % 10)
+			 < CONTEXT_MAX / 10)
+		      ? 10 * ocontext + (c - '0')
+		      : CONTEXT_MAX);
 	  break;
 
 	case 'a':
@@ -337,8 +338,8 @@ main (int argc, char **argv)
 		numval = strtoumax (optarg, &numend, 10);
 		if (*numend)
 		  try_help ("invalid context length '%s'", optarg);
-		if (LIN_MAX < numval)
-		  numval = LIN_MAX;
+		if (CONTEXT_MAX < numval)
+		  numval = CONTEXT_MAX;
 	      }
 	    else
 	      numval = 3;
@@ -594,7 +595,8 @@ main (int argc, char **argv)
 
 	case TABSIZE_OPTION:
 	  numval = strtoumax (optarg, &numend, 10);
-	  if (! (0 < numval && numval <= SIZE_MAX) || *numend)
+	  if (! (0 < numval && numval <= SIZE_MAX - GUTTER_WIDTH_MINIMUM)
+	      || *numend)
 	    try_help ("invalid tabsize '%s'", optarg);
 	  if (tabsize != numval)
 	    {
@@ -681,10 +683,14 @@ main (int argc, char **argv)
 		a half line plus a gutter is an integral number of tabs,
 		so that tabs in the right column line up.  */
 
-    intmax_t t = expand_tabs ? 1 : tabsize;
-    intmax_t w = width;
-    intmax_t off = (w + t + GUTTER_WIDTH_MINIMUM) / (2 * t)  *  t;
-    sdiff_half_width = MAX (0, MIN (off - GUTTER_WIDTH_MINIMUM, w - off)),
+    size_t t = expand_tabs ? 1 : tabsize;
+    size_t w = width;
+    size_t t_plus_g = t + GUTTER_WIDTH_MINIMUM;
+    size_t unaligned_off = (w >> 1) + (t_plus_g >> 1) + (w & t_plus_g & 1);
+    size_t off = unaligned_off - unaligned_off % t;
+    sdiff_half_width = (off <= GUTTER_WIDTH_MINIMUM || w <= off
+			? 0
+			: MIN (off - GUTTER_WIDTH_MINIMUM, w - off));
     sdiff_column2_offset = sdiff_half_width ? off : w;
   }
 
@@ -938,7 +944,7 @@ static char const * const option_help_msgid[] = {
   N_("    --help               display this help and exit"),
   N_("-v, --version            output version information and exit"),
   "",
-  N_("FILES are 'FILE1 FILE2' or 'DIR1 DIR2' or 'DIR FILE...' or 'FILE... DIR'."),
+  N_("FILES are 'FILE1 FILE2' or 'DIR1 DIR2' or 'DIR FILE' or 'FILE DIR'."),
   N_("If --from-file or --to-file is given, there are no restrictions on FILE(s)."),
   N_("If a FILE is '-', read standard input."),
   N_("Exit status is 0 if inputs are the same, 1 if different, 2 if trouble."),

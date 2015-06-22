@@ -9,8 +9,8 @@ fail=0
 
 printf '\0'|diff - /dev/null > out 2> err
 
-# diff must exit with status 2, stdout as above, and no stderr.
-test $? = 2 || fail=1
+# diff must exit with status 1, stdout as above, and no stderr.
+test $? = 1 || fail=1
 compare out-exp out || fail=1
 compare /dev/null err || fail=1
 

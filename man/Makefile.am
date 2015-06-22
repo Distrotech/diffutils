@@ -1,6 +1,6 @@
 # Automakefile for GNU diffutils man pages
 
-# Copyright (C) 2002, 2009-2013 Free Software Foundation, Inc.
+# Copyright (C) 2002, 2009-2013, 2015 Free Software Foundation, Inc.
 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -29,6 +29,6 @@ sdiff.1: $S/sdiff.c sdiff.x
 $(dist_man1_MANS): $(SRC_VERSION_C) help2man
 	$(AM_V_GEN)base=`expr $@ : '\(.*\).1'`				\
 	  && (echo '[NAME]' && sed 's@/\* *@@; s/-/\\-/; q' $S/$$base.c) \
-	     | PATH=..$(PATH_SEPARATOR)$$PATH				\
+	     | PATH="..$(PATH_SEPARATOR)$$PATH"				\
 	       $(srcdir)/help2man -i - -i $(srcdir)/$$base.x		\
 		 -S '$(PACKAGE) $(VERSION)' $$base > $@-t && mv $@-t $@

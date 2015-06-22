@@ -1,7 +1,7 @@
 /* System dependent declarations.
 
-   Copyright (C) 1988-1989, 1992-1995, 1998, 2001-2002, 2004, 2006, 2009-2013
-   Free Software Foundation, Inc.
+   Copyright (C) 1988-1989, 1992-1995, 1998, 2001-2002, 2004, 2006, 2009-2013,
+   2015 Free Software Foundation, Inc.
 
    This file is part of GNU DIFF.
 
@@ -119,10 +119,12 @@ int strcasecmp (char const *, char const *);
 #include "propername.h"
 #include "version.h"
 
-/* Type used for fast comparison of several bytes at a time.  */
+/* Type used for fast comparison of several bytes at a time.
+   This used to be uintmax_t, but changing it to size_t
+   made plain 'cmp' 90% faster (GCC 4.8.1, x86).  */
 
 #ifndef word
-# define word uintmax_t
+# define word size_t
 #endif
 
 /* The integer type of a line number.  Since files are read into main
@@ -133,6 +135,11 @@ typedef ptrdiff_t lin;
 verify (TYPE_SIGNED (lin));
 verify (sizeof (ptrdiff_t) <= sizeof (lin));
 verify (sizeof (lin) <= sizeof (long int));
+
+/* Limit so that 2 * CONTEXT + 1 does not overflow.  */
+
+#define CONTEXT_MAX ((LIN_MAX - 1) / 2)
+
 
 /* This section contains POSIX-compliant defaults for macros
    that are meant to be overridden by hand in config.h as needed.  */

@@ -1,7 +1,7 @@
 /* Context-format output routines for GNU DIFF.
 
-   Copyright (C) 1988-1989, 1991-1995, 1998, 2001-2002, 2004, 2006, 2009-2013
-   Free Software Foundation, Inc.
+   Copyright (C) 1988-1989, 1991-1995, 1998, 2001-2002, 2004, 2006, 2009-2013,
+   2015 Free Software Foundation, Inc.
 
    This file is part of GNU DIFF.
 
@@ -402,12 +402,11 @@ find_hunk (struct change *start)
   lin top0, top1;
   lin thresh;
 
-  /* Threshold distance is 2 * CONTEXT + 1 between two non-ignorable
-     changes, but only CONTEXT if one is ignorable.  Watch out for
-     integer overflow, though.  */
-  lin non_ignorable_threshold =
-    (LIN_MAX - 1) / 2 < context ? LIN_MAX : 2 * context + 1;
+  /* Threshold distance is CONTEXT if the second change is ignorable,
+     2 * CONTEXT + 1 otherwise.  Integer overflow can't happen, due
+     to CONTEXT_LIM.  */
   lin ignorable_threshold = context;
+  lin non_ignorable_threshold = 2 * context + 1;
 
   do
     {
@@ -416,7 +415,7 @@ find_hunk (struct change *start)
       top1 = start->line1 + start->inserted;
       prev = start;
       start = start->link;
-      thresh = (prev->ignore || (start && start->ignore)
+      thresh = (start && start->ignore
 		? ignorable_threshold
 		: non_ignorable_threshold);
       /* It is not supposed to matter which file we check in the end-test.

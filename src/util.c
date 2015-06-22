@@ -1,7 +1,7 @@
 /* Support routines for GNU DIFF.
 
-   Copyright (C) 1988-1989, 1992-1995, 1998, 2001-2002, 2004, 2006, 2009-2013
-   Free Software Foundation, Inc.
+   Copyright (C) 1988-1989, 1992-1995, 1998, 2001-2002, 2004, 2006, 2009-2013,
+   2015 Free Software Foundation, Inc.
 
    This file is part of GNU DIFF.
 
@@ -817,7 +817,8 @@ analyze_hunk (struct change *hunk,
       for (i = next->line0; i <= l0 && trivial; i++)
 	{
 	  char const *line = linbuf0[i];
-	  char const *newline = linbuf0[i + 1] - 1;
+	  char const *lastbyte = linbuf0[i + 1] - 1;
+	  char const *newline = lastbyte + (*lastbyte != '\n');
 	  size_t len = newline - line;
 	  char const *p = line;
 	  if (skip_white_space)
@@ -837,7 +838,8 @@ analyze_hunk (struct change *hunk,
       for (i = next->line1; i <= l1 && trivial; i++)
 	{
 	  char const *line = linbuf1[i];
-	  char const *newline = linbuf1[i + 1] - 1;
+	  char const *lastbyte = linbuf1[i + 1] - 1;
+	  char const *newline = lastbyte + (*lastbyte != '\n');
 	  size_t len = newline - line;
 	  char const *p = line;
 	  if (skip_white_space)

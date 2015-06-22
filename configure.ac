@@ -1,7 +1,7 @@
 # Configure template for GNU Diffutils.
 
-# Copyright (C) 1994-1995, 1998, 2001-2002, 2004, 2006, 2009-2013 Free Software
-# Foundation, Inc.
+# Copyright (C) 1994-1995, 1998, 2001-2002, 2004, 2006, 2009-2013, 2015 Free
+# Software Foundation, Inc.
 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -26,13 +26,15 @@ AC_CONFIG_SRCDIR([src/diff.c])
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_MACRO_DIR([m4])
 
-AM_INIT_AUTOMAKE([1.11 dist-xz no-dist-gzip color-tests parallel-tests])
+AM_INIT_AUTOMAKE([1.11 dist-xz no-dist-gzip subdir-objects
+                       color-tests parallel-tests])
 AM_SILENT_RULES([yes]) # make --enable-silent-rules the default.
 
 AC_CONFIG_HEADER([lib/config.h:lib/config.hin])
 
 AC_PROG_AWK
 AC_PROG_CC
+AM_PROG_CC_C_O
 AM_MISSING_PROG([HELP2MAN], [help2man])
 AC_PROG_RANLIB
 gl_EARLY
@@ -121,6 +123,7 @@ if test "$gl_gcc_warnings" = yes; then
   nw="$nw -Wunused-macros"
   nw="$nw -Wmissing-prototypes"
   nw="$nw -Wold-style-definition"
+  nw="$nw -Wsuggest-attribute=pure"
   gl_MANYWARN_COMPLEMENT([GNULIB_WARN_CFLAGS], [$WARN_CFLAGS], [$nw])
   AC_SUBST([GNULIB_WARN_CFLAGS])
 fi
