@@ -2,10 +2,9 @@
 # gendocs.sh -- generate a GNU manual in many formats.  This script is
 #   mentioned in maintain.texi.  See the help message below for usage details.
 
-scriptversion=2013-03-08.15
+scriptversion=2015-01-01.15
 
-# Copyright 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013
-# Free Software Foundation, Inc.
+# Copyright 2003-2015 Free Software Foundation, Inc.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -78,6 +77,9 @@ Options:
   --html ARG   pass ARG to makeinfo or texi2html for HTML targets.
   --info ARG   pass ARG to makeinfo for Info, instead of --no-split.
   --no-ascii   skip generating the plain text output.
+  --no-html    skip generating the html output.
+  --no-info    skip generating the info output.
+  --no-tex     skip generating the dvi and pdf output.
   --source ARG include ARG in tar archive of sources.
   --split HOW  make split HTML by node, section, chapter; default node.
 
@@ -139,10 +141,13 @@ PACKAGE=
 EMAIL=webmasters@gnu.org  # please override with --email
 commonarg= # passed to all makeinfo/texi2html invcations.
 dirargs=   # passed to all tools (-I dir).
-dirs=      # -I's directories.
+dirs=      # -I directories.
 htmlarg=
 infoarg=--no-split
 generate_ascii=true
+generate_html=true
+generate_info=true
+generate_tex=true
 outdir=manual
 source_extra=
 split=node
@@ -159,6 +164,9 @@ while test $# -gt 0; do
     --html)      shift; htmlarg=$1;;
     --info)      shift; infoarg=$1;;
     --no-ascii)  generate_ascii=false;;
+    --no-html)   generate_ascii=false;;
+    --no-info)   generate_info=false;;
+    --no-tex)    generate_tex=false;;
     --source)    shift; source_extra=$1;;
     --split)     shift; split=$1;;
     --texi2html) use_texi2html=1;;
@@ -221,8 +229,9 @@ calcsize()
 
 # copy_images OUTDIR HTML-FILE...
 # -------------------------------
-# Copy all the images needed by the HTML-FILEs into OUTDIR.  Look
-# for them in the -I directories.
+# Copy all the images needed by the HTML-FILEs into OUTDIR.
+# Look for them in . and the -I directories; this is simpler than what
+# makeinfo supports with -I, but hopefully it will suffice.
 copy_images()
 {
   local odir
@@ -232,7 +241,7 @@ copy_images()
 BEGIN {
   \$me = '$prog';
   \$odir = '$odir';
-  @dirs = qw($dirs);
+  @dirs = qw(. $dirs);
 }
 " -e '
 /<img src="(.*?)"/g && ++$need{$1};
@@ -270,31 +279,39 @@ echo "Making output for $srcfile"
 echo " in `pwd`"
 mkdir -p "$outdir/"
 
-cmd="$SETLANG $MAKEINFO -o $PACKAGE.info $commonarg $infoarg \"$srcfile\""
-echo "Generating info... ($cmd)"
-eval "$cmd"
-tar czf "$outdir/$PACKAGE.info.tar.gz" $PACKAGE.info*
-ls -l "$outdir/$PACKAGE.info.tar.gz"
-info_tgz_size=`calcsize "$outdir/$PACKAGE.info.tar.gz"`
-# do not mv the info files, there's no point in having them available
-# separately on the web.
+# 
+if $generate_info; then
+  cmd="$SETLANG $MAKEINFO -o $PACKAGE.info $commonarg $infoarg \"$srcfile\""
+  echo "Generating info... ($cmd)"
+  rm -f $PACKAGE.info* # get rid of any strays
+  eval "$cmd"
+  tar czf "$outdir/$PACKAGE.info.tar.gz" $PACKAGE.info*
+  ls -l "$outdir/$PACKAGE.info.tar.gz"
+  info_tgz_size=`calcsize "$outdir/$PACKAGE.info.tar.gz"`
+  # do not mv the info files, there's no point in having them available
+  # separately on the web.
+fi  # end info
 
-cmd="$SETLANG $TEXI2DVI $dirargs \"$srcfile\""
-printf "\nGenerating dvi... ($cmd)\n"
-eval "$cmd"
-# compress/finish dvi:
-gzip -f -9 $PACKAGE.dvi
-dvi_gz_size=`calcsize $PACKAGE.dvi.gz`
-mv $PACKAGE.dvi.gz "$outdir/"
-ls -l "$outdir/$PACKAGE.dvi.gz"
+# 
+if $generate_tex; then
+  cmd="$SETLANG $TEXI2DVI $dirargs \"$srcfile\""
+  printf "\nGenerating dvi... ($cmd)\n"
+  eval "$cmd"
+  # compress/finish dvi:
+  gzip -f -9 $PACKAGE.dvi
+  dvi_gz_size=`calcsize $PACKAGE.dvi.gz`
+  mv $PACKAGE.dvi.gz "$outdir/"
+  ls -l "$outdir/$PACKAGE.dvi.gz"
 
-cmd="$SETLANG $TEXI2DVI --pdf $dirargs \"$srcfile\""
-printf "\nGenerating pdf... ($cmd)\n"
-eval "$cmd"
-pdf_size=`calcsize $PACKAGE.pdf`
-mv $PACKAGE.pdf "$outdir/"
-ls -l "$outdir/$PACKAGE.pdf"
+  cmd="$SETLANG $TEXI2DVI --pdf $dirargs \"$srcfile\""
+  printf "\nGenerating pdf... ($cmd)\n"
+  eval "$cmd"
+  pdf_size=`calcsize $PACKAGE.pdf`
+  mv $PACKAGE.pdf "$outdir/"
+  ls -l "$outdir/$PACKAGE.pdf"
+fi # end tex (dvi + pdf)
 
+# 
 if $generate_ascii; then
   opt="-o $PACKAGE.txt --no-split --no-headers $commonarg"
   cmd="$SETLANG $MAKEINFO $opt \"$srcfile\""
@@ -307,6 +324,9 @@ if $generate_ascii; then
   ls -l "$outdir/$PACKAGE.txt" "$outdir/$PACKAGE.txt.gz"
 fi
 
+# 
+
+if $generate_html; then
 # Split HTML at level $1.  Used for texi2html.
 html_split()
 {
@@ -381,7 +401,9 @@ else # use texi2html:
   html_split chapter
   html_split section
 fi
+fi # end html
 
+# 
 printf "\nMaking .tar.gz for sources...\n"
 d=`dirname $srcfile`
 (
@@ -392,6 +414,8 @@ d=`dirname $srcfile`
 )
 texi_tgz_size=`calcsize "$outdir/$PACKAGE.texi.tar.gz"`
 
+# 
+# Do everything again through docbook.
 if test -n "$docbook"; then
   opt="-o - --docbook $commonarg"
   cmd="$SETLANG $MAKEINFO $opt \"$srcfile\" >${srcdir}/$PACKAGE-db.xml"
@@ -430,7 +454,8 @@ if test -n "$docbook"; then
   mv $PACKAGE-db.pdf "$outdir/"
 fi
 
-printf "\nMaking index file...\n"
+# 
+printf "\nMaking index.html for $PACKAGE...\n"
 if test -z "$use_texi2html"; then
   CONDS="/%%IF  *HTML_SECTION%%/,/%%ENDIF  *HTML_SECTION%%/d;\
          /%%IF  *HTML_CHAPTER%%/,/%%ENDIF  *HTML_CHAPTER%%/d"

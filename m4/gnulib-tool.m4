@@ -1,0 +1,1 @@
+/root/git-working/diffutils/gnulib/m4/gnulib-tool.m4

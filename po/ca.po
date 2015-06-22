@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: diffutils 2.8.7\n"
 "Report-Msgid-Bugs-To: bug-diffutils@gnu.org\n"
-"POT-Creation-Date: 2013-06-11 00:25+0200\n"
+"POT-Creation-Date: 2015-06-22 20:00+0200\n"
 "PO-Revision-Date: 2004-04-21 13:33+0200\n"
 "Last-Translator: Ernest Adrogué Calveras <eadrogue@gmx.net>\n"
 "Language-Team: Catalan <ca@dodds.net>\n"
@@ -24,59 +24,107 @@ msgstr "error del programa"
 msgid "stack overflow"
 msgstr "desbordament de pila"
 
-#: lib/error.c:188
+#: lib/error.c:191
 msgid "Unknown system error"
 msgstr "Error no identificat del sistema"
 
-#: lib/file-type.c:38
+#: lib/file-type.c:40
 msgid "regular empty file"
 msgstr "fitxer ordinari buit"
 
-#: lib/file-type.c:38
+#: lib/file-type.c:40
 msgid "regular file"
 msgstr "fitxer ordinari"
 
-#: lib/file-type.c:41
+#: lib/file-type.c:43
 msgid "directory"
 msgstr "directori"
 
-#: lib/file-type.c:44
-msgid "block special file"
-msgstr "fitxer especial de blocs"
-
-#: lib/file-type.c:47
-msgid "character special file"
-msgstr "fitxer especial de caràcters"
-
-#: lib/file-type.c:50
-msgid "fifo"
-msgstr "cua FIFO"
-
-#: lib/file-type.c:53
+#: lib/file-type.c:46
 msgid "symbolic link"
 msgstr "enllaç simbòlic"
 
-#: lib/file-type.c:56
-msgid "socket"
-msgstr "connector"
-
-#: lib/file-type.c:59
+#: lib/file-type.c:52
 msgid "message queue"
 msgstr "cua de missatges"
 
-#: lib/file-type.c:62
+#: lib/file-type.c:55
 msgid "semaphore"
 msgstr "semàfor"
 
-#: lib/file-type.c:65
+#: lib/file-type.c:58
 msgid "shared memory object"
 msgstr "objecte de memòria compartida"
 
-#: lib/file-type.c:68
+#: lib/file-type.c:61
 msgid "typed memory object"
 msgstr "objecte de memòria tipificada"
 
-#: lib/file-type.c:70
+#: lib/file-type.c:66
+msgid "block special file"
+msgstr "fitxer especial de blocs"
+
+#: lib/file-type.c:69
+msgid "character special file"
+msgstr "fitxer especial de caràcters"
+
+#: lib/file-type.c:72
+msgid "contiguous data"
+msgstr ""
+
+#: lib/file-type.c:75
+msgid "fifo"
+msgstr "cua FIFO"
+
+#: lib/file-type.c:78
+msgid "door"
+msgstr ""
+
+#: lib/file-type.c:81
+#, fuzzy
+msgid "multiplexed block special file"
+msgstr "fitxer especial de blocs"
+
+#: lib/file-type.c:84
+#, fuzzy
+msgid "multiplexed character special file"
+msgstr "fitxer especial de caràcters"
+
+#: lib/file-type.c:87
+msgid "multiplexed file"
+msgstr ""
+
+#: lib/file-type.c:90
+#, fuzzy
+msgid "named file"
+msgstr "fitxer estrambòtic"
+
+#: lib/file-type.c:93
+#, fuzzy
+msgid "network special file"
+msgstr "fitxer especial de blocs"
+
+#: lib/file-type.c:96
+msgid "migrated file with data"
+msgstr ""
+
+#: lib/file-type.c:99
+msgid "migrated file without data"
+msgstr ""
+
+#: lib/file-type.c:102
+msgid "port"
+msgstr ""
+
+#: lib/file-type.c:105
+msgid "socket"
+msgstr "connector"
+
+#: lib/file-type.c:108
+msgid "whiteout"
+msgstr ""
+
+#: lib/file-type.c:110
 msgid "weird file"
 msgstr "fitxer estrambòtic"
 
@@ -233,7 +281,7 @@ msgstr "L'expressió regular és massa gran"
 msgid "Unmatched ) or \\)"
 msgstr "Hi ha un signe ) o \\) desaparellat"
 
-#: lib/regcomp.c:704
+#: lib/regcomp.c:707
 msgid "No previous regular expression"
 msgstr "No hi ha cap expressió regular prèvia"
 
@@ -443,17 +491,17 @@ msgstr ""
 msgid "General help using GNU software: <http://www.gnu.org/gethelp/>\n"
 msgstr ""
 
-#: src/analyze.c:459 src/diff.c:1343
+#: src/analyze.c:454 src/diff.c:1349
 #, c-format
 msgid "Files %s and %s differ\n"
 msgstr "Els fitxers %s i %s difereixen\n"
 
-#: src/analyze.c:462
+#: src/analyze.c:455
 #, fuzzy, c-format
 msgid "Binary files %s and %s differ\n"
 msgstr "Els fitxers %s i %s difereixen\n"
 
-#: src/analyze.c:713 src/diff3.c:1416 src/util.c:663
+#: src/analyze.c:695 src/diff3.c:1416 src/util.c:663
 msgid "No newline at end of file"
 msgstr "No hi ha cap caràcter de salt de línia al final del fitxer"
 
@@ -467,7 +515,7 @@ msgstr "Torbjorn Granlund"
 msgid "David MacKenzie"
 msgstr ""
 
-#: src/cmp.c:118 src/diff.c:839 src/diff3.c:414 src/sdiff.c:158
+#: src/cmp.c:118 src/diff.c:845 src/diff3.c:414 src/sdiff.c:158
 #, fuzzy, c-format
 msgid "Try '%s --help' for more information."
 msgstr "Proveu «%s --help» per obtenir més informació."
@@ -482,13 +530,13 @@ msgstr "el valor «%s» per l'opció --ignore-initial no és vàlid"
 msgid "options -l and -s are incompatible"
 msgstr "les opcions -l i -s són incompatibles"
 
-#: src/cmp.c:155 src/diff.c:848 src/diff3.c:422 src/sdiff.c:167
+#: src/cmp.c:155 src/diff.c:854 src/diff3.c:422 src/sdiff.c:167
 #: src/sdiff.c:315 src/sdiff.c:322 src/sdiff.c:874 src/util.c:278
 #: src/util.c:375 src/util.c:382
 msgid "write failed"
 msgstr "error d'escriptura"
 
-#: src/cmp.c:157 src/diff.c:850 src/diff.c:1408 src/diff3.c:424
+#: src/cmp.c:157 src/diff.c:856 src/diff.c:1414 src/diff3.c:424
 #: src/sdiff.c:169
 msgid "standard output"
 msgstr "sortida estàndard"
@@ -552,7 +600,7 @@ msgid ""
 msgstr ""
 "SALT1 i SALT2 són el nombre d'octets que es passen per alt de cada fitxer."
 
-#: src/cmp.c:185 src/diff.c:956 src/diff3.c:462 src/sdiff.c:210
+#: src/cmp.c:185 src/diff.c:962 src/diff3.c:462 src/sdiff.c:210
 msgid ""
 "Mandatory arguments to long options are mandatory for short options too.\n"
 msgstr ""
@@ -572,7 +620,7 @@ msgstr ""
 msgid "If a FILE is '-' or missing, read standard input."
 msgstr "Si un FITXER és «-» o falta, llegeix l'entrada estàndard."
 
-#: src/cmp.c:195 src/diff.c:944 src/sdiff.c:220
+#: src/cmp.c:195 src/diff.c:950 src/sdiff.c:220
 msgid "Exit status is 0 if inputs are the same, 1 if different, 2 if trouble."
 msgstr ""
 "L'estat de sortida és 0 si les entrades són iguals, 1 si són diferents\n"
@@ -583,28 +631,28 @@ msgstr ""
 msgid "invalid --bytes value '%s'"
 msgstr "el valor «%s» per l'opció --bytes no és vàlid"
 
-#: src/cmp.c:266 src/diff.c:757 src/diff3.c:318 src/sdiff.c:565
+#: src/cmp.c:266 src/diff.c:763 src/diff3.c:318 src/sdiff.c:565
 #, fuzzy, c-format
 msgid "missing operand after '%s'"
 msgstr "falta un operand després de «%s»"
 
-#: src/cmp.c:278 src/diff.c:759 src/diff3.c:320 src/sdiff.c:567
+#: src/cmp.c:278 src/diff.c:765 src/diff3.c:320 src/sdiff.c:567
 #, fuzzy, c-format
 msgid "extra operand '%s'"
 msgstr "sobra l'operand «%s»"
 
 # mirar el comentari del codi font
-#: src/cmp.c:491
+#: src/cmp.c:494
 #, c-format
 msgid "%s %s differ: byte %s, line %s\n"
 msgstr "%s i %s difereixen: octet %s, línia %s\n"
 
-#: src/cmp.c:507
+#: src/cmp.c:510
 #, c-format
 msgid "%s %s differ: byte %s, line %s is %3o %s %3o %s\n"
 msgstr "%s i %s difereixen: l'octet %s, línia %s, és %3o %s %3o %s\n"
 
-#: src/cmp.c:559
+#: src/cmp.c:562
 #, c-format
 msgid "cmp: EOF on %s\n"
 msgstr "cmp: final de fitxer a %s\n"
@@ -634,134 +682,134 @@ msgstr ""
 msgid "Len Tower"
 msgstr ""
 
-#: src/diff.c:339
+#: src/diff.c:340
 #, fuzzy, c-format
 msgid "invalid context length '%s'"
 msgstr "el nombre de línies de context «%s» no és vàlid"
 
-#: src/diff.c:422
+#: src/diff.c:423
 #, c-format
 msgid "pagination not supported on this host"
 msgstr "aquest sistema no suporta paginació"
 
-#: src/diff.c:437 src/diff3.c:300
+#: src/diff.c:438 src/diff3.c:300
 #, c-format
 msgid "too many file label options"
 msgstr "massa opcions d'etiqueta de fitxer"
 
-#: src/diff.c:514
+#: src/diff.c:515
 #, fuzzy, c-format
 msgid "invalid width '%s'"
 msgstr "l'amplada «%s» no és vàlida"
 
-#: src/diff.c:518
+#: src/diff.c:519
 msgid "conflicting width options"
 msgstr "opcions d'amplada incompatibles"
 
-#: src/diff.c:543
+#: src/diff.c:544
 #, fuzzy, c-format
 msgid "invalid horizon length '%s'"
 msgstr "el nombre de línies d'horitzó «%s» no és vàlid"
 
-#: src/diff.c:598
+#: src/diff.c:600
 #, fuzzy, c-format
 msgid "invalid tabsize '%s'"
 msgstr "la distància de tabulació «%s» no és vàlida"
 
-#: src/diff.c:602
+#: src/diff.c:604
 msgid "conflicting tabsize options"
 msgstr "opcions de distància de tabulació incompatibles"
 
-#: src/diff.c:734
+#: src/diff.c:740
 msgid "--from-file and --to-file both specified"
 msgstr "heu especificat les opcions --from-file i --to-file al mateix temps"
 
-#: src/diff.c:854
+#: src/diff.c:860
 #, fuzzy
 msgid "    --normal                  output a normal diff (the default)"
 msgstr "--normal  Genera un diff normal."
 
-#: src/diff.c:855
+#: src/diff.c:861
 #, fuzzy
 msgid "-q, --brief                   report only when files differ"
 msgstr "-q  --brief  Indica només si els fitxers difereixen o no."
 
-#: src/diff.c:856
+#: src/diff.c:862
 #, fuzzy
 msgid "-s, --report-identical-files  report when two files are the same"
 msgstr "-s  --report-identical-files  Avisa quan dos fitxers són idèntics."
 
-#: src/diff.c:857
+#: src/diff.c:863
 msgid ""
 "-c, -C NUM, --context[=NUM]   output NUM (default 3) lines of copied context"
 msgstr ""
 
-#: src/diff.c:858
+#: src/diff.c:864
 #, fuzzy
 msgid ""
 "-u, -U NUM, --unified[=NUM]   output NUM (default 3) lines of unified context"
 msgstr ""
 "-w NÚM  --width=NÚM  No més de NÚM (130 per omissió) caràcters per línia."
 
-#: src/diff.c:859
+#: src/diff.c:865
 #, fuzzy
 msgid "-e, --ed                      output an ed script"
 msgstr "-e  --ed  Genera un script ed."
 
-#: src/diff.c:860
+#: src/diff.c:866
 #, fuzzy
 msgid "-n, --rcs                     output an RCS format diff"
 msgstr "-n  --rcs  Genera un diff en format RCS."
 
-#: src/diff.c:861
+#: src/diff.c:867
 msgid "-y, --side-by-side            output in two columns"
 msgstr ""
 
-#: src/diff.c:862
+#: src/diff.c:868
 #, fuzzy
 msgid ""
 "-W, --width=NUM               output at most NUM (default 130) print columns"
 msgstr ""
 "-w NÚM  --width=NÚM  No més de NÚM (130 per omissió) caràcters per línia."
 
-#: src/diff.c:863
+#: src/diff.c:869
 #, fuzzy
 msgid ""
 "    --left-column             output only the left column of common lines"
 msgstr ""
 "-l  --left-column  Només escriu les línies en comú a la columna esquerra."
 
-#: src/diff.c:864
+#: src/diff.c:870
 #, fuzzy
 msgid "    --suppress-common-lines   do not output common lines"
 msgstr "-s  --suppress-common-lines  No mostra les línies en comú."
 
-#: src/diff.c:866
+#: src/diff.c:872
 msgid "-p, --show-c-function         show which C function each change is in"
 msgstr ""
 
-#: src/diff.c:867
+#: src/diff.c:873
 msgid "-F, --show-function-line=RE   show the most recent line matching RE"
 msgstr ""
 
-#: src/diff.c:868
+#: src/diff.c:874
 msgid ""
 "    --label LABEL             use LABEL instead of file name\n"
 "                                (can be repeated)"
 msgstr ""
 
-#: src/diff.c:871
+#: src/diff.c:877
 #, fuzzy
 msgid "-t, --expand-tabs             expand tabs to spaces in output"
 msgstr "-t  --expand-tabs  Expandeix les tabulacions de la sortida a espais."
 
-#: src/diff.c:872
+#: src/diff.c:878
 #, fuzzy
 msgid "-T, --initial-tab             make tabs line up by prepending a tab"
 msgstr ""
 "-T  --initial-tab  Alinea el text de cada línia amb un caràcter de tabulació."
 
-#: src/diff.c:873
+#: src/diff.c:879
 #, fuzzy
 msgid ""
 "    --tabsize=NUM             tab stops every NUM (default 8) print columns"
@@ -769,40 +817,40 @@ msgstr ""
 "--tabsize=NÚM  Estableix la distància de tabulació en NÚM (8 per omissió)\n"
 "               caràcters."
 
-#: src/diff.c:874
+#: src/diff.c:880
 msgid ""
 "    --suppress-blank-empty    suppress space or tab before empty output lines"
 msgstr ""
 
-#: src/diff.c:875
+#: src/diff.c:881
 #, fuzzy
 msgid "-l, --paginate                pass output through 'pr' to paginate it"
 msgstr "-l  --paginate  Pagina la sortida amb el programa «pr»."
 
-#: src/diff.c:877
+#: src/diff.c:883
 #, fuzzy
 msgid ""
 "-r, --recursive                 recursively compare any subdirectories found"
 msgstr ""
 "-r  --recursive  Compara recursivament qualsevol subdirectori existent."
 
-#: src/diff.c:878
+#: src/diff.c:884
 msgid "    --no-dereference            don't follow symbolic links"
 msgstr ""
 
-#: src/diff.c:879
+#: src/diff.c:885
 #, fuzzy
 msgid "-N, --new-file                  treat absent files as empty"
 msgstr "-N  --new-file  Considera els fitxers inexistents com si fóssin buits."
 
-#: src/diff.c:880
+#: src/diff.c:886
 #, fuzzy
 msgid "    --unidirectional-new-file   treat absent first files as empty"
 msgstr ""
 "--unidirectional-new-file  Tracta els fitxers primers inexistents com si\n"
 "                           fóssin buits."
 
-#: src/diff.c:881
+#: src/diff.c:887
 #, fuzzy
 msgid "    --ignore-file-name-case     ignore case when comparing file names"
 msgstr ""
@@ -810,19 +858,19 @@ msgstr ""
 "en\n"
 "                         els noms dels fitxers."
 
-#: src/diff.c:882
+#: src/diff.c:888
 #, fuzzy
 msgid "    --no-ignore-file-name-case  consider case when comparing file names"
 msgstr ""
 "--no-ignore-file-name-case  Té en compte diferències entre majúscules i\n"
 "                            minúscules en comparar noms de fitxers."
 
-#: src/diff.c:883
+#: src/diff.c:889
 #, fuzzy
 msgid "-x, --exclude=PAT               exclude files that match PAT"
 msgstr "-x PAT  --exclude=PAT  Exclou fitxers que coincideixen amb PAT."
 
-#: src/diff.c:884
+#: src/diff.c:890
 #, fuzzy
 msgid ""
 "-X, --exclude-from=FILE         exclude files that match any pattern in FILE"
@@ -830,7 +878,7 @@ msgstr ""
 "-X FITXER  --exclude-from=FITXER  Exclou fitxers que coincideixen amb\n"
 "                                  qualsevol patró de FITXER."
 
-#: src/diff.c:885
+#: src/diff.c:891
 #, fuzzy
 msgid ""
 "-S, --starting-file=FILE        start with FILE when comparing directories"
@@ -838,7 +886,7 @@ msgstr ""
 "-S FITXER  --starting-file=FITXER  Comença per FITXER quan es comparen\n"
 "                                   directoris."
 
-#: src/diff.c:886
+#: src/diff.c:892
 #, fuzzy
 msgid ""
 "    --from-file=FILE1           compare FILE1 to all operands;\n"
@@ -847,7 +895,7 @@ msgstr ""
 "--from-file=FITXER1  Compara FITXER1 amb tots els operands. FITXER1 pot ser\n"
 "                     un directori."
 
-#: src/diff.c:888
+#: src/diff.c:894
 #, fuzzy
 msgid ""
 "    --to-file=FILE2             compare all operands to FILE2;\n"
@@ -856,66 +904,66 @@ msgstr ""
 "--to-file=FITXER1  Compara tots els operands amb FITXER2. FITXER2 pot ser\n"
 "                   un directori."
 
-#: src/diff.c:891
+#: src/diff.c:897
 #, fuzzy
 msgid ""
 "-i, --ignore-case               ignore case differences in file contents"
 msgstr "-i  --ignore-case  Ignora diferències entre majúscules i minúscules."
 
-#: src/diff.c:892
+#: src/diff.c:898
 #, fuzzy
 msgid "-E, --ignore-tab-expansion      ignore changes due to tab expansion"
 msgstr ""
 "-E  --ignore-tab-expansion  Ignora canvis provocats per la distància de\n"
 "                            tabulació."
 
-#: src/diff.c:893
+#: src/diff.c:899
 #, fuzzy
 msgid "-Z, --ignore-trailing-space     ignore white space at line end"
 msgstr "-w  --ignore-all-space  Ignora tot l'espai en blanc."
 
-#: src/diff.c:894
+#: src/diff.c:900
 #, fuzzy
 msgid ""
 "-b, --ignore-space-change       ignore changes in the amount of white space"
 msgstr ""
 "-b  --ignore-space-change  Ignora canvis en la quantitat d'espai en blanc."
 
-#: src/diff.c:895
+#: src/diff.c:901
 #, fuzzy
 msgid "-w, --ignore-all-space          ignore all white space"
 msgstr "-w  --ignore-all-space  Ignora tot l'espai en blanc."
 
-#: src/diff.c:896
+#: src/diff.c:902
 #, fuzzy
 msgid ""
 "-B, --ignore-blank-lines        ignore changes where lines are all blank"
 msgstr "-B  --ignore-blank-lines  Ignora canvis en línies que estan en blanc."
 
-#: src/diff.c:897
+#: src/diff.c:903
 #, fuzzy
 msgid "-I, --ignore-matching-lines=RE  ignore changes where all lines match RE"
 msgstr ""
 "-I ER  --ignore-matching-lines=ER  Ignora canvis en línies que continguin ER."
 
-#: src/diff.c:899
+#: src/diff.c:905
 #, fuzzy
 msgid "-a, --text                      treat all files as text"
 msgstr "-a  --text  Tracta tots els fitxers com a text."
 
-#: src/diff.c:900
+#: src/diff.c:906
 #, fuzzy
 msgid "    --strip-trailing-cr         strip trailing carriage return on input"
 msgstr ""
 "--strip-trailing-cr  Treu els caràcters finals de retorn de carro de "
 "l'entrada."
 
-#: src/diff.c:902
+#: src/diff.c:908
 #, fuzzy
 msgid "    --binary                    read and write data in binary mode"
 msgstr "--binary  Escriu i llegeix dades en mode binari."
 
-#: src/diff.c:905
+#: src/diff.c:911
 #, fuzzy
 msgid ""
 "-D, --ifdef=NAME                output merged file with '#ifdef NAME' diffs"
@@ -924,30 +972,30 @@ msgstr ""
 "                      amb directives `#ifdef NOM'."
 
 # `grups' o `grups de línies' (no queda prou clar)
-#: src/diff.c:906
+#: src/diff.c:912
 #, fuzzy
 msgid "    --GTYPE-group-format=GFMT   format GTYPE input groups with GFMT"
 msgstr ""
 "--TIPUSG-group-format=FMTG  Similar, però formata els grups TIPUSG amb FMTG."
 
-#: src/diff.c:907
+#: src/diff.c:913
 #, fuzzy
 msgid "    --line-format=LFMT          format all input lines with LFMT"
 msgstr "--line-format=FMTL  Similar, però formata totes les línies amb FMTL."
 
-#: src/diff.c:908
+#: src/diff.c:914
 #, fuzzy
 msgid "    --LTYPE-line-format=LFMT    format LTYPE input lines with LFMT"
 msgstr ""
 "--TIPUSL-line-format=FMTL  Similar, però formata les línies TIPUSL amb FMTL."
 
-#: src/diff.c:909
+#: src/diff.c:915
 msgid ""
 "  These format options provide fine-grained control over the output\n"
 "    of diff, generalizing -D/--ifdef."
 msgstr ""
 
-#: src/diff.c:911
+#: src/diff.c:917
 #, fuzzy
 msgid "  LTYPE is 'old', 'new', or 'unchanged'.  GTYPE is LTYPE or 'changed'."
 msgstr ""
@@ -955,7 +1003,7 @@ msgstr ""
 "«unchanged» (inalterades).\n"
 "  TIPUSG pot ser qualsevol TIPUSL o bé «changed» (alterades)."
 
-#: src/diff.c:912
+#: src/diff.c:918
 #, fuzzy
 msgid ""
 "  GFMT (only) may contain:\n"
@@ -985,7 +1033,7 @@ msgstr ""
 "        E  F-1\n"
 "        M  L+1"
 
-#: src/diff.c:924
+#: src/diff.c:930
 #, fuzzy
 msgid ""
 "  LFMT (only) may contain:\n"
@@ -999,7 +1047,7 @@ msgstr ""
 "    %[-][AMPLADA][.[PRECISIÓ]]{doxX}n  espec. estil printf pel nombre de "
 "línia"
 
-#: src/diff.c:928
+#: src/diff.c:934
 #, fuzzy
 msgid ""
 "  Both GFMT and LFMT may contain:\n"
@@ -1013,17 +1061,17 @@ msgstr ""
 "    %c'C'  el caràcter C\n"
 "    %c'\\OOO'  el caràcter de codi octal OOO"
 
-#: src/diff.c:934
+#: src/diff.c:940
 #, fuzzy
 msgid "-d, --minimal            try hard to find a smaller set of changes"
 msgstr "-d  --minimal  Intenta trobar canvis mínims."
 
-#: src/diff.c:935
+#: src/diff.c:941
 #, fuzzy
 msgid "    --horizon-lines=NUM  keep NUM lines of the common prefix and suffix"
 msgstr "--horizon-lines=NÚM  No descarta NÚM línies amb prefix i sufix comú."
 
-#: src/diff.c:936
+#: src/diff.c:942
 #, fuzzy
 msgid ""
 "    --speed-large-files  assume large files and many scattered small changes"
@@ -1031,85 +1079,84 @@ msgstr ""
 "-H  --speed-large-files  Assumeix fitxers grans i molts canvis petits "
 "dispersos."
 
-#: src/diff.c:938
+#: src/diff.c:944
 msgid "    --help               display this help and exit"
 msgstr ""
 
-#: src/diff.c:939
+#: src/diff.c:945
 #, fuzzy
 msgid "-v, --version            output version information and exit"
 msgstr "-v  --version  Mostra la versió del programa."
 
-#: src/diff.c:941
+#: src/diff.c:947
 #, fuzzy
-msgid ""
-"FILES are 'FILE1 FILE2' or 'DIR1 DIR2' or 'DIR FILE...' or 'FILE... DIR'."
+msgid "FILES are 'FILE1 FILE2' or 'DIR1 DIR2' or 'DIR FILE' or 'FILE DIR'."
 msgstr ""
 "FITXERS és «FITXER1 FITXER2» o «DIR1 DIR2» o «DIR FITXER...» o «FITXER... "
 "DIR»."
 
-#: src/diff.c:942
+#: src/diff.c:948
 #, fuzzy
 msgid ""
 "If --from-file or --to-file is given, there are no restrictions on FILE(s)."
 msgstr ""
 "Amb les opcions --from-file o --to-file no hi ha restriccions de FITXERS."
 
-#: src/diff.c:943 src/diff3.c:481 src/sdiff.c:219
+#: src/diff.c:949 src/diff3.c:481 src/sdiff.c:219
 #, fuzzy
 msgid "If a FILE is '-', read standard input."
 msgstr "Si FITXER és «-», llegeix l'entrada estàndard."
 
-#: src/diff.c:953
+#: src/diff.c:959
 #, c-format
 msgid "Usage: %s [OPTION]... FILES\n"
 msgstr "Mode d'ús: %s [OPCIÓ]... FITXERS\n"
 
-#: src/diff.c:954
+#: src/diff.c:960
 #, fuzzy
 msgid "Compare FILES line by line."
 msgstr "Compara fitxers línia per línia."
 
-#: src/diff.c:988
+#: src/diff.c:994
 #, fuzzy, c-format
 msgid "conflicting %s option value '%s'"
 msgstr "el valor «%s» per l'opció %s és conflictiu"
 
-#: src/diff.c:1001
+#: src/diff.c:1007
 #, c-format
 msgid "conflicting output style options"
 msgstr "opcions d'estil de sortida conflictives"
 
-#: src/diff.c:1058 src/diff.c:1268
+#: src/diff.c:1064 src/diff.c:1274
 #, c-format
 msgid "Only in %s: %s\n"
 msgstr "Només a %s: %s\n"
 
-#: src/diff.c:1192
+#: src/diff.c:1198
 #, fuzzy
 msgid "cannot compare '-' to a directory"
 msgstr "no es pot comparar «-» amb un directori"
 
-#: src/diff.c:1227
+#: src/diff.c:1233
 msgid "-D option not supported with directories"
 msgstr "l'opció -D no funciona amb directoris"
 
-#: src/diff.c:1236
+#: src/diff.c:1242
 #, c-format
 msgid "Common subdirectories: %s and %s\n"
 msgstr "Subdirectoris comuns: %s i %s\n"
 
-#: src/diff.c:1278 src/diff.c:1328
+#: src/diff.c:1284 src/diff.c:1334
 #, c-format
 msgid "File %s is a %s while file %s is a %s\n"
 msgstr "El fitxer %s és un %s mentre que el fitxer %s és un %s\n"
 
-#: src/diff.c:1314
+#: src/diff.c:1320
 #, fuzzy, c-format
 msgid "Symbolic links %s and %s differ\n"
 msgstr "Els fitxers %s i %s difereixen\n"
 
-#: src/diff.c:1399
+#: src/diff.c:1405
 #, c-format
 msgid "Files %s and %s are identical\n"
 msgstr "Els fitxers %s i %s són idèntics\n"
@@ -1290,12 +1337,12 @@ msgstr "error intern: tipus de diff no vàlid passat a la sortida"
 msgid "input file shrank"
 msgstr "el fitxer d'entrada s'ha encongit"
 
-#: src/dir.c:158
+#: src/dir.c:156
 #, fuzzy, c-format
 msgid "cannot compare file names '%s' and '%s'"
 msgstr "no es poden comparar els noms de fitxer «%s» i «%s»"
 
-#: src/dir.c:209
+#: src/dir.c:225
 #, c-format
 msgid "%s: recursive directory loop"
 msgstr ""

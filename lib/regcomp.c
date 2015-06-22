@@ -1,5 +1,5 @@
 /* Extended regular expression matching and search library.
-   Copyright (C) 2002-2013 Free Software Foundation, Inc.
+   Copyright (C) 2002-2015 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Isamu Hasegawa <isamu@yamato.ibm.com>.
 
@@ -586,7 +586,7 @@ weak_alias (__regerror, regerror)
 static const bitset_t utf8_sb_map =
 {
   /* Set the first 128 bits.  */
-# ifdef __GNUC__
+# if defined __GNUC__ && !defined __STRICT_ANSI__
   [0 ... 0x80 / BITSET_WORD_BITS - 1] = BITSET_WORD_MAX
 # else
 #  if 4 * BITSET_WORD_BITS < ASCII_CHARS
@@ -663,7 +663,10 @@ regfree (preg)
 {
   re_dfa_t *dfa = preg->buffer;
   if (BE (dfa != NULL, 1))
-    free_dfa_content (dfa);
+    {
+      lock_fini (dfa->lock);
+      free_dfa_content (dfa);
+    }
   preg->buffer = NULL;
   preg->allocated = 0;
 
@@ -784,6 +787,8 @@ re_compile_internal (regex_t *preg, const char * pattern, size_t length,
   preg->used = sizeof (re_dfa_t);
 
   err = init_dfa (dfa, length);
+  if (BE (err == REG_NOERROR && lock_init (dfa->lock) != 0, 0))
+    err = REG_ESPACE;
   if (BE (err != REG_NOERROR, 0))
     {
       free_dfa_content (dfa);
@@ -797,8 +802,6 @@ re_compile_internal (regex_t *preg, const char * pattern, size_t length,
   strncpy (dfa->re_str, pattern, length + 1);
 #endif
 
-  __libc_lock_init (dfa->lock);
-
   err = re_string_construct (&regexp, pattern, length, preg->translate,
 			     (syntax & RE_ICASE) != 0, dfa);
   if (BE (err != REG_NOERROR, 0))
@@ -806,6 +809,7 @@ re_compile_internal (regex_t *preg, const char * pattern, size_t length,
     re_compile_internal_free_return:
       free_workarea_compile (preg);
       re_string_destruct (&regexp);
+      lock_fini (dfa->lock);
       free_dfa_content (dfa);
       preg->buffer = NULL;
       preg->allocated = 0;
@@ -838,6 +842,7 @@ re_compile_internal (regex_t *preg, const char * pattern, size_t length,
 
   if (BE (err != REG_NOERROR, 0))
     {
+      lock_fini (dfa->lock);
       free_dfa_content (dfa);
       preg->buffer = NULL;
       preg->allocated = 0;
@@ -2194,7 +2199,11 @@ parse_reg_exp (re_string_t *regexp, regex_t *preg, re_token_t *token,
 	{
 	  branch = parse_branch (regexp, preg, token, syntax, nest, err);
 	  if (BE (*err != REG_NOERROR && branch == NULL, 0))
-	    return NULL;
+	    {
+	      if (tree != NULL)
+		postorder (tree, free_tree, NULL);
+	      return NULL;
+	    }
 	}
       else
 	branch = NULL;
@@ -2455,14 +2464,22 @@ parse_expression (re_string_t *regexp, regex_t *preg, re_token_t *token,
   while (token->type == OP_DUP_ASTERISK || token->type == OP_DUP_PLUS
 	 || token->type == OP_DUP_QUESTION || token->type == OP_OPEN_DUP_NUM)
     {
-      tree = parse_dup_op (tree, regexp, dfa, token, syntax, err);
-      if (BE (*err != REG_NOERROR && tree == NULL, 0))
-	return NULL;
+      bin_tree_t *dup_tree = parse_dup_op (tree, regexp, dfa, token,
+					   syntax, err);
+      if (BE (*err != REG_NOERROR && dup_tree == NULL, 0))
+	{
+	  if (tree != NULL)
+	    postorder (tree, free_tree, NULL);
+	  return NULL;
+	}
+      tree = dup_tree;
       /* In BRE consecutive duplications are not allowed.  */
       if ((syntax & RE_CONTEXT_INVALID_DUP)
 	  && (token->type == OP_DUP_ASTERISK
 	      || token->type == OP_OPEN_DUP_NUM))
 	{
+	  if (tree != NULL)
+	    postorder (tree, free_tree, NULL);
 	  *err = REG_BADRPT;
 	  return NULL;
 	}
@@ -2618,6 +2635,8 @@ parse_dup_op (bin_tree_t *elem, re_string_t *regexp, re_dfa_t *dfa,
 
       /* Duplicate ELEM before it is marked optional.  */
       elem = duplicate_tree (elem, dfa);
+      if (BE (elem == NULL, 0))
+        goto parse_dup_op_espace;
       old_tree = tree;
     }
   else

@@ -1,4 +1,228 @@
+2015-06-22  Greg Nietsky  <gregory@distrotech.co.za>
+
+	Merge git://git.savannah.gnu.org/diffutils into distrotech-diffutils
+
+2015-01-02  Jim Meyering  <meyering@fb.com>
+
+	maint: update copyright year ranges to include 2015; update gnulib
+
+2014-12-13  KO Myung-Hun  <komh@chollian.net>
+
+	diff: skip test if seek is not possible on OS/2 kLIBC
+	This fixes the problem that 'diff - file' and 'cat file | diff - file'
+	fail due to a seek failure with a message 'diff.exe: -: Invalid seek',
+	because seek does not work on stdin and a pipe on OS/2 kLIBC.
+
+	* src/io.c (sip): Set skip_test to true if seek is not possible on
+	OS/2 kLIBC.
+
+2014-12-09  Jim Meyering  <meyering@fb.com>
+
+	gnulib: update to latest
+
+2014-12-09  KO Myung-Hun  <komh78@gmail.com>
+
+	build: double-quote use of $PATH
+	* man/Makefile.am (dist_man1_MANS): On OS/2, PATH_SEPARATOR is ';',
+	but unquoted, that is interpreted as the shell's statement
+	terminator.  Quote it.
+
+2014-10-28  Paul Eggert  <eggert@cs.ucla.edu>
+
+	diff: fix integer overflow problem with --tabsize
+	Reported by Tobias Stoeckmann in: http://bugs.gnu.org/18857
+	* src/diff.c (main): Don't overflow if INTMAX_MAX / 2 < tabsize.
+	* tests/bignum: New file, to test for this bug.
+	* tests/Makefile.am (TESTS): Add it.
+
+2014-09-04  Paul Eggert  <eggert@cs.ucla.edu>
+
+	doc: mention diff -B fix in NEWS
+
+	diff: fix bug with diff -B and incomplete lines
+	Reported by Navin Kabra via Eric Blake in:
+	http://bugs.gnu.org/18402
+	* src/util.c (analyze_hunk): Don't mishandle incomplete
+	lines at end of file.
+	* tests/no-newline-at-eof: Test for the bug.
+
+	diff: fix performance bug with prefix computation
+	* src/io.c (find_identical_ends): Fix performance bug:
+	the test for when the prefix was needed messed up by
+	the 2002-02-28 integer-overflow fixes, causing performance to be
+	worse than it needed to be.
+
+2014-08-23  Jim Meyering  <meyering@fb.com>
+
+	gnulib: update to latest, as well as bootstrap
+
+	maint: update copyright year range in texinfo documentation
+	* doc/diffutils.texi: Update copyright.
+
+2014-04-15  Jim Meyering  <meyering@fb.com>
+
+	maint: update bug-reporting address
+	* README: Change bug-gnu-utils@... to bug-diffutils@gnu.org.
+	* doc/diffutils.texi: Likewise.
+	Reported by Jamie Landeg Jones.
+
+2014-03-26  Paul Eggert  <eggert@penguin.cs.ucla.edu>
+
+	diff: fix two "..." typos in --help output
+	* src/diff.c (option_help_msgid): Remove two "..." typos (Bug#17102).
+
+2014-03-26  Paul Eggert  <eggert@cs.ucla.edu>
+
+	doc: improve documentation about reading and stdin
+	See Bug#17075.
+	* doc/diffutils.texi (Comparison): Say that files need not be read.
+	(Invoking diff): Remove confusing remark about 'diff - -'.
+	It's not that useful, and it's not portable anyway.
+
+2014-02-25  Paul Eggert  <eggert@cs.ucla.edu>
+
+	diff, sdiff: minor integer overflow fixes
+	* src/context.c (find_hunk):
+	Simplify, now that 2 * context + 1 cannot overflow.
+	* src/diff.c (main):
+	* src/sdiff.c (interact):
+	Don't rely on undefined behavior on signed integer overflow.
+	* src/diff.c (main): Don't let contexts exceed CONTEXT_MAX.
+	* src/system.h (CONTEXT_MAX): New macro.
+
+	diff: fix bug with -I and overlapping hunks
+	Problem reported by Vincent Lefevre in <http://bugs.gnu.org/16864>.
+	* src/context.c (find_hunk): Threshold is CONTEXT only if
+	the second change is ignorable.
+	* tests/ignore-matching-lines: New test.
+	* tests/Makefile.am (TESTS): Add it.
+
+2014-02-24  Paul Eggert  <eggert@cs.ucla.edu>
+
+	diff: remove TOO_EXPENSIVE heuristic
+	Problem reported by Vincent Lefevre in <http://bugs.gnu.org/16848>.
+	The simplest solution is to remove the TOO_EXPENSIVE heuristic
+	that I added to GNU diff in 1993.  Although appropriate for
+	circa-1993 hardware, these days the heuristic seems to be more
+	trouble than it's worth.
+	* NEWS: Document this.
+	* doc/diffutils.texi (Overview): Modernize citations.
+	Remove mention of TOO_EXPENSIVE heuristic.
+	* src/analyze.c (diff_2_files): Adjust to TOO_EXPENSIVE-related
+	API changes in gnulib's diffseq module.
+
+	build: update gnulib submodule to latest
+
+2014-02-01  Paul Eggert  <eggert@cs.ucla.edu>
+
+	diff: exit with status 1, not 2, when binary files differ
+	Problem reported by Vincent Lefevre in <http://bugs.gnu.org/16608>.
+	* NEWS:
+	* doc/diffutils.texi (Binary, Invoking diff): Document this.
+	* src/analyze.c (briefly_report): Return void, not int.
+	All uses changed.  Do not futz with exit status.  Simplify.
+	* tests/binary: Adjust to match new behavior.
+
+2013-09-26  Paul Eggert  <eggert@cs.ucla.edu>
+
+	build: omit -Wsuggest-attribute=pure for lib
+	* configure.ac (WARN_CFLAGS): Omit -Wsuggest-attribute=pure
+	when compiling the lib subdirectory.  Reported for Fedora 19
+	by Eric Blake in <http://bugs.gnu.org/15463>.
+
+2013-08-23  Paul Eggert  <eggert@cs.ucla.edu>
+
+	cmp, diff, sdiff: tune by using rawmemchr
+	On my platform (AMD Phenom II X4 910e, Fedora 17 x86-64), this sped up
+	'cmp -n 8GiB /dev/full /dev/zero' by a factor of 3.8, and
+	'cmp -sn 8GiB /dev/full /dev/zero' by a factor of 1.8.
+	* bootstrap.conf (gnulib_modules): Add rawmemchr.
+	* src/cmp.c (cmp): Optimize the common case where buffers are the same,
+	by using count_newlines rather than block_compare_and_count.
+	(block_compare_and_count): Remove.
+	(count_newlines): New function.
+	* src/cmp.c (count_newlines):
+	* src/io.c (prepare_text):
+	* src/sdiff.c (lf_copy, lf_skip, lf_snarf):
+	Use rawmemchr instead of memchr, for speed.
+
+2013-08-13  Paul Eggert  <eggert@cs.ucla.edu>
+
+	cmp: tune 'cmp a b' for GCC x86
+	Performance problem reported by David Balažic in:
+	http://lists.gnu.org/archive/html/bug-diffutils/2013-08/msg00013.html
+	* src/system.h (word): Make it size_t, not uintmax_t.
+	This sped up plain cmp 90% on my tests (GCC 4.8.1, x86).
+
+2013-07-07  Paul Eggert  <eggert@cs.ucla.edu>
+
+	build: update gnulib submodule to latest
+
+2013-06-11  Greg Nietsky  <gregory@distrotech.co.za>
+
+	Distrotech diffutils 3.3
+
+2013-05-06  Stefano Lattarini  <stefano.lattarini@gmail.com>
+
+	build: enable 'subdir-objects' automake option
+	The future major Automake version (2.0, ETA at least one year from now)
+	might enable that option unconditionally, so better get prepared in due
+	time.
+
+	* configure.ac (AM_INIT_AUTOMAKE): Adjust.
+	(AM_PROG_CC_C_O): New, required by Automake up to 1.13.x when the
+	'subdir-objects' is in use.
+
+2013-04-29  Paul Eggert  <eggert@cs.ucla.edu>
+
+	build: update gnulib submodule to latest
+
+2013-04-03  Paul Eggert  <eggert@cs.ucla.edu>
+
+	diff: fix bug with Asian file names
+	Problem reported by Errembault Philippe in:
+	http://lists.gnu.org/archive/html/bug-diffutils/2013-03/msg00012.html
+	* NEWS: Document this.
+	* src/dir.c (compare_names): Fall back on file_name_cmp if
+	compare_collated returns 0, unless ignoring file name case.
+	(diff_dirs): Don't bother with the O(N**2) stuff unless ignoring
+	file name case.
+	* tests/Makefile.am (TESTS): Add strcoll-0-names.
+	* tests/strcoll-0-names: New file.
+
+	diff: remove unnecessary decl
+	* src/dir.c (compare_names_for_qsort): Remove declaration.
+	Not needed now that we assume C89.
+
+	diff: tune compare_names_for_qsort
+	* src/dir.c (compare_collated): New function.
+	(compare_names): Use it.
+	(compare_names_for_qsort): Use it.  This is a bit more efficient
+	as it can avoid a double invocation of file_name_cmp when
+	file_name_cmp returns zero.
+
+2013-03-30  Jim Meyering  <meyering@fb.com>
+
+	doc: mention new option, --no-dereference in 3.3's NEWS
+	* NEWS (New feeatures): Update 3.3's news to mention --no-dereference.
+	Reported by Denis Excoffier.
+	* Makefile.am (old_NEWS_hash): Update, since this modifies old, and
+	normally-immutable NEWS.
+
+2013-03-26  Paul Eggert  <eggert@cs.ucla.edu>
+
+	tests: port to Solaris 10 /bin/sh
+	* tests/Makefile.am (TESTS_ENVIRONMENT):
+	Use "FOO=val; export FOO" rather than "export FOO=val",
+	as the latter form doesn't work with Solaris /bin/sh.
+	Problem found when trying to run "make check" on Solaris 10.
+
 2013-03-24  Jim Meyering  <meyering@fb.com>
+
+	maint: post-release administrivia
+	* NEWS: Add header line for next release.
+	* .prev-version: Record previous version.
+	* cfg.mk (old_NEWS_hash): Auto-update.
 
 	version 3.3
 	* NEWS: Record release date.

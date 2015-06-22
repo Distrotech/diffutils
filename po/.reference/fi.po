@@ -1,0 +1,1017 @@
+# Finnish translation of GNU diffutils.
+# Copyright © 2004 Free Software Foundation, Inc.
+# Lauri Nurmi <lanurmi@iki.fi>, 2002-2004.
+# 
+msgid ""
+msgstr ""
+"Project-Id-Version: diffutils 2.8.7\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2004-04-13 00:07-0700\n"
+"PO-Revision-Date: 2004-04-19 14:36+03:00\n"
+"Last-Translator: Lauri Nurmi <lanurmi@iki.fi>\n"
+"Language-Team: Finnish <translation-team-fi@lists.sourceforge.net>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: lib/c-stack.c:244
+msgid "program error"
+msgstr "ohjelmavirhe"
+
+#: lib/c-stack.c:245
+msgid "stack overflow"
+msgstr "pinon ylivuoto"
+
+#: lib/error.c:127
+msgid "Unknown system error"
+msgstr "Tuntematon järjestelmävirhe"
+
+#: lib/file-type.c:42
+msgid "regular empty file"
+msgstr "tavallinen tyhjä tiedosto"
+
+#: lib/file-type.c:42
+msgid "regular file"
+msgstr "tavallinen tiedosto"
+
+#: lib/file-type.c:45
+msgid "directory"
+msgstr "hakemisto"
+
+#: lib/file-type.c:48
+msgid "block special file"
+msgstr "lohkolaite-erikoistiedosto"
+
+#: lib/file-type.c:51
+msgid "character special file"
+msgstr "merkkilaite-erikoistiedosto"
+
+#: lib/file-type.c:54
+msgid "fifo"
+msgstr "fifo"
+
+#: lib/file-type.c:57
+msgid "symbolic link"
+msgstr "symbolinen linkki"
+
+#: lib/file-type.c:60
+msgid "socket"
+msgstr "pistoke"
+
+#: lib/file-type.c:63
+msgid "message queue"
+msgstr "viestijono"
+
+#: lib/file-type.c:66
+msgid "semaphore"
+msgstr "semafori"
+
+#: lib/file-type.c:69
+msgid "shared memory object"
+msgstr "jaettu muistiobjekti"
+
+#: lib/file-type.c:72
+msgid "typed memory object"
+msgstr "tyypitetty muistiobjekti"
+
+#: lib/file-type.c:74
+msgid "weird file"
+msgstr "outo tiedosto"
+
+#: lib/getopt.c:570 lib/getopt.c:589
+#, c-format
+msgid "%s: option `%s' is ambiguous\n"
+msgstr "%s: valitsin \"%s\" on moniselitteinen\n"
+
+#: lib/getopt.c:622 lib/getopt.c:626
+#, c-format
+msgid "%s: option `--%s' doesn't allow an argument\n"
+msgstr "%s: valitsin \"--%s\" ei salli argumenttia\n"
+
+#: lib/getopt.c:635 lib/getopt.c:640
+#, c-format
+msgid "%s: option `%c%s' doesn't allow an argument\n"
+msgstr "%s: valitsin \"%c%s\" ei salli argumenttia\n"
+
+#: lib/getopt.c:686 lib/getopt.c:708 lib/getopt.c:1039 lib/getopt.c:1061
+#, c-format
+msgid "%s: option `%s' requires an argument\n"
+msgstr "%s: valitsin \"%s\" vaatii argumentin\n"
+
+#: lib/getopt.c:746 lib/getopt.c:749
+#, c-format
+msgid "%s: unrecognized option `--%s'\n"
+msgstr "%s: tunnistamaton valitsin \"--%s\"\n"
+
+#: lib/getopt.c:757 lib/getopt.c:760
+#, c-format
+msgid "%s: unrecognized option `%c%s'\n"
+msgstr "%s: tunnistamaton valitsin \"%c%s\"\n"
+
+#: lib/getopt.c:815 lib/getopt.c:818
+#, c-format
+msgid "%s: illegal option -- %c\n"
+msgstr "%s: virheellinen valitsin -- %c\n"
+
+#: lib/getopt.c:824 lib/getopt.c:827
+#, c-format
+msgid "%s: invalid option -- %c\n"
+msgstr "%s: virheellinen valitsin -- %c\n"
+
+#: lib/getopt.c:882 lib/getopt.c:901 lib/getopt.c:1114 lib/getopt.c:1135
+#, c-format
+msgid "%s: option requires an argument -- %c\n"
+msgstr "%s: valitsin vaatii argumentin -- %c\n"
+
+#: lib/getopt.c:954 lib/getopt.c:973
+#, c-format
+msgid "%s: option `-W %s' is ambiguous\n"
+msgstr "%s: valitsin \"-W %s\" on moniselitteinen\n"
+
+#: lib/getopt.c:997 lib/getopt.c:1018
+#, c-format
+msgid "%s: option `-W %s' doesn't allow an argument\n"
+msgstr "%s: valitsin \"-W %s\" ei salli argumenttia\n"
+
+#: lib/regex.c:1302
+msgid "Success"
+msgstr "Onnistui"
+
+#: lib/regex.c:1305
+msgid "No match"
+msgstr "Ei vastaavuutta"
+
+#: lib/regex.c:1308
+msgid "Invalid regular expression"
+msgstr "Virheellinen säännöllinen lauseke"
+
+#: lib/regex.c:1311
+msgid "Invalid collation character"
+msgstr "Virheellinen vertailumerkki"
+
+#: lib/regex.c:1314
+msgid "Invalid character class name"
+msgstr "Virheellinen merkkiluokan nimi"
+
+#: lib/regex.c:1317
+msgid "Trailing backslash"
+msgstr "Kenoviiva lopussa"
+
+#: lib/regex.c:1320
+msgid "Invalid back reference"
+msgstr "Virheellinen takaisinviittaus"
+
+#: lib/regex.c:1323
+msgid "Unmatched [ or [^"
+msgstr "Pariton [ tai [^"
+
+#: lib/regex.c:1326
+msgid "Unmatched ( or \\("
+msgstr "Pariton ( tai \\("
+
+#: lib/regex.c:1329
+msgid "Unmatched \\{"
+msgstr "Pariton \\{"
+
+#: lib/regex.c:1332
+msgid "Invalid content of \\{\\}"
+msgstr "Virheellinen \"\\{\\}\":n sisältö"
+
+#: lib/regex.c:1335
+msgid "Invalid range end"
+msgstr "Virheellinen välin loppu"
+
+#: lib/regex.c:1338
+msgid "Memory exhausted"
+msgstr "Muisti lopussa"
+
+#: lib/regex.c:1341
+msgid "Invalid preceding regular expression"
+msgstr "Virheellinen edeltävä säännöllinen lauseke"
+
+#: lib/regex.c:1344
+msgid "Premature end of regular expression"
+msgstr "Ennenaikainen säännöllisen lausekkeen loppu"
+
+#: lib/regex.c:1347
+msgid "Regular expression too big"
+msgstr "Liian suuri säännöllinen lauseke"
+
+#: lib/regex.c:1350
+msgid "Unmatched ) or \\)"
+msgstr "Pariton ) tai \\)"
+
+#: lib/regex.c:7915
+msgid "No previous regular expression"
+msgstr "Ei edellistä säännöllistä lauseketta"
+
+#: lib/xmalloc.c:53
+msgid "memory exhausted"
+msgstr "muisti lopussa"
+
+#. TRANSLATORS: %s denotes an author name.
+#: lib/version-etc.c:78
+#, c-format
+msgid "Written by %s.\n"
+msgstr "Kirjoittanut %s.\n"
+
+#. TRANSLATORS: Each %s denotes an author name.
+#: lib/version-etc.c:82
+#, c-format
+msgid "Written by %s and %s.\n"
+msgstr "Kirjoittaneet %s ja %s.\n"
+
+#. TRANSLATORS: Each %s denotes an author name.
+#: lib/version-etc.c:86
+#, c-format
+msgid "Written by %s, %s, and %s.\n"
+msgstr "Kirjoittaneet %s, %s ja %s.\n"
+
+#. TRANSLATORS: Each %s denotes an author name.
+#. You can use line breaks, estimating that each author name occupies
+#. ca. 16 screen columns and that a screen line has ca. 80 columns.
+#: lib/version-etc.c:92
+#, c-format
+msgid ""
+"Written by %s, %s, %s,\n"
+"and %s.\n"
+msgstr ""
+"Kirjoittaneet %s, %s,\n"
+"%s ja %s.\n"
+
+#. TRANSLATORS: Each %s denotes an author name.
+#. You can use line breaks, estimating that each author name occupies
+#. ca. 16 screen columns and that a screen line has ca. 80 columns.
+#: lib/version-etc.c:98
+#, c-format
+msgid ""
+"Written by %s, %s, %s,\n"
+"%s, and %s.\n"
+msgstr ""
+"Kirjoittaneet %s, %s,\n"
+"%s, %s ja %s.\n"
+
+#. TRANSLATORS: Each %s denotes an author name.
+#. You can use line breaks, estimating that each author name occupies
+#. ca. 16 screen columns and that a screen line has ca. 80 columns.
+#: lib/version-etc.c:104
+#, c-format
+msgid ""
+"Written by %s, %s, %s,\n"
+"%s, %s, and %s.\n"
+msgstr ""
+"Kirjoittaneet %s, %s,\n"
+"%s, %s, %s ja %s.\n"
+
+#. TRANSLATORS: Each %s denotes an author name.
+#. You can use line breaks, estimating that each author name occupies
+#. ca. 16 screen columns and that a screen line has ca. 80 columns.
+#: lib/version-etc.c:111
+#, c-format
+msgid ""
+"Written by %s, %s, %s,\n"
+"%s, %s, %s, and %s.\n"
+msgstr ""
+"Kirjoittaneet %s, %s,\n"
+"%s, %s, %s,\n"
+"%s ja %s.\n"
+
+#. TRANSLATORS: Each %s denotes an author name.
+#. You can use line breaks, estimating that each author name occupies
+#. ca. 16 screen columns and that a screen line has ca. 80 columns.
+#: lib/version-etc.c:118
+#, c-format
+msgid ""
+"Written by %s, %s, %s,\n"
+"%s, %s, %s, %s,\n"
+"and %s.\n"
+msgstr ""
+"Kirjoittaneet %s, %s,\n"
+"%s, %s, %s, %s,\n"
+"%s ja %s.\n"
+
+#. TRANSLATORS: Each %s denotes an author name.
+#. You can use line breaks, estimating that each author name occupies
+#. ca. 16 screen columns and that a screen line has ca. 80 columns.
+#: lib/version-etc.c:126
+#, c-format
+msgid ""
+"Written by %s, %s, %s,\n"
+"%s, %s, %s, %s,\n"
+"%s, and %s.\n"
+msgstr ""
+"Kirjoittaneet %s, %s,\n"
+"%s, %s, %s, %s,\n"
+"%s, %s ja %s.\n"
+
+#. TRANSLATORS: Each %s denotes an author name.
+#. You can use line breaks, estimating that each author name occupies
+#. ca. 16 screen columns and that a screen line has ca. 80 columns.
+#: lib/version-etc.c:136
+#, c-format
+msgid ""
+"Written by %s, %s, %s,\n"
+"%s, %s, %s, %s,\n"
+"%s, %s, and others.\n"
+msgstr ""
+"Kirjoittaneet %s, %s,\n"
+"%s, %s, %s, %s,\n"
+"%s, %s, %s ja muut.\n"
+
+#: lib/version-etc.c:147
+msgid ""
+"This is free software; see the source for copying conditions.  There is NO\n"
+"warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n"
+msgstr ""
+"Tämä on vapaa ohjelmisto; katsokaa kopiointiehdot lähdekoodista. Takuuta EI\n"
+"OLE; ei edes KAUPALLISESTI HYVÄKSYTTÄVÄSTÄ LAADUSTA tai SOPIVUUDESTA TIETTYYN\n"
+"TARKOITUKSEEN.\n"
+
+#: src/analyze.c:782 src/diff.c:1273
+#, c-format
+msgid "Files %s and %s differ\n"
+msgstr "Tiedostot %s ja %s eroavat\n"
+
+#: src/analyze.c:1028 src/diff3.c:1417 src/util.c:533
+msgid "No newline at end of file"
+msgstr "Ei rivinvaihtoa tiedoston lopussa"
+
+#: src/cmp.c:115 src/diff.c:840 src/diff3.c:412 src/sdiff.c:168
+#, c-format
+msgid "Try `%s --help' for more information."
+msgstr "Kokeile \"%s --help\" saadaksesi lisää tietoa."
+
+#: src/cmp.c:135
+#, c-format
+msgid "invalid --ignore-initial value `%s'"
+msgstr "virheellinen arvo \"%s\" valitsimelle --ignore-initial"
+
+#: src/cmp.c:145
+msgid "options -l and -s are incompatible"
+msgstr "valitsimet -l ja -s eivät ole yhteensopivia"
+
+#: src/cmp.c:153 src/diff.c:849 src/diff3.c:420 src/sdiff.c:177
+#: src/sdiff.c:319 src/sdiff.c:326 src/sdiff.c:914 src/util.c:193
+#: src/util.c:286 src/util.c:293
+msgid "write failed"
+msgstr "kirjoitus epäonnistui"
+
+#: src/cmp.c:155 src/diff.c:851 src/diff.c:1344 src/diff3.c:422
+#: src/sdiff.c:179
+msgid "standard output"
+msgstr "vakiotuloste"
+
+#: src/cmp.c:159
+msgid "-b  --print-bytes  Print differing bytes."
+msgstr "-b  --print-bytes  Tulostaa eroavat tavut."
+
+#: src/cmp.c:160
+msgid "-i SKIP  --ignore-initial=SKIP  Skip the first SKIP bytes of input."
+msgstr "-i OHITA --ignore-initial=OHITA Ohittaa syötteen ensimmäiset OHITA tavua."
+
+#: src/cmp.c:161
+msgid "-i SKIP1:SKIP2  --ignore-initial=SKIP1:SKIP2"
+msgstr "-i OHITA1:OHITA2 --ignore-initial=OHITA1:OHITA2"
+
+#: src/cmp.c:162
+msgid "  Skip the first SKIP1 bytes of FILE1 and the first SKIP2 bytes of FILE2."
+msgstr "  Ohittaa TIEDOSTO1:n ensimmäiset OHITA1 tavua, ja TIEDOSTO2:n ensimmäiset OHITA2 tavua."
+
+#: src/cmp.c:163
+msgid "-l  --verbose  Output byte numbers and values of all differing bytes."
+msgstr "-I  --verbose  Näytä kaikkien eroavien tavujen sijainnit ja arvot"
+
+#: src/cmp.c:164
+msgid "-n LIMIT  --bytes=LIMIT  Compare at most LIMIT bytes."
+msgstr "-n RAJA   --bytes=RAJA  Vertaa korkeintaan RAJAn verran tavuja."
+
+#: src/cmp.c:165
+msgid "-s  --quiet  --silent  Output nothing; yield exit status only."
+msgstr "-s  --quiet  --silent  Ei tulostusta; vain paluuarvo."
+
+#: src/cmp.c:166 src/diff.c:928 src/diff3.c:441 src/sdiff.c:205
+msgid "-v  --version  Output version info."
+msgstr "-v  --version  Näyttää versiotiedot."
+
+#: src/cmp.c:167 src/diff.c:929 src/diff3.c:442 src/sdiff.c:206
+msgid "--help  Output this help."
+msgstr "--help  Näyttää tämän ohjeen."
+
+#: src/cmp.c:176
+#, c-format
+msgid "Usage: %s [OPTION]... FILE1 [FILE2 [SKIP1 [SKIP2]]]\n"
+msgstr "Käyttö: %s [VALITSIN]... TIEDOSTO1 [TIEDOSTO2 [OHITA1 [OHITA2]]]\n"
+
+#: src/cmp.c:178
+msgid "Compare two files byte by byte."
+msgstr "Vertaa kahta tiedostoa tavu tavulta."
+
+#: src/cmp.c:182
+msgid "SKIP1 and SKIP2 are the number of bytes to skip in each file."
+msgstr "OHITA1 ja OHITA2 ovat jokaisessa tiedostossa ohitettavien tavujen määrä."
+
+#: src/cmp.c:183
+msgid ""
+"SKIP values may be followed by the following multiplicative suffixes:\n"
+"kB 1000, K 1024, MB 1,000,000, M 1,048,576,\n"
+"GB 1,000,000,000, G 1,073,741,824, and so on for T, P, E, Z, Y."
+msgstr ""
+"OHITA-arvoihin voidaan liittää perään seuraavat kertoimet:\n"
+"kB 1000, K 1024, MB 1,000,000, M 1,048,576,\n"
+"GB 1,000,000,000, G 1,073,741,824, sekä T, P, E, Z, Y."
+
+#: src/cmp.c:186
+msgid "If a FILE is `-' or missing, read standard input."
+msgstr "Jos TIEDOSTO on \"-\" tai puuttuu, luetaan vakiosyötteestä."
+
+#: src/cmp.c:187 src/diff.c:934 src/sdiff.c:224
+msgid "Exit status is 0 if inputs are the same, 1 if different, 2 if trouble."
+msgstr "Paluuarvo on 0, jos syötteet ovat samoja, 1 jos erilaisia, ongelmatilanteissa 2."
+
+#: src/cmp.c:188 src/diff.c:936 src/diff3.c:462 src/sdiff.c:225
+msgid "Report bugs to <bug-gnu-utils@gnu.org>."
+msgstr "Ilmoita ohjelmistovioista (englanniksi) osoitteeseen <bug-gnu-utils@gnu.org>."
+
+#: src/cmp.c:232
+#, c-format
+msgid "invalid --bytes value `%s'"
+msgstr "virheellinen arvo \"%s\" valitsimelle --bytes"
+
+#: src/cmp.c:247
+msgid "Torbjorn Granlund"
+msgstr "Torbjörn Granlund"
+
+#: src/cmp.c:261 src/diff.c:757 src/diff3.c:315 src/sdiff.c:564
+#, c-format
+msgid "missing operand after `%s'"
+msgstr "puuttuva operandi argumentin \"%s\" jälkeen"
+
+#: src/cmp.c:273 src/diff.c:759 src/diff3.c:317 src/sdiff.c:566
+#, c-format
+msgid "extra operand `%s'"
+msgstr "ylimääräinen operandi \"%s\""
+
+#: src/cmp.c:481
+#, c-format
+msgid "%s %s differ: byte %s, line %s\n"
+msgstr "%s %s eroavat: tavu %s, rivi %s\n"
+
+#: src/cmp.c:497
+#, c-format
+msgid "%s %s differ: byte %s, line %s is %3o %s %3o %s\n"
+msgstr "%s %s eroavat: tavu %s, rivi %s on %3o %s %3o %s\n"
+
+#: src/cmp.c:545
+#, c-format
+msgid "cmp: EOF on %s\n"
+msgstr "cmp: Tiedoston %s loppu\n"
+
+#: src/diff.c:322
+#, c-format
+msgid "invalid context length `%s'"
+msgstr "virheellinen kontekstin pituus \"%s\""
+
+#: src/diff.c:405
+msgid "pagination not supported on this host"
+msgstr "tämä isäntä ei tue sivunumerointia"
+
+#: src/diff.c:420 src/diff3.c:297
+msgid "too many file label options"
+msgstr "liian monta tiedostonimivalitsinta"
+
+#: src/diff.c:498
+#, c-format
+msgid "invalid width `%s'"
+msgstr "virheellinen leveys \"%s\""
+
+#: src/diff.c:502
+msgid "conflicting width options"
+msgstr "ristiriitaiset leveysvalinnat"
+
+#: src/diff.c:526
+#, c-format
+msgid "invalid horizon length `%s'"
+msgstr "virheellinen horisontin pituus \"%s\""
+
+#: src/diff.c:573
+#, c-format
+msgid "invalid tabsize `%s'"
+msgstr "virheellinen sarkaimen koko \"%s\""
+
+#: src/diff.c:577
+msgid "conflicting tabsize options"
+msgstr "ristiriitaiset sarkaimen kokovalinnat"
+
+#: src/diff.c:647
+#, c-format
+msgid "`-%ld' option is obsolete; use `-%c %ld'"
+msgstr "valitsin \"-%ld\" on vanhentunut, käytä \"-%c %ld\""
+
+#: src/diff.c:659
+#, c-format
+msgid "`-%ld' option is obsolete; omit it"
+msgstr "valitsin \"-%ld\" on vanhentunut; jätä se pois"
+
+#: src/diff.c:732
+msgid "--from-file and --to-file both specified"
+msgstr "sekä valitsin --from-file että --to-file on määritetty"
+
+#: src/diff.c:855
+msgid "Compare files line by line."
+msgstr "Vertaa tiedostoja rivi riviltä."
+
+#: src/diff.c:857
+msgid "-i  --ignore-case  Ignore case differences in file contents."
+msgstr "-i  --ignore-case  Älä huomioi kirjainkokoa tiedostojen sisältöä verrattaessa."
+
+#: src/diff.c:858
+msgid "--ignore-file-name-case  Ignore case when comparing file names."
+msgstr "--ignore-file-name-case  Älä huomioi kirjainkokoa tiedostojen nimiä verrattaessa."
+
+#: src/diff.c:859
+msgid "--no-ignore-file-name-case  Consider case when comparing file names."
+msgstr "--no-ignore-file-name-case  Kirjainkoko huomioidaan tiedostonimiä verrattaessa."
+
+#: src/diff.c:860 src/sdiff.c:186
+msgid "-E  --ignore-tab-expansion  Ignore changes due to tab expansion."
+msgstr "-E  --ignore-tab-expansion  Älä huomioi sarkainten laajennuksesta johtuvia eroja."
+
+#: src/diff.c:861 src/sdiff.c:187
+msgid "-b  --ignore-space-change  Ignore changes in the amount of white space."
+msgstr "-b  --ignore-space-change  Älä huomioi tyhjistä merkeistä johtuvia eroja."
+
+#: src/diff.c:862
+msgid "-w  --ignore-all-space  Ignore all white space."
+msgstr "-w  --ignore-all-white-space  Älä huomioi tyhjiä merkkejä."
+
+#: src/diff.c:863 src/sdiff.c:189
+msgid "-B  --ignore-blank-lines  Ignore changes whose lines are all blank."
+msgstr "-B  --ignore-blank-lines  Älä huomioi tyhjistä riveistä johtuvia eroja."
+
+#: src/diff.c:864 src/sdiff.c:190
+msgid "-I RE  --ignore-matching-lines=RE  Ignore changes whose lines all match RE."
+msgstr "-I SI  --ignore-matching-lines=SI  Älä huomioi eroavia rivejä, jotka vastaavat säännöllistä lauseketta."
+
+#: src/diff.c:865 src/diff3.c:437 src/sdiff.c:191
+msgid "--strip-trailing-cr  Strip trailing carriage return on input."
+msgstr "--strip-trailing-cr  Poista lopussa oleva vaununpalautus syötteestä."
+
+#: src/diff.c:867
+msgid "--binary  Read and write data in binary mode."
+msgstr "--binary  Lukee ja kirjoittaa dataa binääritilassa."
+
+#: src/diff.c:869 src/diff3.c:436 src/sdiff.c:192
+msgid "-a  --text  Treat all files as text."
+msgstr "-a  --text  Käsittelee kaikki tiedostot tekstinä."
+
+#: src/diff.c:871
+msgid ""
+"-c  -C NUM  --context[=NUM]  Output NUM (default 3) lines of copied context.\n"
+"-u  -U NUM  --unified[=NUM]  Output NUM (default 3) lines of unified context.\n"
+"  --label LABEL  Use LABEL instead of file name.\n"
+"  -p  --show-c-function  Show which C function each change is in.\n"
+"  -F RE  --show-function-line=RE  Show the most recent line matching RE."
+msgstr ""
+"-c  -C MÄÄRÄ  --context[=MÄÄRÄ]  Tulosta MÄÄRÄ (oletus 3) riviä kopioitua kontekstia.\n"
+"-u  -U MÄÄRÄ  --unified[=MÄÄRÄ]  Tulosta MÄÄRÄ (oletus 3) riviä yhdistettyä kontekstia.\n"
+"  --label NIMIÖ  Käytä NIMIÖtä tiedostonimen sijaan.\n"
+"  -p  --show-c-function  Näytä, minkä C-funktion sisällä kukin muutos on.\n"
+"  -F SI  --show-function-line=SI  Näytä viimeisin säännöllistä lauseketta vastaava rivi."
+
+#: src/diff.c:876
+msgid "-q  --brief  Output only whether files differ."
+msgstr "-q  --brief  Kertoo vain, eroavatko tiedostot."
+
+#: src/diff.c:877
+msgid "-e  --ed  Output an ed script."
+msgstr "-e  --ed  Tulosta ed-skripti."
+
+#: src/diff.c:878
+msgid "--normal  Output a normal diff."
+msgstr "--normal  Tulosta normaali diff."
+
+#: src/diff.c:879
+msgid "-n  --rcs  Output an RCS format diff."
+msgstr "-n  --rcs  Tulosta RCS-muotoinen diff."
+
+#: src/diff.c:880
+msgid ""
+"-y  --side-by-side  Output in two columns.\n"
+"  -W NUM  --width=NUM  Output at most NUM (default 130) print columns.\n"
+"  --left-column  Output only the left column of common lines.\n"
+"  --suppress-common-lines  Do not output common lines."
+msgstr ""
+"-y  --side-by-side  Tulosta kahdelle palstalle.\n"
+"  -W MÄÄRÄ --width=MÄÄRÄ Tulosta korkeintaan MÄÄRÄ (oletus 130) merkkiä riville.\n"
+"  --left-column  Tulosta vain yhteisten rivien vasen palsta.\n"
+"  --suppress-common-lines  Älä tulosta yhteisiä rivejä."
+
+#: src/diff.c:884
+msgid "-D NAME  --ifdef=NAME  Output merged file to show `#ifdef NAME' diffs."
+msgstr "-D NIMI  --ifdef=NIMI  Tulosta yhdistetty tiedosto näyttämään \"#ifdef NIMI\"-erot."
+
+#: src/diff.c:885
+msgid "--GTYPE-group-format=GFMT  Similar, but format GTYPE input groups with GFMT."
+msgstr "--GTYYPPI-group-format=GMUOTO  Sama, muotoile GTYYPPIset syöteryhmät GMUOTOon."
+
+#: src/diff.c:886
+msgid "--line-format=LFMT  Similar, but format all input lines with LFMT."
+msgstr "--line-format=LMUOTO  Sama, muotoile kaikki syöterivit LMUOTOon."
+
+#: src/diff.c:887
+msgid "--LTYPE-line-format=LFMT  Similar, but format LTYPE input lines with LFMT."
+msgstr "--LTYYPPI-line-format=MUOTO  Sama, muotoile LTYYPPIset syöterivit LMUOTOon."
+
+#: src/diff.c:888
+msgid "  LTYPE is `old', `new', or `unchanged'.  GTYPE is LTYPE or `changed'."
+msgstr "  LTYYPPI on \"old\", \"new\" tai \"unchanged\". GTYYPPI on LTYYPPI tai \"changed\"."
+
+#: src/diff.c:889
+msgid ""
+"  GFMT may contain:\n"
+"    %<  lines from FILE1\n"
+"    %>  lines from FILE2\n"
+"    %=  lines common to FILE1 and FILE2\n"
+"    %[-][WIDTH][.[PREC]]{doxX}LETTER  printf-style spec for LETTER\n"
+"      LETTERs are as follows for new group, lower case for old group:\n"
+"        F  first line number\n"
+"        L  last line number\n"
+"        N  number of lines = L-F+1\n"
+"        E  F-1\n"
+"        M  L+1"
+msgstr ""
+"  GMUOTO voi sisältää:\n"
+"    %<  rivejä TIEDOSTO1:stä\n"
+"    %>  rivejä TIEDOSTO2:sta\n"
+"    %=  TIEDOSTO1:n ja TIEDOSTO2:n yhteiset rivit\n"
+"    %[-][LEVEYS][.[TARKK]]{doxX}KIRJAIN  printf-tyylimääritys KIRJAIMELLE\n"
+"      KIRJAIMET ovat seuraavat uudelle ryhmälle; pienet kirjaimet vanhalle ryhmälle:\n"
+"        F  ensimmäinen rivinumero\n"
+"        L  viimeinen rivinumero\n"
+"        N  rivien määrä = L-F+1\n"
+"        E  F-1\n"
+"        M  L+1"
+
+#: src/diff.c:900
+msgid ""
+"  LFMT may contain:\n"
+"    %L  contents of line\n"
+"    %l  contents of line, excluding any trailing newline\n"
+"    %[-][WIDTH][.[PREC]]{doxX}n  printf-style spec for input line number"
+msgstr ""
+"  LMUOTO voi sisältää:\n"
+"    %L  rivin sisältö\n"
+"    %l  rivin sisältö, mahdollinen edeltävä rivinvaihto poislukien\n"
+"    %[-][LEVEYS][.[TARKK]]{doxX}n syöterivin numero printf-tyylillä"
+
+#: src/diff.c:904
+msgid ""
+"  Either GFMT or LFMT may contain:\n"
+"    %%  %\n"
+"    %c'C'  the single character C\n"
+"    %c'\\OOO'  the character with octal code OOO"
+msgstr ""
+"  Sekä GMUOTO että LMUOTO voivat sisältää:\n"
+"   %%   %\n"
+"    %c'C'  yksittäinen merkki C\n"
+"    %c'\\OOO'  yksittäinen merkki oktaalikoodilla OOO"
+
+#: src/diff.c:909
+msgid "-l  --paginate  Pass the output through `pr' to paginate it."
+msgstr "-l  --paginate  Ohjaa tuloste ohjelman \"pr\" läpi sivunumerointia varten."
+
+#: src/diff.c:910 src/sdiff.c:198
+msgid "-t  --expand-tabs  Expand tabs to spaces in output."
+msgstr "-t  --expand-tabs  Laajentaa sarkaimet välilyönneiksi tulosteessa."
+
+#: src/diff.c:911 src/diff3.c:438
+msgid "-T  --initial-tab  Make tabs line up by prepending a tab."
+msgstr "-T  --initial-tab  Lisää sarkain rivien alkuun."
+
+#: src/diff.c:912 src/sdiff.c:199
+msgid "--tabsize=NUM  Tab stops are every NUM (default 8) print columns."
+msgstr "--tabsize=KOKO Sarkaimen koko on KOKO (oletus 8) merkkiä."
+
+#: src/diff.c:914
+msgid "-r  --recursive  Recursively compare any subdirectories found."
+msgstr "-r  --recursive  Vertaa löytyneitä alihakemistoja rekursiivisesti."
+
+#: src/diff.c:915
+msgid "-N  --new-file  Treat absent files as empty."
+msgstr "-N  --new-file  Käsittele puuttuvia tiedostoja tyhjinä."
+
+#: src/diff.c:916
+msgid "--unidirectional-new-file  Treat absent first files as empty."
+msgstr "--unidirectional-new-file  Käsittele puuttuvia tiedostoja tyhjinä."
+
+#: src/diff.c:917
+msgid "-s  --report-identical-files  Report when two files are the same."
+msgstr "-s  --report-identical-files  Ilmoita, jos kaksi tiedostoa ovat samat."
+
+#: src/diff.c:918
+msgid "-x PAT  --exclude=PAT  Exclude files that match PAT."
+msgstr "-x HAHMO  --exclude=HAHMO  Jätä pois tiedostot, jotka vastaavat HAHMOa."
+
+#: src/diff.c:919
+msgid "-X FILE  --exclude-from=FILE  Exclude files that match any pattern in FILE."
+msgstr "-X TIEDOSTO --exclude-from=TIEDOSTO  Jätä pois TIEDOSTOssa listatut tiedostot."
+
+#: src/diff.c:920
+msgid "-S FILE  --starting-file=FILE  Start with FILE when comparing directories."
+msgstr "-S TIEDOSTO  --starting-file=TIEDOSTO  Aloita TIEDOSTOlla verrattaessa hakemistoja."
+
+#: src/diff.c:921
+msgid "--from-file=FILE1  Compare FILE1 to all operands.  FILE1 can be a directory."
+msgstr "--from-file=TIEDOSTO1  Vertaa TIEDOSTO1:ä kaikkiin operandeihin. TIEDOSTO1 voi olla hakemisto."
+
+#: src/diff.c:922
+msgid "--to-file=FILE2  Compare all operands to FILE2.  FILE2 can be a directory."
+msgstr "--to-file=TIEDOSTO2  Vertaa kaikkia operandeja TIEDOSTO2:een. TIEDOSTO2 voi olla hakemisto."
+
+#: src/diff.c:924
+msgid "--horizon-lines=NUM  Keep NUM lines of the common prefix and suffix."
+msgstr "--horizon-lines=MÄÄRÄ  Säilytä MÄÄRÄ riviä yhteisestä etu- ja jälkiliitteestä."
+
+#: src/diff.c:925 src/sdiff.c:201
+msgid "-d  --minimal  Try hard to find a smaller set of changes."
+msgstr "-d  --minimal  Yrittää löytää pienemmän määrän muutoksia."
+
+#: src/diff.c:926
+msgid "--speed-large-files  Assume large files and many scattered small changes."
+msgstr "--speed-large-files  Olettaa tiedostojen olevan suuria ja muutosten pieniä sekä hajanaisia."
+
+#: src/diff.c:931
+msgid "FILES are `FILE1 FILE2' or `DIR1 DIR2' or `DIR FILE...' or `FILE... DIR'."
+msgstr "TIEDOSTOT ovat \"TIEDOSTO1 TIEDOSTO2\" tai \"HAK1 HAK2\" tai \"HAK TIEDOSTO...\" tai \"TIEDOSTO... HAK\"."
+
+#: src/diff.c:932
+msgid "If --from-file or --to-file is given, there are no restrictions on FILES."
+msgstr "Jos valitsin --from-file tai --to-file on annettu, TIEDOSTOILLE ei ole rajoituksia."
+
+#: src/diff.c:933 src/diff3.c:460 src/sdiff.c:223
+msgid "If a FILE is `-', read standard input."
+msgstr "Jos TIEDOSTO on \"-\", luetaan vakiosyötteestä."
+
+#: src/diff.c:945
+#, c-format
+msgid "Usage: %s [OPTION]... FILES\n"
+msgstr "Käyttö: %s [VALITSIN]... TIEDOSTOT\n"
+
+#: src/diff.c:974
+#, c-format
+msgid "conflicting %s option value `%s'"
+msgstr "ristiriitainen arvo \"%2$s\" valitsimelle %1$s"
+
+#: src/diff.c:987
+msgid "conflicting output style options"
+msgstr "ristiriitaiset tulostustyylin valinnat"
+
+#: src/diff.c:1053 src/diff.c:1248
+#, c-format
+msgid "Only in %s: %s\n"
+msgstr "Vain hakemistossa %s: %s\n"
+
+#: src/diff.c:1180
+msgid "cannot compare `-' to a directory"
+msgstr "ei voi verrata syötettä \"-\" hakemistoon"
+
+#: src/diff.c:1212
+msgid "-D option not supported with directories"
+msgstr "valitsin -D ei toimi hakemistojen kanssa"
+
+#: src/diff.c:1221
+#, c-format
+msgid "Common subdirectories: %s and %s\n"
+msgstr "Yhteiset alihakemistot: %s ja %s\n"
+
+#: src/diff.c:1258
+#, c-format
+msgid "File %s is a %s while file %s is a %s\n"
+msgstr "Tiedosto %s on %s, kun taas tiedosto %s on %s\n"
+
+#: src/diff.c:1335
+#, c-format
+msgid "Files %s and %s are identical\n"
+msgstr "Tiedostot %s ja %s ovat identtiset\n"
+
+#: src/diff3.c:310
+msgid "incompatible options"
+msgstr "yhteensopimattomat valitsimet"
+
+#: src/diff3.c:350
+msgid "`-' specified for more than one input file"
+msgstr "\"-\" on määritetty useammaksi kuin yhdeksi syötetiedostoksi"
+
+#: src/diff3.c:393 src/diff3.c:1242 src/diff3.c:1645 src/diff3.c:1700
+#: src/sdiff.c:311 src/sdiff.c:883 src/sdiff.c:894
+msgid "read failed"
+msgstr "lukeminen epäonnistui"
+
+#: src/diff3.c:426
+msgid "-e  --ed  Output unmerged changes from OLDFILE to YOURFILE into MYFILE."
+msgstr "-e  --ed  Tulosta VANHANTIEDOSTON yhdistämättömät muutokset TIEDOSTOOSI verrattuna TIEDOSTOONI."
+
+#: src/diff3.c:427
+msgid "-E  --show-overlap  Output unmerged changes, bracketing conflicts."
+msgstr "-E  --show-overlap  Tulosta yhdistämättömät muutokset, ristiriidat merkiten."
+
+#: src/diff3.c:428
+msgid "-A  --show-all  Output all changes, bracketing conflicts."
+msgstr "-A  --show-all  Tulosta kaikki muutokset, ristiriidat merkiten."
+
+#: src/diff3.c:429
+msgid "-x  --overlap-only  Output overlapping changes."
+msgstr "-x  --overlap-only  Tulosta päällekkäiset muutokset."
+
+#: src/diff3.c:430
+msgid "-X  Output overlapping changes, bracketing them."
+msgstr "-X  Tulosta päällekkäiset muutokset sulkeiden sisään."
+
+#: src/diff3.c:431
+msgid "-3  --easy-only  Output unmerged nonoverlapping changes."
+msgstr "-3  --easy-only  Tulosta yhdistämättömät ei-päällekkäiset muutokset."
+
+#: src/diff3.c:433
+msgid "-m  --merge  Output merged file instead of ed script (default -A)."
+msgstr "-m  --merge  Tulosta yhdistetty tiedosto ed-skriptin sijaan (oletus -A)."
+
+#: src/diff3.c:434
+msgid "-L LABEL  --label=LABEL  Use LABEL instead of file name."
+msgstr "-L NIMIÖ  --label=NIMIÖ  Käytä NIMIÖtä tiedostonimen sijaan."
+
+#: src/diff3.c:435
+msgid "-i  Append `w' and `q' commands to ed scripts."
+msgstr "-i  Lisää komennot \"w\" ja \"q\" ed-skripteihin."
+
+#: src/diff3.c:439 src/sdiff.c:203
+msgid "--diff-program=PROGRAM  Use PROGRAM to compare files."
+msgstr "--diff-program=OHJELMA  Käytä OHJELMAa tiedostojen vertaamiseen."
+
+#: src/diff3.c:451
+#, c-format
+msgid "Usage: %s [OPTION]... MYFILE OLDFILE YOURFILE\n"
+msgstr "Käyttö: %s [VALITSIN]... TIEDOSTONI VANHATIEDOSTO TIEDOSTOSI\n"
+
+#: src/diff3.c:453
+msgid "Compare three files line by line."
+msgstr "Vertaa kolmea tiedostoa rivi riviltä."
+
+#: src/diff3.c:461
+msgid "Exit status is 0 if successful, 1 if conflicts, 2 if trouble."
+msgstr "Paluuarvo on onnistuessa 0, ristiriitatilanteissa 1, ja ongelmatilanteissa 2."
+
+#: src/diff3.c:655
+msgid "internal error: screwup in format of diff blocks"
+msgstr "sisäinen virhe: virhe diff-lohkojen muodossa"
+
+#: src/diff3.c:948
+#, c-format
+msgid "%s: diff failed: "
+msgstr "%s: diff epäonnistui: "
+
+#: src/diff3.c:970
+msgid "internal error: invalid diff type in process_diff"
+msgstr "sisäinen virhe: virheellinen diff-tyyppi funktiossa process_diff"
+
+#: src/diff3.c:995
+msgid "invalid diff format; invalid change separator"
+msgstr "virheellinen diff-muoto; virheellinen muutoserotin"
+
+#: src/diff3.c:1252
+msgid "invalid diff format; incomplete last line"
+msgstr "virheellinen diff-muoto; viimeinen rivi vajaa"
+
+#: src/diff3.c:1276 src/sdiff.c:279 src/util.c:303
+#, c-format
+msgid "subsidiary program `%s' could not be invoked"
+msgstr "apuohjelmaa \"%s\" ei voitu käynnistää"
+
+#: src/diff3.c:1278 src/sdiff.c:281 src/util.c:305
+#, c-format
+msgid "subsidiary program `%s' not found"
+msgstr "apuohjelmaa \"%s\" ei löytynyt"
+
+#: src/diff3.c:1280 src/sdiff.c:283 src/util.c:307
+#, c-format
+msgid "subsidiary program `%s' failed"
+msgstr "apuohjelman \"%s\" suoritus epäonnistui"
+
+#: src/diff3.c:1281 src/sdiff.c:284 src/util.c:308
+#, c-format
+msgid "subsidiary program `%s' failed (exit status %d)"
+msgstr "apuohjelman \"%s\" suoritus epäonnistui (paluuarvo %d)"
+
+#: src/diff3.c:1301
+msgid "invalid diff format; incorrect leading line chars"
+msgstr "virheellinen diff-muoto; väärät rivin alkumerkit"
+
+#: src/diff3.c:1374
+msgid "internal error: invalid diff type passed to output"
+msgstr "sisäinen virhe: virheellinen diff-muoto välitetty tulosteeseen"
+
+#: src/diff3.c:1647 src/diff3.c:1704
+msgid "input file shrank"
+msgstr "syötetiedosto kutistui"
+
+#: src/dir.c:160
+#, c-format
+msgid "cannot compare file names `%s' and `%s'"
+msgstr "ei voi verrata tiedostonimiä \"%s\" ja \"%s\""
+
+#: src/sdiff.c:183
+msgid "-o FILE  --output=FILE  Operate interactively, sending output to FILE."
+msgstr "-o TIEDOSTO  --output=TIEDOSTO  Vuorovaikutteinen toiminta, tuloste TIEDOSTOon."
+
+#: src/sdiff.c:185
+msgid "-i  --ignore-case  Consider upper- and lower-case to be the same."
+msgstr "-i  --ignore-case  Käsittele isot ja pienet kirjaimet samoina."
+
+#: src/sdiff.c:188
+msgid "-W  --ignore-all-space  Ignore all white space."
+msgstr "-W  --ignore-all-white  Älä huomioi tyhjiä merkkejä."
+
+#: src/sdiff.c:194
+msgid "-w NUM  --width=NUM  Output at most NUM (default 130) print columns."
+msgstr "-w MÄÄRÄ  --width=MÄÄRÄ  Tulosta enintään MÄÄRÄ (oletus 130) merkkiä riville."
+
+#: src/sdiff.c:195
+msgid "-l  --left-column  Output only the left column of common lines."
+msgstr "-l  --left-column  Tulosta vain yhteisten rivien vasen palsta"
+
+#: src/sdiff.c:196
+msgid "-s  --suppress-common-lines  Do not output common lines."
+msgstr "-s  --suppress-common-lines  Älä tulosta yhteisiä rivejä."
+
+#: src/sdiff.c:202
+msgid "-H  --speed-large-files  Assume large files and many scattered small changes."
+msgstr "-H  --speed-large-files  Oleta suuret tiedostot, joissa pieniä muutoksia ympäri tiedoston."
+
+#: src/sdiff.c:215
+#, c-format
+msgid "Usage: %s [OPTION]... FILE1 FILE2\n"
+msgstr "Käyttö: %s [VALITSIN]...TIEDOSTO1 TIEDOSTO2\n"
+
+#: src/sdiff.c:216
+msgid "Side-by-side merge of file differences."
+msgstr "Tiedostojen erojen yhdistäminen vierekkäisillä palstoilla."
+
+#: src/sdiff.c:333
+msgid "cannot interactively merge standard input"
+msgstr "vakiosyötettä ei voi yhdistää vuorovaikutteisesti"
+
+#: src/sdiff.c:594
+msgid "both files to be compared are directories"
+msgstr "molemmat vertailtavat tiedostot ovat hakemistoja"
+
+#: src/sdiff.c:857
+msgid ""
+"ed:\tEdit then use both versions, each decorated with a header.\n"
+"eb:\tEdit then use both versions.\n"
+"el:\tEdit then use the left version.\n"
+"er:\tEdit then use the right version.\n"
+"e:\tEdit a new version.\n"
+"l:\tUse the left version.\n"
+"r:\tUse the right version.\n"
+"s:\tSilently include common lines.\n"
+"v:\tVerbosely include common lines.\n"
+"q:\tQuit.\n"
+msgstr ""
+"ed:\tMuokkaa ja käytä molempia versioita, kumpaankin otsake.\n"
+"eb:\tMuokkaa ja käytä molempia versioita.\n"
+"el:\tMuokkaa ja käytä vasenta versiota.\n"
+"er:\tMuokkaa ja käytä oikeata versiota.\n"
+"e:\tMuokkaa uusi versio.\n"
+"l:\tKäytä vasenta versiota.\n"
+"r:\tKäytä oikeata versiota.\n"
+"s:\tSisällytä yhteiset rivit automaattisesti, ei ilmoitusta.\n"
+"v:\tSisällytä yhteiset rivit automaattisesti ja ilmoita niistä.\n"
+"q:\tLopeta.\n"
+
+#~ msgid "(C)"
+#~ msgstr "©"
+
+#~ msgid ""
+#~ "This program comes with NO WARRANTY, to the extent permitted by law.\n"
+#~ "You may redistribute copies of this program\n"
+#~ "under the terms of the GNU General Public License.\n"
+#~ "For more information about these matters, see the files named COPYING."
+#~ msgstr ""
+#~ "Tällä ohjelmalla EI - lain sallimissa rajoissa - OLE TAKUUTA.\n"
+#~ "Tämän ohjelman kopioita saa levittää GNU:n General Public Licensen \n"
+#~ "mukaisesti. Lisää tietoa näistä asioista on tiedostossa COPYING."
+
+#~ msgid "Binary files %s and %s differ\n"
+#~ msgstr "Binääritiedostot %s ja %s eroavat\n"
+
+#~ msgid "Written by Torbjorn Granlund and David MacKenzie."
+#~ msgstr "Kirjoittaneet Torbjörn Granlund ja David MacKenzie."
+
+#~ msgid ""
+#~ "Written by Paul Eggert, Mike Haertel, David Hayes,\n"
+#~ "Richard Stallman, and Len Tower."
+#~ msgstr ""
+#~ "Kirjoittaneet Paul Eggert, Mike Haertel, David Hayes,\n"
+#~ "Richard Stallman ja Len Tower."
+
+#~ msgid "subsidiary program `%s' not executable"
+#~ msgstr "apuohjelma \"%s\" ei ole käynnistettävä"

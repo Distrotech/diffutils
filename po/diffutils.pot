@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: GNU diffutils 3.3\n"
 "Report-Msgid-Bugs-To: bug-diffutils@gnu.org\n"
-"POT-Creation-Date: 2013-06-11 00:25+0200\n"
+"POT-Creation-Date: 2015-06-22 20:00+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -25,59 +25,103 @@ msgstr ""
 msgid "stack overflow"
 msgstr ""
 
-#: lib/error.c:188
+#: lib/error.c:191
 msgid "Unknown system error"
 msgstr ""
 
-#: lib/file-type.c:38
+#: lib/file-type.c:40
 msgid "regular empty file"
 msgstr ""
 
-#: lib/file-type.c:38
+#: lib/file-type.c:40
 msgid "regular file"
 msgstr ""
 
-#: lib/file-type.c:41
+#: lib/file-type.c:43
 msgid "directory"
 msgstr ""
 
-#: lib/file-type.c:44
-msgid "block special file"
-msgstr ""
-
-#: lib/file-type.c:47
-msgid "character special file"
-msgstr ""
-
-#: lib/file-type.c:50
-msgid "fifo"
-msgstr ""
-
-#: lib/file-type.c:53
+#: lib/file-type.c:46
 msgid "symbolic link"
 msgstr ""
 
-#: lib/file-type.c:56
-msgid "socket"
-msgstr ""
-
-#: lib/file-type.c:59
+#: lib/file-type.c:52
 msgid "message queue"
 msgstr ""
 
-#: lib/file-type.c:62
+#: lib/file-type.c:55
 msgid "semaphore"
 msgstr ""
 
-#: lib/file-type.c:65
+#: lib/file-type.c:58
 msgid "shared memory object"
 msgstr ""
 
-#: lib/file-type.c:68
+#: lib/file-type.c:61
 msgid "typed memory object"
 msgstr ""
 
-#: lib/file-type.c:70
+#: lib/file-type.c:66
+msgid "block special file"
+msgstr ""
+
+#: lib/file-type.c:69
+msgid "character special file"
+msgstr ""
+
+#: lib/file-type.c:72
+msgid "contiguous data"
+msgstr ""
+
+#: lib/file-type.c:75
+msgid "fifo"
+msgstr ""
+
+#: lib/file-type.c:78
+msgid "door"
+msgstr ""
+
+#: lib/file-type.c:81
+msgid "multiplexed block special file"
+msgstr ""
+
+#: lib/file-type.c:84
+msgid "multiplexed character special file"
+msgstr ""
+
+#: lib/file-type.c:87
+msgid "multiplexed file"
+msgstr ""
+
+#: lib/file-type.c:90
+msgid "named file"
+msgstr ""
+
+#: lib/file-type.c:93
+msgid "network special file"
+msgstr ""
+
+#: lib/file-type.c:96
+msgid "migrated file with data"
+msgstr ""
+
+#: lib/file-type.c:99
+msgid "migrated file without data"
+msgstr ""
+
+#: lib/file-type.c:102
+msgid "port"
+msgstr ""
+
+#: lib/file-type.c:105
+msgid "socket"
+msgstr ""
+
+#: lib/file-type.c:108
+msgid "whiteout"
+msgstr ""
+
+#: lib/file-type.c:110
 msgid "weird file"
 msgstr ""
 
@@ -233,7 +277,7 @@ msgstr ""
 msgid "Unmatched ) or \\)"
 msgstr ""
 
-#: lib/regcomp.c:704
+#: lib/regcomp.c:707
 msgid "No previous regular expression"
 msgstr ""
 
@@ -425,17 +469,17 @@ msgstr ""
 msgid "General help using GNU software: <http://www.gnu.org/gethelp/>\n"
 msgstr ""
 
-#: src/analyze.c:459 src/diff.c:1343
+#: src/analyze.c:454 src/diff.c:1349
 #, c-format
 msgid "Files %s and %s differ\n"
 msgstr ""
 
-#: src/analyze.c:462
+#: src/analyze.c:455
 #, c-format
 msgid "Binary files %s and %s differ\n"
 msgstr ""
 
-#: src/analyze.c:713 src/diff3.c:1416 src/util.c:663
+#: src/analyze.c:695 src/diff3.c:1416 src/util.c:663
 msgid "No newline at end of file"
 msgstr ""
 
@@ -449,7 +493,7 @@ msgstr ""
 msgid "David MacKenzie"
 msgstr ""
 
-#: src/cmp.c:118 src/diff.c:839 src/diff3.c:414 src/sdiff.c:158
+#: src/cmp.c:118 src/diff.c:845 src/diff3.c:414 src/sdiff.c:158
 #, c-format
 msgid "Try '%s --help' for more information."
 msgstr ""
@@ -464,13 +508,13 @@ msgstr ""
 msgid "options -l and -s are incompatible"
 msgstr ""
 
-#: src/cmp.c:155 src/diff.c:848 src/diff3.c:422 src/sdiff.c:167
+#: src/cmp.c:155 src/diff.c:854 src/diff3.c:422 src/sdiff.c:167
 #: src/sdiff.c:315 src/sdiff.c:322 src/sdiff.c:874 src/util.c:278
 #: src/util.c:375 src/util.c:382
 msgid "write failed"
 msgstr ""
 
-#: src/cmp.c:157 src/diff.c:850 src/diff.c:1408 src/diff3.c:424
+#: src/cmp.c:157 src/diff.c:856 src/diff.c:1414 src/diff3.c:424
 #: src/sdiff.c:169
 msgid "standard output"
 msgstr ""
@@ -525,7 +569,7 @@ msgid ""
 "at the beginning of each file (zero by default)."
 msgstr ""
 
-#: src/cmp.c:185 src/diff.c:956 src/diff3.c:462 src/sdiff.c:210
+#: src/cmp.c:185 src/diff.c:962 src/diff3.c:462 src/sdiff.c:210
 msgid ""
 "Mandatory arguments to long options are mandatory for short options too.\n"
 msgstr ""
@@ -541,7 +585,7 @@ msgstr ""
 msgid "If a FILE is '-' or missing, read standard input."
 msgstr ""
 
-#: src/cmp.c:195 src/diff.c:944 src/sdiff.c:220
+#: src/cmp.c:195 src/diff.c:950 src/sdiff.c:220
 msgid "Exit status is 0 if inputs are the same, 1 if different, 2 if trouble."
 msgstr ""
 
@@ -550,27 +594,27 @@ msgstr ""
 msgid "invalid --bytes value '%s'"
 msgstr ""
 
-#: src/cmp.c:266 src/diff.c:757 src/diff3.c:318 src/sdiff.c:565
+#: src/cmp.c:266 src/diff.c:763 src/diff3.c:318 src/sdiff.c:565
 #, c-format
 msgid "missing operand after '%s'"
 msgstr ""
 
-#: src/cmp.c:278 src/diff.c:759 src/diff3.c:320 src/sdiff.c:567
+#: src/cmp.c:278 src/diff.c:765 src/diff3.c:320 src/sdiff.c:567
 #, c-format
 msgid "extra operand '%s'"
 msgstr ""
 
-#: src/cmp.c:491
+#: src/cmp.c:494
 #, c-format
 msgid "%s %s differ: byte %s, line %s\n"
 msgstr ""
 
-#: src/cmp.c:507
+#: src/cmp.c:510
 #, c-format
 msgid "%s %s differ: byte %s, line %s is %3o %s %3o %s\n"
 msgstr ""
 
-#: src/cmp.c:559
+#: src/cmp.c:562
 #, c-format
 msgid "cmp: EOF on %s\n"
 msgstr ""
@@ -600,254 +644,254 @@ msgstr ""
 msgid "Len Tower"
 msgstr ""
 
-#: src/diff.c:339
+#: src/diff.c:340
 #, c-format
 msgid "invalid context length '%s'"
 msgstr ""
 
-#: src/diff.c:422
+#: src/diff.c:423
 #, c-format
 msgid "pagination not supported on this host"
 msgstr ""
 
-#: src/diff.c:437 src/diff3.c:300
+#: src/diff.c:438 src/diff3.c:300
 #, c-format
 msgid "too many file label options"
 msgstr ""
 
-#: src/diff.c:514
+#: src/diff.c:515
 #, c-format
 msgid "invalid width '%s'"
 msgstr ""
 
-#: src/diff.c:518
+#: src/diff.c:519
 msgid "conflicting width options"
 msgstr ""
 
-#: src/diff.c:543
+#: src/diff.c:544
 #, c-format
 msgid "invalid horizon length '%s'"
 msgstr ""
 
-#: src/diff.c:598
+#: src/diff.c:600
 #, c-format
 msgid "invalid tabsize '%s'"
 msgstr ""
 
-#: src/diff.c:602
+#: src/diff.c:604
 msgid "conflicting tabsize options"
 msgstr ""
 
-#: src/diff.c:734
+#: src/diff.c:740
 msgid "--from-file and --to-file both specified"
 msgstr ""
 
-#: src/diff.c:854
+#: src/diff.c:860
 msgid "    --normal                  output a normal diff (the default)"
 msgstr ""
 
-#: src/diff.c:855
+#: src/diff.c:861
 msgid "-q, --brief                   report only when files differ"
 msgstr ""
 
-#: src/diff.c:856
-msgid "-s, --report-identical-files  report when two files are the same"
-msgstr ""
-
-#: src/diff.c:857
-msgid ""
-"-c, -C NUM, --context[=NUM]   output NUM (default 3) lines of copied context"
-msgstr ""
-
-#: src/diff.c:858
-msgid ""
-"-u, -U NUM, --unified[=NUM]   output NUM (default 3) lines of unified context"
-msgstr ""
-
-#: src/diff.c:859
-msgid "-e, --ed                      output an ed script"
-msgstr ""
-
-#: src/diff.c:860
-msgid "-n, --rcs                     output an RCS format diff"
-msgstr ""
-
-#: src/diff.c:861
-msgid "-y, --side-by-side            output in two columns"
-msgstr ""
-
 #: src/diff.c:862
-msgid ""
-"-W, --width=NUM               output at most NUM (default 130) print columns"
+msgid "-s, --report-identical-files  report when two files are the same"
 msgstr ""
 
 #: src/diff.c:863
 msgid ""
-"    --left-column             output only the left column of common lines"
+"-c, -C NUM, --context[=NUM]   output NUM (default 3) lines of copied context"
 msgstr ""
 
 #: src/diff.c:864
-msgid "    --suppress-common-lines   do not output common lines"
+msgid ""
+"-u, -U NUM, --unified[=NUM]   output NUM (default 3) lines of unified context"
+msgstr ""
+
+#: src/diff.c:865
+msgid "-e, --ed                      output an ed script"
 msgstr ""
 
 #: src/diff.c:866
-msgid "-p, --show-c-function         show which C function each change is in"
+msgid "-n, --rcs                     output an RCS format diff"
 msgstr ""
 
 #: src/diff.c:867
-msgid "-F, --show-function-line=RE   show the most recent line matching RE"
+msgid "-y, --side-by-side            output in two columns"
 msgstr ""
 
 #: src/diff.c:868
+msgid ""
+"-W, --width=NUM               output at most NUM (default 130) print columns"
+msgstr ""
+
+#: src/diff.c:869
+msgid ""
+"    --left-column             output only the left column of common lines"
+msgstr ""
+
+#: src/diff.c:870
+msgid "    --suppress-common-lines   do not output common lines"
+msgstr ""
+
+#: src/diff.c:872
+msgid "-p, --show-c-function         show which C function each change is in"
+msgstr ""
+
+#: src/diff.c:873
+msgid "-F, --show-function-line=RE   show the most recent line matching RE"
+msgstr ""
+
+#: src/diff.c:874
 msgid ""
 "    --label LABEL             use LABEL instead of file name\n"
 "                                (can be repeated)"
 msgstr ""
 
-#: src/diff.c:871
+#: src/diff.c:877
 msgid "-t, --expand-tabs             expand tabs to spaces in output"
 msgstr ""
 
-#: src/diff.c:872
+#: src/diff.c:878
 msgid "-T, --initial-tab             make tabs line up by prepending a tab"
 msgstr ""
 
-#: src/diff.c:873
+#: src/diff.c:879
 msgid ""
 "    --tabsize=NUM             tab stops every NUM (default 8) print columns"
 msgstr ""
 
-#: src/diff.c:874
+#: src/diff.c:880
 msgid ""
 "    --suppress-blank-empty    suppress space or tab before empty output lines"
 msgstr ""
 
-#: src/diff.c:875
+#: src/diff.c:881
 msgid "-l, --paginate                pass output through 'pr' to paginate it"
 msgstr ""
 
-#: src/diff.c:877
+#: src/diff.c:883
 msgid ""
 "-r, --recursive                 recursively compare any subdirectories found"
 msgstr ""
 
-#: src/diff.c:878
+#: src/diff.c:884
 msgid "    --no-dereference            don't follow symbolic links"
 msgstr ""
 
-#: src/diff.c:879
+#: src/diff.c:885
 msgid "-N, --new-file                  treat absent files as empty"
 msgstr ""
 
-#: src/diff.c:880
+#: src/diff.c:886
 msgid "    --unidirectional-new-file   treat absent first files as empty"
 msgstr ""
 
-#: src/diff.c:881
+#: src/diff.c:887
 msgid "    --ignore-file-name-case     ignore case when comparing file names"
 msgstr ""
 
-#: src/diff.c:882
+#: src/diff.c:888
 msgid "    --no-ignore-file-name-case  consider case when comparing file names"
 msgstr ""
 
-#: src/diff.c:883
+#: src/diff.c:889
 msgid "-x, --exclude=PAT               exclude files that match PAT"
 msgstr ""
 
-#: src/diff.c:884
+#: src/diff.c:890
 msgid ""
 "-X, --exclude-from=FILE         exclude files that match any pattern in FILE"
 msgstr ""
 
-#: src/diff.c:885
+#: src/diff.c:891
 msgid ""
 "-S, --starting-file=FILE        start with FILE when comparing directories"
 msgstr ""
 
-#: src/diff.c:886
+#: src/diff.c:892
 msgid ""
 "    --from-file=FILE1           compare FILE1 to all operands;\n"
 "                                  FILE1 can be a directory"
 msgstr ""
 
-#: src/diff.c:888
+#: src/diff.c:894
 msgid ""
 "    --to-file=FILE2             compare all operands to FILE2;\n"
 "                                  FILE2 can be a directory"
 msgstr ""
 
-#: src/diff.c:891
+#: src/diff.c:897
 msgid ""
 "-i, --ignore-case               ignore case differences in file contents"
 msgstr ""
 
-#: src/diff.c:892
+#: src/diff.c:898
 msgid "-E, --ignore-tab-expansion      ignore changes due to tab expansion"
 msgstr ""
 
-#: src/diff.c:893
+#: src/diff.c:899
 msgid "-Z, --ignore-trailing-space     ignore white space at line end"
 msgstr ""
 
-#: src/diff.c:894
+#: src/diff.c:900
 msgid ""
 "-b, --ignore-space-change       ignore changes in the amount of white space"
 msgstr ""
 
-#: src/diff.c:895
+#: src/diff.c:901
 msgid "-w, --ignore-all-space          ignore all white space"
 msgstr ""
 
-#: src/diff.c:896
+#: src/diff.c:902
 msgid ""
 "-B, --ignore-blank-lines        ignore changes where lines are all blank"
 msgstr ""
 
-#: src/diff.c:897
+#: src/diff.c:903
 msgid "-I, --ignore-matching-lines=RE  ignore changes where all lines match RE"
 msgstr ""
 
-#: src/diff.c:899
+#: src/diff.c:905
 msgid "-a, --text                      treat all files as text"
 msgstr ""
 
-#: src/diff.c:900
+#: src/diff.c:906
 msgid "    --strip-trailing-cr         strip trailing carriage return on input"
 msgstr ""
 
-#: src/diff.c:902
+#: src/diff.c:908
 msgid "    --binary                    read and write data in binary mode"
 msgstr ""
 
-#: src/diff.c:905
+#: src/diff.c:911
 msgid ""
 "-D, --ifdef=NAME                output merged file with '#ifdef NAME' diffs"
 msgstr ""
 
-#: src/diff.c:906
+#: src/diff.c:912
 msgid "    --GTYPE-group-format=GFMT   format GTYPE input groups with GFMT"
 msgstr ""
 
-#: src/diff.c:907
+#: src/diff.c:913
 msgid "    --line-format=LFMT          format all input lines with LFMT"
 msgstr ""
 
-#: src/diff.c:908
+#: src/diff.c:914
 msgid "    --LTYPE-line-format=LFMT    format LTYPE input lines with LFMT"
 msgstr ""
 
-#: src/diff.c:909
+#: src/diff.c:915
 msgid ""
 "  These format options provide fine-grained control over the output\n"
 "    of diff, generalizing -D/--ifdef."
 msgstr ""
 
-#: src/diff.c:911
+#: src/diff.c:917
 msgid "  LTYPE is 'old', 'new', or 'unchanged'.  GTYPE is LTYPE or 'changed'."
 msgstr ""
 
-#: src/diff.c:912
+#: src/diff.c:918
 msgid ""
 "  GFMT (only) may contain:\n"
 "    %<  lines from FILE1\n"
@@ -863,7 +907,7 @@ msgid ""
 "    %(A=B?T:E)  if A equals B then T else E"
 msgstr ""
 
-#: src/diff.c:924
+#: src/diff.c:930
 msgid ""
 "  LFMT (only) may contain:\n"
 "    %L  contents of line\n"
@@ -871,7 +915,7 @@ msgid ""
 "    %[-][WIDTH][.[PREC]]{doxX}n  printf-style spec for input line number"
 msgstr ""
 
-#: src/diff.c:928
+#: src/diff.c:934
 msgid ""
 "  Both GFMT and LFMT may contain:\n"
 "    %%  %\n"
@@ -880,89 +924,88 @@ msgid ""
 "    C    the character C (other characters represent themselves)"
 msgstr ""
 
-#: src/diff.c:934
+#: src/diff.c:940
 msgid "-d, --minimal            try hard to find a smaller set of changes"
 msgstr ""
 
-#: src/diff.c:935
-msgid "    --horizon-lines=NUM  keep NUM lines of the common prefix and suffix"
-msgstr ""
-
-#: src/diff.c:936
-msgid ""
-"    --speed-large-files  assume large files and many scattered small changes"
-msgstr ""
-
-#: src/diff.c:938
-msgid "    --help               display this help and exit"
-msgstr ""
-
-#: src/diff.c:939
-msgid "-v, --version            output version information and exit"
-msgstr ""
-
 #: src/diff.c:941
-msgid ""
-"FILES are 'FILE1 FILE2' or 'DIR1 DIR2' or 'DIR FILE...' or 'FILE... DIR'."
+msgid "    --horizon-lines=NUM  keep NUM lines of the common prefix and suffix"
 msgstr ""
 
 #: src/diff.c:942
 msgid ""
+"    --speed-large-files  assume large files and many scattered small changes"
+msgstr ""
+
+#: src/diff.c:944
+msgid "    --help               display this help and exit"
+msgstr ""
+
+#: src/diff.c:945
+msgid "-v, --version            output version information and exit"
+msgstr ""
+
+#: src/diff.c:947
+msgid "FILES are 'FILE1 FILE2' or 'DIR1 DIR2' or 'DIR FILE' or 'FILE DIR'."
+msgstr ""
+
+#: src/diff.c:948
+msgid ""
 "If --from-file or --to-file is given, there are no restrictions on FILE(s)."
 msgstr ""
 
-#: src/diff.c:943 src/diff3.c:481 src/sdiff.c:219
+#: src/diff.c:949 src/diff3.c:481 src/sdiff.c:219
 msgid "If a FILE is '-', read standard input."
 msgstr ""
 
-#: src/diff.c:953
+#: src/diff.c:959
 #, c-format
 msgid "Usage: %s [OPTION]... FILES\n"
 msgstr ""
 
-#: src/diff.c:954
+#: src/diff.c:960
 msgid "Compare FILES line by line."
 msgstr ""
 
-#: src/diff.c:988
+#: src/diff.c:994
 #, c-format
 msgid "conflicting %s option value '%s'"
 msgstr ""
 
-#: src/diff.c:1001
+#: src/diff.c:1007
 #, c-format
 msgid "conflicting output style options"
 msgstr ""
 
-#: src/diff.c:1058 src/diff.c:1268
+#: src/diff.c:1064 src/diff.c:1274
 #, c-format
 msgid "Only in %s: %s\n"
 msgstr ""
 
-#: src/diff.c:1192
+#: src/diff.c:1198
 msgid "cannot compare '-' to a directory"
 msgstr ""
 
-#: src/diff.c:1227
+#: src/diff.c:1233
 msgid "-D option not supported with directories"
 msgstr ""
 
-#: src/diff.c:1236
+#: src/diff.c:1242
 #, c-format
 msgid "Common subdirectories: %s and %s\n"
 msgstr ""
 
-#: src/diff.c:1278 src/diff.c:1328
+#: src/diff.c:1284 src/diff.c:1334
 #, c-format
 msgid "File %s is a %s while file %s is a %s\n"
 msgstr ""
 
-#: src/diff.c:1314
+#: src/diff.c:1320
 #, c-format
 msgid "Symbolic links %s and %s differ\n"
 msgstr ""
 
-#: src/diff.c:1399
+#: src/diff.c:1405
 #, c-format
 msgid "Files %s and %s are identical\n"
 msgstr ""
@@ -1120,12 +1163,12 @@ msgstr ""
 msgid "input file shrank"
 msgstr ""
 
-#: src/dir.c:158
+#: src/dir.c:156
 #, c-format
 msgid "cannot compare file names '%s' and '%s'"
 msgstr ""
 
-#: src/dir.c:209
+#: src/dir.c:225
 #, c-format
 msgid "%s: recursive directory loop"
 msgstr ""

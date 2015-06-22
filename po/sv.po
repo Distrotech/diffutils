@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: diffutils 3.3-pre1\n"
 "Report-Msgid-Bugs-To: bug-diffutils@gnu.org\n"
-"POT-Creation-Date: 2013-06-11 00:25+0200\n"
+"POT-Creation-Date: 2015-06-22 20:00+0200\n"
 "PO-Revision-Date: 2012-10-31 21:15+0100\n"
 "Last-Translator: Göran Uddeborg <goeran@uddeborg.se>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
@@ -26,59 +26,107 @@ msgstr "programfel"
 msgid "stack overflow"
 msgstr "stackspill"
 
-#: lib/error.c:188
+#: lib/error.c:191
 msgid "Unknown system error"
 msgstr "Okänt systemfel"
 
-#: lib/file-type.c:38
+#: lib/file-type.c:40
 msgid "regular empty file"
 msgstr "en tom normal fil"
 
-#: lib/file-type.c:38
+#: lib/file-type.c:40
 msgid "regular file"
 msgstr "en normal fil"
 
-#: lib/file-type.c:41
+#: lib/file-type.c:43
 msgid "directory"
 msgstr "en katalog"
 
-#: lib/file-type.c:44
-msgid "block special file"
-msgstr "en blockspecialfil"
-
-#: lib/file-type.c:47
-msgid "character special file"
-msgstr "en teckenspecialfil"
-
-#: lib/file-type.c:50
-msgid "fifo"
-msgstr "en fifo"
-
-#: lib/file-type.c:53
+#: lib/file-type.c:46
 msgid "symbolic link"
 msgstr "en symbolisk länk"
 
-#: lib/file-type.c:56
-msgid "socket"
-msgstr "ett uttag (socket)"
-
-#: lib/file-type.c:59
+#: lib/file-type.c:52
 msgid "message queue"
 msgstr "en meddelandekö"
 
-#: lib/file-type.c:62
+#: lib/file-type.c:55
 msgid "semaphore"
 msgstr "en semafor"
 
-#: lib/file-type.c:65
+#: lib/file-type.c:58
 msgid "shared memory object"
 msgstr "ett objekt av delat minne"
 
-#: lib/file-type.c:68
+#: lib/file-type.c:61
 msgid "typed memory object"
 msgstr "ett objekt av typat minne"
 
-#: lib/file-type.c:70
+#: lib/file-type.c:66
+msgid "block special file"
+msgstr "en blockspecialfil"
+
+#: lib/file-type.c:69
+msgid "character special file"
+msgstr "en teckenspecialfil"
+
+#: lib/file-type.c:72
+msgid "contiguous data"
+msgstr ""
+
+#: lib/file-type.c:75
+msgid "fifo"
+msgstr "en fifo"
+
+#: lib/file-type.c:78
+msgid "door"
+msgstr ""
+
+#: lib/file-type.c:81
+#, fuzzy
+msgid "multiplexed block special file"
+msgstr "en blockspecialfil"
+
+#: lib/file-type.c:84
+#, fuzzy
+msgid "multiplexed character special file"
+msgstr "en teckenspecialfil"
+
+#: lib/file-type.c:87
+msgid "multiplexed file"
+msgstr ""
+
+#: lib/file-type.c:90
+#, fuzzy
+msgid "named file"
+msgstr "en konstig fil"
+
+#: lib/file-type.c:93
+#, fuzzy
+msgid "network special file"
+msgstr "en blockspecialfil"
+
+#: lib/file-type.c:96
+msgid "migrated file with data"
+msgstr ""
+
+#: lib/file-type.c:99
+msgid "migrated file without data"
+msgstr ""
+
+#: lib/file-type.c:102
+msgid "port"
+msgstr ""
+
+#: lib/file-type.c:105
+msgid "socket"
+msgstr "ett uttag (socket)"
+
+#: lib/file-type.c:108
+msgid "whiteout"
+msgstr ""
+
+#: lib/file-type.c:110
 msgid "weird file"
 msgstr "en konstig fil"
 
@@ -234,7 +282,7 @@ msgstr "För stort reguljäruttryck"
 msgid "Unmatched ) or \\)"
 msgstr "Oparad ) eller \\)"
 
-#: lib/regcomp.c:704
+#: lib/regcomp.c:707
 msgid "No previous regular expression"
 msgstr "Inget föregående reguljäruttryck"
 
@@ -453,17 +501,17 @@ msgid "General help using GNU software: <http://www.gnu.org/gethelp/>\n"
 msgstr ""
 "Allmän hjälp med att använda GNU-program: <http://www.gnu.org/gethelp/>\n"
 
-#: src/analyze.c:459 src/diff.c:1343
+#: src/analyze.c:454 src/diff.c:1349
 #, c-format
 msgid "Files %s and %s differ\n"
 msgstr "Filerna %s och %s skiljer\n"
 
-#: src/analyze.c:462
+#: src/analyze.c:455
 #, c-format
 msgid "Binary files %s and %s differ\n"
 msgstr "De binära filerna %s och %s skiljer\n"
 
-#: src/analyze.c:713 src/diff3.c:1416 src/util.c:663
+#: src/analyze.c:695 src/diff3.c:1416 src/util.c:663
 msgid "No newline at end of file"
 msgstr "Ingen nyrad vid filslut"
 
@@ -477,7 +525,7 @@ msgstr "Torbjörn Granlund"
 msgid "David MacKenzie"
 msgstr "David MacKenzie"
 
-#: src/cmp.c:118 src/diff.c:839 src/diff3.c:414 src/sdiff.c:158
+#: src/cmp.c:118 src/diff.c:845 src/diff3.c:414 src/sdiff.c:158
 #, c-format
 msgid "Try '%s --help' for more information."
 msgstr "Försök med ”%s --help” för mer information."
@@ -492,13 +540,13 @@ msgstr "ogiltigt --ignore-initial-värde ”%s”"
 msgid "options -l and -s are incompatible"
 msgstr "flaggorna -l och -s är motstridiga"
 
-#: src/cmp.c:155 src/diff.c:848 src/diff3.c:422 src/sdiff.c:167
+#: src/cmp.c:155 src/diff.c:854 src/diff3.c:422 src/sdiff.c:167
 #: src/sdiff.c:315 src/sdiff.c:322 src/sdiff.c:874 src/util.c:278
 #: src/util.c:375 src/util.c:382
 msgid "write failed"
 msgstr "skrivning misslyckades"
 
-#: src/cmp.c:157 src/diff.c:850 src/diff.c:1408 src/diff3.c:424
+#: src/cmp.c:157 src/diff.c:856 src/diff.c:1414 src/diff3.c:424
 #: src/sdiff.c:169
 msgid "standard output"
 msgstr "standard ut"
@@ -561,7 +609,7 @@ msgstr ""
 "De valfria HOPP1 och HOPP2 anger antalet antalet byte att hoppa över\n"
 "i början varje fil (noll som standard)."
 
-#: src/cmp.c:185 src/diff.c:956 src/diff3.c:462 src/sdiff.c:210
+#: src/cmp.c:185 src/diff.c:962 src/diff3.c:462 src/sdiff.c:210
 msgid ""
 "Mandatory arguments to long options are mandatory for short options too.\n"
 msgstr ""
@@ -582,7 +630,7 @@ msgstr ""
 msgid "If a FILE is '-' or missing, read standard input."
 msgstr "Om FIL är ”-” eller utelämnats, läs standard in."
 
-#: src/cmp.c:195 src/diff.c:944 src/sdiff.c:220
+#: src/cmp.c:195 src/diff.c:950 src/sdiff.c:220
 msgid "Exit status is 0 if inputs are the same, 1 if different, 2 if trouble."
 msgstr "Slutsstatus är 0 om indata är lika, 1 om olika, 2 vid problem."
 
@@ -591,27 +639,27 @@ msgstr "Slutsstatus är 0 om indata är lika, 1 om olika, 2 vid problem."
 msgid "invalid --bytes value '%s'"
 msgstr "ogiltigt --bytes-värde ”%s”"
 
-#: src/cmp.c:266 src/diff.c:757 src/diff3.c:318 src/sdiff.c:565
+#: src/cmp.c:266 src/diff.c:763 src/diff3.c:318 src/sdiff.c:565
 #, c-format
 msgid "missing operand after '%s'"
 msgstr "saknad operand efter ”%s”"
 
-#: src/cmp.c:278 src/diff.c:759 src/diff3.c:320 src/sdiff.c:567
+#: src/cmp.c:278 src/diff.c:765 src/diff3.c:320 src/sdiff.c:567
 #, c-format
 msgid "extra operand '%s'"
 msgstr "extra operand ”%s”"
 
-#: src/cmp.c:491
+#: src/cmp.c:494
 #, c-format
 msgid "%s %s differ: byte %s, line %s\n"
 msgstr "%s %s skiljer: byte %s, rad %s\n"
 
-#: src/cmp.c:507
+#: src/cmp.c:510
 #, c-format
 msgid "%s %s differ: byte %s, line %s is %3o %s %3o %s\n"
 msgstr "%s %s skiljer: byte %s, rad %s är %3o %s %3o %s\n"
 
-#: src/cmp.c:559
+#: src/cmp.c:562
 #, c-format
 msgid "cmp: EOF on %s\n"
 msgstr "cmp: EOF i %s\n"
@@ -641,112 +689,112 @@ msgstr "Richard Stallman"
 msgid "Len Tower"
 msgstr "Len Tower"
 
-#: src/diff.c:339
+#: src/diff.c:340
 #, c-format
 msgid "invalid context length '%s'"
 msgstr "ogiltig omgivningslängd ”%s”"
 
-#: src/diff.c:422
+#: src/diff.c:423
 #, c-format
 msgid "pagination not supported on this host"
 msgstr "sidvisning stödjs ej på denna värd"
 
-#: src/diff.c:437 src/diff3.c:300
+#: src/diff.c:438 src/diff3.c:300
 #, c-format
 msgid "too many file label options"
 msgstr "för många etikettflaggor"
 
-#: src/diff.c:514
+#: src/diff.c:515
 #, c-format
 msgid "invalid width '%s'"
 msgstr "ogiltig bredd ”%s”"
 
-#: src/diff.c:518
+#: src/diff.c:519
 msgid "conflicting width options"
 msgstr "konflikt mellan breddflaggor"
 
-#: src/diff.c:543
+#: src/diff.c:544
 #, c-format
 msgid "invalid horizon length '%s'"
 msgstr "ogiltig horisontlängd ”%s”"
 
-#: src/diff.c:598
+#: src/diff.c:600
 #, c-format
 msgid "invalid tabsize '%s'"
 msgstr "ogiltigt tabulatorsteg ”%s”"
 
-#: src/diff.c:602
+#: src/diff.c:604
 msgid "conflicting tabsize options"
 msgstr "konflikt mellan tabulatorflaggor"
 
-#: src/diff.c:734
+#: src/diff.c:740
 msgid "--from-file and --to-file both specified"
 msgstr "både --from-file och --to-file angavs"
 
-#: src/diff.c:854
+#: src/diff.c:860
 msgid "    --normal                  output a normal diff (the default)"
 msgstr "    --normal                  skriv ut en normal diff (standard)"
 
-#: src/diff.c:855
+#: src/diff.c:861
 msgid "-q, --brief                   report only when files differ"
 msgstr "-q, --brief                   rapportera endast när filer skiljer sig"
 
-#: src/diff.c:856
+#: src/diff.c:862
 msgid "-s, --report-identical-files  report when two files are the same"
 msgstr "-s  --report-identical-files  rapportera om två filer är lika"
 
-#: src/diff.c:857
+#: src/diff.c:863
 msgid ""
 "-c, -C NUM, --context[=NUM]   output NUM (default 3) lines of copied context"
 msgstr ""
 "-c, -C ANT, --context[=ANT]   skriv ANT (3 som standard) rader kopia av "
 "sammanhang"
 
-#: src/diff.c:858
+#: src/diff.c:864
 msgid ""
 "-u, -U NUM, --unified[=NUM]   output NUM (default 3) lines of unified context"
 msgstr ""
 "-u, -U ANT, --unified[=ANT]   skriv ut ANT (3 som standard) rader med\n"
 "                                 sammanslagen omgivning"
 
-#: src/diff.c:859
+#: src/diff.c:865
 msgid "-e, --ed                      output an ed script"
 msgstr "-e, --ed                      skriv ut ett ed-skript"
 
-#: src/diff.c:860
+#: src/diff.c:866
 msgid "-n, --rcs                     output an RCS format diff"
 msgstr "-n, --rcs                     skriv ut skillnader i RCS-format"
 
-#: src/diff.c:861
+#: src/diff.c:867
 msgid "-y, --side-by-side            output in two columns"
 msgstr "-y, --side-by-side            skriv ut i två kolumner"
 
-#: src/diff.c:862
+#: src/diff.c:868
 msgid ""
 "-W, --width=NUM               output at most NUM (default 130) print columns"
 msgstr ""
 "-W, --width=ANT               skriv ut högst ANT (130 som standard) kolumner"
 
-#: src/diff.c:863
+#: src/diff.c:869
 msgid ""
 "    --left-column             output only the left column of common lines"
 msgstr ""
 "    --left-column             skriv ut endast vänstra kolumnen av gemensamma "
 "rader"
 
-#: src/diff.c:864
+#: src/diff.c:870
 msgid "    --suppress-common-lines   do not output common lines"
 msgstr "    --suppress-common-lines   skriv inte ut gemensamma rader"
 
-#: src/diff.c:866
+#: src/diff.c:872
 msgid "-p, --show-c-function         show which C function each change is in"
 msgstr "-p, --show-c-function         visa vilken C-funktion varje rad finns i"
 
-#: src/diff.c:867
+#: src/diff.c:873
 msgid "-F, --show-function-line=RE   show the most recent line matching RE"
 msgstr "-F, --show-function-line=RU   visa dn senaste raden som matchar RU"
 
-#: src/diff.c:868
+#: src/diff.c:874
 msgid ""
 "    --label LABEL             use LABEL instead of file name\n"
 "                                (can be repeated)"
@@ -754,23 +802,23 @@ msgstr ""
 "    --label ETIKETT           använd ETIKETT istället för filnamn\n"
 "                                (kan upprepas)"
 
-#: src/diff.c:871
+#: src/diff.c:877
 msgid "-t, --expand-tabs             expand tabs to spaces in output"
 msgstr ""
 "-t, --expand-tabs             expandera tabulatorer till blanksteg i utdata"
 
-#: src/diff.c:872
+#: src/diff.c:878
 msgid "-T, --initial-tab             make tabs line up by prepending a tab"
 msgstr ""
 "-T, --initial-tab             justera tabulatorer genom att skjuta in en"
 
-#: src/diff.c:873
+#: src/diff.c:879
 msgid ""
 "    --tabsize=NUM             tab stops every NUM (default 8) print columns"
 msgstr ""
 "    --tabsize=N               tabulatorstopp var N:e (8 som standard) kolumn"
 
-#: src/diff.c:874
+#: src/diff.c:880
 msgid ""
 "    --suppress-blank-empty    suppress space or tab before empty output lines"
 msgstr ""
@@ -778,54 +826,54 @@ msgstr ""
 "tomma\n"
 "                                utrader"
 
-#: src/diff.c:875
+#: src/diff.c:881
 msgid "-l, --paginate                pass output through 'pr' to paginate it"
 msgstr "-l, --paginate                skicka utdata till ”pr” för paginering"
 
-#: src/diff.c:877
+#: src/diff.c:883
 msgid ""
 "-r, --recursive                 recursively compare any subdirectories found"
 msgstr ""
 "-r, --recursive                 jämför underkataloger som hittas rekursivt"
 
-#: src/diff.c:878
+#: src/diff.c:884
 msgid "    --no-dereference            don't follow symbolic links"
 msgstr "    --no-dereference            följ inte symboliska länkar"
 
-#: src/diff.c:879
+#: src/diff.c:885
 msgid "-N, --new-file                  treat absent files as empty"
 msgstr "-N, --new-file                  behandla saknade filer som tomma"
 
-#: src/diff.c:880
+#: src/diff.c:886
 msgid "    --unidirectional-new-file   treat absent first files as empty"
 msgstr "    --unidirectional-new-file   behandla saknade förstafiler som tomma"
 
-#: src/diff.c:881
+#: src/diff.c:887
 msgid "    --ignore-file-name-case     ignore case when comparing file names"
 msgstr ""
 "    --ignore-file-name-case     bortse från skiftläge när filnamn jämförs"
 
-#: src/diff.c:882
+#: src/diff.c:888
 msgid "    --no-ignore-file-name-case  consider case when comparing file names"
 msgstr ""
 "    --no-ignore-file-name-case  ta hänsyn till skiftläge när filnamn jämförs"
 
-#: src/diff.c:883
+#: src/diff.c:889
 msgid "-x, --exclude=PAT               exclude files that match PAT"
 msgstr "-x, --exclude=MNS               ta inte med filer som matchar MNS"
 
-#: src/diff.c:884
+#: src/diff.c:890
 msgid ""
 "-X, --exclude-from=FILE         exclude files that match any pattern in FILE"
 msgstr ""
 "-X, --exclude-from=FIL         uteslut filer som matchar något mönster i FIL"
 
-#: src/diff.c:885
+#: src/diff.c:891
 msgid ""
 "-S, --starting-file=FILE        start with FILE when comparing directories"
 msgstr "-S, --starting-file=FIL        börja med FIL när kataloger jämförs"
 
-#: src/diff.c:886
+#: src/diff.c:892
 msgid ""
 "    --from-file=FILE1           compare FILE1 to all operands;\n"
 "                                  FILE1 can be a directory"
@@ -833,7 +881,7 @@ msgstr ""
 "    --from-file=FIL1            jämför FIL1 med alla operander;\n"
 "                                  FIL1 kan vara en katalog"
 
-#: src/diff.c:888
+#: src/diff.c:894
 msgid ""
 "    --to-file=FILE2             compare all operands to FILE2;\n"
 "                                  FILE2 can be a directory"
@@ -841,79 +889,79 @@ msgstr ""
 "    --to-file=FIL2              jämför alla operander med FIL2;\n"
 "                                  FIL2 kan vara en katalog"
 
-#: src/diff.c:891
+#: src/diff.c:897
 msgid ""
 "-i, --ignore-case               ignore case differences in file contents"
 msgstr ""
 "-i, --ignore-case               bortse från skillnader i skiftläge i "
 "filinnehåll"
 
-#: src/diff.c:892
+#: src/diff.c:898
 msgid "-E, --ignore-tab-expansion      ignore changes due to tab expansion"
 msgstr ""
 "-E, --ignore-tab-expansion      bortse från ändringar på grund av tab-"
 "expansion"
 
-#: src/diff.c:893
+#: src/diff.c:899
 msgid "-Z, --ignore-trailing-space     ignore white space at line end"
 msgstr ""
 "-Z, --ignore-trailing-space     ignorera alla blanktecken i slutet av raden"
 
-#: src/diff.c:894
+#: src/diff.c:900
 msgid ""
 "-b, --ignore-space-change       ignore changes in the amount of white space"
 msgstr "-b, --ignore-space-change       bortse från ändringar i antalet blanka"
 
-#: src/diff.c:895
+#: src/diff.c:901
 msgid "-w, --ignore-all-space          ignore all white space"
 msgstr "-w, --ignore-all-space          bortse från alla blanktecken"
 
-#: src/diff.c:896
+#: src/diff.c:902
 msgid ""
 "-B, --ignore-blank-lines        ignore changes where lines are all blank"
 msgstr ""
 "-B, --ignore-blank-lines        bortse från ändringar där raderna är helt "
 "blanka"
 
-#: src/diff.c:897
+#: src/diff.c:903
 msgid "-I, --ignore-matching-lines=RE  ignore changes where all lines match RE"
 msgstr ""
 "-I, --ignore-matching-lines=RU  bortse från ändringar där alla rader matchar "
 "RU"
 
-#: src/diff.c:899
+#: src/diff.c:905
 msgid "-a, --text                      treat all files as text"
 msgstr "-a, --text                      behandla alla filer som text"
 
-#: src/diff.c:900
+#: src/diff.c:906
 msgid "    --strip-trailing-cr         strip trailing carriage return on input"
 msgstr ""
 "    --strip-trailing-cr         tag bort avslutande vagnreturer i indata"
 
-#: src/diff.c:902
+#: src/diff.c:908
 msgid "    --binary                    read and write data in binary mode"
 msgstr "    --binary                    läs och skriv data binärt"
 
-#: src/diff.c:905
+#: src/diff.c:911
 msgid ""
 "-D, --ifdef=NAME                output merged file with '#ifdef NAME' diffs"
 msgstr ""
 "-D, --ifdef=NAMN                skriv sammanslagen fil med skillnader inom\n"
 "                                  ”#ifdef NAMN”"
 
-#: src/diff.c:906
+#: src/diff.c:912
 msgid "    --GTYPE-group-format=GFMT   format GTYPE input groups with GFMT"
 msgstr "    --GTYP-group-format=GFMT    formatera GTYP-ingrupper med GFMT"
 
-#: src/diff.c:907
+#: src/diff.c:913
 msgid "    --line-format=LFMT          format all input lines with LFMT"
 msgstr "    --line-format=RFMT          formatera alla inrader med RFMT"
 
-#: src/diff.c:908
+#: src/diff.c:914
 msgid "    --LTYPE-line-format=LFMT    format LTYPE input lines with LFMT"
 msgstr "    --RTYP-line-format=RFMT     formatera RTYP-inrader med RFMT"
 
-#: src/diff.c:909
+#: src/diff.c:915
 msgid ""
 "  These format options provide fine-grained control over the output\n"
 "    of diff, generalizing -D/--ifdef."
@@ -921,12 +969,12 @@ msgstr ""
 "  Dessa formatflagger gör det möjligt att finjustera utskriften från\n"
 "    diff, generaliserande -D/--ifdef."
 
-#: src/diff.c:911
+#: src/diff.c:917
 msgid "  LTYPE is 'old', 'new', or 'unchanged'.  GTYPE is LTYPE or 'changed'."
 msgstr ""
 "  LTYP är ”old”, ”new” eller ”unchanged”.  GTYP är LTYP eller ”changed”."
 
-#: src/diff.c:912
+#: src/diff.c:918
 msgid ""
 "  GFMT (only) may contain:\n"
 "    %<  lines from FILE1\n"
@@ -954,7 +1002,7 @@ msgstr ""
 "        M  L+1\n"
 "    %(A=B?T:E)  om A är lika med B då T annars E"
 
-#: src/diff.c:924
+#: src/diff.c:930
 msgid ""
 "  LFMT (only) may contain:\n"
 "    %L  contents of line\n"
@@ -966,7 +1014,7 @@ msgstr ""
 "    %l  radinnehåll exklusive avslutande nyrad\n"
 "    %[-][BREDD][.[PREC]]{doxX}n  printf-stil spec. för inradnummer"
 
-#: src/diff.c:928
+#: src/diff.c:934
 msgid ""
 "  Both GFMT and LFMT may contain:\n"
 "    %%  %\n"
@@ -980,95 +1028,95 @@ msgstr ""
 "    %c'\\OOO'  tecknet med oktalkod OOO\n"
 "    T    tecknet T (övriga tecken representerar sig själva)"
 
-#: src/diff.c:934
+#: src/diff.c:940
 msgid "-d, --minimal            try hard to find a smaller set of changes"
 msgstr ""
 "-d, --minimal            arbeta hårt för att hitta en mindre mängd av "
 "ändringar"
 
-#: src/diff.c:935
+#: src/diff.c:941
 msgid "    --horizon-lines=NUM  keep NUM lines of the common prefix and suffix"
 msgstr ""
 "    --horizon-lines=ANT  spara ANT rader av gemensamt prefix och suffix"
 
-#: src/diff.c:936
+#: src/diff.c:942
 msgid ""
 "    --speed-large-files  assume large files and many scattered small changes"
 msgstr "    --speed-large-files  antag stora filer och små spridda ändringar"
 
-#: src/diff.c:938
+#: src/diff.c:944
 msgid "    --help               display this help and exit"
 msgstr "    --help               visa denna hjälp och avsluta"
 
-#: src/diff.c:939
+#: src/diff.c:945
 msgid "-v, --version            output version information and exit"
 msgstr "-v, --version            visa versionsinformation och avsluta"
 
-#: src/diff.c:941
-msgid ""
-"FILES are 'FILE1 FILE2' or 'DIR1 DIR2' or 'DIR FILE...' or 'FILE... DIR'."
+#: src/diff.c:947
+#, fuzzy
+msgid "FILES are 'FILE1 FILE2' or 'DIR1 DIR2' or 'DIR FILE' or 'FILE DIR'."
 msgstr ""
 "FILER är ”FIL1 FIL2” eller ”KAT1 KAT2” eller \"KAT FIL…” eller ”FIL… KAT”."
 
-#: src/diff.c:942
+#: src/diff.c:948
 msgid ""
 "If --from-file or --to-file is given, there are no restrictions on FILE(s)."
 msgstr ""
 "Om --from-file eller --to-file är angivet finns det inga begränsningar\n"
 "på FILER."
 
-#: src/diff.c:943 src/diff3.c:481 src/sdiff.c:219
+#: src/diff.c:949 src/diff3.c:481 src/sdiff.c:219
 msgid "If a FILE is '-', read standard input."
 msgstr "Om en FIL är ”-”, läs standard in."
 
-#: src/diff.c:953
+#: src/diff.c:959
 #, c-format
 msgid "Usage: %s [OPTION]... FILES\n"
 msgstr "Användning: %s [FLAGGA]... FILER\n"
 
-#: src/diff.c:954
+#: src/diff.c:960
 msgid "Compare FILES line by line."
 msgstr "Jämför FILER rad för rad."
 
-#: src/diff.c:988
+#: src/diff.c:994
 #, c-format
 msgid "conflicting %s option value '%s'"
 msgstr "motstridigt %s-flaggsvärde ”%s”"
 
-#: src/diff.c:1001
+#: src/diff.c:1007
 #, c-format
 msgid "conflicting output style options"
 msgstr "motstridig utmatningsstilsflagga"
 
-#: src/diff.c:1058 src/diff.c:1268
+#: src/diff.c:1064 src/diff.c:1274
 #, c-format
 msgid "Only in %s: %s\n"
 msgstr "Endast i %s: %s\n"
 
-#: src/diff.c:1192
+#: src/diff.c:1198
 msgid "cannot compare '-' to a directory"
 msgstr "kan inte jämföra ”-” med en katalog"
 
-#: src/diff.c:1227
+#: src/diff.c:1233
 msgid "-D option not supported with directories"
 msgstr "-D flaggan stödjs ej för kataloger"
 
-#: src/diff.c:1236
+#: src/diff.c:1242
 #, c-format
 msgid "Common subdirectories: %s and %s\n"
 msgstr "Lika underkataloger: %s och %s\n"
 
-#: src/diff.c:1278 src/diff.c:1328
+#: src/diff.c:1284 src/diff.c:1334
 #, c-format
 msgid "File %s is a %s while file %s is a %s\n"
 msgstr "Filen %s är %s medan filen %s är %s\n"
 
-#: src/diff.c:1314
+#: src/diff.c:1320
 #, c-format
 msgid "Symbolic links %s and %s differ\n"
 msgstr "De symboliska länkarna %s och %s skiljer\n"
 
-#: src/diff.c:1399
+#: src/diff.c:1405
 #, c-format
 msgid "Files %s and %s are identical\n"
 msgstr "Filerna %s och %s är lika\n"
@@ -1253,12 +1301,12 @@ msgstr "internt fel: ogiltig diff-typ utskickad"
 msgid "input file shrank"
 msgstr "infilen krympte"
 
-#: src/dir.c:158
+#: src/dir.c:156
 #, c-format
 msgid "cannot compare file names '%s' and '%s'"
 msgstr "kan inte jämföra filnamnen ”%s” och ”%s”"
 
-#: src/dir.c:209
+#: src/dir.c:225
 #, c-format
 msgid "%s: recursive directory loop"
 msgstr "%s: rekursiv katalogslinga"

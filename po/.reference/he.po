@@ -1,0 +1,896 @@
+# Hebrew messages for GNU Diffutils            -*- coding: hebrew-iso-8bit -*-
+# Copyright (C) 2001, 2002 Free Software Foundation, Inc.
+# Eli Zaretskii <eliz@is.elta.co.il>, 2001, 2002.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: diffutils 2.8.3\n"
+"POT-Creation-Date: 2002-06-16 23:44-0700\n"
+"PO-Revision-Date: 2002-06-17 13:03+0300\n"
+"Last-Translator: Eli Zaretskii <eliz@gnu.org>\n"
+"Language-Team: Hebrew <eliz@gnu.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=ISO-8859-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: lib/c-stack.c:362
+msgid "program error"
+msgstr "תינכתב הרומח הלקת"
+
+#: lib/c-stack.c:363
+msgid "stack overflow"
+msgstr "תינסחמ תשילג"
+
+#: lib/error.c:128 lib/error.c:156
+msgid "Unknown system error"
+msgstr "ההוזמ-יתלב הלקת"
+
+#: lib/file-type.c:42
+msgid "regular empty file"
+msgstr "קיר ץבוק"
+
+#: lib/file-type.c:42
+msgid "regular file"
+msgstr "ץבוק"
+
+#: lib/file-type.c:45
+msgid "directory"
+msgstr "היקית"
+
+#: lib/file-type.c:48
+msgid "block special file"
+msgstr "םיקולב ןקתה ץבוק"
+
+#: lib/file-type.c:51
+msgid "character special file"
+msgstr "םיות ןקתה ץבוק"
+
+#: lib/file-type.c:54
+msgid "fifo"
+msgstr "fifo ץבוק"
+
+#: lib/file-type.c:57
+msgid "symbolic link"
+msgstr "ילובמיס רושיק"
+
+#: lib/file-type.c:60
+msgid "socket"
+msgstr "עקש"
+
+#: lib/file-type.c:63
+msgid "message queue"
+msgstr "תועדוה רות"
+
+#: lib/file-type.c:66
+msgid "semaphore"
+msgstr "רופמס"
+
+#: lib/file-type.c:69
+msgid "shared memory object"
+msgstr "ףתושמ ןורכז טקייבוא"
+
+#: lib/file-type.c:71
+msgid "weird file"
+msgstr "רזומ ץבוק"
+
+#: lib/getopt.c:693
+#, c-format
+msgid "%s: option `%s' is ambiguous\n"
+msgstr "%s תינכת רובע יעמשמ-דח וניא `%s' ןייפאמ\n"
+
+#: lib/getopt.c:718
+#, c-format
+msgid "%s: option `--%s' doesn't allow an argument\n"
+msgstr "%s תינכת רובע טנמוגרא לבקמ וניא `--%s' ןייפאמ\n"
+
+#: lib/getopt.c:723
+#, c-format
+msgid "%s: option `%c%s' doesn't allow an argument\n"
+msgstr "%s תינכת רובע טנמוגרא לבקמ וניא `%c%s' ןייפאמ\n"
+
+#: lib/getopt.c:741 lib/getopt.c:914
+#, c-format
+msgid "%s: option `%s' requires an argument\n"
+msgstr "%s תינכת רובע טנמוגרא בייחמ `%s' ןייפאמ\n"
+
+#: lib/getopt.c:770
+#, c-format
+msgid "%s: unrecognized option `--%s'\n"
+msgstr "%s תינכת רובע `--%s' ההוזמ-יתלב ןייפאמ\n"
+
+#: lib/getopt.c:774
+#, c-format
+msgid "%s: unrecognized option `%c%s'\n"
+msgstr "%s תינכת רובע `%c%s' ההוזמ-יתלב ןייפאמ\n"
+
+#: lib/getopt.c:800
+#, c-format
+msgid "%s: illegal option -- %c\n"
+msgstr "%s: יקוח-יתלב ןייפאמ -- %c\n"
+
+#: lib/getopt.c:803
+#, c-format
+msgid "%s: invalid option -- %c\n"
+msgstr "%s תינכת רובע יוגש ןייפאמ -- %c\n"
+
+#: lib/getopt.c:833 lib/getopt.c:963
+#, c-format
+msgid "%s: option requires an argument -- %c\n"
+msgstr "%s: טנמוגרא בייחמ ןייפאמ -- %c\n"
+
+#: lib/getopt.c:880
+#, c-format
+msgid "%s: option `-W %s' is ambiguous\n"
+msgstr "%s תינכת רובע יעמשמ-דח וניא `-W %s' ןייפאמ\n"
+
+#: lib/getopt.c:898
+#, c-format
+msgid "%s: option `-W %s' doesn't allow an argument\n"
+msgstr "%s תינכת רובע טנמוגרא לבקמ וניא `-W %s' ןייפאמ\n"
+
+#: lib/regex.c:1367
+msgid "Success"
+msgstr "החלצה"
+
+#: lib/regex.c:1370
+msgid "No match"
+msgstr "המיאתמ תזורחמ האצמנ אל"
+
+#: lib/regex.c:1373
+msgid "Invalid regular expression"
+msgstr "יוגש ירלוגר יוטיב"
+
+#: lib/regex.c:1376
+msgid "Invalid collation character"
+msgstr "עודי-יתלב רודיס ות"
+
+#: lib/regex.c:1379
+msgid "Invalid character class name"
+msgstr "םיות תצובק לש רכומ-יתלב םש"
+
+#: lib/regex.c:1382
+msgid "Trailing backslash"
+msgstr "`\\' ירוחא ןסכולב םייתסמ ירלוגר יוטיב"
+
+#: lib/regex.c:1385
+msgid "Invalid back reference"
+msgstr "םדוק יוטיב-תתל היוגש היינפה"
+
+#: lib/regex.c:1388
+msgid "Unmatched [ or [^"
+msgstr "גוז-ןב ול ןיאש [^ וא ["
+
+#: lib/regex.c:1391
+msgid "Unmatched ( or \\("
+msgstr "גוז-ןב ול ןיאש \\( וא ("
+
+#: lib/regex.c:1394
+msgid "Unmatched \\{"
+msgstr "גוז-ןב ול ןיאש \\{"
+
+#: lib/regex.c:1397
+msgid "Invalid content of \\{\\}"
+msgstr "\\{\\} ךותב יוגש הנבמ"
+
+#: lib/regex.c:1400
+msgid "Invalid range end"
+msgstr "םיות םוחת לש היוגש הרדגה"
+
+#: lib/regex.c:1403
+msgid "Memory exhausted"
+msgstr "ןורכזה רמגנ"
+
+#: lib/regex.c:1406
+msgid "Invalid preceding regular expression"
+msgstr "םייק וניא וא יוגש םדוק ירלוגר יוטיב"
+
+#: lib/regex.c:1409
+msgid "Premature end of regular expression"
+msgstr "ידמ םדקומ םייתסמ ירלוגר יוטיב"
+
+#: lib/regex.c:1412
+msgid "Regular expression too big"
+msgstr "ידמ בכרומ וא לודג ירלוגר יוטיב"
+
+#: lib/regex.c:1415
+msgid "Unmatched ) or \\)"
+msgstr "גוז-ןב ול ןיאש \\) וא )"
+
+#: lib/regex.c:8034
+msgid "No previous regular expression"
+msgstr "םדוק ירלוגר יוטיב ןיא"
+
+#: lib/xmalloc.c:63
+msgid "memory exhausted"
+msgstr "ןורכזה רמגנ"
+
+#. TRANSLATORS: Please translate "(C)" to the C-in-a-circle symbol
+#. (U+00A9, COPYRIGHT SIGN) if possible, as this has some minor
+#. technical advantages in international copyright law.  If the
+#. copyright symbol is not available, please leave it as "(C)".
+#: lib/version-etc.c:50
+msgid "(C)"
+msgstr "©"
+
+#: lib/version-etc.c:63
+msgid ""
+"This program comes with NO WARRANTY, to the extent permitted by law.\n"
+"You may redistribute copies of this program\n"
+"under the terms of the GNU General Public License.\n"
+"For more information about these matters, see the files named COPYING."
+msgstr ""
+"      .תאז ריתמ קוחהש המכ דע ,אוהשלכ תוירחא בתכב הוולמ הניא וז תינכות\n"
+".GNU General Public License ןוישרה יאנתל םאתהב וז תינכות ץיפהל םכתוכז\n"
+"                      .COPYING ומשש ץבוקב ונייע ,ולא םינינעב טוריפ רתיל"
+
+#: src/analyze.c:810 src/diff.c:1259
+#, c-format
+msgid "Files %s and %s differ\n"
+msgstr "הזמ הז םינוש `%s'-ו `%s' םיצבקה\n"
+
+#: src/analyze.c:813
+#, c-format
+msgid "Binary files %s and %s differ\n"
+msgstr "הזמ הז םינוש `%s'-ו `%s' םיירניב םיצבק\n"
+
+#: src/analyze.c:1059 src/diff3.c:1386 src/util.c:535
+msgid "No newline at end of file"
+msgstr "ץבוקה ףוסב השדח-הרוש ות רסח"
+
+#. TRANSLATORS: Please translate the second "o" in "Torbjorn Granlund"
+#. to an o-with-umlaut (U+00F6, LATIN SMALL LETTER O WITH DIAERESIS)
+#. if possible.
+#: src/cmp.c:47
+msgid "Written by Torbjorn Granlund and David MacKenzie."
+msgstr ".David MacKenzie-ו Torbjorn Granlund י\"ע בתכנ"
+
+#: src/cmp.c:118 src/diff.c:834 src/diff3.c:403 src/sdiff.c:167
+#, c-format
+msgid "Try `%s --help' for more information."
+msgstr ".רתוי בר עדימ תגצהל `%s --help' שיקהל הסנ"
+
+#: src/cmp.c:137
+#, c-format
+msgid "invalid --ignore-initial value `%s'"
+msgstr "--ignore-initial ןייפאמ רובע `%s' יוגש ךרע"
+
+#: src/cmp.c:146
+msgid "options -l and -s are incompatible"
+msgstr "הז תא הז םירתוס -s-ו -l םינייפאמה"
+
+#: src/cmp.c:154 src/diff.c:843 src/diff3.c:411 src/sdiff.c:176 src/sdiff.c:308 src/sdiff.c:315 src/sdiff.c:902 src/util.c:194 src/util.c:286 src/util.c:293
+msgid "write failed"
+msgstr "הביתכב הלקת"
+
+#: src/cmp.c:156 src/diff.c:845 src/diff.c:1330 src/diff3.c:413 src/sdiff.c:178
+msgid "standard output"
+msgstr "ינקת טלפ ץורעל"
+
+#: src/cmp.c:160
+msgid "-b  --print-bytes  Print differing bytes."
+msgstr "                       .םיהז םניאש םיתב גצה  -b    --print-bytes"
+
+#: src/cmp.c:161
+msgid "-i SKIP  --ignore-initial=SKIP  Skip the first SKIP bytes of input."
+msgstr "             .טלקה לש םינושאר םיתב N לע גלד  -i N --ignore-initial=N"
+
+#: src/cmp.c:162
+msgid "-i SKIP1:SKIP2  --ignore-initial=SKIP1:SKIP2"
+msgstr ""
+"                                             -i N1:N2\n"
+"                                             --ignore-initial=N1:N2"
+
+#: src/cmp.c:163
+msgid "  Skip the first SKIP1 bytes of FILE1 and the first SKIP2 bytes of FILE2."
+msgstr ".ינשה ץבוקב םיתב N2 לעו ןושארה ץבוקב םיתב N1 לע גלד"
+
+#: src/cmp.c:164
+msgid "-l  --verbose  Output byte numbers and values of all differing bytes."
+msgstr ".םיהז םניאש םיתבה לכ לש דוקו ירודיס 'סמ גצה  -l    --verbose"
+
+#: src/cmp.c:165
+msgid "-n LIMIT  --bytes=LIMIT  Compare at most LIMIT bytes."
+msgstr "                    .םיתב N רתויה לכל הוושה  -n N  --bytes=N"
+
+#: src/cmp.c:166
+msgid "-s  --quiet  --silent  Output nothing; yield exit status only."
+msgstr "               .דבלב האיצי דוק קפה ;טלפ אלל  -s  --quiet  --silent"
+
+#: src/cmp.c:167 src/diff.c:922 src/diff3.c:431 src/sdiff.c:204
+msgid "-v  --version  Output version info."
+msgstr "                       .תינכתה תסריג תא גצה  -v  --version"
+
+#: src/cmp.c:168 src/diff.c:923 src/diff3.c:432 src/sdiff.c:205
+msgid "--help  Output this help."
+msgstr "                           .הז הרזע ךסמ גצה      --help"
+
+#: src/cmp.c:177
+#, c-format
+msgid "Usage: %s [OPTION]... FILE1 [FILE2 [SKIP1 [SKIP2]]]\n"
+msgstr "   %s [OPTION]... FILE1 [FILE2 [SKIP1 [SKIP2]]] :שומיש ןפוא\n"
+
+#: src/cmp.c:179
+msgid "Compare two files byte by byte."
+msgstr ".תיבל תיב םיצבק ינש הוושה"
+
+#: src/cmp.c:183
+msgid "SKIP1 and SKIP2 are the number of bytes to skip in each file."
+msgstr "      .םיצבקהמ דחא לכב גלדל שי םהילע םיתבה ירפסמ םה SKIP2-ו SKIP1"
+
+#: src/cmp.c:184
+msgid ""
+"SKIP values may be followed by the following multiplicative suffixes:\n"
+"kB 1000, K 1024, MB 1,000,000, M 1,048,576,\n"
+"GB 1,000,000,000, G 1,073,741,824, and so on for T, P, E, Z, Y."
+msgstr ""
+"                           :תוילפכ תומויס םע SKIP יכרע ןייצל ןתינ\n"
+"                     ,M 1,048,576, MB 1,000,000 ,K 1024 ,kB 1000,\n"
+"  .T, P, E, Z, Y רובע האלה ןכו ,G 1,073,741,824 ,GB 1,000,000,000"
+
+#: src/cmp.c:187
+msgid "If a FILE is `-' or missing, read standard input."
+msgstr "             .ינקת טלק ץורעמ ארק ,ןייוצמ וניא וא `-' וניה FILE םא"
+
+#: src/cmp.c:188 src/diff.c:929 src/diff3.c:451 src/sdiff.c:223
+msgid "Report bugs to <bug-gnu-utils@gnu.org>."
+msgstr ".<bug-gnu-utils@gnu.org> תבותכל תולקת לע םיחוויד חולשל אנ"
+
+#: src/cmp.c:231
+#, c-format
+msgid "invalid --bytes value `%s'"
+msgstr "--bytes ןייפאמ רובע `%s' יוגש ךרע"
+
+#: src/cmp.c:256 src/diff.c:751 src/diff3.c:306 src/sdiff.c:552
+#, c-format
+msgid "missing operand after `%s'"
+msgstr "`%s' ירחא רסח טנמוגרא"
+
+#: src/cmp.c:268 src/diff.c:753 src/diff3.c:308 src/sdiff.c:554
+#, c-format
+msgid "extra operand `%s'"
+msgstr "`%s' ירחא רתוימ טנמוגרא"
+
+#: src/cmp.c:475
+#, c-format
+msgid "%s %s differ: byte %s, line %s\n"
+msgstr "%s-ו %s םיצבקה ןיב %s תיב ,%s הרושמ לחה ינוש\n"
+
+#: src/cmp.c:491
+#, c-format
+msgid "%s %s differ: byte %s, line %s is %3o %s %3o %s\n"
+msgstr "%s-ו %s םיצבקה ןיב %s תיב ,%s הרושמ לחה %3o %s %3o %s ינוש\n"
+
+#: src/cmp.c:539
+#, c-format
+msgid "cmp: EOF on %s\n"
+msgstr "cmp: %s ץבוק ףוס\n"
+
+#: src/diff.c:44
+msgid ""
+"Written by Paul Eggert, Mike Haertel, David Hayes,\n"
+"Richard Stallman, and Len Tower."
+msgstr ""
+"                        ,David Hayes ,Mike Haertel ,Paul Eggert י\"ע בתכנ\n"
+"                                             .Len Tower-ו ,Richard Stallman"
+
+#: src/diff.c:324
+#, c-format
+msgid "invalid context length `%s'"
+msgstr "`%s' יוגש רשקה ךרוא"
+
+#: src/diff.c:407
+msgid "pagination not supported on this host"
+msgstr "וז תכרעמב טלפה דומיעב הכימת ןיא"
+
+#: src/diff.c:422 src/diff3.c:288
+msgid "too many file label options"
+msgstr "םיצבק תיוות רובע -L ינייפאמ ידמ רתוי"
+
+#: src/diff.c:498
+#, c-format
+msgid "invalid width `%s'"
+msgstr "`%s' יוגש הרוש בחור"
+
+#: src/diff.c:502
+msgid "conflicting width options"
+msgstr "םירתוס הרוש בחור ינייפאמ"
+
+#: src/diff.c:526
+#, c-format
+msgid "invalid horizon length `%s'"
+msgstr "--horizon-lines ןייפאמב `%s' יוגש תורוש רפסמ"
+
+#: src/diff.c:573
+#, c-format
+msgid "invalid tabsize `%s'"
+msgstr "`%s' יוגש Tab בחור"
+
+#: src/diff.c:577
+msgid "conflicting tabsize options"
+msgstr "םירתוס Tab בחור ינייפאמ"
+
+#: src/diff.c:641
+#, c-format
+msgid "`-%ld' option is obsolete; use `-%c %ld'"
+msgstr "ןשוימ וניהש `-%ld' םוקמב `-%c %ld'-ב שמתשהל ץלמומ"
+
+#: src/diff.c:653
+#, c-format
+msgid "`-%ld' option is obsolete; omit it"
+msgstr "ןשוימ וניהש `-%ld'-ב שמתשהל אל ץלמומ"
+
+#: src/diff.c:726
+msgid "--from-file and --to-file both specified"
+msgstr "--to-file ןהו --from-file ןה תנייצ"
+
+#: src/diff.c:849
+msgid "Compare files line by line."
+msgstr ".הרוש הרוש םיצבק ינש הוושה"
+
+#: src/diff.c:851
+msgid "-i  --ignore-case  Ignore case differences in file contents."
+msgstr ".םיצבקה ןכותב תונטקמ תולודג תויתוא לידבת לא  -i  --ignore-case"
+
+#: src/diff.c:852
+msgid "--ignore-file-name-case  Ignore case when comparing file names."
+msgstr ".םיצבקה תומשב תונטקמ תולודג תויתוא לידבת לא  --ignore-file-name-case"
+
+#: src/diff.c:853
+msgid "--no-ignore-file-name-case  Consider case when comparing file names."
+msgstr "   .םיצבקה תומשב תונטקמ תולודג תויתוא לידבת  --no-ignore-file-name-case"
+
+#: src/diff.c:854 src/sdiff.c:185
+msgid "-E  --ignore-tab-expansion  Ignore changes due to tab expansion."
+msgstr "             .םיחוורל TAB ןיב םילדבהמ םלעתה  -E  --ignore-tab-expansion"
+
+#: src/diff.c:855 src/sdiff.c:186
+msgid "-b  --ignore-space-change  Ignore changes in the amount of white space."
+msgstr "                .םיחוור תומכב םילדבהמ םלעתה  -b  --ignore-space-change"
+
+#: src/diff.c:856
+msgid "-w  --ignore-all-space  Ignore all white space."
+msgstr "                         .םיחוורה לכמ םלעתה  -w  --ignore-all-space"
+
+#: src/diff.c:857 src/sdiff.c:188
+msgid "-B  --ignore-blank-lines  Ignore changes whose lines are all blank."
+msgstr "            .תוקיר םהיתורושש םייונישמ םלעתה  -B  --ignore-blank-lines"
+
+#: src/diff.c:858 src/sdiff.c:189
+msgid "-I RE  --ignore-matching-lines=RE  Ignore changes whose lines all match RE."
+msgstr ".RE תינבתל תומיאתמ םהיתורושש םייונישמ םלעתה  -I RE --ignore-matching-lines=RE"
+
+#: src/diff.c:859 src/sdiff.c:190
+msgid "--strip-trailing-cr  Strip trailing carriage return on input."
+msgstr "              .טלק תרוש לכ ףוסמ CR יוות קלס      --strip-trailing-cr"
+
+#: src/diff.c:861
+msgid "--binary  Read and write data in binary mode."
+msgstr "                    .יראניב ןפואב בותכו ארק      --binary"
+
+#: src/diff.c:863 src/diff3.c:427 src/sdiff.c:191
+msgid "-a  --text  Treat all files as text."
+msgstr "                .טסקט יצבקבכ םיצבקה לכב לפט  -a  --text"
+
+#: src/diff.c:865
+msgid ""
+"-c  -C NUM  --context[=NUM]  Output NUM (default 3) lines of copied context.\n"
+"-u  -U NUM  --unified[=NUM]  Output NUM (default 3) lines of unified context.\n"
+"  --label LABEL  Use LABEL instead of file name.\n"
+"  -p  --show-c-function  Show which C function each change is in.\n"
+"  -F RE  --show-function-line=RE  Show the most recent line matching RE."
+msgstr ""
+"  .קתעומ טסקטנוק תורוש (3 :ח\"מרב) NUM הארה  -c  -C NUM  --context[=NUM]\n"
+"  .דחואמ טסקטנוק תורוש (3 :ח\"מרב) NUM הארה  -u  -U NUM  --unified[=NUM]\n"
+"                    .םש םוקמב LABEL-ב שמתשה         --label LABEL\n"
+"            .יוניש לכ לש C תייצקנופ םש הארה  -p     --show-c-function\n"
+"        .RE תינבתל המיאתמש הנורחא הרוש הארה  -F RE  --show-function-line=RE"
+
+#: src/diff.c:870
+msgid "-q  --brief  Output only whether files differ."
+msgstr "                   .םינוש םיצבקה םא רומא קר  -q  --brief"
+
+#: src/diff.c:871
+msgid "-e  --ed  Output an ed script."
+msgstr "             .ed ךרוע רובע תוארוה תמישר קפה  -e  --ed"
+
+#: src/diff.c:872
+msgid "--normal  Output a normal diff."
+msgstr "                   .ליגר טמרופב םייוניש קפה      --normal"
+
+#: src/diff.c:873
+msgid "-n  --rcs  Output an RCS format diff."
+msgstr "                    .RCS טמרופב םייוניש קפה  -n  --rcs"
+
+#: src/diff.c:874
+msgid ""
+"-y  --side-by-side  Output in two columns.\n"
+"  -W NUM  --width=NUM  Output at most NUM (default 130) print columns.\n"
+"  --left-column  Output only the left column of common lines.\n"
+"  --suppress-common-lines  Do not output common lines."
+msgstr ""
+"            .וז דצל וז תודומע יתשב טלפ ךורע  -y  --side-by-side\n"
+"  .םיוות (130 :ח\"מרב) NUM-ל טלפ תורוש לבגה  -W NUM  --width=NUM\n"
+"         .תילאמשה תא קר גצה ,תוהז תורושה םא      --left-column\n"
+"                    .תוהז תורוש ללכ גיצת לא      --suppress-common-lines"
+
+#: src/diff.c:878
+msgid "-D NAME  --ifdef=NAME  Output merged file to show `#ifdef NAME' diffs."
+msgstr "`#ifdef NAME'-ב םייוניש דרפה ,בלושמ ץבוק קפה -D NAME  --ifdef=NAME"
+
+#: src/diff.c:879
+msgid "--GTYPE-group-format=GFMT  Similar, but format GTYPE input groups with GFMT."
+msgstr "GFMT תרזעב GTYPE גוסמ טלק תוצובק טמרפ ךא ,ל\"נכ  --GTYPE-group-format=GFMT"
+
+#: src/diff.c:880
+msgid "--line-format=LFMT  Similar, but format all input lines with LFMT."
+msgstr "               .LFMT תרזעב תורוש טמרפ ךא ,ל\"נכ  --line-format=LFMT"
+
+#: src/diff.c:881
+msgid "--LTYPE-line-format=LFMT  Similar, but format LTYPE input lines with LFMT."
+msgstr ".LFMT תרזעב LTYPE גוסמ טלק תורוש טמרפ ךא ,ל\"נכ  --LTYPE-group-format=LFMT"
+
+#: src/diff.c:882
+msgid "  LTYPE is `old', `new', or `unchanged'.  GTYPE is LTYPE or `changed'."
+msgstr "  .`changed' וא LTYPE ומכ GTYPE .`unchanged' וא `new' ,`old' אוה LTYPE"
+
+#: src/diff.c:883
+msgid ""
+"  GFMT may contain:\n"
+"    %<  lines from FILE1\n"
+"    %>  lines from FILE2\n"
+"    %=  lines common to FILE1 and FILE2\n"
+"    %[-][WIDTH][.[PREC]]{doxX}LETTER  printf-style spec for LETTER\n"
+"      LETTERs are as follows for new group, lower case for old group:\n"
+"        F  first line number\n"
+"        L  last line number\n"
+"        N  number of lines = L-F+1\n"
+"        E  F-1\n"
+"        M  L+1"
+msgstr ""
+"                                                      :לולכל לוכי GFMT\n"
+"                     FILE1-מ תורוש  %<\n"
+"                     FILE2-מ תורוש  %>\n"
+"     FILE2-ו FILE1-ל תופתושמ תורוש  %=\n"
+"  LETTER רובע printf ןונגסב תזורחמ  %[-][WIDTH][.[PREC]]{doxX}LETTER\n"
+"       :(הנשי הצובק רובע תונטק תויתוא) תואבה תויתואה תחא איה LETTER\n"
+"                  הנושאר הרוש רפסמ  F\n"
+"                  הנורחא הרוש רפסמ  L\n"
+"               L-F+1 = תורושה רפסמ  N\n"
+"                               F-1  E\n"
+"                               M+1  M"
+
+#: src/diff.c:894
+msgid ""
+"  LFMT may contain:\n"
+"    %L  contents of line\n"
+"    %l  contents of line, excluding any trailing newline\n"
+"    %[-][WIDTH][.[PREC]]{doxX}n  printf-style spec for input line number"
+msgstr ""
+"                                                      :לולכל לוכי LFMT\n"
+"                         הרוש ןכות  %L\n"
+"       הרושה ףוס ות טעמל הרוש ןכות  %l\n"
+"טלק תרוש רובע printf ןונגסב תזורחמ  %[-][WIDTH][.[PREC]]{doxX}n"
+
+#: src/diff.c:898
+msgid ""
+"  Either GFMT or LFMT may contain:\n"
+"    %%  %\n"
+"    %c'C'  the single character C\n"
+"    %c'\\OOO'  the character with octal code OOO"
+msgstr ""
+"                                         :םג לולכל םילוכי LFMT וא GFMT\n"
+"                                    %%  %\n"
+"                         C דדוב ות  %c'C'\n"
+"             OOO ילטקוא דוק לעב ות  %c'\\OOO'"
+
+#: src/diff.c:903
+msgid "-l  --paginate  Pass the output through `pr' to paginate it."
+msgstr "                .דומיע םשל `pr' ךרד טלפ בתנ  -l  --paginate"
+
+#: src/diff.c:904 src/sdiff.c:197
+msgid "-t  --expand-tabs  Expand tabs to spaces in output."
+msgstr "                .טלפב םיחוורל TAB יוות ךופה  -t  --expand-tabs"
+
+#: src/diff.c:905 src/diff3.c:428
+msgid "-T  --initial-tab  Make tabs line up by prepending a tab."
+msgstr "             .הרושה ינפל TAB \"ע םי-TAB רשי  -T  --initial-tab"
+
+#: src/diff.c:906 src/sdiff.c:198
+msgid "--tabsize=NUM  Tab stops are every NUM (default 8) print columns."
+msgstr "                  .(8 ח\"מרב) תודומע NUM לכ Tab  --tabsize=NUM"
+
+#: src/diff.c:908
+msgid "-r  --recursive  Recursively compare any subdirectories found."
+msgstr "            .יביסרוקר ןפואב תויקית-תת הוושה  -r  --recursive"
+
+#: src/diff.c:909
+msgid "-N  --new-file  Treat absent files as empty."
+msgstr "          .םיקיר ויה וליאכ םירסח םיצבקב לפט  -N  --new-file"
+
+#: src/diff.c:910
+msgid "--unidirectional-new-file  Treat absent first files as empty."
+msgstr "  .םיקיר ויה וליאכ םירסח םינושאר םיצבקב לפט      --unidirectional-new-file"
+
+#: src/diff.c:911
+msgid "-s  --report-identical-files  Report when two files are the same."
+msgstr "                        .םיהז םיצבק לע חווד  -s  --report-identical-files"
+
+#: src/diff.c:912
+msgid "-x PAT  --exclude=PAT  Exclude files that match PAT."
+msgstr "  .PAT תינבתל םימיאתמ םהיתומשש םיצבק לע גלד  -x PAT  --exclude=PAT"
+
+#: src/diff.c:913
+msgid "-X FILE  --exclude-from=FILE  Exclude files that match any pattern in FILE."
+msgstr "FILE-ב תוינבתל םימיאתמ םהיתומשש םיצבק לע גלד -X FILE  --exclude-from=FILE"
+
+#: src/diff.c:914
+msgid "-S FILE  --starting-file=FILE  Start with FILE when comparing directories."
+msgstr "             .FILE ץבוקב תויקית תאוושה לחתה  -S FILE  --starting-file=FILE"
+
+#: src/diff.c:915
+msgid "--from-file=FILE1  Compare FILE1 to all operands.  FILE1 can be a directory."
+msgstr ".היקית תויהל לוכי FILE1 .םיטנמוגראה ראש לכל FILE1 הוושה  --from-file=FILE1"
+
+#: src/diff.c:916
+msgid "--to-file=FILE2  Compare all operands to FILE2.  FILE2 can be a directory."
+msgstr "   .היקית תויהל לוכי FILE2 .FILE2-ל םיטנמוגראה לכ הוושה  --to-file=FILE2"
+
+#: src/diff.c:918
+msgid "--horizon-lines=NUM  Keep NUM lines of the common prefix and suffix."
+msgstr ".םיצבקה םויסו הליחתב תופתושמ תורוש NUM ראשה          --horizon-lines=NUM"
+
+#: src/diff.c:919 src/sdiff.c:200
+msgid "-d  --minimal  Try hard to find a smaller set of changes."
+msgstr "            .םייונישה תצובק תא ןיטקהל לדתשה  -d  --minimal"
+
+#: src/diff.c:920
+msgid "--speed-large-files  Assume large files and many scattered small changes."
+msgstr "  .םיקחורמו םינטק םייונישו םילודג םיצבק חנה      --speed-large-files"
+
+#: src/diff.c:925
+msgid "FILES are `FILE1 FILE2' or `DIR1 DIR2' or `DIR FILE...' or `FILE... DIR'."
+msgstr ".`FILE... DIR' וא `DIR FILE...' וא `DIR1 DIR2' וא `FILE1 FILE2' םה FILES"
+
+#: src/diff.c:926
+msgid "If --from-file or --to-file is given, there are no restrictions on FILES."
+msgstr "       .FILES לע תולבגמ ןיא יזא ,--to-file וא --from-file ןייפאמ ןותנ םא"
+
+#: src/diff.c:927 src/diff3.c:450 src/sdiff.c:222
+msgid "If a FILE is `-', read standard input."
+msgstr "                                   .ינקתה טלקה ץרעמ ארק ,`-' אוה FILE םא"
+
+#: src/diff.c:938
+#, c-format
+msgid "Usage: %s [OPTION]... FILES\n"
+msgstr "%s [OPTION]... FILES   :שומיש ןפוא\n"
+
+#: src/diff.c:967
+#, c-format
+msgid "conflicting %s option value `%s'"
+msgstr "%s ןייפאמ לש םדוק ךרע רתוס `%s' ךרע"
+
+#: src/diff.c:980
+msgid "conflicting output style options"
+msgstr "טלפ ןונגס לש םירתוס םינייפאמ"
+
+#: src/diff.c:1046 src/diff.c:1232
+#, c-format
+msgid "Only in %s: %s\n"
+msgstr "%s-ב קר אצמנ %s\n"
+
+#: src/diff.c:1169
+msgid "cannot compare `-' to a directory"
+msgstr "היקיתל `-' תוושהל תורשפא ןיא"
+
+#: src/diff.c:1196
+msgid "-D option not supported with directories"
+msgstr "תויקית רובע -D ןייפאמב הכימת ןיא"
+
+#: src/diff.c:1205
+#, c-format
+msgid "Common subdirectories: %s and %s\n"
+msgstr "%s-ו %s :תוהז תויקית-תת\n"
+
+#: src/diff.c:1242
+#, c-format
+msgid "File %s is a %s while file %s is a %s\n"
+msgstr "%s %s-ל %s %s תוושהל ןתינ אל\n"
+
+#: src/diff.c:1321
+#, c-format
+msgid "Files %s and %s are identical\n"
+msgstr "םיהז םניה %s-ו %s םיצבקה\n"
+
+#: src/diff3.c:24
+msgid "Written by Randy Smith."
+msgstr ".Randy Smith י\"ע בתכנ"
+
+#: src/diff3.c:301
+msgid "incompatible options"
+msgstr "םירתוס םינייפאמ"
+
+#: src/diff3.c:341
+msgid "`-' specified for more than one input file"
+msgstr "דחא טלק ץבוקמ רתוי רובע `-' תנייצ"
+
+#: src/diff3.c:384 src/diff3.c:1217 src/diff3.c:1612 src/diff3.c:1667 src/sdiff.c:300 src/sdiff.c:871 src/sdiff.c:882
+msgid "read failed"
+msgstr "האירקב הלקת"
+
+#: src/diff3.c:417
+msgid "-e  --ed  Output unmerged changes from OLDFILE to YOURFILE into MYFILE."
+msgstr "MYFILE ךות לא YOURFILE-ל OLDFILE-מ גוזימ אלל םייוניש -e  --ed"
+
+#: src/diff3.c:418
+msgid "-E  --show-overlap  Output unmerged changes, bracketing conflicts."
+msgstr "             .םיטקילפנוק ןמס ,גוזימ אלל םייוניש גצה  -E  --show-overlap"
+
+#: src/diff3.c:419
+msgid "-A  --show-all  Output all changes, bracketing conflicts."
+msgstr "                .םיטקילפנוק ןמס ,םייונישה לכ תא גצה  -A  --show-all"
+
+#: src/diff3.c:420
+msgid "-x  --overlap-only  Output overlapping changes."
+msgstr "                                .םיפפוח םייוניש גצה  -x  --overlap-only"
+
+#: src/diff3.c:421
+msgid "-X  Output overlapping changes, bracketing them."
+msgstr "                      .םתוא ןמסו םיפפוח םייוניש גצה  -X"
+
+#: src/diff3.c:422
+msgid "-3  --easy-only  Output unmerged nonoverlapping changes."
+msgstr "               .גוזימ אללו םיפפוח םניאש םייוניש גצה  -3  --easy-only"
+
+#: src/diff3.c:424
+msgid "-m  --merge  Output merged file instead of ed script (default -A)."
+msgstr "       .(-A ח\"מרב) ed תוארוה םוקמב גזוממ ץבוק בותכ  -m  --merge"
+
+#: src/diff3.c:425
+msgid "-L LABEL  --label=LABEL  Use LABEL instead of file name."
+msgstr "                      .ץבוקה םש םוקמב LABEL-ב שמתשה  -L LABEL  --label=LABEL"
+
+#: src/diff3.c:426
+msgid "-i  Append `w' and `q' commands to ed scripts."
+msgstr "            .ed תודוקפ םויסב `q'-ו `w' תודוקפ בותכ   -i"
+
+#: src/diff3.c:429 src/sdiff.c:202
+msgid "--diff-program=PROGRAM  Use PROGRAM to compare files."
+msgstr "                 .םיצבק תאושהל PROGRAM תינכתב שמתשה  --diff-program=PROGRAM"
+
+#: src/diff3.c:441
+#, c-format
+msgid "Usage: %s [OPTION]... MYFILE OLDFILE YOURFILE\n"
+msgstr "%s [OPTION]... MYFILE OLDFILE YOURFILE   :שומיש ןפוא\n"
+
+#: src/diff3.c:443
+msgid "Compare three files line by line."
+msgstr ".תיבל תיב םיצבק השלש הוושה"
+
+#: src/diff3.c:644
+msgid "internal error: screwup in format of diff blocks"
+msgstr "diff יעטק טמרופב החירמ :תימינפ הנכת תאיגש"
+
+#: src/diff3.c:937
+#, c-format
+msgid "%s: diff failed: "
+msgstr "%s י\"ע diff תלעפהב הלקת :"
+
+#: src/diff3.c:959
+msgid "internal error: invalid diff type in process_diff"
+msgstr "process_diff תייצקנופב יוניש לש יוגש גוס :תימינפ הנכת תאיגש"
+
+#: src/diff3.c:984
+msgid "invalid diff format; invalid change separator"
+msgstr "היוגש םייוניש תדרפה תזורחמ :יוניש לש יוגש טמרופ"
+
+#: src/diff3.c:1227
+msgid "invalid diff format; incomplete last line"
+msgstr "המלש הניא הנורחא הרוש :יוניש לש יוגש טמרופ"
+
+#: src/diff3.c:1249 src/sdiff.c:272 src/util.c:307
+#, c-format
+msgid "subsidiary program `%s' not found"
+msgstr "האצמנ אל `%s' תינכת-תת"
+
+#: src/diff3.c:1250 src/sdiff.c:273 src/util.c:299
+#, c-format
+msgid "subsidiary program `%s' failed"
+msgstr "`%s' תינכת-תת תצרהב ןולשכ"
+
+#: src/diff3.c:1270
+msgid "invalid diff format; incorrect leading line chars"
+msgstr "הרוש תליחתב םייוגש םיוות :יוניש לש יוגש טמרופ"
+
+#: src/diff3.c:1343
+msgid "internal error: invalid diff type passed to output"
+msgstr "טלפ יכרצל יוניש לש יוגש גוס :תימינפ הנכת תאיגש"
+
+#: src/diff3.c:1614 src/diff3.c:1671
+msgid "input file shrank"
+msgstr "קמטצה טלק ץבוק"
+
+#: src/dir.c:162
+#, c-format
+msgid "cannot compare file names `%s' and `%s'"
+msgstr "`%s'-ו `%s' םיצבק תומש תוושהל ןתינ אל"
+
+#: src/sdiff.c:37
+msgid "Written by Thomas Lord."
+msgstr ".Thomas Lord י\"ע בתכנ"
+
+#: src/sdiff.c:182
+msgid "-o FILE  --output=FILE  Operate interactively, sending output to FILE."
+msgstr "            .FILE-ל טלפ ,תיביטקארטניא הלועפ  -o FILE  --output=FILE"
+
+#: src/sdiff.c:184
+msgid "-i  --ignore-case  Consider upper- and lower-case to be the same."
+msgstr "    .תונטקו תולודג תויתוא ןיב םילדבהמ םלעתה  -i  --ignore-case"
+
+#: src/sdiff.c:187
+msgid "-W  --ignore-all-space  Ignore all white space."
+msgstr "                .רחא ןבל חטשו םיחוורמ םלעתה  -W  --ignore-all-space"
+
+#: src/sdiff.c:193
+msgid "-w NUM  --width=NUM  Output at most NUM (default 130) print columns."
+msgstr ".הרושל (130 ח\"מרב) םיוות NUM רתויה לכל גצה  -w NUM  --width=NUM"
+
+#: src/sdiff.c:194
+msgid "-l  --left-column  Output only the left column of common lines."
+msgstr "         .תילאמשה תא קר גצה ,תוהז תורושה םא  -l  --left-column"
+
+#: src/sdiff.c:195
+msgid "-s  --suppress-common-lines  Do not output common lines."
+msgstr "                    .תוהז תורוש ללכ גיצת לא  -s  --suppress-common-lines"
+
+#: src/sdiff.c:201
+msgid "-H  --speed-large-files  Assume large files and many scattered small changes."
+msgstr "  .םיקחורמו םינטק םייונישו םילודג םיצבק חנה  -H  --speed-large-files"
+
+#: src/sdiff.c:214
+#, c-format
+msgid "Usage: %s [OPTION]... FILE1 FILE2\n"
+msgstr "%s [OPTION]... FILE1 FILE2  :שומיש ןפוא\n"
+
+#: src/sdiff.c:215
+msgid "Side-by-side merge of file differences."
+msgstr ".הז דצב הז םיצבק ןיב םייוניש לש גוזימ"
+
+#: src/sdiff.c:322
+msgid "cannot interactively merge standard input"
+msgstr "יביטקארטניא ןפואב ינקת טלק ץורע גזמל תורשפא ןיא"
+
+#: src/sdiff.c:582
+msgid "both files to be compared are directories"
+msgstr "תויקית םניה האוושהל םיצבקה ינש"
+
+#: src/sdiff.c:845
+msgid ""
+"ed:\tEdit then use both versions, each decorated with a header.\n"
+"eb:\tEdit then use both versions.\n"
+"el:\tEdit then use the left version.\n"
+"er:\tEdit then use the right version.\n"
+"e:\tEdit a new version.\n"
+"l:\tUse the left version.\n"
+"r:\tUse the right version.\n"
+"s:\tSilently include common lines.\n"
+"v:\tVerbosely include common lines.\n"
+"q:\tQuit.\n"
+msgstr ""
+"ed  --  התרתוכ םע תחא לכ ,תואסרגה יתשב שמתשה זאו ,ךורע\n"
+"eb  --                    תואסרגה יתשב שמתשה זאו ,ךורע\n"
+"el  --                    לאמשמש אסרגב שמתשה זאו ,ךורע\n"
+"er  --                    ןימימש אסרגב שמתשה זאו ,ךורע\n"
+"e   --                            ירמגל השדח אסרג ךורע\n"
+"l   --                              לאמשמש אסרגב שמתשה\n"
+"r   --                              ןימימש אסרגב שמתשה\n"
+"s   --                  ןגיצהל ילבמ תופתושמ תורוש קתעה\n"
+"v   --                    ןתגצה ךות תופתושמ תורוש קתעה\n"
+"q   --  האיצי\n"
+
+#: src/util.c:304
+#, c-format
+msgid "subsidiary program `%s' not executable"
+msgstr "עוציב תב הניא `%s' תינכת-תת"
+
+#~ msgid "typed memory object"
+#~ msgstr "גוויס לעב ןורכז טקייבוא"

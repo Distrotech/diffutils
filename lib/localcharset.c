@@ -1,6 +1,6 @@
 /* Determine a canonical name for the current locale's character encoding.
 
-   Copyright (C) 2000-2006, 2008-2013 Free Software Foundation, Inc.
+   Copyright (C) 2000-2006, 2008-2015 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -34,6 +34,7 @@
 
 #if defined _WIN32 || defined __WIN32__
 # define WINDOWS_NATIVE
+# include <locale.h>
 #endif
 
 #if defined __EMX__
@@ -63,6 +64,11 @@
 #if defined OS2
 # define INCL_DOS
 # include <os2.h>
+#endif
+
+/* For MB_CUR_MAX_L */
+#if defined DARWIN7
+# include <xlocale.h>
 #endif
 
 #if ENABLE_RELOCATABLE
@@ -456,14 +462,34 @@ locale_charset (void)
 
   static char buf[2 + 10 + 1];
 
-  /* The Windows API has a function returning the locale's codepage as a
-     number: GetACP().
-     When the output goes to a console window, it needs to be provided in
-     GetOEMCP() encoding if the console is using a raster font, or in
-     GetConsoleOutputCP() encoding if it is using a TrueType font.
-     But in GUI programs and for output sent to files and pipes, GetACP()
-     encoding is the best bet.  */
-  sprintf (buf, "CP%u", GetACP ());
+  /* The Windows API has a function returning the locale's codepage as
+     a number, but the value doesn't change according to what the
+     'setlocale' call specified.  So we use it as a last resort, in
+     case the string returned by 'setlocale' doesn't specify the
+     codepage.  */
+  char *current_locale = setlocale (LC_ALL, NULL);
+  char *pdot;
+
+  /* If they set different locales for different categories,
+     'setlocale' will return a semi-colon separated list of locale
+     values.  To make sure we use the correct one, we choose LC_CTYPE.  */
+  if (strchr (current_locale, ';'))
+    current_locale = setlocale (LC_CTYPE, NULL);
+
+  pdot = strrchr (current_locale, '.');
+  if (pdot)
+    sprintf (buf, "CP%s", pdot + 1);
+  else
+    {
+      /* The Windows API has a function returning the locale's codepage as a
+        number: GetACP().
+        When the output goes to a console window, it needs to be provided in
+        GetOEMCP() encoding if the console is using a raster font, or in
+        GetConsoleOutputCP() encoding if it is using a TrueType font.
+        But in GUI programs and for output sent to files and pipes, GetACP()
+        encoding is the best bet.  */
+      sprintf (buf, "CP%u", GetACP ());
+    }
   codeset = buf;
 
 #elif defined OS2
@@ -545,7 +571,7 @@ locale_charset (void)
 #ifdef DARWIN7
   /* Mac OS X sets MB_CUR_MAX to 1 when LC_ALL=C, and "UTF-8"
      (the default codeset) does not work when MB_CUR_MAX is 1.  */
-  if (strcmp (codeset, "UTF-8") == 0 && MB_CUR_MAX <= 1)
+  if (strcmp (codeset, "UTF-8") == 0 && MB_CUR_MAX_L (uselocale (NULL)) <= 1)
     codeset = "ASCII";
 #endif
 
