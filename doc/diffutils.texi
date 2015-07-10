@@ -1848,12 +1848,9 @@ is specified while the @option{--ignore-file-name-case} option is in
 effect, case is ignored when excluding file names matching the
 specified patterns.
 
-To avoid that @command{diff} follows symbolic links, use the
+To tell @command{diff} not to follow a symbolic link, use the
 @c later: @option{--no-dereference} (@option{-P}).
-@option{--no-dereference}.
-When this option is in use,
-symbolic links will be treated like a special kind of files, rather than
-comparing the target of each symbolic link.
+@option{--no-dereference} option.
 
 @node Adjusting Output
 @chapter Making @command{diff} Output Prettier
@@ -3857,6 +3854,8 @@ if-then-else format.  @xref{Line Formats}.
 
 @item --no-dereference
 Act on symbolic links themselves instead of what they point to.
+Two symbolic links are deemed equal only when each points to
+precisely the same name.
 
 @item --old-group-format=@var{format}
 Use @var{format} to output a group of lines taken from just the first
