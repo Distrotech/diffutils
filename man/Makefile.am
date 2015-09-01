@@ -25,10 +25,15 @@ diff.1: $S/diff.c diff.x
 diff3.1: $S/diff3.c diff3.x
 sdiff.1: $S/sdiff.c sdiff.x
 
+# Directory in which just-built programs reside.  It is used
+# to ensure help2man invokes them via the use of PATH below.
+bin_dir = ../src
+
 # Depend on the former to get version number changes.
 $(dist_man1_MANS): $(SRC_VERSION_C) help2man
 	$(AM_V_GEN)base=`expr $@ : '\(.*\).1'`				\
+	  && test -x $(bin_dir)/$$base					\
 	  && (echo '[NAME]' && sed 's@/\* *@@; s/-/\\-/; q' $S/$$base.c) \
-	     | PATH="..$(PATH_SEPARATOR)$$PATH"				\
+	     | PATH="$(bin_dir)$(PATH_SEPARATOR)$$PATH"			\
 	       $(srcdir)/help2man -i - -i $(srcdir)/$$base.x		\
 		 -S '$(PACKAGE) $(VERSION)' $$base > $@-t && mv $@-t $@
