@@ -871,7 +871,7 @@ static char const * const option_help_msgid[] = {
   "",
   N_("-p, --show-c-function         show which C function each change is in"),
   N_("-F, --show-function-line=RE   show the most recent line matching RE"),
-  N_("    --label LABEL             use LABEL instead of file name\n"
+  N_("    --label LABEL             use LABEL instead of file name and timestamp\n"
      "                                (can be repeated)"),
   "",
   N_("-t, --expand-tabs             expand tabs to spaces in output"),
