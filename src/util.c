@@ -19,6 +19,7 @@
    along with this program.  If not, see <http://www.gnu.org/licenses/>.  */
 
 #include "diff.h"
+#include "argmatch.h"
 #include <dirname.h>
 #include <error.h>
 #include <system-quote.h>
@@ -310,6 +311,397 @@ static char const *current_name1;
 static bool currently_recursive;
 static bool colors_enabled;
 
+static struct color_ext_type *color_ext_list = NULL;
+
+struct bin_str
+  {
+    size_t len;			/* Number of bytes */
+    const char *string;		/* Pointer to the same */
+  };
+
+struct color_ext_type
+  {
+    struct bin_str ext;		/* The extension we're looking for */
+    struct bin_str seq;		/* The sequence to output when we do */
+    struct color_ext_type *next;	/* Next in list */
+  };
+
+/* Parse a string as part of the --palette argument; this may involve
+   decoding all kinds of escape characters.  If equals_end is set an
+   unescaped equal sign ends the string, otherwise only a : or \0
+   does.  Set *OUTPUT_COUNT to the number of bytes output.  Return
+   true if successful.
+
+   The resulting string is *not* null-terminated, but may contain
+   embedded nulls.
+
+   Note that both dest and src are char **; on return they point to
+   the first free byte after the array and the character that ended
+   the input string, respectively.  */
+
+static bool
+get_funky_string (char **dest, const char **src, bool equals_end,
+                  size_t *output_count)
+{
+  char num;			/* For numerical codes */
+  size_t count;			/* Something to count with */
+  enum {
+    ST_GND, ST_BACKSLASH, ST_OCTAL, ST_HEX, ST_CARET, ST_END, ST_ERROR
+  } state;
+  const char *p;
+  char *q;
+
+  p = *src;			/* We don't want to double-indirect */
+  q = *dest;			/* the whole darn time.  */
+
+  count = 0;			/* No characters counted in yet.  */
+  num = 0;
+
+  state = ST_GND;		/* Start in ground state.  */
+  while (state < ST_END)
+    {
+      switch (state)
+        {
+        case ST_GND:		/* Ground state (no escapes) */
+          switch (*p)
+            {
+            case ':':
+            case '\0':
+              state = ST_END;	/* End of string */
+              break;
+            case '\\':
+              state = ST_BACKSLASH; /* Backslash scape sequence */
+              ++p;
+              break;
+            case '^':
+              state = ST_CARET; /* Caret escape */
+              ++p;
+              break;
+            case '=':
+              if (equals_end)
+                {
+                  state = ST_END; /* End */
+                  break;
+                }
+              /* else fall through */
+            default:
+              *(q++) = *(p++);
+              ++count;
+              break;
+            }
+          break;
+
+        case ST_BACKSLASH:	/* Backslash escaped character */
+          switch (*p)
+            {
+            case '0':
+            case '1':
+            case '2':
+            case '3':
+            case '4':
+            case '5':
+            case '6':
+            case '7':
+              state = ST_OCTAL;	/* Octal sequence */
+              num = *p - '0';
+              break;
+            case 'x':
+            case 'X':
+              state = ST_HEX;	/* Hex sequence */
+              num = 0;
+              break;
+            case 'a':		/* Bell */
+              num = '\a';
+              break;
+            case 'b':		/* Backspace */
+              num = '\b';
+              break;
+            case 'e':		/* Escape */
+              num = 27;
+              break;
+            case 'f':		/* Form feed */
+              num = '\f';
+              break;
+            case 'n':		/* Newline */
+              num = '\n';
+              break;
+            case 'r':		/* Carriage return */
+              num = '\r';
+              break;
+            case 't':		/* Tab */
+              num = '\t';
+              break;
+            case 'v':		/* Vtab */
+              num = '\v';
+              break;
+            case '?':		/* Delete */
+              num = 127;
+              break;
+            case '_':		/* Space */
+              num = ' ';
+              break;
+            case '\0':		/* End of string */
+              state = ST_ERROR;	/* Error! */
+              break;
+            default:		/* Escaped character like \ ^ : = */
+              num = *p;
+              break;
+            }
+          if (state == ST_BACKSLASH)
+            {
+              *(q++) = num;
+              ++count;
+              state = ST_GND;
+            }
+          ++p;
+          break;
+
+        case ST_OCTAL:		/* Octal sequence */
+          if (*p < '0' || *p > '7')
+            {
+              *(q++) = num;
+              ++count;
+              state = ST_GND;
+            }
+          else
+            num = (num << 3) + (*(p++) - '0');
+          break;
+
+        case ST_HEX:		/* Hex sequence */
+          switch (*p)
+            {
+            case '0':
+            case '1':
+            case '2':
+            case '3':
+            case '4':
+            case '5':
+            case '6':
+            case '7':
+            case '8':
+            case '9':
+              num = (num << 4) + (*(p++) - '0');
+              break;
+            case 'a':
+            case 'b':
+            case 'c':
+            case 'd':
+            case 'e':
+            case 'f':
+              num = (num << 4) + (*(p++) - 'a') + 10;
+              break;
+            case 'A':
+            case 'B':
+            case 'C':
+            case 'D':
+            case 'E':
+            case 'F':
+              num = (num << 4) + (*(p++) - 'A') + 10;
+              break;
+            default:
+              *(q++) = num;
+              ++count;
+              state = ST_GND;
+              break;
+            }
+          break;
+
+        case ST_CARET:		/* Caret escape */
+          state = ST_GND;	/* Should be the next state... */
+          if (*p >= '@' && *p <= '~')
+            {
+              *(q++) = *(p++) & 037;
+              ++count;
+            }
+          else if (*p == '?')
+            {
+              *(q++) = 127;
+              ++count;
+            }
+          else
+            state = ST_ERROR;
+          break;
+
+        default:
+          abort ();
+        }
+    }
+
+  *dest = q;
+  *src = p;
+  *output_count = count;
+
+  return state != ST_ERROR;
+}
+
+enum parse_state
+  {
+    PS_START = 1,
+    PS_2,
+    PS_3,
+    PS_4,
+    PS_DONE,
+    PS_FAIL
+  };
+
+#define LEN_STR_PAIR(s) sizeof (s) - 1, s
+
+static struct bin_str color_indicator[] =
+  {
+    { LEN_STR_PAIR ("\033[") },		/* lc: Left of color sequence */
+    { LEN_STR_PAIR ("m") },		/* rc: Right of color sequence */
+    { 0, NULL },			/* ec: End color (replaces lc+rs+rc) */
+    { LEN_STR_PAIR ("0") },		/* rs: Reset to ordinary colors */
+    { LEN_STR_PAIR ("1") },		/* hd: Header */
+    { LEN_STR_PAIR ("32") },		/* ad: Add line */
+    { LEN_STR_PAIR ("31") },		/* de: Delete line */
+    { LEN_STR_PAIR ("36") },		/* ln: Line number */
+  };
+
+static const char *const indicator_name[] =
+  {
+    "lc", "rc", "ec", "rs", "hd", "ad", "de", "ln", NULL
+  };
+ARGMATCH_VERIFY (indicator_name, color_indicator);
+
+static char const *color_palette;
+
+void
+set_color_palette (char const *palette)
+{
+  color_palette = palette;
+}
+
+static void
+parse_diff_color (void)
+{
+  char *color_buf;
+  const char *p;		/* Pointer to character being parsed */
+  char *buf;			/* color_buf buffer pointer */
+  int ind_no;			/* Indicator number */
+  char label[3];		/* Indicator label */
+  struct color_ext_type *ext;	/* Extension we are working on */
+
+  if ((p = color_palette) == NULL || *p == '\0')
+    return;
+
+  ext = NULL;
+  strcpy (label, "??");
+
+  /* This is an overly conservative estimate, but any possible
+     --palette string will *not* generate a color_buf longer than
+     itself, so it is a safe way of allocating a buffer in
+     advance.  */
+  buf = color_buf = xstrdup (p);
+
+  enum parse_state state = PS_START;
+  while (true)
+    {
+      switch (state)
+        {
+        case PS_START:		/* First label character */
+          switch (*p)
+            {
+            case ':':
+              ++p;
+              break;
+
+            case '*':
+              /* Allocate new extension block and add to head of
+                 linked list (this way a later definition will
+                 override an earlier one, which can be useful for
+                 having terminal-specific defs override global).  */
+
+              ext = xmalloc (sizeof *ext);
+              ext->next = color_ext_list;
+              color_ext_list = ext;
+
+              ++p;
+              ext->ext.string = buf;
+
+              state = (get_funky_string (&buf, &p, true, &ext->ext.len)
+                       ? PS_4 : PS_FAIL);
+              break;
+
+            case '\0':
+              state = PS_DONE;	/* Done! */
+              goto done;
+
+            default:	/* Assume it is file type label */
+              label[0] = *(p++);
+              state = PS_2;
+              break;
+            }
+          break;
+
+        case PS_2:		/* Second label character */
+          if (*p)
+            {
+              label[1] = *(p++);
+              state = PS_3;
+            }
+          else
+            state = PS_FAIL;	/* Error */
+          break;
+
+        case PS_3:		/* Equal sign after indicator label */
+          state = PS_FAIL;	/* Assume failure...  */
+          if (*(p++) == '=')/* It *should* be...  */
+            {
+              for (ind_no = 0; indicator_name[ind_no] != NULL; ++ind_no)
+                {
+                  if (STREQ (label, indicator_name[ind_no]))
+                    {
+                      color_indicator[ind_no].string = buf;
+                      state = (get_funky_string (&buf, &p, false,
+                                                 &color_indicator[ind_no].len)
+                               ? PS_START : PS_FAIL);
+                      break;
+                    }
+                }
+              if (state == PS_FAIL)
+                error (0, 0, _("unrecognized prefix: %s"), label);
+            }
+          break;
+
+        case PS_4:		/* Equal sign after *.ext */
+          if (*(p++) == '=')
+            {
+              ext->seq.string = buf;
+              state = (get_funky_string (&buf, &p, false, &ext->seq.len)
+                       ? PS_START : PS_FAIL);
+            }
+          else
+            state = PS_FAIL;
+          break;
+
+        case PS_FAIL:
+          goto done;
+
+        default:
+          abort ();
+        }
+    }
+ done:
+
+  if (state == PS_FAIL)
+    {
+      struct color_ext_type *e;
+      struct color_ext_type *e2;
+
+      error (0, 0,
+             _("unparsable value for --palette"));
+      free (color_buf);
+      for (e = color_ext_list; e != NULL; /* empty */)
+        {
+          e2 = e;
+          e = e->next;
+          free (e2);
+        }
+      colors_enabled = false;
+    }
+}
+
 static void
 check_color_output (bool is_pipe)
 {
@@ -322,6 +714,9 @@ check_color_output (bool is_pipe)
 
   colors_enabled = (colors_style == ALWAYS
                     || (colors_style == AUTO && output_is_tty));
+
+  if (colors_enabled)
+    parse_diff_color ();
 
   if (output_is_tty)
     install_signal_handlers ();
@@ -938,41 +1333,56 @@ output_1_line (char const *base, char const *limit, char const *flag_format,
     }
 }
 
+enum indicator_no
+  {
+    C_LEFT, C_RIGHT, C_END, C_RESET, C_HEADER, C_ADD, C_DELETE, C_LINE
+  };
+
+static void
+put_indicator (const struct bin_str *ind)
+{
+  fwrite (ind->string, ind->len, 1, outfile);
+}
+
+static enum color_context last_context = RESET_CONTEXT;
 
 void
 set_color_context (enum color_context color_context)
 {
   process_signals ();
-  if (colors_enabled)
+  if (colors_enabled && last_context != color_context)
     {
+      put_indicator (&color_indicator[C_LEFT]);
       switch (color_context)
         {
         case HEADER_CONTEXT:
-          fputs ("\x1B[1m", outfile);
+          put_indicator (&color_indicator[C_HEADER]);
           break;
 
         case LINE_NUMBER_CONTEXT:
-          fputs ("\x1B[36m", outfile);
-
+          put_indicator (&color_indicator[C_LINE]);
           break;
 
         case ADD_CONTEXT:
-          fputs ("\x1B[32m", outfile);
+          put_indicator (&color_indicator[C_ADD]);
           break;
 
         case DELETE_CONTEXT:
-          fputs ("\x1B[31m", outfile);
+          put_indicator (&color_indicator[C_DELETE]);
           break;
 
         case RESET_CONTEXT:
-          fputs ("\x1b[0m", outfile);
+          put_indicator (&color_indicator[C_RESET]);
           break;
 
         default:
           abort ();
         }
+      put_indicator (&color_indicator[C_RIGHT]);
+      last_context = color_context;
     }
 }
+
 
 char const change_letter[] = { 0, 'd', 'a', 'c' };
 

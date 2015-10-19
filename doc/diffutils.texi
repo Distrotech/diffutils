@@ -3890,6 +3890,40 @@ if-then-else format.  @xref{Line Formats}.
 @itemx --show-c-function
 Show which C function each change is in.  @xref{C Function Headings}.
 
+@item --palette=@var{palette}
+Specify what color palette to use when colored output is enabled.  It
+defaults to @samp{rs=0:hd=1:ad=32:de=31:ln=36} for red deleted lines,
+green added lines, cyan line numbers, bold header.
+
+Supported capabilities are as follows.
+
+@table @code
+@item ad=32
+@vindex ad @r{capability}
+
+SGR substring for added lines.
+The default is green foreground.
+
+@item de=31
+@vindex de @r{capability}
+
+SGR substring for deleted lines.
+The default is red foreground.
+
+@item hd=1
+@vindex hd @r{capability}
+
+SGR substring for chunk header.
+The default is bold foreground.
+
+@item ln=36
+@vindex ln @r{capability}
+
+SGR substring for line numbers.
+The default is cyan foreground.
+@end table
+
+
 @item -q
 @itemx --brief
 Report only whether the files differ, not the details of the

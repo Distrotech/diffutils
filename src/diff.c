@@ -140,6 +140,7 @@ enum
   CHANGED_GROUP_FORMAT_OPTION,
 
   COLOR_OPTION,
+  COLOR_PALETTE_OPTION,
 };
 
 static char const group_format_option[][sizeof "--unchanged-group-format"] =
@@ -196,6 +197,7 @@ static struct option const longopts[] =
   {"old-group-format", 1, 0, OLD_GROUP_FORMAT_OPTION},
   {"old-line-format", 1, 0, OLD_LINE_FORMAT_OPTION},
   {"paginate", 0, 0, 'l'},
+  {"palette", 1, 0, COLOR_PALETTE_OPTION},
   {"rcs", 0, 0, 'n'},
   {"recursive", 0, 0, 'r'},
   {"report-identical-files", 0, 0, 's'},
@@ -635,6 +637,10 @@ main (int argc, char **argv)
 	  specify_colors_style (optarg);
 	  break;
 
+	case COLOR_PALETTE_OPTION:
+	  set_color_palette (optarg);
+	  break;
+
 	default:
 	  try_help (NULL, NULL);
 	}
@@ -950,6 +956,8 @@ static char const * const option_help_msgid[] = {
   N_("    --speed-large-files  assume large files and many scattered small changes"),
   N_("    --color[=WHEN]       colorize the output; WHEN can be 'never', 'always',"),
   N_("                           or 'auto' (the default)"),
+  N_("    --palette=PALETTE    specify the colors to use when --color is active"),
+  N_("                           PALETTE is a colon-separated list terminfo capabilities"),
   "",
   N_("    --help               display this help and exit"),
   N_("-v, --version            output version information and exit"),

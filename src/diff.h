@@ -418,3 +418,4 @@ enum color_context
 };
 
 extern void set_color_context (enum color_context color_context);
+extern void set_color_palette (char const *palette);
