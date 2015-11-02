@@ -1,0 +1,119 @@
+#!/bin/sh
+
+. "${srcdir=.}/init.sh"; path_prepend_ ../src
+
+TZ=UTC0
+export TZ
+
+fail=0
+
+echo a > a
+echo b > b
+
+epoch='1970-01-01 00:00:00'
+touch --date="$epoch" a b
+
+gen_exp_u()
+{
+    local tab=$(printf '\t')
+    local epoch_plus="$epoch.000000000 +0000"
+    local rs=$(printf "\e[${rs}m")
+    local hd=$(printf "\e[${hd}m")
+    local ad=$(printf "\e[${ad}m")
+    local de=$(printf "\e[${de}m")
+    local ln=$(printf "\e[${ln}m")
+    printf '%s' \
+"$hd--- a$tab$epoch_plus
++++ b$tab$epoch_plus
+$rs${ln}@@ -1 +1 @@$rs
+$de-a$rs
+$ad+b$rs
+"
+}
+
+gen_exp_c()
+{
+    local tab=$(printf '\t')
+    local epoch_posix_1003_1_2001="Thu Jan  1 00:00:00 1970"
+    local rs=$(printf "\e[${rs}m")
+    local hd=$(printf "\e[${hd}m")
+    local ad=$(printf "\e[${ad}m")
+    local de=$(printf "\e[${de}m")
+    local ln=$(printf "\e[${ln}m")
+    printf '%s' \
+"$hd*** a$tab$epoch_posix_1003_1_2001
+--- b$tab$epoch_posix_1003_1_2001
+$rs***************
+$ln*** 1 ****$rs
+$de! a$rs
+$ln--- 1 ----$rs
+$ad! b$rs
+"
+}
+
+gen_exp_default()
+{
+    printf '%s' \
+"1c1
+< a
+---
+> b
+"
+}
+
+gen_exp_default_colors()
+{
+    local rs=$(printf "\e[${rs}m")
+    local hd=$(printf "\e[${hd}m")
+    local ad=$(printf "\e[${ad}m")
+    local de=$(printf "\e[${de}m")
+    local ln=$(printf "\e[${ln}m")
+    printf '%s' \
+"${ln}1c1$rs
+$de< a$rs
+---
+$ad> b$rs
+"
+}
+
+# Compare with some known outputs
+
+rs=0 hd=1 ad=32 de=31 ln=36
+
+diff --color=auto a b > out
+test $? = 1 || fail=1
+gen_exp_default > exp || framework_failure_
+compare exp out || fail=1
+
+diff --color=never a b > out
+test $? = 1 || fail=1
+gen_exp_default > exp || framework_failure_
+compare exp out || fail=1
+
+diff a b > out
+test $? = 1 || fail=1
+gen_exp_default > exp || framework_failure_
+compare exp out || fail=1
+
+diff --color=always a b > out
+test $? = 1 || fail=1
+gen_exp_default_colors > exp || framework_failure_
+compare exp out || fail=1
+
+diff -u --color=always a b > out
+test $? = 1 || fail=1
+gen_exp_u > exp || framework_failure_
+compare exp out || fail=1
+
+diff -c --color=always a b > out
+test $? = 1 || fail=1
+gen_exp_c > exp || framework_failure_
+compare exp out || fail=1
+
+rs=0 hd=33 ad=34 de=35 ln=36
+diff -u --color=always --palette="rs=0:hd=33:ad=34:de=35:ln=36" a b > out
+test $? = 1 || fail=1
+gen_exp_u > exp || framework_failure_
+compare exp out || fail=1
+
+Exit $fail

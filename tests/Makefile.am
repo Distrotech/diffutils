@@ -15,7 +15,8 @@ TESTS = \
   no-newline-at-eof \
   stdin \
   strcoll-0-names \
-  filename-quoting
+  filename-quoting \
+  colors
 
 EXTRA_DIST = \
   $(TESTS) init.sh t-local.sh
