@@ -4,6 +4,7 @@ TESTS = \
   basic \
   bignum \
   binary \
+  brief-vs-stat-zero-kernel-lies \
   colliding-file-names \
   excess-slash \
   help-version	\

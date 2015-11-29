@@ -477,6 +477,8 @@ diff_2_files (struct comparison *cmp)
     {
       /* Files with different lengths must be different.  */
       if (cmp->file[0].stat.st_size != cmp->file[1].stat.st_size
+	  && 0 < cmp->file[0].stat.st_size
+	  && 0 < cmp->file[1].stat.st_size
 	  && (cmp->file[0].desc < 0 || S_ISREG (cmp->file[0].stat.st_mode))
 	  && (cmp->file[1].desc < 0 || S_ISREG (cmp->file[1].stat.st_mode)))
 	changes = 1;

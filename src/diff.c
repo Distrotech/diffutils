@@ -1377,7 +1377,9 @@ compare_files (struct comparison const *parent,
   else if (files_can_be_treated_as_binary
 	   && S_ISREG (cmp.file[0].stat.st_mode)
 	   && S_ISREG (cmp.file[1].stat.st_mode)
-	   && cmp.file[0].stat.st_size != cmp.file[1].stat.st_size)
+	   && cmp.file[0].stat.st_size != cmp.file[1].stat.st_size
+	   && 0 < cmp.file[0].stat.st_size
+	   && 0 < cmp.file[1].stat.st_size)
     {
       message ("Files %s and %s differ\n",
 	       file_label[0] ? file_label[0] : cmp.file[0].name,

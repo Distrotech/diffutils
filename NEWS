@@ -23,6 +23,13 @@ GNU diffutils NEWS                                    -*- outline -*-
   diff -B no longer generates incorrect output if the two inputs
   each end with a one-byte incomplete line.
 
+  diff --brief no longer reports a difference for unusual identical files.
+  For example, when comparing a file like /proc/cmdline (for which the linux
+  kernel reports st_size of 0 even though it is not an empty file) to a
+  copy of that file's contents residing on a "normal" file system:
+    $ f=/proc/cmdline; cp $f k; diff --brief $f k
+    Files /proc/cmdline and k differ
+
 ** Performance changes
 
   diff's default algorithm has been adjusted to output higher-quality
