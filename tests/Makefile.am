@@ -46,6 +46,7 @@ TESTS_ENVIRONMENT =							\
     export PREFERABLY_POSIX_SHELL;					\
   REPLACE_GETCWD=$(REPLACE_GETCWD); export REPLACE_GETCWD;		\
   PATH='$(abs_top_builddir)/src$(PATH_SEPARATOR)'"$$PATH"; export PATH	\
+  stderr_fileno_=9; export stderr_fileno				\
   ; 9>&2
 
 LOG_COMPILER= $(SHELL)
