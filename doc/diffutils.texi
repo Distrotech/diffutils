@@ -14,7 +14,7 @@ and documents the @acronym{GNU} @command{diff}, @command{diff3},
 differences between files and the @acronym{GNU} @command{patch} command for
 using their output to update files.
 
-Copyright @copyright{} 1992-1994, 1998, 2001-2002, 2004, 2006, 2009-2015 Free
+Copyright @copyright{} 1992-1994, 1998, 2001-2002, 2004, 2006, 2009-2016 Free
 Software Foundation, Inc.
 
 @quotation

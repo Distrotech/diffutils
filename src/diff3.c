@@ -1,7 +1,7 @@
 /* diff3 - compare three files line by line
 
    Copyright (C) 1988-1989, 1992-1996, 1998, 2001-2002, 2004, 2006, 2009-2013,
-   2015 Free Software Foundation, Inc.
+   2015-2016 Free Software Foundation, Inc.
 
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
