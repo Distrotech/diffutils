@@ -1040,6 +1040,7 @@ process_diff (char const *filea,
 
   *block_list_end = NULL;
   *last_block = bptr;
+  free (diff_contents);
   return block_list;
 }
 
