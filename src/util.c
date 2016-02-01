@@ -44,6 +44,8 @@
 
 char const pr_program[] = PR_PROGRAM;
 
+bool presume_output_tty;
+
 /* Queue up one-line messages to be printed at the end,
    when -l is specified.  Each message is recorded with a 'struct msg'.  */
 
@@ -710,7 +712,7 @@ check_color_output (bool is_pipe)
   if (! outfile || colors_style == NEVER)
     return;
 
-  output_is_tty = !is_pipe && isatty (fileno (outfile));
+  output_is_tty = presume_output_tty || (!is_pipe && isatty (fileno (outfile)));
 
   colors_enabled = (colors_style == ALWAYS
                     || (colors_style == AUTO && output_is_tty));
@@ -1349,7 +1351,8 @@ static enum color_context last_context = RESET_CONTEXT;
 void
 set_color_context (enum color_context color_context)
 {
-  process_signals ();
+  if (color_context != RESET_CONTEXT)
+    process_signals ();
   if (colors_enabled && last_context != color_context)
     {
       put_indicator (&color_indicator[C_LEFT]);

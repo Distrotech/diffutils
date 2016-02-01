@@ -141,6 +141,8 @@ enum
 
   COLOR_OPTION,
   COLOR_PALETTE_OPTION,
+
+  PRESUME_OUTPUT_TTY_OPTION,
 };
 
 static char const group_format_option[][sizeof "--unchanged-group-format"] =
@@ -219,6 +221,9 @@ static struct option const longopts[] =
   {"unified", 2, 0, 'U'},
   {"version", 0, 0, 'v'},
   {"width", 1, 0, 'W'},
+
+  /* This is solely for testing.  Do not document.  */
+  {"-presume-output-tty", no_argument, NULL, PRESUME_OUTPUT_TTY_OPTION},
   {0, 0, 0, 0}
 };
 
@@ -640,6 +645,10 @@ main (int argc, char **argv)
 	case COLOR_PALETTE_OPTION:
 	  set_color_palette (optarg);
 	  break;
+
+        case PRESUME_OUTPUT_TTY_OPTION:
+          presume_output_tty = true;
+          break;
 
 	default:
 	  try_help (NULL, NULL);

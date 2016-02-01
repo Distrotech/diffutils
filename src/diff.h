@@ -417,5 +417,7 @@ enum color_context
   LINE_NUMBER_CONTEXT,
 };
 
+XTERN bool presume_output_tty;
+
 extern void set_color_context (enum color_context color_context);
 extern void set_color_palette (char const *palette);
