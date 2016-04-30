@@ -14,6 +14,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+# Use the direct link.  This is guaranteed to work immediately, while
+# it can take a while for the faster mirror links to become usable.
+url_dir_list = http://ftp.gnu.org/gnu/$(PACKAGE)
+
 # Used in maint.mk's web-manual rule
 manual_title = Comparing and Merging Files
 
