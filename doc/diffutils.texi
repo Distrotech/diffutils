@@ -2438,7 +2438,7 @@ put the merged text.  @xref{Invoking sdiff}, for more details on the
 options to @command{sdiff}.
 
 Another way to merge files interactively is to use the Emacs Lisp
-package @command{emerge}.  @xref{emerge, , emerge, emacs, The
+package @command{emerge}.  @xref{Emerge, , Emerge, emacs, The
 @acronym{GNU} Emacs Manual}, for more information.
 
 @menu
