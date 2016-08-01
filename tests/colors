@@ -12,16 +12,17 @@ echo b > b
 
 epoch='1970-01-01 00:00:00'
 touch --date="$epoch" a b
+e=$(printf '\033')
+tab=$(printf '\t')
 
 gen_exp_u()
 {
-    local tab=$(printf '\t')
     local epoch_plus="$epoch.000000000 +0000"
-    local rs=$(printf "\e[${rs}m")
-    local hd=$(printf "\e[${hd}m")
-    local ad=$(printf "\e[${ad}m")
-    local de=$(printf "\e[${de}m")
-    local ln=$(printf "\e[${ln}m")
+    local rs=$(printf "$e[${rs}m")
+    local hd=$(printf "$e[${hd}m")
+    local ad=$(printf "$e[${ad}m")
+    local de=$(printf "$e[${de}m")
+    local ln=$(printf "$e[${ln}m")
     printf '%s' \
 "$hd--- a$tab$epoch_plus
 +++ b$tab$epoch_plus
@@ -33,13 +34,12 @@ $ad+b$rs
 
 gen_exp_c()
 {
-    local tab=$(printf '\t')
     local epoch_posix_1003_1_2001="Thu Jan  1 00:00:00 1970"
-    local rs=$(printf "\e[${rs}m")
-    local hd=$(printf "\e[${hd}m")
-    local ad=$(printf "\e[${ad}m")
-    local de=$(printf "\e[${de}m")
-    local ln=$(printf "\e[${ln}m")
+    local rs=$(printf "$e[${rs}m")
+    local hd=$(printf "$e[${hd}m")
+    local ad=$(printf "$e[${ad}m")
+    local de=$(printf "$e[${de}m")
+    local ln=$(printf "$e[${ln}m")
     printf '%s' \
 "$hd*** a$tab$epoch_posix_1003_1_2001
 --- b$tab$epoch_posix_1003_1_2001
@@ -63,11 +63,11 @@ gen_exp_default()
 
 gen_exp_default_colors()
 {
-    local rs=$(printf "\e[${rs}m")
-    local hd=$(printf "\e[${hd}m")
-    local ad=$(printf "\e[${ad}m")
-    local de=$(printf "\e[${de}m")
-    local ln=$(printf "\e[${ln}m")
+    local rs=$(printf "$e[${rs}m")
+    local hd=$(printf "$e[${hd}m")
+    local ad=$(printf "$e[${ad}m")
+    local de=$(printf "$e[${de}m")
+    local ln=$(printf "$e[${ln}m")
     printf '%s' \
 "${ln}1c1$rs
 $de< a$rs
