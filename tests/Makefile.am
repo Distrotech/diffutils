@@ -20,34 +20,59 @@ TESTS = \
   colors
 
 EXTRA_DIST = \
-  $(TESTS) init.sh t-local.sh
+  $(TESTS) init.sh t-local.sh envvar-check
 
 # Note that the first lines are statements.  They ensure that environment
 # variables that can perturb tests are unset or set to expected values.
 # The rest are envvar settings that propagate build-related Makefile
 # variables to test scripts.
-TESTS_ENVIRONMENT =							\
-  tmp__=$$TMPDIR; test -d "$$tmp__" || tmp__=.;				\
-  TMPDIR=$$tmp__; export TMPDIR;					\
-  VERSION='$(VERSION)'; export VERSION;					\
-  abs_top_builddir='$(abs_top_builddir)'; export abs_top_builddir;	\
-  abs_top_srcdir='$(abs_top_srcdir)'; export abs_top_srcdir;		\
-  abs_srcdir='$(abs_srcdir)'; export abs_srcdir;			\
-  built_programs="`$(built_programs)`"					\
-  srcdir='$(srcdir)'; export built_programs;				\
-  top_srcdir='$(top_srcdir)'; export top_srcdir;			\
-  CC='$(CC)'; export CC;						\
-  MAKE=$(MAKE); export MAKE;						\
-  PACKAGE_BUGREPORT='$(PACKAGE_BUGREPORT)'; export PACKAGE_BUGREPORT;	\
-  PACKAGE_VERSION=$(PACKAGE_VERSION); export PACKAGE_VERSION;		\
-  CONFIG_HEADER='$(abs_top_builddir)/lib/config.h'; export CONFIG_HEADER; \
-  ENABLE_DEVICE_MAPPER=$(ENABLE_DEVICE_MAPPER); export ENABLE_DEVICE_MAPPER; \
-  PERL='$(PERL)'; export PERL;						\
-  PREFERABLY_POSIX_SHELL='$(PREFERABLY_POSIX_SHELL)';			\
-    export PREFERABLY_POSIX_SHELL;					\
-  REPLACE_GETCWD=$(REPLACE_GETCWD); export REPLACE_GETCWD;		\
-  PATH='$(abs_top_builddir)/src$(PATH_SEPARATOR)'"$$PATH"; export PATH	\
-  stderr_fileno_=9; export stderr_fileno				\
+TESTS_ENVIRONMENT =					\
+  tmp__=$${TMPDIR-/tmp};				\
+  test -d "$$tmp__" && test -w "$$tmp__" || tmp__=.;	\
+  . $(srcdir)/envvar-check;				\
+  TMPDIR=$$tmp__; export TMPDIR;			\
+							\
+  if test -n "$$BASH_VERSION" || (eval "export v=x") 2>/dev/null; then \
+    export_with_values () { export "$$@"; };		\
+  else							\
+    export_with_values ()				\
+    {							\
+      sed_extract_var='s/=.*//';			\
+      sed_quote_value="s/'/'\\\\''/g;s/=\\(.*\\)/='\\1'/";\
+      for arg in "$$@"; do				\
+        var=`echo "$$arg" | sed "$$sed_extract_var"`;	\
+        arg=`echo "$$arg" | sed "$$sed_quote_value"`;	\
+        eval "$$arg";					\
+        export "$$var";					\
+      done;						\
+    };							\
+  fi;							\
+							\
+  export_with_values					\
+  VERSION='$(VERSION)'					\
+  LOCALE_FR='$(LOCALE_FR)'				\
+  LOCALE_FR_UTF8='$(LOCALE_FR_UTF8)'			\
+  AWK=$(AWK)						\
+  GREP_OPTIONS=''					\
+  LC_ALL=C						\
+  abs_top_builddir='$(abs_top_builddir)'		\
+  abs_top_srcdir='$(abs_top_srcdir)'			\
+  abs_srcdir='$(abs_srcdir)'				\
+  built_programs="`$(built_programs)`"			\
+  srcdir='$(srcdir)'					\
+  top_srcdir='$(top_srcdir)'				\
+  CC='$(CC)'						\
+  DIFFUTILS_TEST_NAME=`echo $$tst|sed 's,^\./,,;s,/,-,g'` \
+  MAKE=$(MAKE)						\
+  MALLOC_PERTURB_=$(MALLOC_PERTURB_)			\
+  PACKAGE_BUGREPORT='$(PACKAGE_BUGREPORT)'		\
+  PACKAGE_VERSION=$(PACKAGE_VERSION)			\
+  PERL='$(PERL)'					\
+  SHELL='$(SHELL)'					\
+  PREFERABLY_POSIX_SHELL='$(PREFERABLY_POSIX_SHELL)'	\
+  REPLACE_GETCWD=$(REPLACE_GETCWD)			\
+  PATH='$(abs_top_builddir)/src$(PATH_SEPARATOR)'"$$PATH"	\
+  stderr_fileno_=9					\
   ; 9>&2
 
 LOG_COMPILER= $(SHELL)
