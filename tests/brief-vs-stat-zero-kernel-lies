@@ -14,6 +14,14 @@ test -f $boot || skip_ no $boot file
 sz=$(stat --format %s $boot) || skip_ stat --format %s does not work
 test $sz = 0 || skip_ $boot has nonzero size
 
+# /proc/self is not useful on the Hurd, where it always points to "1",
+# so skip this test when /proc/self does not point to a file whose name is
+# the current process ID.
+readlink /proc/self > pid & pid=$!
+wait $pid
+echo $pid > exp
+compare exp pid || skip_ /proc/self is not useful on this system
+
 # There are two code paths to test: one for non-binary and one for binary files.
 # $boot is non-binary.
 cat $boot > ref || framework_failure_
