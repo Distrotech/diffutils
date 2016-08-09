@@ -656,6 +656,13 @@ main (int argc, char **argv)
       prev = c;
     }
 
+  if (colors_style == AUTO)
+    {
+      char const *t = getenv ("TERM");
+      if (t && STREQ (t, "dumb"))
+        colors_style = NEVER;
+    }
+
   if (output_style == OUTPUT_UNSPECIFIED)
     {
       if (show_c_function)

@@ -86,6 +86,11 @@ test $? = 1 || fail=1
 gen_exp_default > exp || framework_failure_
 compare exp out || fail=1
 
+TERM=dumb diff ---presume-output-tty --color=auto a b > out
+test $? = 1 || fail=1
+gen_exp_default > exp || framework_failure_
+compare exp out || fail=1
+
 diff --color=never a b > out
 test $? = 1 || fail=1
 gen_exp_default > exp || framework_failure_
