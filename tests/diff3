@@ -1,0 +1,30 @@
+#!/bin/sh
+# This would malfunction in diff-3.4
+
+. "${srcdir=.}/init.sh"; path_prepend_ ../src
+
+echo a > a || framework_failure_
+echo b > b || framework_failure_
+echo c > c || framework_failure_
+cat <<'EOF' > exp || framework_failure_
+====
+1:1c
+  a
+2:1c
+  b
+3:1c
+  c
+EOF
+
+fail=0
+
+diff3 a b c > out 2> err || fail=1
+compare exp out || fail=1
+compare /dev/null err || fail=1
+
+# Repeat, but with all three files the same:
+diff3 a a a > out 2> err || fail=1
+compare /dev/null out || fail=1
+compare /dev/null err || fail=1
+
+Exit $fail

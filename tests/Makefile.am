@@ -6,6 +6,7 @@ TESTS = \
   binary \
   brief-vs-stat-zero-kernel-lies \
   colliding-file-names \
+  diff3 \
   excess-slash \
   help-version	\
   function-line-vs-leading-space \

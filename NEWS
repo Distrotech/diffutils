@@ -4,6 +4,9 @@ GNU diffutils NEWS                                    -*- outline -*-
 
 ** Bug fixes
 
+  diff3 no longer malfunctions due to use-after-free
+  [bug introduced in 3.4]
+
   diff --color no longer colorizes when TERM=dumb
 
 
