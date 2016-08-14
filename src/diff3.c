@@ -402,7 +402,6 @@ main (int argc, char **argv)
 
   check_stdout ();
   exit (conflicts_found);
-  return conflicts_found;
 }
 
 static void
