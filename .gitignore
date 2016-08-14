@@ -15,10 +15,14 @@
 /config.log
 /config.status
 /configure
-/diffutils-*.tar.gz
 /diffutils-*.tar.xz
 /doc/.gitignore
+/doc/diffutils.aux
+/doc/diffutils.cp
+/doc/diffutils.cps
 /doc/diffutils.info
+/doc/diffutils.log
+/doc/diffutils.toc
 /doc/stamp-vti
 /doc/version.texi
 /gnulib-tests
