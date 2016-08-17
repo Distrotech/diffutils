@@ -109,6 +109,7 @@ if test "$gl_gcc_warnings" = yes; then
 
   gl_WARN_ADD([-fdiagnostics-show-option])
   gl_WARN_ADD([-funit-at-a-time])
+  gl_WARN_ADD([-fno-common])
 
   AC_SUBST([WARN_CFLAGS])
 
