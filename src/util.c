@@ -44,8 +44,6 @@
 
 char const pr_program[] = PR_PROGRAM;
 
-bool presume_output_tty;
-
 /* Queue up one-line messages to be printed at the end,
    when -l is specified.  Each message is recorded with a 'struct msg'.  */
 
